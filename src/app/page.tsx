@@ -19,6 +19,7 @@ import { AchievementsDialog } from '@/components/game/AchievementsDialog'
 import { useGameEngine } from '@/hooks/useGameEngine'
 import { useGameAudio } from '@/hooks/useGameAudio'
 import { getUnlockedCount, getTotalCount } from '@/lib/achievements'
+import { version } from '../../package.json'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // THIN ORCHESTRATOR — Routes to extracted screen components
@@ -259,6 +260,7 @@ export default function MythworldEngine() {
             <div className={`w-2 h-2 rounded-full ${geminiKey ? 'bg-[#40c080]' : 'bg-[#804040]'}`} />
             <span className="text-[10px] text-[#5a4d30]">Gem2.5</span>
           </div>
+          <span className="text-[8px] text-[#3a3020]">v{version}</span>
 
           {/* Inventory Button */}
           <Button

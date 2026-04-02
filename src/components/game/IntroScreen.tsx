@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BookOpen, Users, Package, ScrollText, Save, Upload } from 'lucide-react'
+import { version } from '../../../package.json'
 
 export interface IntroScreenProps {
   geminiKey: string
@@ -56,6 +57,10 @@ export function IntroScreen({
             <br /><br />
             <span className="text-[#7a5f20] not-italic text-sm" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.15em' }}>
               ✦ Created by the imagination of JeTZone2k26 ✦
+            </span>
+            <br />
+            <span className="text-[#5a4d30] not-italic text-xs" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.1em' }}>
+              v{version}
             </span>
             <br />
             <span className="text-[#c9a84c] not-italic" style={{ fontFamily: 'Cinzel, serif', fontSize: '.8rem', letterSpacing: '.1em' }}>
