@@ -16,6 +16,14 @@ import { PROPHECIES, rollProphecies, getProphecyById, Prophecy } from '@/lib/pro
 import { rollAntagonist, getAntagonistById, getAntagonistRival, generateBanishmentNarration, generateRivalSummonNarration, AntagonistCandidate, AntagonistRival } from '@/lib/antagonistPool'
 import { toast } from '@/hooks/use-toast'
 import type { CharacterPortrait } from '@/components/game/PortraitModal'
+import { soundEvents } from '@/lib/soundEvents'
+import {
+  createAchievementTracker,
+  checkAchievements,
+  getUnlockedCount,
+  getTotalCount,
+  type AchievementTracker,
+} from '@/lib/achievements'
 
 export function useGameEngine() {
 
@@ -55,6 +63,12 @@ export function useGameEngine() {
   const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
   // Store the exact displayed narrative text for TTS
   const [displayedNarrative, setDisplayedNarrative] = useState('')
+  
+  // Achievement System State
+  const achievementTrackerRef = useRef<AchievementTracker>(createAchievementTracker())
+  const [achievementUnlocks, setAchievementUnlocks] = useState<Array<{ id: string; turn: number }>>([])
+  const [showAchievementsDialog, setShowAchievementsDialog] = useState(false)
+  const prevGameStateRef = useRef<GameState | null>(null)
   
   // ═══════════════════════════════════════════════════════════════════════════
   // TOKEN OPTIMIZATION FEATURES
@@ -624,6 +638,11 @@ export function useGameEngine() {
       `
     }
     setNarrativeContent([shardCard])
+    soundEvents.emit({ type: 'ambient_start', act: 'act1' })
+    // Reset achievement tracker for new campaign
+    achievementTrackerRef.current = createAchievementTracker()
+    setAchievementUnlocks([])
+    prevGameStateRef.current = null
 
     // Run first turn
     setStatusMessage('Opening scene loading...')
@@ -1449,8 +1468,22 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
     if (res.story_summary) newGS.storySummary = res.story_summary
     if (res.journey_so_far) newGS.journeySoFar = res.journey_so_far
 
+    // ── SOUND EVENTS ──────────────────────────────────────────────────
+    if (res.dice_rolls?.length) {
+      for (const d of res.dice_rolls) {
+        setTimeout(() => soundEvents.emit({ type: 'dice_roll', success: !!d.success }), Math.random() * 200)
+      }
+    }
+    if (res.damage_dealt?.length) {
+      for (const d of res.damage_dealt) {
+        const isCritical = d.damage && d.damage.includes('critical')
+        setTimeout(() => soundEvents.emit({ type: 'combat_hit', critical: isCritical }), 300)
+      }
+    }
+
     // Shard event
     if (res.shard_event?.invoked) {
+      soundEvents.emit({ type: 'shard_pulse' })
       newGS.pendingShardSummon = null
       if (res.shard_event.success && res.shard_event.summoned_name) {
         if (res.shard_event.is_greater) {
@@ -1506,6 +1539,7 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
           if (u.dead || pc.hp <= 0) {
             pc.dead = true
             pc.hp = 0
+            soundEvents.emit({ type: 'death' })
 
             // ═══ PROPHECY TRANSFER ON DEATH — Story-Driven Chain ═══
             // Main PC falls → Companion becomes Chosen One
@@ -1590,6 +1624,7 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
     // Injuries
     if (res.injury_events) {
       for (const ev of res.injury_events) {
+        soundEvents.emit({ type: 'injury' })
         // Validate pc_id exists in party before applying injury
         if (!ev.pc_id || !newGS.pcs.find(p => p.id === ev.pc_id)) continue
         const injTemplate = ev.injury_id ? INJURY_TABLE.find(i => i.id === ev.injury_id) : INJURY_TABLE[Math.floor(Math.random() * INJURY_TABLE.length)]
@@ -1622,6 +1657,7 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
     if (res.next_pc_id && newGS.pcQueue.length > 0) {
       const newPC = newGS.pcQueue.find(p => p.id === res.next_pc_id) || newGS.pcQueue[0]
       if (newPC && !newGS.pcs.find(p => p.id === newPC.id)) {
+        soundEvents.emit({ type: 'level_up' })
         newGS.pcs = [...newGS.pcs, { ...newPC, hp: newPC.maxHp, conditions: [], dead: false }]
         newGS.pcQueue = newGS.pcQueue.filter(p => p.id !== newPC.id)
         newGS.pcAgreements = { ...newGS.pcAgreements, [newPC.id]: null }
@@ -1637,6 +1673,7 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
 
     // Log phase transitions for dramatic narration in renderResult
     if (newGS.antagonistPhase > oldPhase && newGS.act === ACTS.THREE) {
+      soundEvents.emit({ type: 'boss_phase', phase: newGS.antagonistPhase })
       const phaseAnt = getAntagonist(newGS.antagonistId)
       const phaseDesc = newGS.antagonistPhase === 2
         ? phaseAnt?.phase2 || 'The adversary reveals deeper power, fury breaking through composure.'
@@ -1697,6 +1734,7 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
       const turnLimitReached = newGS.turn >= newGS.act1TurnLimit
       if ((allPCsIntroduced && allPCsAgreed) || turnLimitReached) {
         newGS.act = ACTS.TWO
+        soundEvents.emit({ type: 'act_transition', act: 'act2' })
         newGS.act2StartTurn = newGS.turn
         // Log the act transition
         newGS.log = [...newGS.log, {
@@ -1717,6 +1755,7 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
       
       if (act2Complete || (storyReady && act2Duration >= 20)) { // Minimum 20 turns in Act II
         newGS.act = ACTS.THREE
+        soundEvents.emit({ type: 'act_transition', act: 'act3' })
         
         // If antagonist was banished, they return with a vengeance in Act III
         if (newGS.antagonistBanished) {
@@ -2582,6 +2621,21 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
 
       await renderResult(res, false, newGS)
 
+      // ── ACHIEVEMENT CHECK ───────────────────────────────────────────
+      const damageThisTurn = (res.damage_dealt?.length || 0) > 0
+      const critThisTurn = !!(res.dice_rolls || []).find(d => d.roll >= 20 && d.die?.includes('d20'))
+      const newlyUnlocked = checkAchievements(
+        achievementTrackerRef.current,
+        newGS,
+        prevGameStateRef.current,
+        damageThisTurn,
+        critThisTurn,
+      )
+      if (newlyUnlocked.length > 0) {
+        setAchievementUnlocks(prev => [...prev, ...newlyUnlocked.map(id => ({ id, turn: newGS.turn }))])
+      }
+      prevGameStateRef.current = { ...newGS }
+
       // If Test of Faith triggered, pause here — don't generate next options
       if (newGS.pendingTestOfFaith) {
         newGS.isProcessing = false
@@ -2635,6 +2689,7 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
 
   // ── END CAMPAIGN ───────────────────────────────────────────────────────
   const endCampaign = (victory: boolean, gs: GameState) => {
+    soundEvents.emit({ type: victory ? 'victory' : 'death' })
     const ant = getAntagonist(gs.antagonistId)
     const shard = gs.shardEntry
     const living = gs.pcs.filter(p => !p.dead)
@@ -2970,5 +3025,10 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
     waitForThrottle,
     estimateTokens,
     updateTokenUsage,
+    // Achievement System
+    achievementTracker: achievementTrackerRef.current,
+    achievementUnlocks,
+    showAchievementsDialog,
+    setShowAchievementsDialog,
   }
 }

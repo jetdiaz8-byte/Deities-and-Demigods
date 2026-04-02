@@ -1,12 +1,13 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
-  BookOpen, ScrollText, Volume2, VolumeX, Menu, X, Clock
+  BookOpen, ScrollText, Volume2, VolumeX, Menu, X, Clock,
+  Music, VolumeOff, Volume1, Swords, Trophy
 } from 'lucide-react'
 import { HealthBar, NarrativeSection, TokenCounter } from '@/components/game/GameComponents'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
@@ -26,6 +27,21 @@ export interface GameHeaderProps {
   setSidebarOpen: (open: boolean) => void
   setSelectedPortrait: (portrait: CharacterPortrait | null) => void
   setPortraitModalOpen: (open: boolean) => void
+  // Audio
+  sfxEnabled: boolean
+  ambientEnabled: boolean
+  volume: number
+  sfxVolume: number
+  ambientVolume: number
+  toggleSfx: () => void
+  toggleAmbient: () => void
+  setVolume: (v: number) => void
+  setSfxVolume: (v: number) => void
+  setAmbientVolume: (v: number) => void
+  // Achievements
+  achievementCount: number
+  achievementTotal: number
+  onOpenAchievements: () => void
 }
 
 export function GameHeader({
@@ -40,7 +56,24 @@ export function GameHeader({
   setSidebarOpen,
   setSelectedPortrait,
   setPortraitModalOpen,
+  // Audio
+  sfxEnabled,
+  ambientEnabled,
+  volume,
+  sfxVolume,
+  ambientVolume,
+  toggleSfx,
+  toggleAmbient,
+  setVolume,
+  setSfxVolume,
+  setAmbientVolume,
+  // Achievements
+  achievementCount,
+  achievementTotal,
+  onOpenAchievements,
 }: GameHeaderProps) {
+  const [showAudioPanel, setShowAudioPanel] = useState(false)
+
   return (
     <header className="sticky top-0 z-50 bg-[#0a0806]/95 backdrop-blur-sm border-b-2 border-[#5a4018]">
       {/* Top Bar - Title, Voice Controls & Token Counter */}
@@ -70,6 +103,115 @@ export function GameHeader({
           <p className="text-[10px] md:text-xs text-[#8a7040] tracking-widest uppercase">
             Turn {gameState.turn} · {gameState.act === 'act1' ? 'Act I' : gameState.act === 'act2' ? 'Act II' : 'Final Boss'}
           </p>
+        </div>
+
+        {/* Audio Toggle Buttons */}
+        <div className="flex items-center gap-1.5">
+          {/* SFX Toggle */}
+          <button
+            onClick={toggleSfx}
+            className="relative p-1.5 rounded transition-all"
+            title={sfxEnabled ? 'Disable SFX' : 'Enable SFX'}
+          >
+            <Swords
+              className={`w-4 h-4 transition-colors ${
+                sfxEnabled ? 'text-[#d4af37]' : 'text-gray-500'
+              }`}
+            />
+            {!sfxEnabled && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-4 h-[2px] bg-gray-600 rotate-45 rounded-full" />
+              </div>
+            )}
+          </button>
+
+          {/* Ambient Toggle */}
+          <button
+            onClick={toggleAmbient}
+            className="p-1.5 rounded transition-all"
+            title={ambientEnabled ? 'Disable Ambient Music' : 'Enable Ambient Music'}
+          >
+            {ambientEnabled ? (
+              <Music className="w-4 h-4 text-[#d4af37]" />
+            ) : (
+              <VolumeOff className="w-4 h-4 text-gray-500" />
+            )}
+          </button>
+
+          {/* Volume Slider Panel - Desktop only */}
+          <div className="hidden md:flex items-center gap-1">
+            <button
+              onClick={() => setShowAudioPanel(!showAudioPanel)}
+              className="p-1.5 rounded text-[#d4af37] hover:bg-[#3a3020] transition-all"
+              title="Volume Settings"
+            >
+              {volume === 0 ? (
+                <VolumeOff className="w-4 h-4" />
+              ) : volume < 0.5 ? (
+                <Volume1 className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
+            </button>
+
+            {/* Expandable Volume Panel */}
+            {showAudioPanel && (
+              <div className="absolute top-full mt-1 right-32 z-[60] p-3 bg-[#1a1510] border border-[#3a3020] rounded-lg shadow-xl shadow-black/60 min-w-[180px]">
+                <div className="space-y-2.5">
+                  {/* Master Volume */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8a7040] font-title">Master</span>
+                      <span className="text-[10px] text-[#c9a84c]">{Math.round(volume * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={volume}
+                      onChange={(e) => setVolume(parseFloat(e.target.value))}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#2a2015] accent-[#d4af37]"
+                    />
+                  </div>
+
+                  {/* SFX Volume */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8a7040] font-title">SFX</span>
+                      <span className="text-[10px] text-[#c9a84c]">{Math.round(sfxVolume * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={sfxVolume}
+                      onChange={(e) => setSfxVolume(parseFloat(e.target.value))}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#2a2015] accent-[#d4af37]"
+                    />
+                  </div>
+
+                  {/* Music Volume */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8a7040] font-title">Music</span>
+                      <span className="text-[10px] text-[#c9a84c]">{Math.round(ambientVolume * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={ambientVolume}
+                      onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#2a2015] accent-[#d4af37]"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Voice Narration Controls - Prominent */}
@@ -112,6 +254,51 @@ export function GameHeader({
         </div>
         
         <TokenCounter geminiTokens={gameState.geminiTokensUsed} groqTokens={gameState.groqTokensUsed} />
+
+        {/* Achievements Trophy Button */}
+        <button
+          onClick={onOpenAchievements}
+          className="relative p-2 text-[#d4af37] hover:bg-[#1a1510] border border-[#3a3020] rounded-lg transition-all hover:border-[#d4af37]/60"
+          title={`Achievements: ${achievementCount}/${achievementTotal}`}
+        >
+          <Trophy className="w-4 h-4" />
+          {achievementCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[16px] h-4 px-1 text-[9px] font-bold text-[#0a0806] bg-[#d4af37] rounded-full">
+              {achievementCount}
+            </span>
+          )}
+        </button>
+
+        {/* Mobile Audio Buttons */}
+        <div className="flex items-center gap-1 md:hidden">
+          <button
+            onClick={toggleSfx}
+            className="relative p-1.5 rounded transition-all"
+            title={sfxEnabled ? 'Disable SFX' : 'Enable SFX'}
+          >
+            <Swords
+              className={`w-4 h-4 transition-colors ${
+                sfxEnabled ? 'text-[#d4af37]' : 'text-gray-500'
+              }`}
+            />
+            {!sfxEnabled && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-4 h-[2px] bg-gray-600 rotate-45 rounded-full" />
+              </div>
+            )}
+          </button>
+          <button
+            onClick={toggleAmbient}
+            className="p-1.5 rounded transition-all"
+            title={ambientEnabled ? 'Disable Ambient Music' : 'Enable Ambient Music'}
+          >
+            {ambientEnabled ? (
+              <Music className="w-4 h-4 text-[#d4af37]" />
+            ) : (
+              <VolumeOff className="w-4 h-4 text-gray-500" />
+            )}
+          </button>
+        </div>
         
         {/* Mobile Menu Button */}
         <button 

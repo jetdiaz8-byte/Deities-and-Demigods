@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,11 @@ import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
 import { GameDialogs } from '@/components/game/GameDialogs'
 import { TestOfFaith } from '@/components/game/TestOfFaith'
+import { AchievementNotificationQueue } from '@/components/game/AchievementNotification'
+import { AchievementsDialog } from '@/components/game/AchievementsDialog'
 import { useGameEngine } from '@/hooks/useGameEngine'
+import { useGameAudio } from '@/hooks/useGameAudio'
+import { getUnlockedCount, getTotalCount } from '@/lib/achievements'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // THIN ORCHESTRATOR — Routes to extracted screen components
@@ -63,7 +67,19 @@ export default function MythworldEngine() {
     invokeShard,
     handleUseItem,
     resolveTestOfFaith,
+    // Achievement System
+    achievementTracker,
+    achievementUnlocks,
+    showAchievementsDialog,
+    setShowAchievementsDialog,
   } = useGameEngine()
+
+  // ── AUDIO ENGINE ─────────────────────────────────────────────────────
+  const audio = useGameAudio()
+
+  // Achievement notification handler
+  const [processedAchievements, setProcessedAchievements] = useState<Set<string>>(new Set())
+  const pendingAchievements = achievementUnlocks.filter(a => !processedAchievements.has(a.id))
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER — Phase Routing
@@ -142,6 +158,19 @@ export default function MythworldEngine() {
           setSidebarOpen={setSidebarOpen}
           setSelectedPortrait={setSelectedPortrait}
           setPortraitModalOpen={setPortraitModalOpen}
+          sfxEnabled={audio.sfxEnabled}
+          ambientEnabled={audio.ambientEnabled}
+          volume={audio.volume}
+          sfxVolume={audio.sfxVolume}
+          ambientVolume={audio.ambientVolume}
+          toggleSfx={audio.toggleSfx}
+          toggleAmbient={audio.toggleAmbient}
+          setVolume={audio.setVolume}
+          setSfxVolume={audio.setSfxVolume}
+          setAmbientVolume={audio.setAmbientVolume}
+          achievementCount={getUnlockedCount(achievementTracker)}
+          achievementTotal={getTotalCount()}
+          onOpenAchievements={() => setShowAchievementsDialog(true)}
         />
 
         {/* Dice Rolls Display */}
@@ -322,6 +351,20 @@ export default function MythworldEngine() {
           gameState={gameState}
         />
       </div>
+
+      {/* Achievement Notification Toasts */}
+      <AchievementNotificationQueue
+        unlockQueue={pendingAchievements}
+        currentTurn={gameState.turn}
+        onProcessed={(id) => setProcessedAchievements(prev => new Set(prev).add(id))}
+      />
+
+      {/* Achievements Dialog */}
+      <AchievementsDialog
+        open={showAchievementsDialog}
+        onClose={() => setShowAchievementsDialog(false)}
+        tracker={achievementTracker}
+      />
     </TooltipProvider>
   )
 }
