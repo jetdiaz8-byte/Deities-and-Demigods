@@ -1,0 +1,2077 @@
+==========================================
+[2026-03-25 14:06:20] Starting: bun install
+==========================================
+[BUN] Installing dependencies...
+[0.28ms] ".env"
+bun install v1.3.10 (30e609e0)
+
++ @tailwindcss/postcss@4.1.18
++ @types/react@19.2.8
++ @types/react-dom@19.2.3
++ bun-types@1.3.6
++ eslint@9.39.2
++ eslint-config-next@16.1.3
++ tailwindcss@4.1.18
++ tw-animate-css@1.4.0
++ typescript@5.9.3
++ @dnd-kit/core@6.3.1
++ @dnd-kit/sortable@10.0.0
++ @dnd-kit/utilities@3.2.2
++ @hookform/resolvers@5.2.2
++ @mdxeditor/editor@3.52.3
++ @prisma/client@6.19.2
++ @radix-ui/react-accordion@1.2.12
++ @radix-ui/react-alert-dialog@1.1.15
++ @radix-ui/react-aspect-ratio@1.1.8
++ @radix-ui/react-avatar@1.1.11
++ @radix-ui/react-checkbox@1.3.3
++ @radix-ui/react-collapsible@1.1.12
++ @radix-ui/react-context-menu@2.2.16
++ @radix-ui/react-dialog@1.1.15
++ @radix-ui/react-dropdown-menu@2.1.16
++ @radix-ui/react-hover-card@1.1.15
++ @radix-ui/react-label@2.1.8
++ @radix-ui/react-menubar@1.1.16
++ @radix-ui/react-navigation-menu@1.2.14
++ @radix-ui/react-popover@1.1.15
++ @radix-ui/react-progress@1.1.8
++ @radix-ui/react-radio-group@1.3.8
++ @radix-ui/react-scroll-area@1.2.10
++ @radix-ui/react-select@2.2.6
++ @radix-ui/react-separator@1.1.8
++ @radix-ui/react-slider@1.3.6
++ @radix-ui/react-slot@1.2.4
++ @radix-ui/react-switch@1.2.6
++ @radix-ui/react-tabs@1.1.13
++ @radix-ui/react-toast@1.2.15
++ @radix-ui/react-toggle@1.1.10
++ @radix-ui/react-toggle-group@1.1.11
++ @radix-ui/react-tooltip@1.2.8
++ @reactuses/core@6.1.9
++ @tanstack/react-query@5.90.19
++ @tanstack/react-table@8.21.3
++ class-variance-authority@0.7.1
++ clsx@2.1.1
++ cmdk@1.1.1
++ date-fns@4.1.0
++ embla-carousel-react@8.6.0
++ framer-motion@12.26.2
++ input-otp@1.4.2
++ lucide-react@0.525.0
++ next@16.1.3
++ next-auth@4.24.13
++ next-intl@4.7.0
++ next-themes@0.4.6
++ prisma@6.19.2
++ react@19.2.3
++ react-day-picker@9.13.0
++ react-dom@19.2.3
++ react-hook-form@7.71.1
++ react-markdown@10.1.0
++ react-resizable-panels@3.0.6
++ react-syntax-highlighter@15.6.6
++ recharts@2.15.4
++ sharp@0.34.5
++ sonner@2.0.7
++ tailwind-merge@3.4.0
++ tailwindcss-animate@1.0.7
++ uuid@11.1.0
++ vaul@1.1.2
++ z-ai-web-dev-sdk@0.0.17
++ zod@4.3.5
++ zustand@5.0.10
+
+827 packages installed [7.54s]
+==========================================
+[2026-03-25 14:06:27] Completed: bun install
+[LOG] Step: bun install | Duration: 7s
+==========================================
+
+==========================================
+[2026-03-25 14:06:27] Starting: bun run db:push
+==========================================
+[BUN] Setting up database...
+$ prisma db push
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": SQLite database "custom.db" at "file:/home/z/my-project/db/custom.db"
+
+SQLite database custom.db created at file:/home/z/my-project/db/custom.db
+
+🚀  Your database is now in sync with your Prisma schema. Done in 17ms
+
+Running generate... (Use --skip-generate to skip the generators)
+[2K[1A[2K[GRunning generate... - Prisma Client
+[2K[1A[2K[G✔ Generated Prisma Client (v6.19.2) to ./node_modules/@prisma/client in 68ms
+┌─────────────────────────────────────────────────────────┐
+│  Update available 6.19.2 -> 7.5.0                       │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+
+==========================================
+[2026-03-25 14:06:29] Completed: bun run db:push
+[LOG] Step: bun run db:push | Duration: 2s
+==========================================
+
+==========================================
+[2026-03-25 14:06:29] Starting: Starting Next.js dev server
+==========================================
+[BUN] Starting development server...
+==========================================
+$ next dev -p 3000 2>&1 | tee dev.log
+[2026-03-25 14:06:29] Completed: Starting Next.js dev server
+[LOG] Step: Starting Next.js dev server | Duration: 0s
+==========================================
+
+==========================================
+[2026-03-25 14:06:29] Starting: Waiting for Next.js dev server
+==========================================
+Waiting for Next.js dev server to be ready on localhost:3000...
+Attempt 1/60: Next.js dev server not ready yet, waiting...
+▲ Next.js 16.1.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://21.0.12.3:3000
+- Environments: .env
+
+✓ Starting...
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+  We detected TypeScript in your project and reconfigured your tsconfig.json file for you.
+  The following suggested values were added to your tsconfig.json. These values can be changed to fit your project's needs:
+
+  	- include was updated to add '.next/dev/types/**/*.ts'
+
+  The following mandatory changes were made to your tsconfig.json:
+
+  	- jsx was set to react-jsx (next.js uses the React automatic runtime)
+
+✓ Ready in 905ms
+ GET / 200 in 2.7s (compile: 2.6s, render: 128ms)
+Next.js dev server is ready!
+ GET / 200 in 2.7s (compile: 2.5s, render: 188ms)
+==========================================
+[2026-03-25 14:06:33] Completed: Waiting for Next.js dev server
+[LOG] Step: Waiting for Next.js dev server | Duration: 4s
+==========================================
+
+==========================================
+[2026-03-25 14:06:33] Starting: Health check
+==========================================
+[BUN] Performing health check...
+ GET / 200 in 25ms (compile: 3ms, render: 22ms)
+[BUN] Health check passed
+==========================================
+[2026-03-25 14:06:33] Completed: Health check
+[LOG] Step: Health check | Duration: 0s
+==========================================
+
+==========================================
+[2026-03-25 14:06:33] Starting: Starting mini-services
+==========================================
+Found mini-services directory, scanning for sub-services...
+Mini-services startup completed. Started 0 service(s).
+==========================================
+[2026-03-25 14:06:33] Completed: Starting mini-services
+[LOG] Step: Starting mini-services | Duration: 0s
+==========================================
+
+Next.js dev server is running in background (PID: 665).
+Use 'kill 665' to stop it.
+✓ Compiled in 430ms
+ GET / 200 in 78ms (compile: 39ms, render: 39ms)
+⚠ Fast Refresh had to perform a full reload when ./src/app/page.tsx changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ GET / 200 in 117ms (compile: 3ms, render: 114ms)
+⚠ Cross origin request detected from preview-chat-117a1921-b63b-439d-ac62-5dee576f7266.space.z.ai to /_next/* resource. In a future major version of Next.js, you will need to explicitly configure "allowedDevOrigins" in next.config to allow this.
+Read more: https://nextjs.org/docs/app/api-reference/config/next-config-js/allowedDevOrigins
+✓ Compiled in 139ms
+✓ Compiled in 113ms
+ GET / 200 in 138ms (compile: 33ms, render: 105ms)
+ GET / 200 in 35ms (compile: 3ms, render: 33ms)
+ GET / 200 in 30ms (compile: 2ms, render: 27ms)
+ GET / 200 in 36ms (compile: 3ms, render: 33ms)
+ GET / 200 in 34ms (compile: 3ms, render: 32ms)
+ GET / 200 in 34ms (compile: 2ms, render: 32ms)
+ GET / 200 in 39ms (compile: 2ms, render: 37ms)
+ GET / 200 in 84ms (compile: 44ms, render: 41ms)
+ GET / 200 in 12ms (compile: 1447µs, render: 11ms)
+ GET / 200 in 17ms (compile: 1872µs, render: 15ms)
+ GET / 200 in 16ms (compile: 2ms, render: 14ms)
+ GET / 200 in 13ms (compile: 1289µs, render: 12ms)
+ GET / 200 in 17ms (compile: 2ms, render: 15ms)
+ GET / 200 in 11ms (compile: 1374µs, render: 10ms)
+ GET / 200 in 15ms (compile: 2ms, render: 13ms)
+ GET / 200 in 69ms (compile: 44ms, render: 25ms)
+ GET / 200 in 29ms (compile: 2ms, render: 27ms)
+ GET / 200 in 12ms (compile: 1560µs, render: 10ms)
+ GET / 200 in 11ms (compile: 1382µs, render: 10ms)
+ GET / 200 in 11ms (compile: 1229µs, render: 10ms)
+ GET / 200 in 11ms (compile: 1305µs, render: 9ms)
+ GET / 200 in 17ms (compile: 1862µs, render: 15ms)
+ GET / 200 in 17ms (compile: 1999µs, render: 15ms)
+ GET / 200 in 13ms (compile: 1978µs, render: 11ms)
+ GET / 200 in 12ms (compile: 1732µs, render: 10ms)
+✓ Compiled in 164ms
+✓ Compiled in 140ms
+✓ Compiled in 145ms
+Entity lookup error: Error [PrismaClientValidationError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findFirst()` invocation in
+/home/z/my-project/.next/dev/server/chunks/[root-of-the-server]__ee030735._.js:83:158
+
+  80     });
+  81 }
+  82 // Try to find by ID first, then by name (case-insensitive)
+→ 83 const entity = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findFirst({
+       where: {
+         OR: [
+           {
+             id: "zeus"
+           },
+           {
+             name: {
+               equals: "zeus",
+               mode: "insensitive"
+             }
+           }
+         ]
+       }
+     })
+
+Unknown argument `mode`. Did you mean `lte`? Available options are marked with ?.
+    at <unknown> (src/app/api/entity/[id]/route.ts:17:36)
+    at async GET (src/app/api/entity/[id]/route.ts:17:20)
+  15 |
+  16 |     // Try to find by ID first, then by name (case-insensitive)
+> 17 |     const entity = await db.entity.findFirst({
+     |                                    ^
+  18 |       where: {
+  19 |         OR: [
+  20 |           { id: id.toLowerCase().replace(/[^a-z0-9_]/g, '') }, {
+  clientVersion: '6.19.2'
+}
+ GET /api/entity/zeus 500 in 1286ms (compile: 1016ms, render: 270ms)
+prisma:query SELECT 1
+Entity lookup error: Error [PrismaClientValidationError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findFirst()` invocation in
+/home/z/my-project/.next/dev/server/chunks/[root-of-the-server]__ee030735._.js:83:158
+
+  80     });
+  81 }
+  82 // Try to find by ID first, then by name (case-insensitive)
+→ 83 const entity = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findFirst({
+       where: {
+         OR: [
+           {
+             id: "zeus"
+           },
+           {
+             name: {
+               equals: "zeus",
+               mode: "insensitive"
+             }
+           }
+         ]
+       }
+     })
+
+Unknown argument `mode`. Did you mean `lte`? Available options are marked with ?.
+    at <unknown> (src/app/api/entity/[id]/route.ts:17:36)
+    at async GET (src/app/api/entity/[id]/route.ts:17:20)
+  15 |
+  16 |     // Try to find by ID first, then by name (case-insensitive)
+> 17 |     const entity = await db.entity.findFirst({
+     |                                    ^
+  18 |       where: {
+  19 |         OR: [
+  20 |           { id: id.toLowerCase().replace(/[^a-z0-9_]/g, '') }, {
+  clientVersion: '6.19.2'
+}
+ GET /api/entity/zeus 500 in 284ms (compile: 33ms, render: 251ms)
+✓ Compiled in 224ms
+ GET /api/entity/zeus 200 in 99ms (compile: 76ms, render: 22ms)
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`id` = ? LIMIT ? OFFSET ?
+prisma:query SELECT 1
+Entities list error: Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany()` invocation in
+/home/z/my-project/.next/dev/server/chunks/[root-of-the-server]__a3b6d63d._.js:109:158
+
+  106     ];
+  107 }
+  108 // Query entities
+→ 109 let entities = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany(
+Inconsistent column data: Could not convert value "18(00)" of the field `str` to type `Int`.
+    at <unknown> (src/app/api/entities/route.ts:35:36)
+    at async GET (src/app/api/entities/route.ts:35:20)
+  33 |
+  34 |     // Query entities
+> 35 |     let entities = await db.entity.findMany({
+     |                                    ^
+  36 |       where,
+  37 |       take: limit,
+  38 |       orderBy: random ? undefined : { name: 'asc' } {
+  code: 'P2023',
+  meta: [Object],
+  clientVersion: '6.19.2'
+}
+ GET /api/entities?category=heroes&limit=5 500 in 409ms (compile: 195ms, render: 214ms)
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`category` = ? ORDER BY `main`.`Entity`.`name` ASC LIMIT ? OFFSET ?
+ GET /api/entity/arthur 200 in 53ms (compile: 40ms, render: 13ms)
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`id` = ? LIMIT ? OFFSET ?
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`category` = ? ORDER BY `main`.`Entity`.`name` ASC LIMIT ? OFFSET ?
+Entities list error: Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany()` invocation in
+/home/z/my-project/.next/dev/server/chunks/[root-of-the-server]__a3b6d63d._.js:109:158
+
+  106     ];
+  107 }
+  108 // Query entities
+→ 109 let entities = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany(
+Inconsistent column data: Could not convert value "18(00)" of the field `str` to type `Int`.
+    at <unknown> (src/app/api/entities/route.ts:35:36)
+    at async GET (src/app/api/entities/route.ts:35:20)
+  33 |
+  34 |     // Query entities
+> 35 |     let entities = await db.entity.findMany({
+     |                                    ^
+  36 |       where,
+  37 |       take: limit,
+  38 |       orderBy: random ? undefined : { name: 'asc' } {
+  code: 'P2023',
+  meta: [Object],
+  clientVersion: '6.19.2'
+}
+ GET /api/entities?category=heroes&limit=5 500 in 204ms (compile: 4ms, render: 201ms)
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`category` = ? ORDER BY `main`.`Entity`.`name` ASC LIMIT ? OFFSET ?
+Entities list error: Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany()` invocation in
+/home/z/my-project/.next/dev/server/chunks/[root-of-the-server]__a3b6d63d._.js:109:158
+
+  106     ];
+  107 }
+  108 // Query entities
+→ 109 let entities = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany(
+Inconsistent column data: Could not convert value "18(00)" of the field `str` to type `Int`.
+    at <unknown> (src/app/api/entities/route.ts:35:36)
+    at async GET (src/app/api/entities/route.ts:35:20)
+  33 |
+  34 |     // Query entities
+> 35 |     let entities = await db.entity.findMany({
+     |                                    ^
+  36 |       where,
+  37 |       take: limit,
+  38 |       orderBy: random ? undefined : { name: 'asc' } {
+  code: 'P2023',
+  meta: [Object],
+  clientVersion: '6.19.2'
+}
+ GET /api/entities?category=heroes&limit=3 500 in 210ms (compile: 3ms, render: 207ms)
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`category` = ? ORDER BY `main`.`Entity`.`name` ASC LIMIT ? OFFSET ?
+Entities list error: Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany()` invocation in
+/home/z/my-project/.next/dev/server/chunks/[root-of-the-server]__a3b6d63d._.js:109:158
+
+  106     ];
+  107 }
+  108 // Query entities
+→ 109 let entities = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany(
+Inconsistent column data: Could not convert value "18(00)" of the field `str` to type `Int`.
+    at <unknown> (src/app/api/entities/route.ts:35:36)
+    at async GET (src/app/api/entities/route.ts:35:20)
+  33 |
+  34 |     // Query entities
+> 35 |     let entities = await db.entity.findMany({
+     |                                    ^
+  36 |       where,
+  37 |       take: limit,
+  38 |       orderBy: random ? undefined : { name: 'asc' } {
+  code: 'P2023',
+  meta: [Object],
+  clientVersion: '6.19.2'
+}
+ GET /api/entities?category=heroes&limit=3 500 in 159ms (compile: 2ms, render: 157ms)
+⨯ ./node_modules/next/dist/client/app-index.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/app-router.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/error-boundary.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/error-boundary.js
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/errors/root-error-boundary.js:12:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/errors/root-error-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/layout-router.js:15:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/layout-router.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/layout-router.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:32:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/lib/console.js:23:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/lib/console.js
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/react-client-callbacks/on-recoverable-error.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/react-client-callbacks/on-recoverable-error.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/app-dev-overlay-error-boundary.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/app-dev-overlay-error-boundary.js
+    ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:23:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/index.js
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/errors/stitched-error.js:35:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/stitched-error.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js:31:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/app-router-context.shared-runtime.js:36:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/app-router-context.shared-runtime.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/format-webpack-messages.js:33:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/format-webpack-messages.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/app-router.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/http-access-fallback/error-boundary.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/http-access-fallback/error-boundary.js
+    ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/layout-router.js:16:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/layout-router.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/layout-router.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/navigation.js:85:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/navigation.js
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/redirect-boundary.js:24:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/render-from-template-context.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/render-from-template-context.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/render-from-template-context.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/use-action-queue.js:23:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/use-action-queue.js
+    ./node_modules/next/dist/client/components/app-router-instance.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.js:24:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.js
+    ./node_modules/next/dist/client/components/navigation.js
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/app-index.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/app-router.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/error-boundary.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/error-boundary.js
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/errors/root-error-boundary.js:12:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/errors/root-error-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/layout-router.js:15:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/layout-router.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/layout-router.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:32:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/lib/console.js:23:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/lib/console.js
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/react-client-callbacks/on-recoverable-error.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/react-client-callbacks/on-recoverable-error.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/app-dev-overlay-error-boundary.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/app-dev-overlay-error-boundary.js
+    ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:23:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/index.js
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/errors/stitched-error.js:35:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/stitched-error.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js:31:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/app-router-context.shared-runtime.js:36:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/app-router-context.shared-runtime.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/format-webpack-messages.js:33:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/format-webpack-messages.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/app-router.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/http-access-fallback/error-boundary.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/http-access-fallback/error-boundary.js
+    ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/layout-router.js:16:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/layout-router.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/layout-router.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/navigation.js:85:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/navigation.js
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/redirect-boundary.js:24:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/render-from-template-context.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/render-from-template-context.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/render-from-template-context.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/use-action-queue.js:23:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/use-action-queue.js
+    ./node_modules/next/dist/client/components/app-router-instance.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.js:24:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.js
+    ./node_modules/next/dist/client/components/navigation.js
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/app-index.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/app-router.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/error-boundary.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/error-boundary.js
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/errors/root-error-boundary.js:12:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/errors/root-error-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/layout-router.js:15:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/layout-router.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/layout-router.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:32:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/lib/console.js:23:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/lib/console.js
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/react-client-callbacks/on-recoverable-error.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/react-client-callbacks/on-recoverable-error.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/app-dev-overlay-error-boundary.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/app-dev-overlay-error-boundary.js
+    ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:23:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/index.js
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/errors/stitched-error.js:35:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/stitched-error.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js:31:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/app-router-context.shared-runtime.js:36:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/app-router-context.shared-runtime.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/format-webpack-messages.js:33:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/format-webpack-messages.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/app-router.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/http-access-fallback/error-boundary.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/http-access-fallback/error-boundary.js
+    ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/layout-router.js:16:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/layout-router.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/layout-router.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/navigation.js:85:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/navigation.js
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/redirect-boundary.js:24:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/render-from-template-context.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/render-from-template-context.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/render-from-template-context.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/client/components/use-action-queue.js:23:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/use-action-queue.js
+    ./node_modules/next/dist/client/components/app-router-instance.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⨯ ./node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.js:24:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.js
+    ./node_modules/next/dist/client/components/navigation.js
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+✓ Compiled in 333ms
+⨯ ./node_modules/next/dist/client/app-index.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/app-router.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/error-boundary.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/error-boundary.js
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/errors/root-error-boundary.js:12:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/errors/root-error-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/layout-router.js:15:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/layout-router.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/layout-router.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:32:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/lib/console.js:23:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/lib/console.js
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/react-client-callbacks/on-recoverable-error.js:24:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/react-client-callbacks/on-recoverable-error.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/next-devtools/userspace/app/app-dev-overlay-error-boundary.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/app-dev-overlay-error-boundary.js
+    ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/next-devtools/userspace/app/client-entry.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/client-entry.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:23:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/index.js
+    ./node_modules/next/dist/client/react-client-callbacks/error-boundary-callbacks.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/next-devtools/userspace/app/errors/stitched-error.js:35:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/stitched-error.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js:31:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/next-devtools/userspace/app/errors/use-error-handler.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/shared/lib/app-router-context.shared-runtime.js:36:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/app-router-context.shared-runtime.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/shared/lib/format-webpack-messages.js:33:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/format-webpack-messages.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js
+    ./node_modules/next/dist/client/dev/hot-reloader/app/web-socket.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js:11:34
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_default'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_default' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/head-manager-context.shared-runtime.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/app-router.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/http-access-fallback/error-boundary.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/http-access-fallback/error-boundary.js
+    ./node_modules/next/dist/client/components/dev-root-http-access-fallback-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/layout-router.js:16:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/layout-router.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/layout-router.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/navigation.js:85:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/navigation.js
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/redirect-boundary.js:24:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/render-from-template-context.js:12:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/render-from-template-context.js [Client Component Browser]
+    ./node_modules/next/dist/esm/client/components/render-from-template-context.js [Server Component]
+    ./node_modules/next/dist/esm/server/app-render/entry-base.js [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/client/components/use-action-queue.js:23:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/client/components/use-action-queue.js
+    ./node_modules/next/dist/client/components/app-router-instance.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.js:24:35
+Module not found: Can't resolve '@swc/helpers/_/_interop_require_wildcard'
+Import map: aliased to module '@swc/helpers' with subpath '/_/_interop_require_wildcard' inside of [project]/node_modules/next
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/next/dist/shared/lib/server-inserted-html.shared-runtime.js
+    ./node_modules/next/dist/client/components/navigation.js
+    ./node_modules/next/dist/client/components/redirect-boundary.js
+    ./node_modules/next/dist/client/components/app-router.js
+    ./node_modules/next/dist/client/app-index.js
+    ./node_modules/next/dist/client/app-next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+⚠ Fast Refresh had to perform a full reload when [turbopack]/browser/dev/hmr-client/hmr-client.ts changed. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+✓ Compiled in 769ms
+ GET / 200 in 324ms (compile: 109ms, render: 215ms)
+ GET / 200 in 27ms (compile: 6ms, render: 22ms)
+ GET / 500 in 1434ms (compile: 1236ms, render: 197ms)
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`category` = ? ORDER BY `main`.`Entity`.`name` ASC LIMIT ? OFFSET ?
+ GET /api/entities?category=heroes&limit=2 200 in 22ms (compile: 4ms, render: 18ms)
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`id` = ? LIMIT ? OFFSET ?
+ GET /api/entity/zeus 200 in 72ms (compile: 55ms, render: 18ms)
+ GET / 200 in 44ms (compile: 4ms, render: 40ms)
+ GET / 200 in 36ms (compile: 3ms, render: 33ms)
+ GET / 200 in 34ms (compile: 2ms, render: 31ms)
+ GET / 200 in 32ms (compile: 3ms, render: 29ms)
+✓ Compiled in 173ms
+ GET / 200 in 199ms (compile: 57ms, render: 142ms)
+ GET / 200 in 72ms (compile: 2ms, render: 70ms)
+ GET / 200 in 31ms (compile: 3ms, render: 28ms)
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`category` = ? ORDER BY `main`.`Entity`.`name` ASC LIMIT ? OFFSET ?
+Entities list error: Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany()` invocation in
+/home/z/my-project/.next/dev/server/chunks/[root-of-the-server]__a3b6d63d._.js:109:158
+
+  106     ];
+  107 }
+  108 // Query entities
+→ 109 let entities = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany(
+Inconsistent column data: Could not convert value "18(00)" of the field `str` to type `Int`.
+    at <unknown> (src/app/api/entities/route.ts:35:36)
+    at async GET (src/app/api/entities/route.ts:35:20)
+  33 |
+  34 |     // Query entities
+> 35 |     let entities = await db.entity.findMany({
+     |                                    ^
+  36 |       where,
+  37 |       take: limit,
+  38 |       orderBy: random ? undefined : { name: 'asc' } {
+  code: 'P2023',
+  meta: [Object],
+  clientVersion: '6.19.2'
+}
+ GET /api/entities?category=heroes&limit=3 500 in 185ms (compile: 2ms, render: 183ms)
+prisma:query SELECT 1
+prisma:query SELECT `main`.`Entity`.`id`, `main`.`Entity`.`name`, `main`.`Entity`.`title`, `main`.`Entity`.`pantheon`, `main`.`Entity`.`category`, `main`.`Entity`.`type`, `main`.`Entity`.`hp`, `main`.`Entity`.`maxHp`, `main`.`Entity`.`AC`, `main`.`Entity`.`MR`, `main`.`Entity`.`move`, `main`.`Entity`.`attacks`, `main`.`Entity`.`damage`, `main`.`Entity`.`specialAttacks`, `main`.`Entity`.`specialDefenses`, `main`.`Entity`.`str`, `main`.`Entity`.`int`, `main`.`Entity`.`wis`, `main`.`Entity`.`dex`, `main`.`Entity`.`con`, `main`.`Entity`.`cha`, `main`.`Entity`.`level`, `main`.`Entity`.`clericLevel`, `main`.`Entity`.`fighterLevel`, `main`.`Entity`.`magicUserLevel`, `main`.`Entity`.`thiefLevel`, `main`.`Entity`.`druidLevel`, `main`.`Entity`.`monkLevel`, `main`.`Entity`.`align`, `main`.`Entity`.`plane`, `main`.`Entity`.`symbol`, `main`.`Entity`.`worshiperAlign`, `main`.`Entity`.`psionic`, `main`.`Entity`.`abilities`, `main`.`Entity`.`equipment`, `main`.`Entity`.`spells`, `main`.`Entity`.`personality`, `main`.`Entity`.`description`, `main`.`Entity`.`conditions`, `main`.`Entity`.`dead`, `main`.`Entity`.`inventory`, `main`.`Entity`.`createdAt`, `main`.`Entity`.`updatedAt` FROM `main`.`Entity` WHERE `main`.`Entity`.`category` = ? ORDER BY `main`.`Entity`.`name` ASC LIMIT ? OFFSET ?
+Entities list error: Error [PrismaClientKnownRequestError]: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany()` invocation in
+/home/z/my-project/.next/dev/server/chunks/[root-of-the-server]__a3b6d63d._.js:109:158
+
+  106     ];
+  107 }
+  108 // Query entities
+→ 109 let entities = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$db$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["db"].entity.findMany(
+Inconsistent column data: Could not convert value "18(00)" of the field `str` to type `Int`.
+    at <unknown> (src/app/api/entities/route.ts:35:36)
+    at async GET (src/app/api/entities/route.ts:35:20)
+  33 |
+  34 |     // Query entities
+> 35 |     let entities = await db.entity.findMany({
+     |                                    ^
+  36 |       where,
+  37 |       take: limit,
+  38 |       orderBy: random ? undefined : { name: 'asc' } {
+  code: 'P2023',
+  meta: [Object],
+  clientVersion: '6.19.2'
+}
+ GET /api/entities?category=heroes&limit=3 500 in 187ms (compile: 2ms, render: 185ms)
+error: script "dev" was terminated by signal SIGTERM (Polite quit request)
+[?25h
+==========================================
+[2026-03-27 12:36:33] Starting: bun install
+==========================================
+[BUN] Installing dependencies...
+[0.10ms] ".env"
+bun install v1.3.10 (30e609e0)
+Resolving dependencies
+Resolved, downloaded and extracted [24]
+Saved lockfile
+
++ @types/ws@8.18.1
+
+1 package installed [219.00ms]
+==========================================
+[2026-03-27 12:36:33] Completed: bun install
+[LOG] Step: bun install | Duration: 0s
+==========================================
+
+==========================================
+[2026-03-27 12:36:33] Starting: bun run db:push
+==========================================
+[BUN] Setting up database...
+$ prisma db push
+Environment variables loaded from .env
+Prisma schema loaded from prisma/schema.prisma
+Error: Prisma schema validation - (get-config wasm)
+Error code: P1012
+error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
+  -->  prisma/schema.prisma:9
+   | 
+ 8 |   provider = "postgresql"
+ 9 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+[Context: getConfig]
+
+Prisma CLI Version : 6.19.2
+error: script "db:push" exited with code 1

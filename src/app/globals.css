@@ -1,0 +1,359 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-almendra);
+  --font-mono: var(--font-geist-mono);
+  --font-title: var(--font-cinzel);
+  --font-name: var(--font-uncial);
+  --font-narrative: var(--font-almendra);
+  --font-gothic: var(--font-grenze);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.625rem;
+  
+  /* Dark fantasy background */
+  --background: #0d0d12;
+  --foreground: #e8e4dc;
+  
+  /* LIGHTER cards for readability */
+  --card: #1a1a24;
+  --card-foreground: #f0ebe3;
+  
+  --popover: #12121a;
+  --popover-foreground: #f0ebe3;
+  
+  /* Gold primary */
+  --primary: #c9a227;
+  --primary-foreground: #0d0d12;
+  
+  /* Deep purple secondary */
+  --secondary: #2a2a3a;
+  --secondary-foreground: #e8e4dc;
+  
+  /* Muted tones */
+  --muted: #1e1e2a;
+  --muted-foreground: #9a9a9a;
+  
+  /* Bronze accent */
+  --accent: #8b6914;
+  --accent-foreground: #f0ebe3;
+  
+  --destructive: #8b2635;
+  --border: #3a3a4a;
+  --input: #1e1e2a;
+  --ring: #c9a227;
+  
+  --chart-1: #c9a227;
+  --chart-2: #6b8e23;
+  --chart-3: #8b4513;
+  --chart-4: #8b6914;
+  --chart-5: #a0522d;
+  
+  --sidebar: #0f0f16;
+  --sidebar-foreground: #e8e4dc;
+  --sidebar-primary: #c9a227;
+  --sidebar-primary-foreground: #0d0d12;
+  --sidebar-accent: #2a2a3a;
+  --sidebar-accent-foreground: #e8e4dc;
+  --sidebar-border: #2a2a3a;
+  --sidebar-ring: #c9a227;
+  
+  /* Fantasy gold accent */
+  --gold: #d4af37;
+  --gold-glow: rgba(212, 175, 55, 0.4);
+  --bronze: #8b6914;
+  --parchment: #d4c4a8;
+}
+
+.dark {
+  --background: #0d0d12;
+  --foreground: #e8e4dc;
+  --card: #1a1a24;
+  --card-foreground: #f0ebe3;
+  --popover: #12121a;
+  --popover-foreground: #f0ebe3;
+  --primary: #c9a227;
+  --primary-foreground: #0d0d12;
+  --secondary: #2a2a3a;
+  --secondary-foreground: #e8e4dc;
+  --muted: #1e1e2a;
+  --muted-foreground: #9a9a9a;
+  --accent: #8b6914;
+  --accent-foreground: #f0ebe3;
+  --destructive: #8b2635;
+  --border: #3a3a4a;
+  --input: #1e1e2a;
+  --ring: #c9a227;
+  --sidebar: #0f0f16;
+  --sidebar-foreground: #e8e4dc;
+  --sidebar-primary: #c9a227;
+  --sidebar-primary-foreground: #0d0d12;
+  --sidebar-accent: #2a2a3a;
+  --sidebar-accent-foreground: #e8e4dc;
+  --sidebar-border: #2a2a3a;
+  --sidebar-ring: #c9a227;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-almendra), Georgia, serif;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-cinzel), serif;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FANTASY FONT CLASSES - 4 FONTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* FONT 1: Cinzel Decorative - Elegant Medieval for TITLES & HEADERS */
+.font-title {
+  font-family: var(--font-cinzel), "Times New Roman", serif;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+/* FONT 2: Uncial Antiqua - Celtic Calligraphic for NAMES & LABELS */
+.font-name {
+  font-family: var(--font-uncial), cursive;
+  letter-spacing: 0.05em;
+}
+
+/* FONT 3: Almendra - Classic Fantasy Book for NARRATIVE & BODY TEXT */
+.font-narrative {
+  font-family: var(--font-almendra), Georgia, serif;
+  line-height: 1.8;
+}
+
+/* FONT 4: Grenze Gotisch - Gothic Blackletter for DRAMATIC & WARNING TEXT */
+.font-gothic {
+  font-family: var(--font-grenze), "Times New Roman", serif;
+  letter-spacing: 0.02em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD STYLING - READABLE
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Override shadcn card for readability */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  color: var(--card-foreground);
+}
+
+/* Hero/Character cards */
+.hero-card {
+  background: linear-gradient(145deg, #1e1e2a 0%, #16161e 100%);
+  border: 2px solid #3a3a4a;
+  border-radius: 8px;
+  color: #f0ebe3;
+  padding: 1rem;
+}
+
+.hero-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+}
+
+.hero-card .name {
+  font-family: var(--font-uncial), cursive;
+  color: var(--gold);
+  font-size: 1.4rem;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+}
+
+.hero-card .pantheon {
+  font-family: var(--font-cinzel), serif;
+  color: #9a9a9a;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.hero-card .abilities {
+  font-family: var(--font-almendra), serif;
+  color: #d4c4a8;
+  font-size: 0.9rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FANTASY STYLING UTILITIES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.text-gold {
+  color: var(--gold);
+}
+
+.text-bronze {
+  color: var(--bronze);
+}
+
+.text-parchment {
+  color: var(--parchment);
+}
+
+.text-shadow-gold {
+  text-shadow: 0 0 10px var(--gold-glow), 0 0 20px rgba(180, 150, 80, 0.3);
+}
+
+.text-shadow-dark {
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.parchment-bg {
+  background: linear-gradient(135deg, 
+    #2a2a3a 0%, 
+    #1e1e2a 50%, 
+    #16161e 100%);
+  border: 1px solid #3a3a4a;
+}
+
+.scroll-border {
+  border: 2px solid var(--gold);
+  box-shadow: 
+    inset 0 0 20px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(180, 150, 80, 0.2);
+}
+
+/* Animated glow for important elements */
+@keyframes fantasy-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--gold), 0 0 10px rgba(180, 150, 80, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px var(--gold), 0 0 30px rgba(180, 150, 80, 0.5);
+  }
+}
+
+.animate-glow {
+  animation: fantasy-glow 2s ease-in-out infinite;
+}
+
+/* Decorative divider */
+.fantasy-divider {
+  height: 2px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--gold) 20%, 
+    var(--gold) 80%, 
+    transparent 100%);
+  opacity: 0.6;
+}
+
+/* Section headers */
+.fantasy-header {
+  font-family: var(--font-cinzel), serif;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(180, 150, 80, 0.4);
+}
+
+/* Character name styling */
+.character-name {
+  font-family: var(--font-uncial), cursive;
+  color: var(--gold);
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Narrative text */
+.narrative-text {
+  font-family: var(--font-almendra), serif;
+  line-height: 1.8;
+  font-size: 1.1rem;
+  color: #e8e4dc;
+}
+
+/* Warning/Dramatic text */
+.dramatic-text {
+  font-family: var(--font-grenze), serif;
+  color: #c45c3a;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUTTON STYLING
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.btn-fantasy {
+  font-family: var(--font-cinzel), serif;
+  background: linear-gradient(145deg, #2a2a3a, #1e1e2a);
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: all 0.3s ease;
+}
+
+.btn-fantasy:hover {
+  background: linear-gradient(145deg, #3a3a4a, #2a2a3a);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBAR STYLING
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d0d12;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3a3a4a;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
+}
