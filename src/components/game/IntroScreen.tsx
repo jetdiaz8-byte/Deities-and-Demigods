@@ -10,8 +10,6 @@ import { BookOpen, Users, Package, ScrollText, Save, Upload } from 'lucide-react
 export interface IntroScreenProps {
   geminiKey: string
   setGeminiKey: (key: string) => void
-  groqKey: string
-  setGroqKey: (key: string) => void
   startNewCampaign: () => void
   saveSlots: { id: string; name: string; timestamp: number; turn: number; act: string; partyNames: string[] }[]
   setShowLoadDialog: (open: boolean) => void
@@ -19,7 +17,6 @@ export interface IntroScreenProps {
 
 export function IntroScreen({
   geminiKey, setGeminiKey,
-  groqKey, setGroqKey,
   startNewCampaign,
   saveSlots,
   setShowLoadDialog,
@@ -71,29 +68,17 @@ export function IntroScreen({
               <span className="text-[#9a8860] text-xs uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Cinzel, serif' }}>Gemini 2.5 Key</span>
               <Input
                 type="password"
-                placeholder="AIza... — aistudio.google.com (DM)"
+                placeholder="AIza... — aistudio.google.com"
                 value={geminiKey}
                 onChange={e => setGeminiKey(e.target.value)}
                 className="flex-1 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30]"
               />
-              <Badge className="bg-[#0a2820] text-[#40c0a0] border-[#208060]">DM</Badge>
-            </div>
-
-            <div className="flex gap-3 items-center">
-              <span className="text-[#9a8860] text-xs uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Cinzel, serif' }}>Groq Key</span>
-              <Input
-                type="password"
-                placeholder="gsk_... — free at console.groq.com"
-                value={groqKey}
-                onChange={e => setGroqKey(e.target.value)}
-                className="flex-1 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30]"
-              />
-              <Badge className="bg-[#1a2d3d] text-[#5a9fd4] border-[#2a4f6a]">PC</Badge>
+              <Badge className="bg-[#0a2820] text-[#40c0a0] border-[#208060]">AI</Badge>
             </div>
           </div>
 
           <p className="text-[#5a4d30] text-xs text-center mt-4 italic">
-            Keys auto-save to browser memory · Direct browser calls
+            Key auto-saves to browser memory · Direct browser calls to Gemini
           </p>
           
           {/* Help Link */}

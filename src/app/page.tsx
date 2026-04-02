@@ -28,7 +28,6 @@ export default function MythworldEngine() {
   const {
     gameState, setGameState,
     geminiKey, setGeminiKey,
-    groqKey, setGroqKey,
     gamePhase, setGamePhase,
     availableHeroes,
     selectedParty, setSelectedParty,
@@ -91,8 +90,6 @@ export default function MythworldEngine() {
       <IntroScreen
         geminiKey={geminiKey}
         setGeminiKey={setGeminiKey}
-        groqKey={groqKey}
-        setGroqKey={setGroqKey}
         startNewCampaign={startNewCampaign}
         saveSlots={saveSlots}
         setShowLoadDialog={setShowLoadDialog}
@@ -261,11 +258,6 @@ export default function MythworldEngine() {
           <div className="flex items-center gap-1">
             <div className={`w-2 h-2 rounded-full ${geminiKey ? 'bg-[#40c080]' : 'bg-[#804040]'}`} />
             <span className="text-[10px] text-[#5a4d30]">Gem2.5</span>
-          </div>
-          <span className="text-[10px] text-[#5a4d30]">|</span>
-          <div className="flex items-center gap-1">
-            <div className={`w-2 h-2 rounded-full ${groqKey ? 'bg-[#40c080]' : 'bg-[#804040]'}`} />
-            <span className="text-[10px] text-[#5a4d30]">Groq</span>
           </div>
 
           {/* Inventory Button */}
