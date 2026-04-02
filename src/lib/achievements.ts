@@ -339,6 +339,180 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
     category: 'special',
     hidden: true,
   },
+  {
+    id: 'perfectionist',
+    name: 'Completionist',
+    description: 'Complete every quest in a single campaign — no task left undone.',
+    icon: '📋',
+    tier: 'legendary',
+    category: 'special',
+    hidden: true,
+  },
+
+  // ═══ DIVINE & FATE ═══
+  {
+    id: 'prophecy_fulfilled',
+    name: 'The Oracle Speaks True',
+    description: 'Witness a prophecy come to fulfillment.',
+    icon: '🔮',
+    tier: 'silver',
+    category: 'special',
+    hidden: false,
+  },
+  {
+    id: 'prophecy_broken',
+    name: 'Fate Undone',
+    description: 'A prophecy shatters — destiny is not yet written.',
+    icon: '💔',
+    tier: 'gold',
+    category: 'special',
+    hidden: true,
+  },
+  {
+    id: 'test_of_faith_veteran',
+    name: 'Tempted Three Times',
+    description: 'Face 3 or more Tests of Faith in a single campaign.',
+    icon: '🎪',
+    tier: 'gold',
+    category: 'shard',
+    hidden: true,
+  },
+  {
+    id: 'murphys_law',
+    name: "Murphy's Law",
+    description: 'Experience the worst outcome of a Test of Faith. The gods are cruel.',
+    icon: '🤡',
+    tier: 'bronze',
+    category: 'shard',
+    hidden: true,
+  },
+  {
+    id: 'fate_trusted',
+    name: 'Trust in the Unknown',
+    description: 'Choose "Trust Fate" during a Test of Faith — surrendering control.',
+    icon: '🎲',
+    tier: 'silver',
+    category: 'shard',
+    hidden: true,
+  },
+
+  // ═══ WEALTH & POWER ═══
+  {
+    id: 'midas_touch',
+    name: "Midas' Touch",
+    description: 'Accumulate 5000 or more gold in your treasury.',
+    icon: '💰',
+    tier: 'gold',
+    category: 'special',
+    hidden: true,
+  },
+  {
+    id: 'dragon_hoard',
+    name: 'Smaug\'s Jealousy',
+    description: 'Accumulate 10000 or more gold — a hoard fit for a dragon.',
+    icon: '🐲',
+    tier: 'legendary',
+    category: 'special',
+    hidden: true,
+  },
+
+  // ═══ DAMAGE MILESTONES ═══
+  {
+    id: 'wrath_of_gods',
+    name: 'Wrath of the Gods',
+    description: 'Deal 500 or more total damage to enemies throughout the campaign.',
+    icon: '⚡',
+    tier: 'silver',
+    category: 'combat',
+    hidden: false,
+  },
+  {
+    id: 'annihilator',
+    name: 'Annihilator',
+    description: 'Deal 1500 or more total damage — a one-person apocalypse.',
+    icon: '☄️',
+    tier: 'gold',
+    category: 'combat',
+    hidden: true,
+  },
+  {
+    id: 'battered_survivor',
+    name: 'Battered but Unbroken',
+    description: 'Survive receiving 300 or more total damage across the campaign.',
+    icon: '🩸',
+    tier: 'silver',
+    category: 'survival',
+    hidden: false,
+  },
+  {
+    id: 'iron_constitution',
+    name: 'Iron Constitution',
+    description: 'Survive receiving 800 or more total damage and still stand.',
+    icon: '🛡️',
+    tier: 'gold',
+    category: 'survival',
+    hidden: true,
+  },
+
+  // ═══ SPEED & EFFICIENCY ═══
+  {
+    id: 'speedrunner',
+    name: 'Swift Justice',
+    description: 'Defeat the antagonist in under 40 turns — speed and precision.',
+    icon: '⏱️',
+    tier: 'gold',
+    category: 'story',
+    hidden: true,
+  },
+  {
+    id: 'marathon',
+    name: 'The Long Road',
+    description: 'Survive 150 turns in a single campaign.',
+    tier: 'legendary',
+    category: 'survival',
+    icon: '🗺️',
+    hidden: true,
+  },
+
+  // ═══ INJURY ACHIEVEMENTS ═══
+  {
+    id: 'walking_wounded',
+    name: 'Walking Wounded',
+    description: 'Have party members suffering from 4 different injury categories simultaneously.',
+    icon: '🤕',
+    tier: 'silver',
+    category: 'survival',
+    hidden: true,
+  },
+  {
+    id: 'ten_injuries',
+    name: 'Scarred Veterans',
+    description: 'Accumulate 10 or more active injuries across the party at once.',
+    icon: '🩹',
+    tier: 'gold',
+    category: 'survival',
+    hidden: true,
+  },
+
+  // ═══ SHARD MASTERY ═══
+  {
+    id: 'shard_double_summon',
+    name: 'Double Summoning',
+    description: 'Use both shard charges in a single campaign.',
+    icon: '✨',
+    tier: 'silver',
+    category: 'shard',
+    hidden: false,
+  },
+  {
+    id: 'shard_healed',
+    name: 'Shard Reborn',
+    description: 'The shard regains a charge after going dark — a second chance.',
+    icon: '🌟',
+    tier: 'gold',
+    category: 'shard',
+    hidden: true,
+  },
 ]
 
 // ── TIER COLORS & CONFIG ───────────────────────────────────────────────
@@ -379,6 +553,10 @@ export interface AchievementTracker {
     totalDamageDealt: number
     totalDamageReceived: number
     deaths: number
+    wasShardDark: boolean
+    maxGold: number
+    maxPartySize: number
+    prophecyStates: Set<string>   // tracks which prophecy states we've seen
   }
 }
 
@@ -391,7 +569,7 @@ export function createAchievementTracker(): AchievementTracker {
     records,
     newUnlocks: [],
     prevTurnState: { injuriesCount: 0, npcCount: 0, damageDealt: false, act: 'act1' },
-    counters: { turnsWithoutInjury: 0, totalDamageDealt: 0, totalDamageReceived: 0, deaths: 0 },
+    counters: { turnsWithoutInjury: 0, totalDamageDealt: 0, totalDamageReceived: 0, deaths: 0, wasShardDark: false, maxGold: 0, maxPartySize: 0, prophecyStates: new Set() },
   }
 }
 
@@ -481,14 +659,18 @@ export function checkAchievements(
   if (gs.shardSummoned.length > 0) tryUnlock('shard_first_invoke')
   if (gs.shardDark) tryUnlock('shard_dark')
 
-  // Greater god summoned via shard
+  // Greater god summoned via shard — check if any summon name matches known greater god patterns
   if (gs.shardSummoned.length > 0) {
-    // Check if any summoned entity was a greater god (tracked in summon names)
-    tryUnlock('shard_greater_summoned') // simplified; game engine can fire this explicitly
+    const greaterPatterns = /(?:zeus|odin|thor|ra|shiva|vishnu|brahma|cronus|atum|heracles|thoth|anu|enlil|marduk|quetzalcoatl|huitzilopochtli|loki|fistandantilus|paladine|takhisis)/i
+    const hasGreater = gs.shardSummoned.some(s => greaterPatterns.test(s))
+    if (hasGreater) tryUnlock('shard_greater_summoned')
   }
 
   // Test of faith miracle
   if (gs.testOfFaithContext?.outcome === 'miracle') tryUnlock('test_of_faith_miracle')
+  if (gs.testOfFaithContext?.outcome === 'murphy') tryUnlock('murphys_law')
+  if (gs.testOfFaithContext?.choice === 'trust_fate') tryUnlock('fate_trusted')
+  if (gs.totalTestOfFaith >= 3) tryUnlock('test_of_faith_veteran')
 
   // ── SURVIVAL ────────────────────────────────────────────────────────
   if (turn >= 50) tryUnlock('survive_50_turns')
@@ -520,6 +702,76 @@ export function checkAchievements(
   if (gs.antagonistCluesRevealed.length >= 3) tryUnlock('clue_master')
   if (gs.antagonistCluesRevealed.length >= 6) tryUnlock('all_clues')
 
+  // Quest perfectionist
+  const completedQuests = gs.quests.filter(q => q.status === 'completed').length
+  const totalQuests = gs.quests.length
+  if (totalQuests >= 3 && completedQuests === totalQuests) tryUnlock('perfectionist')
+
+  // Prophecy states
+  for (const p of gs.prophecies) {
+    if (p.state === 'fulfilled') {
+      const key = `${p.name || p.id}_fulfilled`
+      if (!tracker.counters.prophecyStates.has(key)) {
+        tracker.counters.prophecyStates.add(key)
+        tryUnlock('prophecy_fulfilled')
+      }
+    }
+    if (p.state === 'broken') {
+      const key = `${p.name || p.id}_broken`
+      if (!tracker.counters.prophecyStates.has(key)) {
+        tracker.counters.prophecyStates.add(key)
+        tryUnlock('prophecy_broken')
+      }
+    }
+  }
+
+  // Gold milestones
+  if (gs.partyGold > tracker.counters.maxGold) tracker.counters.maxGold = gs.partyGold
+  if (gs.partyGold >= 5000) tryUnlock('midas_touch')
+  if (gs.partyGold >= 10000) tryUnlock('dragon_hoard')
+
+  // Damage milestones — track from state diffs
+  if (prevGs) {
+    // Count damage dealt this turn from antagonist HP changes
+    const antHpDrop = prevGs.antagonistMaxHp > 0 ? Math.max(0, prevGs.antagonistHp - gs.antagonistHp) : 0
+    if (antHpDrop > 0) tracker.counters.totalDamageDealt += antHpDrop
+  }
+  if (tracker.counters.totalDamageDealt >= 500) tryUnlock('wrath_of_gods')
+  if (tracker.counters.totalDamageDealt >= 1500) tryUnlock('annihilator')
+
+  // Damage received — sum of max HP minus current HP across living PCs
+  const damageReceived = gs.pcs
+    .filter(p => !p.dead)
+    .reduce((sum, p) => sum + Math.max(0, p.maxHp - p.hp), 0)
+  tracker.counters.totalDamageReceived = Math.max(tracker.counters.totalDamageReceived, damageReceived)
+  if (tracker.counters.totalDamageReceived >= 300) tryUnlock('battered_survivor')
+  if (tracker.counters.totalDamageReceived >= 800) tryUnlock('iron_constitution')
+
+  // Speedrun — win under 40 turns
+  if (gs.ended && gs.antagonistHp <= 0 && gs.turn <= 40) tryUnlock('speedrunner')
+
+  // Marathon — 150 turns
+  if (turn >= 150) tryUnlock('marathon')
+
+  // Injury diversity — track unique injury categories
+  const injuryCategories = new Set<string>()
+  for (const [, injuries] of Object.entries(gs.injuries)) {
+    for (const inj of injuries) {
+      injuryCategories.add(inj.category || inj.type || 'unknown')
+    }
+  }
+  if (injuryCategories.size >= 4) tryUnlock('walking_wounded')
+  const totalActiveInjuries = Object.values(gs.injuries).flat().length
+  if (totalActiveInjuries >= 10) tryUnlock('ten_injuries')
+
+  // Shard mastery
+  if (gs.shardSummoned.length >= 2) tryUnlock('shard_double_summon')
+  if (tracker.counters.wasShardDark && gs.shardCharges > 0) tryUnlock('shard_healed')
+  if (gs.shardDark && !tracker.counters.wasShardDark) tracker.counters.wasShardDark = true
+
+  // Max party size tracking
+  if (livingPCs.length > tracker.counters.maxPartySize) tracker.counters.maxPartySize = livingPCs.length
+
   // Store prev state for next comparison
   tracker.prevTurnState = {
     injuriesCount: currentInjuries,
@@ -543,6 +795,41 @@ export function getUnlockedCount(tracker: AchievementTracker): number {
 
 export function getTotalCount(): number {
   return ACHIEVEMENT_DEFS.length
+}
+
+export function serializeTracker(tracker: AchievementTracker): string {
+  return JSON.stringify({
+    records: tracker.records,
+    prevTurnState: tracker.prevTurnState,
+    counters: {
+      ...tracker.counters,
+      prophecyStates: [...tracker.counters.prophecyStates],
+    },
+    newUnlocks: [], // Don't persist the notification queue
+  })
+}
+
+export function deserializeTracker(json: string): AchievementTracker | null {
+  try {
+    const data = JSON.parse(json)
+    return {
+      records: data.records || {},
+      newUnlocks: [],
+      prevTurnState: data.prevTurnState || { injuriesCount: 0, npcCount: 0, damageDealt: false, act: 'act1' },
+      counters: {
+        turnsWithoutInjury: data.counters?.turnsWithoutInjury || 0,
+        totalDamageDealt: data.counters?.totalDamageDealt || 0,
+        totalDamageReceived: data.counters?.totalDamageReceived || 0,
+        deaths: data.counters?.deaths || 0,
+        wasShardDark: data.counters?.wasShardDark || false,
+        maxGold: data.counters?.maxGold || 0,
+        maxPartySize: data.counters?.maxPartySize || 0,
+        prophecyStates: new Set(data.counters?.prophecyStates || []),
+      },
+    }
+  } catch {
+    return null
+  }
 }
 
 export function getAchievementsByCategory(category: AchievementCategory): AchievementDef[] {

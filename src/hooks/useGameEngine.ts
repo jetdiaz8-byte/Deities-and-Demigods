@@ -22,6 +22,11 @@ import {
   checkAchievements,
   getUnlockedCount,
   getTotalCount,
+  serializeTracker,
+  deserializeTracker,
+  getAchievementDef,
+  ACHIEVEMENT_DEFS,
+  TIER_CONFIG,
   type AchievementTracker,
 } from '@/lib/achievements'
 
@@ -201,7 +206,8 @@ export function useGameEngine() {
       timestamp: Date.now(),
       gameState,
       conversationHistory: conversationHistory.slice(-20),
-      ttsSettings: { enabled: ttsEnabled, voice: ttsVoice, speed: ttsSpeed }
+      ttsSettings: { enabled: ttsEnabled, voice: ttsVoice, speed: ttsSpeed },
+      achievementTracker: serializeTracker(achievementTrackerRef.current),
     }
     localStorage.setItem(`mythworld_save_${slotNum}`, JSON.stringify(saveData))
     loadSaveSlots()
@@ -228,6 +234,18 @@ export function useGameEngine() {
           setTtsEnabled(parsed.ttsSettings.enabled)
           setTtsVoice(parsed.ttsSettings.voice)
           setTtsSpeed(parsed.ttsSettings.speed)
+        }
+        // Restore achievement tracker
+        if (parsed.achievementTracker) {
+          const restored = deserializeTracker(parsed.achievementTracker)
+          if (restored) {
+            achievementTrackerRef.current = restored
+            // Re-emit any unlocks so notification queue shows them
+            const unlockedIds = Object.values(restored.records)
+              .filter(r => r.unlocked)
+              .map(r => r.id)
+            setAchievementUnlocks(prev => [...prev, ...unlockedIds.map(id => ({ id, turn: restored.records[id]?.unlockedAt || 0 }))])
+          }
         }
         toast({ title: 'Game Loaded', description: 'Campaign restored successfully' })
       } catch {
@@ -2694,6 +2712,24 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
     const shard = gs.shardEntry
     const living = gs.pcs.filter(p => !p.dead)
 
+    // Build achievement summary
+    const tracker = achievementTrackerRef.current
+    const unlockedCount = getUnlockedCount(tracker)
+    const totalCount = getTotalCount()
+    const unlockedDefs = ACHIEVEMENT_DEFS.filter(d => tracker.records[d.id]?.unlocked)
+      .sort((a, b) => (TIER_CONFIG[b.tier] ? 0 : 1) - (TIER_CONFIG[a.tier] ? 0 : 1))
+    const achievementCards = unlockedDefs.length > 0
+      ? unlockedDefs.slice(0, 12).map(def => {
+          const tier = TIER_CONFIG[def.tier]
+          return `<div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:6px;border:1px solid ${tier.border};background:${tier.bg};margin:3px">
+            <span style="font-size:16px">${def.icon}</span>
+            <span style="font-size:11px;font-weight:700;color:${tier.color};font-family:Cinzel,serif">${def.name}</span>
+          </div>`
+        }).join('')
+      : '<div style="color:#5a4d30;font-size:12px;padding:8px 0">No achievements unlocked this campaign.</div>'
+    const moreCount = unlockedDefs.length - 12
+    const moreText = moreCount > 0 ? `<div style="color:#8a7040;font-size:11px;margin-top:4px">+ ${moreCount} more achievement${moreCount > 1 ? 's' : ''}</div>` : ''
+
     const html = `<div style="text-align:center;padding:2.5rem;margin:1.5rem 0;border:2px solid ${victory ? '#5a4018' : '#8b0000'};background:${victory ? 'rgba(60,40,0,.15)' : 'rgba(60,0,0,.15)'};border-radius:6px">
       <div style="font-family:Cinzel Decorative,serif;font-size:1.3rem;color:${victory ? '#f0c860' : '#cc2020'};letter-spacing:.13em;margin-bottom:.8rem">
         ${victory ? `${ant?.name || 'THE FOE'} IS DEFEATED` : 'THE LAST CHAMPION FALLS'}
@@ -2706,6 +2742,16 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
       <div style="margin-top:.8rem;font-size:.7rem;color:#5a4d30">
         ${gs.turn} turns · ${gs.npcHistory.length} gods encountered · ${gs.pcs.filter(p => p.dead).length} fallen
       </div>
+      ${unlockedDefs.length > 0 ? `
+      <div style="margin-top:1.2rem;padding-top:1rem;border-top:1px solid #2e2008">
+        <div style="font-family:Cinzel,serif;font-size:.85rem;color:#d4af37;letter-spacing:.1em;margin-bottom:.6rem">
+          🏆 ACHIEVEMENTS UNLOCKED · ${unlockedCount}/${totalCount}
+        </div>
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;max-width:600px;margin:0 auto">
+          ${achievementCards}
+        </div>
+        ${moreText}
+      </div>` : ''}
     </div>`
 
     appendNarrative(html)
