@@ -254,38 +254,21 @@ export const NarrativeSection = ({ title, content, icon, defaultOpen = true, var
 
 interface TokenCounterProps {
   geminiTokens: number
-  groqTokens: number
 }
 
-export const TokenCounter = ({ geminiTokens, groqTokens }: TokenCounterProps) => {
+export const TokenCounter = ({ geminiTokens }: TokenCounterProps) => {
   const formatTokens = (n: number) => {
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
     if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
     return n.toString()
   }
 
-  const total = geminiTokens + groqTokens
-
   return (
     <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#1a1510] to-[#201a14] rounded-lg border border-[#4a4030] shadow-md">
-      {/* Total */}
-      <div className="flex items-center gap-2 px-2 py-0.5 bg-[#0d0a08] rounded">
-        <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
-        <span className="text-[#d4af37] text-xs font-bold">{formatTokens(total)}</span>
-      </div>
-      <div className="w-px h-5 bg-[#3a3020]" />
       {/* Gemini */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-2 px-2 py-0.5 bg-[#0d0a08] rounded">
         <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-[0_0_8px_rgba(96,165,250,0.6)] animate-pulse" />
-        <span className="text-gray-500 text-[10px] uppercase tracking-wide">DM</span>
-        <span className="text-blue-400 text-sm font-bold">{formatTokens(geminiTokens)}</span>
-      </div>
-      <div className="w-px h-5 bg-[#3a3020]" />
-      {/* Groq */}
-      <div className="flex items-center gap-1.5">
-        <div className="w-3 h-3 rounded-full bg-gradient-to-br from-purple-400 to-purple-600 shadow-[0_0_8px_rgba(192,132,252,0.6)] animate-pulse" />
-        <span className="text-gray-500 text-[10px] uppercase tracking-wide">PC</span>
-        <span className="text-purple-400 text-sm font-bold">{formatTokens(groqTokens)}</span>
+        <span className="text-blue-400 text-xs font-bold">{formatTokens(geminiTokens)}</span>
       </div>
     </div>
   )

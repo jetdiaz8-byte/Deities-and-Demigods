@@ -303,20 +303,13 @@ export default function MythworldEngine() {
             <Download className="w-4 h-4 mr-1" /> Export
           </Button>
 
-          {/* API Key Inputs (bottom bar) */}
+          {/* API Key Input (bottom bar) */}
           <Input
             type="password"
             placeholder="Gemini key..."
             value={geminiKey}
             onChange={e => setGeminiKey(e.target.value)}
-            className="w-32 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] text-xs"
-          />
-          <Input
-            type="password"
-            placeholder="Groq key..."
-            value={groqKey}
-            onChange={e => setGroqKey(e.target.value)}
-            className="w-28 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] text-xs"
+            className="w-40 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] text-xs"
           />
         </div>
 
