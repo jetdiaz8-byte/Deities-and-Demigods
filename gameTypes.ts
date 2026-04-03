@@ -192,8 +192,6 @@ export interface GameState {
   humanPCId: string | null
   humanOptions: GameOption[]
   pendingHumanChoice: number | null
-  companionOptions: GameOption[]
-  pendingCompanionChoice: number | null
   waitingForHuman: boolean
   injuries: { [key: string]: Injury[] }
   activeNPCs: Entity[]
@@ -207,6 +205,7 @@ export interface GameState {
   partyGold: number
   // Token tracking
   geminiTokensUsed: number
+  groqTokensUsed: number
   // Current dice rolls for display
   lastDiceRolls: DiceRoll[]
   // Antagonist identity mystery system
@@ -320,3 +319,4 @@ export interface InjuryTemplate {
 
 // ACT constants
 export const ACTS = { ONE: 'act1', TWO: 'act2', THREE: 'act3' } as const
+

@@ -32,19 +32,9 @@ import {
 
 export function useGameEngine() {
 
-  // Screen effects — applies CSS class to body temporarily
-  const triggerScreenEffect = (effectClass: string) => {
-    if (typeof document === 'undefined') return
-    const main = document.querySelector('[data-screen-root]') || document.body
-    main.classList.remove(effectClass)
-    // Force reflow
-    void main.offsetWidth
-    main.classList.add(effectClass)
-    setTimeout(() => main.classList.remove(effectClass), 1500)
-  }
-
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
+  const [groqKey, setGroqKey] = useState('')
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
@@ -92,8 +82,36 @@ export function useGameEngine() {
   // Token Tracking State
   const [tokenUsage, setTokenUsage] = useState({
     gemini: { input: 0, output: 0, total: 0 },
+    groq: { input: 0, output: 0, total: 0 },
     lastCall: { api: '', input: 0, output: 0 }
   })
+  
+  // Request Throttling State
+  const [throttleState, setThrottleState] = useState({
+    lastRequestTime: 0,
+    minInterval: 3000, // 3 seconds minimum between API calls
+    isThrottled: false,
+    cooldownRemaining: 0
+  })
+  
+  // Smart Caching for Groq Options
+  const optionsCacheRef = useRef<Map<string, { options: GameOption[], timestamp: number, pcId: string }>>(new Map())
+  const CACHE_TTL = 60000 // 1 minute cache TTL
+  
+  // Throttling helper
+  const waitForThrottle = async (): Promise<void> => {
+    const now = Date.now()
+    const timeSinceLastRequest = now - throttleState.lastRequestTime
+    const waitTime = Math.max(0, throttleState.minInterval - timeSinceLastRequest)
+    
+    if (waitTime > 0) {
+      setThrottleState(prev => ({ ...prev, isThrottled: true, cooldownRemaining: Math.ceil(waitTime / 1000) }))
+      setStatusMessage(`Cooling down... ${Math.ceil(waitTime / 1000)}s`)
+      await sleep(waitTime)
+    }
+    
+    setThrottleState(prev => ({ ...prev, lastRequestTime: Date.now(), isThrottled: false, cooldownRemaining: 0 }))
+  }
   
   // Token estimation helper (rough approximation: 1 token ≈ 4 characters)
   const estimateTokens = (text: string): number => {
@@ -101,25 +119,32 @@ export function useGameEngine() {
   }
   
   // Update token usage tracking
-  const updateTokenUsage = (inputText: string, outputText: string) => {
+  const updateTokenUsage = (api: 'gemini' | 'groq', inputText: string, outputText: string) => {
     const inputTokens = estimateTokens(inputText)
     const outputTokens = estimateTokens(outputText)
     
     setTokenUsage(prev => ({
       ...prev,
-      gemini: {
-        input: prev.gemini.input + inputTokens,
-        output: prev.gemini.output + outputTokens,
-        total: prev.gemini.total + inputTokens + outputTokens
+      [api]: {
+        input: prev[api].input + inputTokens,
+        output: prev[api].output + outputTokens,
+        total: prev[api].total + inputTokens + outputTokens
       },
-      lastCall: { api: 'gemini', input: inputTokens, output: outputTokens }
+      lastCall: { api, input: inputTokens, output: outputTokens }
     }))
     
     // Also update game state for persistence
-    setGameState(prev => ({
-      ...prev,
-      geminiTokensUsed: prev.geminiTokensUsed + inputTokens + outputTokens
-    }))
+    if (api === 'gemini') {
+      setGameState(prev => ({
+        ...prev,
+        geminiTokensUsed: prev.geminiTokensUsed + inputTokens + outputTokens
+      }))
+    } else {
+      setGameState(prev => ({
+        ...prev,
+        groqTokensUsed: prev.groqTokensUsed + inputTokens + outputTokens
+      }))
+    }
   }
 
   const narrRef = useRef<HTMLDivElement>(null)
@@ -128,7 +153,9 @@ export function useGameEngine() {
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
     const savedGemini = localStorage.getItem('mythworld_gemini') || ''
+    const savedGroq = localStorage.getItem('mythworld_groq') || ''
     setGeminiKey(savedGemini)
+    setGroqKey(savedGroq)
     loadSaveSlots()
   }, [])
 
@@ -137,26 +164,15 @@ export function useGameEngine() {
     if (geminiKey) localStorage.setItem('mythworld_gemini', geminiKey)
   }, [geminiKey])
 
+  useEffect(() => {
+    if (groqKey) localStorage.setItem('mythworld_groq', groqKey)
+  }, [groqKey])
 
   // ── AUTO SCROLL ────────────────────────────────────────────────────────
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
-    // Clear any pending scroll to avoid stacking
-    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
-    // Delay scroll to ensure DOM has rendered new content
-    scrollTimeoutRef.current = setTimeout(() => {
-      // Try anchor-based scroll first (most reliable)
-      const anchor = document.getElementById('narrative-bottom')
-      if (anchor) {
-        anchor.scrollIntoView({ behavior: 'smooth', block: 'end' })
-        return
-      }
-      // Fallback to ref-based scroll
-      if (narrRef.current) {
-        narrRef.current.scrollTo({ top: narrRef.current.scrollHeight, behavior: 'smooth' })
-      }
-    }, 200)
-    return () => { if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current) }
+    if (narrRef.current) {
+      narrRef.current.scrollTop = narrRef.current.scrollHeight
+    }
   }, [narrativeContent])
 
   // ── SAVE/LOAD FUNCTIONS ────────────────────────────────────────────────
@@ -703,28 +719,24 @@ export function useGameEngine() {
 CRITICAL RULES:
 1. DDG rulebook ONLY. Never invent stats.
 2. NPC actions governed strictly by alignment+personality.
-3. NARRATION STYLE — NEIL GAIMAN:
+3. NARRATION STYLE — NEIL GAIMAN (CRITICAL - WRITE FULLY):
    - OPENING SCENE (Turn 0): Write 4-6 paragraphs of RICH, ATMOSPHERIC prose (600-1000 words)
-   - REGULAR TURNS (Turn 1+): Write exactly 1 CONCISE paragraph (80-150 words). Quality over quantity.
-   - Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
-   - Use specific sensory language: the taste of copper, the weight of shadows
-   - For regular turns, ONE vivid paragraph that captures atmosphere, action, and consequence
-   - End each regular turn narration with tension or a pivotal moment
-   - DO NOT pad with extra paragraphs. Brevity is sacred for regular turns.
-   - Include key dialogue, environmental details, and mechanical outcomes
-   - Reference past events when relevant
+   - REGULAR TURNS: Write 3-5 RICH, EVOCATIVE paragraphs (400-600 words MINIMUM)
+   - NEVER truncate or abbreviate your narration - write complete, full prose
+   - Write like Neil Gaiman in "American Gods" or "Norse Mythology" — lush, layered, deliberate
+   - Be mythic, poetic, dark — like a fairy tale for adults
+   - Use specific sensory language: the taste of copper, the weight of shadows, the whisper of old gods
+   - Paint scenes with words: describe the quality of light, the texture of stone, the smell of ancient air
+   - Every scene should feel ancient and dangerous
+   - Foreshadow doom, hint at larger mythic forces
+   - End each narration with tension or a pivotal moment
+   - MINIMUM 300 WORDS per narration - this is MANDATORY
+   - Include dialogue, internal thoughts, environmental details
+   - Reference past events and build on previous narrative threads
 4. Permadeath. No stat/alignment changes mid-game.
 5. PCs=Heroes/Demigods (including Krynn). NPCs=Lesser/Greater Gods (including Krynn gods).
 6. Gods avoid direct combat. WIS>15=cannot be deceived. Ancient enmities override all.
 7. In Act I and II, DO NOT include the Antagonist in the "npc_encounters" array.
-7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
-    - If there are active ENEMY NPCs, they MUST attack the party every 2-3 turns
-    - Include enemy attacks in "damage_dealt" and "state_updates" with appropriate HP damage
-    - Use "dice_rolls" for enemy attack rolls against PC AC
-    - Describe enemy attacks vividly in narration — combat should feel dangerous and consequential
-    - PCs and companions take real damage. Injuries happen. This is D&D, not a theme park.
-    - If an enemy has not attacked in the last 2 turns, they MUST attack this turn
-    - Vary which PC is targeted — enemies are tactical
 8. Occasionally drop items into "item_drops" array for the party inventory.
 9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. Provide 3-4 action OPTIONS for the current PC, then WAIT for the human player to choose. NEVER auto-resolve PC actions.
 10. **PERSISTENT MEMORY** - Remember ALL previous events, decisions, and their consequences. Reference past events when narrating.
@@ -810,11 +822,14 @@ PARTY (ALL HUMAN-CONTROLLED):
 ${partyState}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (the prose you wrote - 1 paragraph for regular turns, full prose for opening)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}]}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (the prose you wrote - 300+ words)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}]}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
   const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
+    // Apply throttling before API call
+    await waitForThrottle()
+    
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`
     const MAX_RETRIES = 3
     const BASE_DELAY = 6000
@@ -877,7 +892,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         console.log(`✅ Gemini response: ${raw.length} chars, ${isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn}`)
         
         // Track token usage
-        updateTokenUsage(totalInput, raw)
+        updateTokenUsage('gemini', totalInput, raw)
 
         return parseDMResponse(raw, gs)
 
@@ -1093,7 +1108,210 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     }
   }
 
-  const buildDefaultOptions = (pc: Entity): { pcOptions: GameOption[]; compOptions: GameOption[]; extraOptions: GameOption[] } => {
+  const callGroqForOptions = async (pc: Entity, sceneCtx: string, fallback: GameOption[]): Promise<GameOption[]> => {
+    let validFallback = fallback.length > 0 && fallback[0].action ? fallback : buildDefaultOptions(pc)
+    if (!groqKey) return validFallback
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // SMART CACHING - Reuse options for similar situations (SAVES API CALLS)
+    // ═══════════════════════════════════════════════════════════════════════
+    const cacheKey = `${pc.id}_${pc.hp}_${gameState.act}_${gameState.antagonistPhase}_${gameState.activeNPCs.length > 0 ? 'npcs' : 'no_npcs'}`
+    const cached = optionsCacheRef.current.get(cacheKey)
+    
+    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL && cached.pcId === pc.id) {
+      setStatusMessage(`Using cached options for ${pc.name}`)
+      return cached.options
+    }
+    
+    // Check if last choice was "Skip Turn" - can reuse skip options
+    if (gameState.humanOptions.length > 0) {
+      const lastChoice = gameState.humanOptions[gameState.pendingHumanChoice || 0]
+      if (lastChoice?.action.toLowerCase().includes('skip') || lastChoice?.action.toLowerCase().includes('wait')) {
+        // Return skip-specific options without API call
+        setStatusMessage(`Quick options for ${pc.name}`)
+        return buildDefaultOptions(pc)
+      }
+    }
+
+    const alignRule = pc.align.includes('good')
+      ? 'Protect innocents, honor alliances, show mercy to the deserving.'
+      : pc.align.includes('evil')
+        ? 'Power and survival first. Exploit weaknesses. Show no mercy to enemies.'
+        : 'Balance all factors. Weigh costs vs benefits. Adapt to the situation.'
+
+    const personalityHint = pc.personality ? `PERSONALITY: ${pc.personality.slice(0, 100)}\n` : ''
+
+    // Get companion info if available
+    const companion = gameState.companionId ? gameState.pcs.find(p => p.id === gameState.companionId) : null
+    const companionAlignRule = companion?.align.includes('good')
+      ? 'Protect innocents, honor alliances, show mercy.'
+      : companion?.align.includes('evil')
+        ? 'Power and survival first. Exploit weaknesses.'
+        : 'Balance all factors. Adapt to the situation.'
+    
+    const affinityDesc = gameState.companionAffinity >= 75 ? 'devoted ally'
+      : gameState.companionAffinity >= 50 ? 'loyal companion'
+      : gameState.companionAffinity >= 25 ? 'concerned friend'
+      : gameState.companionAffinity >= 0 ? 'distant ally'
+      : gameState.companionAffinity >= -25 ? 'conflicted companion'
+      : gameState.companionAffinity >= -50 ? 'hostile partner'
+      : 'rival in name only'
+
+    const sys = gameState.turn === 0
+      ? `Generate 6 options for this scene with a STRUCTURED FORMAT:
+
+MAIN PC: ${pc.name} (${pc.align})
+${personalityHint}ALIGNMENT: ${alignRule}
+KEY ABILITIES: ${pc.abilities.slice(0, 4).join(' | ')}
+
+${companion ? `COMPANION: ${companion.name} (${companion.align})
+COMPANION AFFINITY WITH PC: ${affinityDesc} (${gameState.companionAffinity}/100)
+COMPANION ALIGNMENT: ${companionAlignRule}
+COMPANION ABILITIES: ${companion.abilities.slice(0, 3).join(' | ')}` : 'No companion present.'}
+
+═══════════════════════════════════════════════════════
+REQUIRED OUTPUT STRUCTURE (EXACTLY 6 OPTIONS):
+═══════════════════════════════════════════════════════
+
+OPTIONS 1-3: MAIN PC ACTIONS (according to ${pc.align} alignment)
+- Option 1: Direct action using abilities (attack, defend, investigate)
+- Option 2: Social/diplomatic action (persuade, negotiate, question)
+- Option 3: Strategic or signature ability use
+
+${companion ? `OPTIONS 4-5: COMPANION SUGGESTED ACTIONS (according to ${companion.align} alignment and ${affinityDesc} relationship)
+- Option 4: ${companion.name} suggests an action that supports ${pc.name}'s goal
+- Option 5: ${companion.name} suggests an alternative approach (based on their alignment and affinity)
+
+AFFINITY GUIDE: ${gameState.companionAffinity >= 50 
+  ? 'Positive affinity = supportive, protective, selfless suggestions' 
+  : gameState.companionAffinity >= 0 
+    ? 'Neutral affinity = practical, cautious, pragmatic suggestions' 
+    : 'Negative affinity = challenging, questioning, possibly selfish suggestions'}` : 'OPTIONS 4-5: Alternative PC actions (no companion present)'}
+
+OPTION 6: Skip Turn — Observe and Wait (always include this)
+
+CRITICAL: 
+- Options 1-3 MUST align with ${pc.name}'s ${pc.align} alignment
+- ${companion ? `Options 4-5 MUST reflect ${companion.name}'s ${companion.align} alignment AND their ${affinityDesc} relationship with ${pc.name}` : 'Options 4-5 should be alternative PC actions'}
+
+Output ONLY a JSON array: [{"num":1,"action":"Full action description","ability":"Relevant ability","align_note":"Why this fits","source":"pc"},{"num":2,...,"source":"pc"},{"num":3,...,"source":"pc"},{"num":4,...,"source":"companion","companion_name":"${companion?.name || ''}"},{"num":5,...,"source":"companion","companion_name":"${companion?.name || ''}"},{"num":6,"action":"Skip Turn — Observe and Wait","ability":"Observation","align_note":"Passive","source":"pc"}]`
+      : `Generate 6 options with STRUCTURED FORMAT:
+
+MAIN PC: ${pc.name} (${pc.align})
+${personalityHint}ALIGNMENT: ${alignRule}
+KEY ABILITIES: ${pc.abilities.slice(0, 4).join(' | ')}
+
+${companion ? `COMPANION: ${companion.name} (${companion.align})
+COMPANION AFFINITY WITH PC: ${affinityDesc} (${gameState.companionAffinity}/100)
+COMPANION ALIGNMENT: ${companionAlignRule}
+COMPANION ABILITIES: ${companion.abilities.slice(0, 3).join(' | ')}` : 'No companion present.'}
+
+═══════════════════════════════════════════════════════
+REQUIRED OUTPUT STRUCTURE (EXACTLY 6 OPTIONS):
+═══════════════════════════════════════════════════════
+
+OPTIONS 1-3: MAIN PC ACTIONS (according to ${pc.align} alignment)
+- Option 1: Direct action (offensive/defensive based on situation)
+- Option 2: Social/diplomatic action or ability use
+- Option 3: Strategic move or signature ability
+
+${companion ? `OPTIONS 4-5: COMPANION SUGGESTED ACTIONS (according to ${companion.align} alignment and ${affinityDesc} relationship)
+- Option 4: ${companion.name} suggests supportive action based on affinity
+- Option 5: ${companion.name} suggests alternative approach (reflects alignment + affinity)
+
+AFFINITY EFFECT: ${gameState.companionAffinity >= 50 
+  ? 'High affinity = supportive, protective suggestions' 
+  : gameState.companionAffinity >= 0 
+    ? 'Neutral affinity = practical, balanced suggestions' 
+    : 'Low affinity = challenging, questioning suggestions'}` : 'OPTIONS 4-5: Alternative PC actions'}
+
+OPTION 6: Skip Turn — Observe and Wait (always last)
+
+Output ONLY a JSON array with "source" field: "pc" for PC actions, "companion" for companion suggestions.`
+    
+    // Generate 6 options including skip turn
+    const optionsPrompt = `SCENE: ${toAscii(sceneCtx).slice(0, 500)}
+MAIN PC: ${pc.name} | HP:${pc.hp}/${pc.maxHp} | ${pc.align}
+${companion ? `COMPANION: ${companion.name} | ${companion.align} | Affinity: ${affinityDesc}` : ''}
+
+Generate EXACTLY 6 options:
+- Options 1-3: ${pc.name}'s actions (according to ${pc.align} alignment)
+- ${companion ? `Options 4-5: ${companion.name}'s suggestions (according to ${companion.align} alignment and ${affinityDesc} affinity)` : 'Options 4-5: Alternative PC actions'}
+- Option 6: Skip Turn
+
+Each option needs: num, action, ability, align_note, source ("pc" or "companion")${companion ? ', companion_name' : ''}`
+
+    // Apply throttling before Groq call
+    await waitForThrottle()
+
+    try {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 800, // Reduced from 1000 for optimization
+          temperature: 0.95, // Higher temp for variety
+          messages: [
+            { role: 'system', content: sys },
+            { role: 'user', content: optionsPrompt }
+          ]
+        })
+      })
+
+      if (!r.ok) throw new Error(`Groq ${r.status}`)
+      const data = await r.json()
+      const raw = (data.choices || [])[0]?.message?.content || ''
+      
+      // Track token usage
+      updateTokenUsage('groq', sys + optionsPrompt, raw)
+      
+      let s = raw.replace(/```json\s*/ig, '').replace(/```\s*/g, '').trim()
+      const f = s.indexOf('[')
+      const l = s.lastIndexOf(']')
+      if (f >= 0 && l >= f) s = s.substring(f, l + 1)
+      const arr = JSON.parse(s)
+      if (Array.isArray(arr) && arr.length >= 4 && arr[0].action && arr[0].ability) {
+        // Ensure source field is set for all options
+        const processedArr: GameOption[] = arr.map((o: GameOption, idx: number) => ({
+          ...o,
+          num: idx + 1,
+          source: o.source || (idx < 3 ? 'pc' : idx < 5 ? 'companion' : 'pc'),
+          companion_name: o.companion_name || (o.source === 'companion' && idx >= 3 && idx < 5 ? companion?.name : undefined)
+        }))
+        
+        // Add skip turn if not present
+        const hasSkip = processedArr.some((o: GameOption) => o.action.toLowerCase().includes('skip') || o.action.toLowerCase().includes('wait'))
+        if (!hasSkip && processedArr.length < 6) {
+          const skipOption: GameOption = { 
+            num: 6, 
+            action: 'Skip Turn — Observe and Wait', 
+            ability: 'Observation', 
+            align_note: 'Passive, waiting for opportunity',
+            source: 'pc'
+          }
+          processedArr.push(skipOption)
+        }
+        
+        const options = processedArr.slice(0, 6)
+        
+        // Cache the options for future use
+        optionsCacheRef.current.set(cacheKey, {
+          options,
+          timestamp: Date.now(),
+          pcId: pc.id
+        })
+        
+        return options
+      }
+    } catch (e) {
+      console.warn('Groq options failed:', e)
+    }
+    // Add skip turn to fallback
+    return buildDefaultOptions(pc)
+  }
+
+  const buildDefaultOptions = (pc: Entity): GameOption[] => {
     const ab = pc.abilities.map(toAscii)
     const evil = pc.align.toLowerCase().includes('evil')
     
@@ -1102,203 +1320,176 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     const companionEvil = companion?.align.toLowerCase().includes('evil') || false
     const cab = companion?.abilities.map(toAscii) || []
     
-    // Detect context: combat vs social vs exploration
-    const inCombat = gameState.activeNPCs.some(n => !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'))
-    const hasActiveNPC = gameState.activeNPCs.some(n => !n.dead)
-    
     // ═══════════════════════════════════════════════════════════════════════════
-    // PC OPTIONS: 3 context-aware actions (combat/social/explore)
+    // OPTIONS 1-3: PC ACTIONS (according to alignment)
     // ═══════════════════════════════════════════════════════════════════════════
     const pcOptions: GameOption[] = [
       { 
         num: 1, 
-        action: inCombat 
-          ? '⚔️ Attack — Strike with your weapon' 
-          : hasActiveNPC
-            ? `💬 Talk — ${evil ? 'Demand answers from the stranger' : 'Speak with the stranger, seek information'}`
-            : '🔍 Investigate — Examine your surroundings',
-        ability: inCombat ? 'melee_attack' : hasActiveNPC ? 'conversation' : 'investigation',
-        align_note: inCombat ? 'basic attack' : hasActiveNPC ? 'social interaction' : 'perception',
+        action: evil 
+          ? 'Strike with merciless precision — ' + (ab[0] || 'weapon').split('(')[0].trim()
+          : 'Attack with righteous fury — ' + (ab[0] || 'weapon').split('(')[0].trim(), 
+        ability: ab[0] || 'melee', 
+        align_note: evil ? 'ruthless offensive' : 'righteous strike',
         source: 'pc'
       },
       { 
         num: 2, 
-        action: inCombat 
-          ? `🛡️ Defend — Protect ${companion ? companion.name : 'yourself'} from harm` 
-          : hasActiveNPC
-            ? (evil 
-              ? '🎭 Deceive — Manipulate the situation to your advantage' 
-              : '🤝 Negotiate — Attempt diplomacy or persuasion')
-            : (evil 
-              ? '🗡️ Act — Take what you want by force' 
-              : '🚶 Move — Explore further ahead'),
-        ability: inCombat ? 'defend' : hasActiveNPC ? (evil ? 'deception' : 'persuasion') : (evil ? 'aggression' : 'exploration'),
-        align_note: inCombat ? 'protective stance' : hasActiveNPC ? (evil ? 'cunning manipulation' : 'peaceful diplomacy') : (evil ? 'bold action' : 'cautious advance'),
+        action: evil 
+          ? 'Dominate the situation through intimidation'
+          : 'Defend and protect allies — ' + (ab[1] || 'shield').split(':')[0].trim(), 
+        ability: evil ? 'intimidation' : (ab[1] || 'defend'), 
+        align_note: evil ? 'coercive control' : 'protective support',
         source: 'pc'
       },
       { 
         num: 3, 
-        action: ab.length > 0
-          ? `✨ Use ${ab[0].split('(')[0].trim()} — Unleash your signature power`
-          : '✨ Use your innate power — Channel your divine essence',
-        ability: ab[0] || 'innate_power',
-        align_note: 'special ability',
+        action: 'Unleash signature power — ' + (ab[2] || ab[0] || 'ability').split(':')[0].trim(), 
+        ability: ab[2] || ab[0] || 'signature', 
+        align_note: 'signature ability',
         source: 'pc'
       }
     ]
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // COMPANION OPTIONS: 3 context-aware actions (player-controlled)
+    // OPTIONS 4-5: COMPANION ACTIONS (80% ability-driven, 20% dialogue)
+    // The PC suggests the companion use their specific powers
     // ═══════════════════════════════════════════════════════════════════════════
-    let compOptions: GameOption[]
+    let companionOptions: GameOption[]
     
     if (companion) {
-      const compName = companion.name.split(' ')[0]
-      const compAbility1 = cab.length > 0 ? cab[0].split('(')[0].trim() : ''
-      const compAbility2 = cab.length > 1 ? cab[1].split('(')[0].trim() : ''
-      
-      if (inCombat) {
-        compOptions = [
+      const affinityPositive = gameState.companionAffinity >= 25
+      const affinityNegative = gameState.companionAffinity < 0
+      const useAbilities = Math.random() < 0.80 // 80% ability-driven
+
+      // Build companion ability descriptions from their actual power list
+      const companionAbilities = companion.abilities.map(a => a.split('(')[0].trim()).filter(a => a.length > 2)
+      const compAbility1 = companionAbilities[0] || 'their power'
+      const compAbility2 = companionAbilities[1] || companionAbilities[0] || 'another ability'
+      const compAbility3 = companionAbilities[2] || companionAbilities[1] || compAbility1
+
+      // Alignment-flavored action verbs
+      const attackVerb = companionEvil ? 'unleash' : 'channel'
+      const supportVerb = companionEvil ? 'exploit' : 'invoke'
+      const defendVerb = companionEvil ? 'dominate' : 'shield'
+
+      if (useAbilities) {
+        // ═══ ABILITY-DRIVEN OPTIONS — PC suggests companion use their powers ═══
+        const abilityPair = (() => {
+          // Pick 2 distinct abilities from companion's list
+          const pool = companionAbilities.length >= 2
+            ? companionAbilities
+            : [...companionAbilities, 'their innate power']
+          const idx1 = Math.floor(Math.random() * pool.length)
+          const remaining = pool.filter((_, i) => i !== idx1)
+          const idx2 = Math.floor(Math.random() * remaining.length)
+          return [pool[idx1], remaining[idx2]]
+        })()
+
+        companionOptions = [
           { 
-            num: 1,
-            action: `⚔️ Attack — ${compName} strikes with their weapon`,
-            ability: 'companion_attack',
-            align_note: 'standard attack',
+            num: 4,
+            action: affinityNegative
+              ? `${companion.name} should ${attackVerb} ${abilityPair[0]} — "I don't trust this situation, use your power"`
+              : `Suggest ${companion.name} ${supportVerb} ${abilityPair[0]} — combine our strengths`,
+            ability: abilityPair[0],
+            align_note: companionEvil
+              ? (affinityNegative ? 'ruthless power, self-preserving' : 'calculated force')
+              : (affinityNegative ? 'cautious power use' : 'coordinated assault'),
             source: 'companion',
             companion_name: companion.name
           },
           { 
-            num: 2,
-            action: compAbility1
-              ? `✨ ${compAbility1} — ${compName} unleashes their power`
-              : `🛡️ Defend — ${compName} guards against incoming attacks`,
-            ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_defend',
-            align_note: compAbility1 ? 'special ability' : 'defensive stance',
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 3,
-            action: compAbility2
-              ? `✨ ${compAbility2} — ${compName}'s secondary power`
-              : `💪 Assist — ${compName} aids your attack for a coordinated strike`,
-            ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_assist',
-            align_note: compAbility2 ? 'secondary ability' : 'coordinated assault',
-            source: 'companion',
-            companion_name: companion.name
-          }
-        ]
-      } else if (hasActiveNPC) {
-        compOptions = [
-          { 
-            num: 1,
-            action: `💬 Talk — ${compName} joins the conversation`,
-            ability: 'companion_conversation',
-            align_note: 'social interaction',
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 2,
-            action: compAbility1
-              ? `✨ ${compAbility1} — ${compName} readies their power`
-              : `🤝 Support — ${companionEvil ? `${compName} watches for an opening` : `${compName} backs you up diplomatically`}`,
-            ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_support',
-            align_note: compAbility1 ? 'special ability' : (companionEvil ? 'calculated support' : 'loyal backing'),
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 3,
-            action: compAbility2
-              ? `✨ ${compAbility2} — ${compName}'s secondary power`
-              : `🔍 Observe — ${compName} studies the stranger carefully`,
-            ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_observe',
-            align_note: compAbility2 ? 'secondary ability' : 'perception check',
+            num: 5,
+            action: affinityNegative
+              ? `${companion.name} could ${attackVerb} ${abilityPair[1]} instead — "Let them handle this their way"`
+              : `Ask ${companion.name} to ${defendVerb} with ${abilityPair[1]} — trust their judgment`,
+            ability: abilityPair[1],
+            align_note: companionEvil
+              ? (affinityPositive ? 'strategic power combo' : 'delegated force')
+              : (affinityPositive ? 'trusted synergy' : 'shared burden'),
             source: 'companion',
             companion_name: companion.name
           }
         ]
       } else {
-        compOptions = [
+        // ═══ DIALOGUE OPTIONS (20%) — Character-driven conversation ═══
+        companionOptions = [
           { 
-            num: 1,
-            action: `🔍 Scout — ${compName} checks the area ahead`,
-            ability: 'companion_scout',
-            align_note: 'exploration',
+            num: 4, 
+            action: affinityNegative
+              ? `${companion.name} questions: "Are you certain about this approach?"`
+              : affinityPositive
+                ? `${companion.name} offers: "Let me support you with ${compAbility1}"`
+                : `${companion.name} suggests: "We should proceed carefully"`,
+            ability: compAbility1, 
+            align_note: companionEvil 
+              ? (affinityNegative ? 'challenging from self-interest' : 'calculated support')
+              : (affinityNegative ? 'cautious disagreement' : 'loyal assistance'),
             source: 'companion',
             companion_name: companion.name
           },
           { 
-            num: 2,
-            action: compAbility1
-              ? `✨ ${compAbility1} — ${compName} senses something`
-              : `💬 Discuss — "What do you think, ${compName}?"`,
-            ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_discussion',
-            align_note: compAbility1 ? 'special ability' : 'dialogue',
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 3,
-            action: compAbility2
-              ? `✨ ${compAbility2} — ${compName}'s secondary power`
-              : `🛡️ Guard — ${compName} stands watch while you investigate`,
-            ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_guard',
-            align_note: compAbility2 ? 'secondary ability' : 'defensive stance',
+            num: 5, 
+            action: affinityNegative
+              ? `${companion.name} proposes an alternative: "${companionEvil ? 'Why not take what we want?' : 'There may be another way'}"`
+              : `${companion.name} advises: "${companionEvil ? 'Power favors the bold' : 'Consider all options before acting'}"`,
+            ability: compAbility2, 
+            align_note: companionEvil 
+              ? (affinityPositive ? 'strategic counsel' : 'self-serving suggestion')
+              : (affinityPositive ? 'wise guidance' : 'cautious alternative'),
             source: 'companion',
             companion_name: companion.name
           }
         ]
       }
     } else {
-      // No companion — empty companion options
-      compOptions = []
+      // No companion - provide alternative PC actions
+      companionOptions = [
+        { 
+          num: 4, 
+          action: evil ? 'Attempt manipulation to gain advantage' : 'Attempt negotiation with authority', 
+          ability: 'persuasion/authority', 
+          align_note: evil ? 'cunning' : 'diplomatic',
+          source: 'pc'
+        },
+        { 
+          num: 5, 
+          action: evil ? 'Exploit the chaos for personal gain' : 'Rally allies with an inspiring act of heroism', 
+          ability: ab[3] || ab[0] || 'inspire', 
+          align_note: evil ? 'self-serving' : 'leadership',
+          source: 'pc'
+        }
+      ]
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // EXTRA OPTIONS: Potion, Skip, Archrival Summon
+    // OPTION 6: SKIP TURN (always available)
     // ═══════════════════════════════════════════════════════════════════════════
-    const extraOptions: GameOption[] = []
-    
-    // Potion option in combat
-    const consumables = gameState.inventory.filter(i => 
-      i.type === 'potion' && (i.charges ?? 0) > 0 && 
-      (i.effect?.toLowerCase().includes('heal') || i.effect?.toLowerCase().includes('restore'))
-    )
-    if (inCombat && consumables.length > 0) {
-      const potion = consumables[0]
-      extraOptions.push({
-        num: 99,
-        action: `🧪 Use ${potion.name} — ${potion.effect}`,
-        ability: `use_item:${potion.id}`,
-        align_note: `${potion.charges} charge${potion.charges !== 1 ? 's' : ''} remaining`,
-        source: 'pc'
-      })
-    }
-
-    // Skip turn
-    extraOptions.push({ 
+    const skipOption: GameOption = { 
       num: 6, 
-      action: '⏭️ Skip Turn — Observe and wait', 
-      ability: 'skip', 
-      align_note: 'passive',
+      action: 'Skip Turn — Observe and Wait', 
+      ability: 'Observation', 
+      align_note: 'Passive, waiting for opportunity',
       source: 'pc'
-    })
+    }
     
-    // Archrival summon (Act III only)
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OPTION 7: SUMMON ARCHRIVAL (Act III only, if antagonist was banished)
+    // ═══════════════════════════════════════════════════════════════════════════
+    let rivalOption: GameOption | null = null
     if (gameState.act === ACTS.THREE && gameState.antagonistBanished && gameState.antagonistRival) {
       const rival = gameState.antagonistRival
-      extraOptions.push({
+      rivalOption = {
         num: 7,
         action: `⚡ Summon ${rival.name}, ${rival.title} — the shard pulses with forbidden power`,
         ability: `archrival_summon:${rival.id}`,
         align_note: `Summon ${rival.name} — ${rival.ability}`,
         source: 'archrival_summon'
-      })
+      }
     }
     
-    return { pcOptions, compOptions, extraOptions }
+    return [...pcOptions, ...companionOptions, skipOption, ...(rivalOption ? [rivalOption] : [])]
   }
 
   // ── APPLY MECHANICS ────────────────────────────────────────────────────
@@ -1318,18 +1509,12 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       for (const d of res.damage_dealt) {
         const isCritical = d.damage && d.damage.includes('critical')
         setTimeout(() => soundEvents.emit({ type: 'combat_hit', critical: isCritical }), 300)
-        // Screen effect for PC taking damage
-        if (d.amount > 0 && d.to) {
-          const targetPc = newGS.pcs.find(p => p.id === d.to || p.name === d.to)
-          if (targetPc) triggerScreenEffect('screen-effect-red')
-        }
       }
     }
 
     // Shard event
     if (res.shard_event?.invoked) {
       soundEvents.emit({ type: 'shard_pulse' })
-      triggerScreenEffect('screen-effect-gold')
       newGS.pendingShardSummon = null
       if (res.shard_event.success && res.shard_event.summoned_name) {
         if (res.shard_event.is_greater) {
@@ -1386,7 +1571,6 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
             pc.dead = true
             pc.hp = 0
             soundEvents.emit({ type: 'death' })
-            triggerScreenEffect('screen-effect-shake')
 
             // ═══ PROPHECY TRANSFER ON DEATH — Story-Driven Chain ═══
             // Main PC falls → Companion becomes Chosen One
@@ -1491,58 +1675,6 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       }
     }
 
-    // ── ENEMY RETALIATION — If enemies exist but didn't hit PCs, force an attack ──
-    const enemyHitPC = (res.damage_dealt || []).some((d: DamageDealt) => {
-      const targetPc = newGS.pcs.find(p => p.id === d.to || p.name === d.to)
-      return !!targetPc
-    })
-    if (!enemyHitPC && newGS.turn > 1) {
-      const enemies = newGS.activeNPCs.filter(n => !n.dead && (
-        n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'
-      ))
-      if (enemies.length > 0 && Math.random() < 0.55) {
-        const attacker = enemies[Math.floor(Math.random() * enemies.length)]
-        const targets = newGS.pcs.filter(p => !p.dead)
-        const target = targets[Math.floor(Math.random() * targets.length)]
-        if (target) {
-          const atkRoll = Math.floor(Math.random() * 20) + 1
-          const targetAC = target.AC || 10
-          const hit = atkRoll >= targetAC || atkRoll === 20
-          const isCrit = atkRoll === 20
-          const baseDmg = Math.floor(Math.random() * 8) + 2
-          const dmg = hit ? baseDmg + (isCrit ? Math.floor(Math.random() * 8) + 2 : 0) : 0
-          const targetIdx = newGS.pcs.findIndex(p => p.id === target.id)
-
-          if (targetIdx >= 0 && dmg > 0) {
-            const updatedPc = { ...newGS.pcs[targetIdx] }
-            updatedPc.hp = Math.max(0, updatedPc.hp - dmg)
-            if (updatedPc.hp <= 0) { updatedPc.dead = true; updatedPc.hp = 0; soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake') }
-            newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
-            soundEvents.emit({ type: 'combat_hit', critical: isCrit })
-            triggerScreenEffect('screen-effect-red')
-            const fellText = updatedPc.dead ? ` <span style="color:#ff3030">☠️ ${target.name} falls!</span>` : ` (${updatedPc.hp}/${updatedPc.maxHp} HP)`
-            newGS.log = [...newGS.log, {
-              msg: `__ENEMY_ATTACK__:${JSON.stringify({
-                attacker: attacker.name, target: target.name, roll: atkRoll, damage: dmg, critical: isCrit,
-                html: isCrit
-                  ? `<div style="color:#cc3030;border-left:3px solid #cc3030;padding:0.5rem 1rem;margin:0.5rem 0;background:rgba(204,48,48,0.08);border-radius:0 4px 4px 0"><strong>⚔️ ${attacker.name}</strong> strikes <strong>${target.name}</strong> — <span style="color:#ff6060;font-weight:bold">CRITICAL HIT</span>! (${atkRoll}) → <strong style="color:#ff8080">${dmg} damage</strong>${fellText}</div>`
-                  : `<div style="color:#cc8060;border-left:3px solid #a05030;padding:0.5rem 1rem;margin:0.5rem 0;background:rgba(160,80,48,0.08);border-radius:0 4px 4px 0"><strong>⚔️ ${attacker.name}</strong> attacks <strong>${target.name}</strong> (${atkRoll}) → <strong style="color:#cc8060">${dmg} damage</strong>${fellText}</div>`
-              })}`,
-              type: 'enemy_attack', turn: newGS.turn
-            }]
-          } else if (!hit && targetIdx >= 0) {
-            newGS.log = [...newGS.log, {
-              msg: `__ENEMY_MISS__:${JSON.stringify({
-                attacker: attacker.name, target: target.name, roll: atkRoll,
-                html: `<div style="color:#6a6a6a;border-left:3px solid #4a4a4a;padding:0.3rem 1rem;margin:0.5rem 0;background:rgba(100,100,100,0.05);border-radius:0 4px 4px 0;font-style:italic"><strong>${attacker.name}</strong> swings at <strong>${target.name}</strong> but misses (${atkRoll})</div>`
-              })}`,
-              type: 'enemy_miss', turn: newGS.turn
-            }]
-          }
-        }
-      }
-    }
-
     // PC agreements
     if (res.pc_agreement) {
       const newAgreements = { ...newGS.pcAgreements }
@@ -1573,7 +1705,6 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     // Log phase transitions for dramatic narration in renderResult
     if (newGS.antagonistPhase > oldPhase && newGS.act === ACTS.THREE) {
       soundEvents.emit({ type: 'boss_phase', phase: newGS.antagonistPhase })
-      triggerScreenEffect('screen-effect-dark')
       const phaseAnt = getAntagonist(newGS.antagonistId)
       const phaseDesc = newGS.antagonistPhase === 2
         ? phaseAnt?.phase2 || 'The adversary reveals deeper power, fury breaking through composure.'
@@ -1909,15 +2040,13 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         const sceneCtx = `Act ${gs.act}, Turn ${gs.turn}. SUMMARY: ${gs.storySummary}\nRECENT: ` + gs.log.slice(0, 3).map(l => l.msg).join(' | ')
         setStatusMessage(`Generating options for ${humanPC.name}...`)
 
-        const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(humanPC)
-        gs.humanOptions = [...pcOptions, ...extraOptions]
-        gs.companionOptions = compOptions
+        const opts = await callGroqForOptions(humanPC, sceneCtx, buildDefaultOptions(humanPC))
+        gs.humanOptions = opts
         gs.waitingForHuman = true
         gs.pendingHumanChoice = null
-        gs.pendingCompanionChoice = compOptions.length > 0 ? null : undefined
 
         setGameState({ ...gs })
-        setStatusMessage(`YOUR TURN — ${humanPC.name}${compOptions.length > 0 ? ` + ${gs.companionId ? gs.pcs.find(p => p.id === gs.companionId)?.name?.split(' ')[0] : 'Companion'}` : ''}`)
+        setStatusMessage(`YOUR TURN — ${humanPC.name}`)
       } else {
         setGameState({ ...gs })
         setStatusMessage(`T${gs.turn} complete — ${living.length} standing`)
@@ -1978,22 +2107,6 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
           <div style="font-size:.95rem;color:#e08060;margin-top:.6rem;line-height:1.7">${phaseData.html}</div>
         </div>`
       } catch { /* ignore parse errors */ }
-    }
-
-    // Render enemy auto-attack / miss events from applyMechanics
-    const enemyAtkLog = gs.log.find(l => l.type === 'enemy_attack' && l.turn === gs.turn)
-    if (enemyAtkLog && enemyAtkLog.msg.startsWith('__ENEMY_ATTACK__:')) {
-      try {
-        const atkData = JSON.parse(enemyAtkLog.msg.replace('__ENEMY_ATTACK__:', ''))
-        html += atkData.html
-      } catch { /* ignore */ }
-    }
-    const enemyMissLog = gs.log.find(l => l.type === 'enemy_miss' && l.turn === gs.turn)
-    if (enemyMissLog && enemyMissLog.msg.startsWith('__ENEMY_MISS__:')) {
-      try {
-        const missData = JSON.parse(enemyMissLog.msg.replace('__ENEMY_MISS__:', ''))
-        html += missData.html
-      } catch { /* ignore */ }
     }
 
     // Narrative
@@ -2182,26 +2295,6 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     // Tension note
     if (res.tension_note) {
       html += `<div style="text-align:center;margin-top:1rem;font-size:.9rem;color:#5a4d30;font-style:italic">${toAscii(res.tension_note)}</div>`
-    }
-
-    // Enemy HP bars — show active enemies in combat
-    const activeEnemies = gs.activeNPCs.filter(n => !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'))
-    if (activeEnemies.length > 0) {
-      html += `<div style="margin-top:1rem;padding:0.75rem 1rem;border:1px solid #4a2020;background:rgba(60,20,20,0.15);border-radius:6px">
-        <div style="font-family:'Cinzel',serif;font-size:.75rem;color:#c05050;letter-spacing:.1em;margin-bottom:.5rem">⚔ ACTIVE ENEMIES</div>
-        ${activeEnemies.map(e => {
-          const pct = Math.max(0, Math.round((e.hp / (e.maxHp || 1)) * 100))
-          const barColor = pct <= 20 ? '#cc3030' : pct <= 50 ? '#cc8030' : '#cc5050'
-          const label = e.encounter_type === 'BOSS' ? '👑 ' : ''
-          return `<div style="display:flex;align-items:center;gap:.75rem;margin:.4rem 0">
-            <span style="font-size:.8rem;color:#e08080;min-width:120px;font-family:'Cinzel',serif">${label}${e.name}</span>
-            <div style="flex:1;height:8px;background:#1a1010;border-radius:4px;overflow:hidden;border:1px solid #3a2020">
-              <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width .5s"></div>
-            </div>
-            <span style="font-size:.75rem;color:#a06060;min-width:60px;text-align:right">${Math.max(0, e.hp)}/${e.maxHp}</span>
-          </div>`
-        }).join('')}
-      </div>`
     }
 
     html += '</div>'
@@ -2427,15 +2520,13 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const nextPC = newGS.pcs.find(p => p.id === newGS.humanPCId && !p.dead) || living[0]
     if (nextPC) {
       const sceneCtx = `Act ${newGS.act}, Turn ${newGS.turn}. SUMMARY: ${newGS.storySummary}\nRECENT: ` + newGS.log.slice(0, 3).map(l => l.msg).join(' | ')
-      const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(nextPC)
-      newGS.humanOptions = [...pcOptions, ...extraOptions]
-      newGS.companionOptions = compOptions
+      const opts = await callGroqForOptions(nextPC, sceneCtx, buildDefaultOptions(nextPC))
+      newGS.humanOptions = opts
       newGS.waitingForHuman = true
       newGS.pendingHumanChoice = null
-      newGS.pendingCompanionChoice = compOptions.length > 0 ? null : undefined
       newGS.isProcessing = false
       setGameState({ ...newGS })
-      setStatusMessage(`YOUR TURN — ${nextPC.name}${compOptions.length > 0 ? ` + ${newGS.companionId ? newGS.pcs.find(p => p.id === newGS.companionId)?.name?.split(' ')[0] : 'Companion'}` : ''}`)
+      setStatusMessage(`YOUR TURN — ${nextPC.name}`)
     } else {
       newGS.isProcessing = false
       setGameState({ ...newGS })
@@ -2452,21 +2543,8 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     }))
   }
 
-  // Companion choice handler — separate from PC choice
-  const selectCompanionOption = (idx: number) => {
-    if (!gameState.waitingForHuman || gameState.isProcessing) return
-    if (gameState.companionOptions.length === 0) return
-    setGameState(prev => ({
-      ...prev,
-      pendingCompanionChoice: idx
-    }))
-  }
-
   const confirmChoice = async () => {
-    // Require PC choice; companion choice only required if companion exists
     if (gameState.pendingHumanChoice === null || !gameState.waitingForHuman || gameState.isProcessing) return
-    const needsCompanionChoice = gameState.companionOptions.length > 0 && gameState.pendingCompanionChoice === null && gameState.pendingCompanionChoice !== undefined
-    if (needsCompanionChoice) return
 
     const gs = { ...gameState, waitingForHuman: false, isProcessing: true }
     setGameState(gs)
@@ -2475,12 +2553,6 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const choiceIdx = Math.min(gs.pendingHumanChoice ?? 0, gs.humanOptions.length - 1)
     const chosen = gs.humanOptions[choiceIdx]
     if (!chosen) return
-    
-    // Resolve companion choice
-    const companion = gs.companionId ? gs.pcs.find(p => p.id === gs.companionId) : null
-    const compChoiceIdx = gs.pendingCompanionChoice != null ? Math.min(gs.pendingCompanionChoice, gs.companionOptions.length - 1) : null
-    const compChosen = compChoiceIdx != null ? gs.companionOptions[compChoiceIdx] : null
-    
     const ant = getAntagonist(gs.antagonistId)
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -2489,32 +2561,22 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const isRivalSummon = chosen?.source === 'archrival_summon' && gs.antagonistBanished && gs.antagonistRival
     let rivalSummoned = false
 
-    setStatusMessage(`Resolving ${humanPC?.name}'s choice${compChosen ? ` + ${companion?.name?.split(' ')[0]}'s action` : ''}...`)
-
-    const companionActionLine = compChosen && companion
-      ? `\n\nThe player ALSO chose for ${toAscii(companion.name)}: "${toAscii(compChosen.action)}"[${toAscii(compChosen.ability || '')}].\nResolve ${toAscii(companion.name.split(' ')[0])}'s action WITH MECHANICAL DETAIL too — roll d20, apply damage, etc. Both characters act this turn.`
-      : ''
+    setStatusMessage(`Resolving ${humanPC?.name}'s choice...`)
 
     const userMsg = `TURN ${gs.turn} RESOLUTION.
 
-Human player chose for ${toAscii(humanPC?.name || 'PC')}: "${toAscii(chosen?.action || 'acts')}"[${toAscii(chosen?.ability || '')}].${companionActionLine}
+Human player chose for ${toAscii(humanPC?.name || 'PC')}: "${toAscii(chosen?.action || 'acts')}"[${toAscii(chosen?.ability || '')}].
 
 RESOLVE THIS ACTION:
-1. Execute ${toAscii(humanPC?.name || 'PC')}'s choice with full mechanical detail (d20 vs AC, damage, saves). ROLL DICE.${compChosen ? `\n2. Execute ${toAscii(companion?.name || 'Companion')}'s action with full mechanical detail too (d20 vs AC, damage, saves). ROLL DICE for both characters.` : ''}
-${gs.act === ACTS.THREE ? `${compChosen ? '3' : '2'}. ${ant?.name} retaliates with Phase ${gs.antagonistPhase} ability.` : `${compChosen ? '3' : '2'}. Any active NPCs act per their alignment. The antagonist shadow grows.`}
-${isRivalSummon ? `${compChosen ? '4' : '3'}. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, ${gs.antagonistRival?.title} has been SUMMONED by the shard to fight alongside the party!\n   - ${gs.antagonistRival?.name} is the mythological archrival of ${ant?.name}.\n   - They deal devastating damage to ${ant?.name} (narrate the legendary confrontation).\n   - The rival's ${gs.antagonistRival?.ability} turns the tide of battle.\n   - This is a CINEMATIC MOMENT — write it with maximum drama and Gaiman-style prose.\n   - Apply state_updates: ~35% of antagonist max HP as damage from the rival's assault.\n   - The rival does NOT join the party permanently — they deliver their blow and fade back into myth.` : `${compChosen ? '4' : '3'}. Apply dice rolls/damage for ALL actions. Signal injuries (injury_events).`}
-${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH characters' actions, then JSON payload. BOTH ${toAscii(humanPC?.name || 'PC')} and ${toAscii(companion?.name || 'Companion')} act this turn — describe their coordinated effort.` : 'Full narrative prose, then JSON payload.'}`
-
+1. Execute the human's choice with full mechanical detail (d20 vs AC, damage, saves). ROLL DICE.
+2. ${gs.act === ACTS.THREE ? `${ant?.name} retaliates with Phase ${gs.antagonistPhase} ability.` : 'Any active NPCs act per their alignment. The antagonist shadow grows.'}
+${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, ${gs.antagonistRival?.title} has been SUMMONED by the shard to fight alongside the party!\n   - ${gs.antagonistRival?.name} is the mythological archrival of ${ant?.name}.\n   - They deal devastating damage to ${ant?.name} (narrate the legendary confrontation).\n   - The rival's ${gs.antagonistRival?.ability} turns the tide of battle.\n   - This is a CINEMATIC MOMENT — write it with maximum drama and Gaiman-style prose.\n   - Apply state_updates: ~35% of antagonist max HP as damage from the rival's assault.\n   - The rival does NOT join the party permanently — they deliver their blow and fade back into myth.` : '3. Apply dice rolls/damage. Signal injuries (injury_events).'}
+4. Full narrative prose, then JSON payload. REMEMBER: ALL PCs are human-controlled, only resolve the current PC's action.`
+    
     // Add user choice to conversation history
-    const convEntries = [
-      { role: 'user' as const, content: `${humanPC?.name}: ${chosen?.action || 'acts'}` }
-    ]
-    if (compChosen && companion) {
-      convEntries.push({ role: 'user' as const, content: `${companion.name}: ${compChosen.action}` })
-    }
     setConversationHistory(prev => [
       ...prev,
-      ...convEntries
+      { role: 'user' as const, content: `${humanPC?.name}: ${chosen?.action || 'acts'}` }
     ].slice(-15))
 
     try {
@@ -2645,16 +2707,14 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       const nextPC = newGS.pcs.find(p => p.id === newGS.humanPCId && !p.dead) || living[0]
       if (nextPC) {
         const sceneCtx = `Act ${newGS.act}, Turn ${newGS.turn}. SUMMARY: ${newGS.storySummary}\nRECENT: ` + newGS.log.slice(0, 3).map(l => l.msg).join(' | ')
-        const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(nextPC)
-        newGS.humanOptions = [...pcOptions, ...extraOptions]
-        newGS.companionOptions = compOptions
+        const opts = await callGroqForOptions(nextPC, sceneCtx, buildDefaultOptions(nextPC))
+        newGS.humanOptions = opts
         newGS.waitingForHuman = true
         newGS.pendingHumanChoice = null
-        newGS.pendingCompanionChoice = compOptions.length > 0 ? null : undefined
         newGS.isProcessing = false
 
         setGameState({ ...newGS })
-        setStatusMessage(`YOUR TURN — ${nextPC.name}${compOptions.length > 0 ? ` + ${newGS.companionId ? newGS.pcs.find(p => p.id === newGS.companionId)?.name?.split(' ')[0] : 'Companion'}` : ''}`)
+        setStatusMessage(`YOUR TURN — ${nextPC.name}`)
       } else {
         newGS.isProcessing = false
         setGameState({ ...newGS })
@@ -2973,6 +3033,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     // ── STATE ──────────────────────────────────────────────────────────────
     gameState, setGameState,
     geminiKey, setGeminiKey,
+    groqKey, setGroqKey,
     gamePhase, setGamePhase,
     availableHeroes, setAvailableHeroes,
     selectedParty, setSelectedParty,
@@ -3003,8 +3064,11 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     audioCache, setAudioCache,
     displayedNarrative, setDisplayedNarrative,
     tokenUsage, setTokenUsage,
+    throttleState, setThrottleState,
     // ── REFS ───────────────────────────────────────────────────────────────
     narrRef,
+    audioRef,
+    optionsCacheRef,
     // ── FUNCTIONS ──────────────────────────────────────────────────────────
     loadSaveSlots,
     saveGame,
@@ -3022,13 +3086,13 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     parseDMResponse,
     generateSmartFallback,
     getTemplateFallback,
+    callGroqForOptions,
     buildDefaultOptions,
     applyMechanics,
     runTurn,
     renderResult,
     appendNarrative,
     selectOption,
-    selectCompanionOption,
     confirmChoice,
     advanceTurn,
     endCampaign,
@@ -3036,6 +3100,8 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     handleUseItem,
     exportStory,
     resolveTestOfFaith,
+    waitForThrottle,
+    estimateTokens,
     updateTokenUsage,
     // Achievement System
     achievementTracker: achievementTrackerRef.current,

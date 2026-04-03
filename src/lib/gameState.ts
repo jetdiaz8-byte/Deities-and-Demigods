@@ -32,6 +32,8 @@ export const createInitialState = (): GameState => ({
   humanPCId: null,
   humanOptions: [],
   pendingHumanChoice: null,
+  companionOptions: [],
+  pendingCompanionChoice: null,
   waitingForHuman: false,
   injuries: {},
   activeNPCs: [],

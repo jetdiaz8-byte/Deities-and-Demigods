@@ -122,3 +122,67 @@ Stage Summary:
 - DM Handbook PDF: 23 pages, 58.8 KB - 13 chapters covering AI architecture and engine internals
 - All PDFs use Times New Roman, dark blue table headers, auto-generated TOC, Z.ai metadata
 - Files saved to /home/z/my-project/download/
+
+---
+## Task ID: groq-purge - Main
+### Work Task
+Complete the Groq removal from all remaining files in the codebase. Several files still had Groq references (key state, API calls, token tracking, UI display) that needed to be purged.
+
+### Work Summary
+Removed all Groq references from 6 files (23 insertions, 284 deletions) and committed as `31fbae0` on `temp-branch`:
+
+**1. `src/hooks/useGameEngine.ts` (largest changes)**
+- Removed `groqKey`/`setGroqKey` state
+- Removed `groq` from `tokenUsage` state (now gemini-only)
+- Removed `throttleState`/`setThrottleState` state, `optionsCacheRef`, `CACHE_TTL`, `waitForThrottle()`, `estimateTokens()`
+- Removed entire `callGroqForOptions()` function (~200 lines including Groq API call, caching, prompt engineering)
+- Changed `updateTokenUsage(api, input, output)` → `updateTokenUsage(input, output)` — always tracks as gemini
+- Removed `waitForThrottle()` call from `callGeminiDM`
+- Replaced 3 `await callGroqForOptions(pc, ctx, fallback)` calls with `buildDefaultOptions(pc)`
+- Removed localStorage save/load for groq key
+- Cleaned return object: removed `groqKey`, `setGroqKey`, `throttleState`, `setThrottleState`, `optionsCacheRef`, `waitForThrottle`, `estimateTokens`, `callGroqForOptions`
+
+**2. `src/components/game/GameSidebar.tsx`**
+- Removed `groq` from `tokenUsage` type (3 occurrences: GameSidebarProps, DesktopTabs, MobileTabs)
+- Removed Groq token display cards (purple-400) from both Desktop and Mobile Logs tabs
+- Removed "Groq llama-3.3-70b" description from "How It Works" section
+
+**3. `src/components/game/GameHeader.tsx`**
+- Removed `groqTokens={gameState.groqTokensUsed}` prop from `<TokenCounter>`
+
+**4. `src/lib/gameTypes.ts`**
+- Removed `groqTokensUsed: number` from `GameState` interface
+
+**5. `src/lib/gameState.ts`**
+- Removed `groqTokensUsed: 0` from `createInitialState()`
+
+**6. `src/app/page.tsx` (bonus fix)**
+- Added missing ambient audio props to `GameHeader`: `ambientEnabled`, `ambientVolume`, `toggleAmbient`, `setAmbientVolume` (these exist in `useGameAudio` but weren't being passed)
+
+**Verification**: `rg -in 'groq' src/` returns zero matches. Lint shows only pre-existing errors in scripts/ and AchievementNotification.tsx.
+
+---
+## Task ID: layout-bugfixes - Main
+### Work Task
+Fix three bugs: sidebar covering bottom bar, oversized portrait cards in header, and DialogContent accessibility warnings.
+
+### Work Summary
+Fixed 3 bugs across 4 files:
+
+**Bug 1: Sidebar covering bottom bar (page.tsx)**
+- Added `relative z-[41]` to the bottom bar div (line 237) so it sits above the sidebar's `z-40`
+- The sidebar was `fixed` with `z-40` and `h-screen`, overlapping the bottom bar
+- Simple z-index fix was the cleanest solution
+
+**Bug 2: Oversized portrait cards (GameHeader.tsx + GameSidebar.tsx)**
+- Changed portrait aspect ratio from `768/1344` (very tall, ~1.75:1) to `3/4` (compact thumbnail) in both PC cards (line 336) and antagonist card (line 377)
+- This dramatically reduces the header height, making more room for narrative content
+- Adjusted `GameSidebar.tsx` top padding from `pt-[300px]` to `pt-[200px]` since the header is now shorter
+
+**Bug 3: DialogContent accessibility warnings (PortraitModal.tsx + codex/page.tsx)**
+- Added `<DialogTitle className="sr-only">` and `<DialogDescription className="sr-only">` to `PortraitModal.tsx` which was missing both
+- Added `DialogDescription` import and `<DialogDescription className="sr-only">` to `codex/page.tsx` which already had `DialogTitle` but was missing `Description`
+- Both use `sr-only` class to hide visually while remaining accessible to screen readers
+- `GameDialogs.tsx` already had both `DialogTitle` and `DialogDescription` on all 4 dialogs — no changes needed
+
+Lint passes with only pre-existing errors in AchievementNotification.tsx.

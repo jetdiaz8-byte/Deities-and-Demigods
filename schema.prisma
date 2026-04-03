@@ -1,0 +1,91 @@
+// This is your Prisma schema file for DDG Entities Database
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Main entity table for all DDG creatures
+model Entity {
+  id          String   @id           // e.g., "zeus", "arthur"
+  name        String                 // Display name e.g., "Zeus", "King Arthur"
+  title       String?               // Title or epithet e.g., "Lord of Olympus"
+  pantheon    String                 // e.g., "Greek", "Norse", "Arthurian"
+  category    String                 // "greater_gods", "lesser_gods", "demigods", "heroes", "monsters"
+  type        String?               // "hero", "deity", "monster", etc.
+  
+  // Core Stats
+  hp          Int                    // Hit Points
+  maxHp       Int                    // Max HP (same as hp for NPCs)
+  AC          Int                    // Armor Class
+  MR          String?               // Magic Resistance (can be "90", "Std", "Immune")
+  move        String?               // Movement rate
+  
+  // Combat Stats
+  attacks     Int?                   // Number of attacks per round
+  damage      String?               // Damage per attack
+  specialAttacks String?            // Special attack abilities
+  specialDefenses String?           // Special defense abilities
+  
+  // Ability Scores (stored as string to handle special formats like "18(99%)")
+  str         String?               // Strength (can be "18", "18(99%)", "18(00)")
+  int         String?               // Intelligence
+  wis         String?               // Wisdom
+  dex         String?               // Dexterity
+  con         String?               // Constitution
+  cha         String?               // Charisma
+  
+  // Class Levels
+  level       String?               // Character level(s) e.g., "14th paladin"
+  clericLevel Int?                   // Cleric level
+  fighterLevel Int?                  // Fighter level
+  magicUserLevel Int?                // Magic-User level
+  thiefLevel  Int?                   // Thief level
+  druidLevel  Int?                   // Druid level
+  monkLevel   Int?                   // Monk level
+  
+  // Divine Information
+  align       String                 // Alignment
+  plane       String?               // Home plane
+  symbol      String?               // Holy symbol
+  worshiperAlign String?            // Worshiper's alignment
+  psionic     String?               // Psionic ability
+  
+  // Descriptive
+  abilities   String?               // JSON array of abilities
+  equipment   String?               // JSON array of equipment
+  spells      String?               // JSON array of spells
+  personality String?               // Personality description
+  description String?               // Full description
+  
+  // Game State
+  conditions  String   @default("") // Current conditions (JSON array)
+  dead        Boolean  @default(false)
+  inventory   String?               // JSON array of inventory items
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([pantheon])
+  @@index([name])
+}
+
+// Game saves
+model GameSave {
+  id          String   @id @default(cuid())
+  name        String
+  timestamp   DateTime @default(now())
+  turn        Int      @default(0)
+  act         String   @default("act1")
+  gameState   String               // Full game state as JSON
+  partyNames  String               // JSON array of party member names
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
