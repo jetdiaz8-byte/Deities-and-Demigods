@@ -79,6 +79,13 @@ export function useGameEngine() {
   // Store the exact displayed narrative text for TTS
   const [displayedNarrative, setDisplayedNarrative] = useState('')
   
+  // Combat Flash Type — exported for page.tsx overlay
+  const [combatFlashType, setCombatFlashType] = useState<'damage' | 'heal' | 'crit' | ''>('')
+  const triggerCombatFlash = (type: 'damage' | 'heal' | 'crit') => {
+    setCombatFlashType(type)
+    setTimeout(() => setCombatFlashType(''), 500)
+  }
+
   // Achievement System State
   const achievementTrackerRef = useRef<AchievementTracker>(createAchievementTracker())
   const [achievementUnlocks, setAchievementUnlocks] = useState<Array<{ id: string; turn: number }>>([])
@@ -1321,7 +1328,10 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
         // Screen effect for PC taking damage
         if (d.amount > 0 && d.to) {
           const targetPc = newGS.pcs.find(p => p.id === d.to || p.name === d.to)
-          if (targetPc) triggerScreenEffect('screen-effect-red')
+          if (targetPc) {
+            triggerScreenEffect('screen-effect-red')
+            triggerCombatFlash(isCritical ? 'crit' : 'damage')
+          }
         }
       }
     }
@@ -1520,6 +1530,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
             newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
             soundEvents.emit({ type: 'combat_hit', critical: isCrit })
             triggerScreenEffect('screen-effect-red')
+            triggerCombatFlash(isCrit ? 'crit' : 'damage')
             const fellText = updatedPc.dead ? ` <span style="color:#ff3030">☠️ ${target.name} falls!</span>` : ` (${updatedPc.hp}/${updatedPc.maxHp} HP)`
             newGS.log = [...newGS.log, {
               msg: `__ENEMY_ATTACK__:${JSON.stringify({
@@ -2015,12 +2026,33 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       ].slice(-15)) // Keep last 15 exchanges
     }
 
-    html += `<div>
-      <div style="font-family:Cinzel,serif;font-size:1.2rem;letter-spacing:.16em;color:#7a5f20;text-transform:uppercase;margin-bottom:.6rem;display:flex;align-items:center;gap:.3rem">
-        ✦ DM Narration <span style="flex:1;height:1px;background:#2e2008"></span>
+    // Combat keyword detection for narration styling
+    const combatKeywords = ['strikes', 'slashes', 'casts', 'attacks', 'hits', 'misses', 'damages', 'deals', 'critical']
+    const isCombatParagraph = (p: string) => combatKeywords.some(kw => p.toLowerCase().includes(kw))
+
+    // Style dialogue: wrap "quoted text" in spans
+    const styledParagraphs = paragraphs.slice(0, 12).map((p, i) => {
+      const withDialogue = p.replace(/"([^"]+)"/g, '<span class="dialogue-text">"$1"</span>')
+      const isFirst = i === 0
+      const pClass = `${isFirst ? 'drop-cap ' : ''}ink-blot`
+      if (isCombatParagraph(p)) {
+        return `<div class="combat-narration"><p class="${pClass}" style="text-indent:1.5em;margin-bottom:.85em">${withDialogue}</p></div>`
+      }
+      return `<p class="${pClass}" style="text-indent:1.5em;margin-bottom:.85em">${withDialogue}</p>`
+    })
+
+    html += `<div class="parchment-bg-dm narration-fade-in" style="padding:20px;margin-bottom:12px">
+      <div class="dm-narration-header">
+        <span class="header-rune-left">ᚠ ᚢ ᚦ</span>
+        <span>✦ DM Narration</span>
+        <span class="header-line"></span>
+        <span class="header-rune-right">ᚨ ᚱ ᚲ</span>
+      </div>
+      <div class="celtic-divider">
+        <span class="knot-symbol">❖</span>
       </div>
       <div style="font-size:1.25rem;line-height:2;color:#e8d9b0">
-        ${paragraphs.slice(0, 12).map(p => `<p style="text-indent:1.5em;margin-bottom:.85em">${p}</p>`).join('')}
+        ${styledParagraphs.join('')}
       </div>
     </div>`
 
@@ -2765,6 +2797,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
         return { ...p, hp: Math.min(p.maxHp, p.hp + healAmount) }
       })
       toast({ title: `${item.name} Used`, description: `${targetPC.name} healed for ${healAmount} HP` })
+      triggerCombatFlash('heal')
     }
 
     if (item.modifier?.full_heal) {
@@ -2776,6 +2809,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       delete cleanInjuries[targetPC.id]
       newGS.injuries = cleanInjuries
       toast({ title: `${item.name} Used`, description: `${targetPC.name} fully restored!` })
+      triggerCombatFlash('heal')
     }
 
     // Cure poison injuries
@@ -3037,6 +3071,8 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     exportStory,
     resolveTestOfFaith,
     updateTokenUsage,
+    // Combat Flash
+    combatFlashType,
     // Achievement System
     achievementTracker: achievementTrackerRef.current,
     achievementUnlocks,

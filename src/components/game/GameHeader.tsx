@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +14,16 @@ import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModa
 import { ACTS } from '@/lib/gameTypes'
 import { getEntityPortrait, getAntagonist } from '@/lib/gameHelpers'
 import type { GameState } from '@/lib/gameTypes'
+
+function getClassIcon(pc: any) {
+  const abs = (pc.abilities || []).join(' ').toLowerCase()
+  if (abs.includes('divine') || abs.includes('paladin') || abs.includes('smite')) return <span className="class-icon-paladin text-xs">⚔️</span>
+  if (abs.includes('arcane') || abs.includes('wizard') || abs.includes('spell')) return <span className="class-icon-mage text-xs">🔮</span>
+  if (abs.includes('heal') || abs.includes('cleric') || abs.includes('restore')) return <span className="class-icon-cleric text-xs">✝️</span>
+  if (abs.includes('stealth') || abs.includes('rogue') || abs.includes('sneak')) return <span className="class-icon-rogue text-xs">🗡️</span>
+  if (abs.includes('nature') || abs.includes('ranger') || abs.includes('bow')) return <span className="class-icon-ranger text-xs">🏹</span>
+  return <span className="class-icon-warrior text-xs">⚔️</span>
+}
 
 export interface GameHeaderProps {
   gameState: GameState
@@ -73,9 +83,19 @@ export function GameHeader({
   onOpenAchievements,
 }: GameHeaderProps) {
   const [showAudioPanel, setShowAudioPanel] = useState(false)
+  const [antagonistRevealPlayed, setAntagonistRevealPlayed] = useState(false)
+  const revealed = gameState.act === ACTS.THREE
+  React.useEffect(() => {
+    if (revealed && !antagonistRevealPlayed) {
+      setAntagonistRevealPlayed(true)
+    }
+  }, [revealed, antagonistRevealPlayed])
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0a0806]/95 backdrop-blur-sm border-b-2 border-[#5a4018]">
+    <header className="sticky top-0 z-50 bg-[#0a0806]/95 backdrop-blur-sm border-b-2 border-[#5a4018] medieval-banner relative">
+      <div className="medieval-banner-texture" />
+      <span className="dragon-corner-tl">🐉</span>
+      <span className="dragon-corner-br">🐉</span>
       {/* Top Bar - Title, Voice Controls & Token Counter */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-[#2a2015]">
         <div className="flex-1">
@@ -333,7 +353,7 @@ export function GameHeader({
               }}
             >
               {/* Portrait thumbnail */}
-              <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] border border-[#3a3020] mb-1" style={{ aspectRatio: '3/4' }}>
+              <div className={`relative w-full rounded overflow-hidden bg-[#0d0a08] border border-[#3a3020] mb-1 ${isActive ? 'portrait-locket portrait-locket-active' : 'portrait-locket'}`} style={{ aspectRatio: '3/4' }}>
                 <Image
                   src={getEntityPortrait(pc)}
                   alt={pc.name}
@@ -357,6 +377,7 @@ export function GameHeader({
                 )}
               </div>
               <div className="font-bold text-[#d4af37] truncate font-name text-[10px] md:text-xs text-center">
+                {getClassIcon(pc)}
                 {pc.name.replace(/\s*\([^)]*\)/g, '').split(/\s+/).slice(-1)[0]}
               </div>
               <HealthBar current={pc.hp} max={pc.maxHp} size="sm" showLabel={false} />
@@ -392,7 +413,6 @@ export function GameHeader({
         {/* Antagonist Card — Identity hidden until Act III reveal */}
         {gameState.act !== ACTS.ONE && gameState.antagonistId && (() => {
           const antagonist = getAntagonist(gameState.antagonistId)
-          const revealed = gameState.act === ACTS.THREE
           return (
           <div
             onClick={() => {
@@ -401,7 +421,7 @@ export function GameHeader({
                 setPortraitModalOpen(true)
               }
             }}
-            className={`flex-shrink-0 w-20 md:w-28 p-1.5 md:p-2 rounded text-xs border cursor-pointer hover:ring-2 transition-all ${revealed ? 'border-red-900/50 hover:ring-red-500/50' : 'border-[#2a2020] hover:ring-[#4a3030]'}`}
+            className={`flex-shrink-0 w-20 md:w-28 p-1.5 md:p-2 rounded text-xs border cursor-pointer hover:ring-2 transition-all ${revealed ? `border-red-900/50 hover:ring-red-500/50 ${antagonistRevealPlayed ? 'antagonist-reveal' : ''}` : 'border-[#2a2020] hover:ring-[#4a3030]'}`}
             style={{ background: 'linear-gradient(145deg, #1a1010 0%, #120808 100%)', borderTop: `3px solid ${revealed ? '#8b0000' : '#3a2020'}` }}
           >
             {/* Portrait thumbnail — shadow silhouette until Act III */}

@@ -66,9 +66,14 @@ const DiceFace = ({ sides, value, isRolling }: { sides: number; value?: number; 
 
 export const VisualDiceRoll = ({ die, roll, dc, success, roller, notes, isAnimating }: DiceRollProps) => {
   const [revealed, setRevealed] = React.useState(false)
+  const [tumbling, setTumbling] = React.useState(true)
   React.useEffect(() => {
     setRevealed(false)
-    const timer = setTimeout(() => setRevealed(true), 1200)
+    setTumbling(true)
+    const timer = setTimeout(() => {
+      setRevealed(true)
+      setTumbling(false)
+    }, 1200)
     return () => clearTimeout(timer)
   }, [roll, die])
 
@@ -120,7 +125,7 @@ export const VisualDiceRoll = ({ die, roll, dc, success, roller, notes, isAnimat
       }
     `}>
       {/* Dice Visual */}
-      <div className="flex flex-wrap gap-2 justify-center mb-3">
+      <div className={`flex flex-wrap gap-2 justify-center mb-3 ${tumbling ? 'dice-tumble' : ''}`}>
         {individualValues.map((val, i) => (
             <DiceFace
               key={`${i}`}
@@ -136,7 +141,7 @@ export const VisualDiceRoll = ({ die, roll, dc, success, roller, notes, isAnimat
         <div className="font-title text-base md:text-lg text-[#d4af37] mb-1">
           {roller} rolls {die.toUpperCase()}
         </div>
-        <div className={`font-bold text-2xl md:text-3xl ${revealed ? (success ? 'text-emerald-400' : 'text-rose-400') : 'text-gray-500 animate-pulse'}`}>
+        <div className={`font-bold text-2xl md:text-3xl ${revealed ? (success ? 'text-emerald-400' : 'text-rose-400') : 'text-gray-500 animate-pulse'} ${revealed && roll === 20 ? 'dice-crit-gold' : ''} ${revealed && roll === 1 ? 'dice-crit-fail' : ''}`}>
           {revealed ? (
             <>{roll} {dc > 0 ? <span className="text-gray-400 text-lg">vs DC {dc}</span> : ''}</>
           ) : (
@@ -181,6 +186,12 @@ export const HealthBar = ({ current, max, showLabel = true, size = 'md', label }
     return 'from-emerald-600 to-emerald-400'
   }
 
+  const getHpGradientClass = () => {
+    if (pct >= 60) return 'hp-gradient-high'
+    if (pct >= 30) return 'hp-gradient-mid'
+    return 'hp-gradient-low'
+  }
+
   const heights = { sm: 'h-1.5', md: 'h-2.5', lg: 'h-4' }
 
   return (
@@ -195,7 +206,7 @@ export const HealthBar = ({ current, max, showLabel = true, size = 'md', label }
       )}
       <div className={`w-full bg-gray-900 rounded-full overflow-hidden border border-gray-700 ${heights[size]}`}>
         <div 
-          className={`h-full rounded-full bg-gradient-to-r ${getColor()} transition-all duration-500`}
+          className={`h-full rounded-full bg-gradient-to-r ${getColor()} hp-bar-smooth ${getHpGradientClass()} transition-all duration-500`}
           style={{ width: `${pct}%` }}
         />
       </div>

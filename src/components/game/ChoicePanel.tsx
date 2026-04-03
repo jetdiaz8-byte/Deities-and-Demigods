@@ -1,11 +1,22 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sword, Users, Sparkles, SkipForward, Shield, Wand2 } from 'lucide-react'
+import { Sword, Users, Sparkles, SkipForward, Shield, Wand2, Footprints, MessageSquare, Heart, Target } from 'lucide-react'
 import type { GameState, GameOption } from '@/lib/gameTypes'
+
+function getAbilityIcon(ability: string) {
+  const a = ability.toLowerCase()
+  if (a.includes('attack') || a.includes('strike') || a.includes('slash') || a.includes('melee')) return <Sword className="w-4 h-4 ability-icon-melee" />
+  if (a.includes('spell') || a.includes('magic') || a.includes('fireball') || a.includes('lightning') || a.includes('arcane')) return <Wand2 className="w-4 h-4 ability-icon-spell" />
+  if (a.includes('defend') || a.includes('shield') || a.includes('block') || a.includes('guard') || a.includes('dodge')) return <Shield className="w-4 h-4 ability-icon-defense" />
+  if (a.includes('move') || a.includes('sneak') || a.includes('hide') || a.includes('retreat') || a.includes('approach') || a.includes('flee')) return <Footprints className="w-4 h-4 ability-icon-movement" />
+  if (a.includes('talk') || a.includes('persuade') || a.includes('intimidate') || a.includes('negotiate') || a.includes('deceive') || a.includes('charm')) return <MessageSquare className="w-4 h-4 ability-icon-social" />
+  if (a.includes('heal') || a.includes('cure') || a.includes('restore') || a.includes('potion')) return <Heart className="w-4 h-4 ability-icon-heal" />
+  return <Target className="w-4 h-4 text-[#8b6914]" />
+}
 
 export interface ChoicePanelProps {
   gameState: GameState
@@ -22,6 +33,8 @@ export function ChoicePanel({
   confirmChoice,
   setShardDialogOpen,
 }: ChoicePanelProps) {
+  const [confirmClicked, setConfirmClicked] = useState(false)
+
   if (!gameState.waitingForHuman || gameState.humanOptions.length === 0) return null
 
   const pcOptions = gameState.humanOptions.slice(0, 3)
@@ -35,7 +48,7 @@ export function ChoicePanel({
   const canConfirm = pcSelected && compSelected
 
   return (
-    <Card className="mt-4 border-2 border-[#c9a84c] bg-gradient-to-br from-[rgba(30,20,0,.5)] to-[rgba(10,0,20,.4)] shadow-[0_0_16px_rgba(200,160,60,.2)]">
+    <Card className="mt-4 border-2 border-[#c9a84c] parchment-bg-choices shadow-[0_0_16px_rgba(200,160,60,.2)]">
       <CardHeader className="bg-gradient-to-r from-[rgba(80,55,0,.6)] to-[rgba(20,10,0,.4)] border-b border-[#7a5f20]">
         <div className="flex items-center gap-3">
           <span style={{ fontFamily: '"Cinzel Decorative", serif', fontSize: '1.1rem', color: '#f0c860', letterSpacing: '.12em' }}>
@@ -66,6 +79,11 @@ export function ChoicePanel({
       </CardHeader>
 
       <CardContent className="p-4 space-y-4">
+        <div className="ornate-corners">
+          <span className="corner-tl" />
+          <span className="corner-tr" />
+          <span className="corner-bl" />
+          <span className="corner-br" />
         {/* ═══════════════════════════════════════════════════════════════════════
             PC ACTIONS — 3 context-aware choices
             ═══════════════════════════════════════════════════════════════════════ */}
@@ -78,24 +96,41 @@ export function ChoicePanel({
           </div>
 
           {pcOptions.map((opt, idx) => (
-            <div
-              key={idx}
-              onClick={() => selectOption(idx)}
-              className={`flex gap-3 p-3 rounded cursor-pointer transition-all mb-2 ${gameState.pendingHumanChoice === idx
-                  ? 'border-2 border-[#d4af37] bg-gradient-to-r from-[rgba(90,60,10,.5)] to-[rgba(60,40,10,.4)] shadow-[inset_0_0_12px_rgba(212,175,55,.2)]'
-                  : 'border border-[#4a4030] bg-gradient-to-b from-[#1a1610] to-[#12100c] hover:border-[#d4af37] hover:shadow-[0_0_10px_rgba(212,175,55,0.15)]'
-                }`}
-            >
-              <div className="text-[#d4af37] font-bold font-title text-xl w-8 text-center">{opt.num}</div>
-              <div className="flex-1">
-                <div className="text-[#f0e0c0] font-narrative text-base">{opt.action}</div>
-                <div className="text-sm text-[#b08050] mt-1 font-narrative">
-                  [{opt.ability}]
-                  {opt.align_note && (
-                    <Badge className="ml-2 text-xs bg-[rgba(212,175,55,.15)] text-[#c0a060] border border-[#5a4030]">
-                      {opt.align_note}
-                    </Badge>
-                  )}
+            <div key={idx} className="fantasy-tooltip">
+              <div className="tooltip-content">
+                {(opt.ability || '').toLowerCase().includes('attack') || (opt.ability || '').toLowerCase().includes('strike')
+                  ? 'Melee attack — uses STR modifier vs target AC'
+                  : (opt.ability || '').toLowerCase().includes('spell') || (opt.ability || '').toLowerCase().includes('magic')
+                    ? 'Arcane spell — uses INT/WIS modifier vs target saving throw'
+                    : (opt.ability || '').toLowerCase().includes('defend') || (opt.ability || '').toLowerCase().includes('shield')
+                      ? 'Defensive stance — grants AC bonus until next turn'
+                      : (opt.ability || '').toLowerCase().includes('move') || (opt.ability || '').toLowerCase().includes('sneak')
+                        ? 'Movement action — reposition or stealth check'
+                        : (opt.ability || '').toLowerCase().includes('talk') || (opt.ability || '').toLowerCase().includes('persuade')
+                          ? 'Social interaction — CHA modifier determines outcome'
+                          : (opt.ability || '').toLowerCase().includes('heal')
+                            ? 'Healing action — restores HP based on ability score'
+                            : 'Ability check — d20 + relevant modifier vs DC'}
+              </div>
+              <div
+                onClick={() => selectOption(idx)}
+                className={`flex gap-3 p-3 rounded cursor-pointer transition-all mb-2 ${gameState.pendingHumanChoice === idx
+                    ? 'border-2 border-[#d4af37] bg-gradient-to-r from-[rgba(90,60,10,.5)] to-[rgba(60,40,10,.4)] shadow-[inset_0_0_12px_rgba(212,175,55,.2)] choice-pulse-gold'
+                    : 'border border-[#4a4030] bg-gradient-to-b from-[#1a1610] to-[#12100c] hover:border-[#d4af37] hover:shadow-[0_0_10px_rgba(212,175,55,0.15)]'
+                  }`}
+              >
+                <div className="text-[#d4af37] font-bold font-title text-xl w-8 text-center">{opt.num}</div>
+                <div className="flex-1">
+                  <div className="text-[#f0e0c0] font-narrative text-base">{opt.action}</div>
+                  <div className="text-sm text-[#b08050] mt-1 font-narrative flex items-center gap-1.5">
+                    {getAbilityIcon(opt.ability)}
+                    <span>[{opt.ability}]</span>
+                    {opt.align_note && (
+                      <Badge className="ml-2 text-xs bg-[rgba(212,175,55,.15)] text-[#c0a060] border border-[#5a4030]">
+                        {opt.align_note}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -106,40 +141,62 @@ export function ChoicePanel({
             COMPANION ACTIONS — 3 context-aware choices (if companion exists)
             ═══════════════════════════════════════════════════════════════════════ */}
         {compOptions.length > 0 && companion && (
-          <div>
-            <div className="text-[#90a0c0] text-xs uppercase tracking-wider mb-2 font-title flex items-center gap-2">
-              <Users className="w-4 h-4" />
-              <span>{companion.name.split(' ')[0]} — Choose Action</span>
-              <span className="flex-1 h-px bg-[#2a3040]" />
-              {compSelected ? <span className="text-emerald-400 text-[10px]">✓ Selected</span> : <span className="text-[#5a6080] text-[10px]">Required</span>}
+          <>
+            <div className="chain-divider">
+              <span /><span /><span /><span /><span /><span /><span /><span /><span />
             </div>
+            <div className="companion-section">
+              <div className="text-[#90a0c0] text-xs uppercase tracking-wider mb-2 font-title flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                <span>{companion.name.split(' ')[0]} — Choose Action</span>
+                <span className="flex-1 h-px bg-[#2a3040]" />
+                {compSelected ? <span className="text-emerald-400 text-[10px]">✓ Selected</span> : <span className="text-[#5a6080] text-[10px]">Required</span>}
+              </div>
 
-            {compOptions.map((opt, idx) => (
-              <div
-                key={idx}
-                onClick={() => selectCompanionOption(idx)}
-                className={`flex gap-3 p-3 rounded cursor-pointer transition-all mb-2 ${gameState.pendingCompanionChoice === idx
-                    ? 'border-2 border-[#7090c0] bg-gradient-to-r from-[rgba(40,60,100,.5)] to-[rgba(30,40,70,.4)] shadow-[inset_0_0_12px_rgba(100,140,200,.2)]'
-                    : 'border border-[#3a4050] bg-gradient-to-b from-[#15181e] to-[#0e1015] hover:border-[#7090c0] hover:shadow-[0_0_10px_rgba(100,140,200,0.15)]'
-                  }`}
-              >
-                <div className={`font-bold font-title text-xl w-8 text-center ${gameState.pendingCompanionChoice === idx ? 'text-[#7090c0]' : 'text-[#5a6a80]'}`}>
-                  {String.fromCharCode(65 + idx)}
-                </div>
-                <div className="flex-1">
-                  <div className="text-[#f0e0c0] font-narrative text-base">{opt.action}</div>
-                  <div className="text-sm text-[#8090b0] mt-1 font-narrative">
-                    [{opt.ability}]
-                    {opt.align_note && (
-                      <Badge className="ml-2 text-xs bg-[rgba(100,140,200,.15)] text-[#90a0c0] border border-[#3a4050]">
-                        {opt.align_note}
-                      </Badge>
-                    )}
+              {compOptions.map((opt, idx) => (
+                <div key={idx} className="fantasy-tooltip">
+                  <div className="tooltip-content">
+                    {(opt.ability || '').toLowerCase().includes('attack') || (opt.ability || '').toLowerCase().includes('strike')
+                      ? 'Melee attack — uses STR modifier vs target AC'
+                      : (opt.ability || '').toLowerCase().includes('spell') || (opt.ability || '').toLowerCase().includes('magic')
+                        ? 'Arcane spell — uses INT/WIS modifier vs target saving throw'
+                        : (opt.ability || '').toLowerCase().includes('defend') || (opt.ability || '').toLowerCase().includes('shield')
+                          ? 'Defensive stance — grants AC bonus until next turn'
+                          : (opt.ability || '').toLowerCase().includes('move') || (opt.ability || '').toLowerCase().includes('sneak')
+                            ? 'Movement action — reposition or stealth check'
+                            : (opt.ability || '').toLowerCase().includes('talk') || (opt.ability || '').toLowerCase().includes('persuade')
+                              ? 'Social interaction — CHA modifier determines outcome'
+                              : (opt.ability || '').toLowerCase().includes('heal')
+                                ? 'Healing action — restores HP based on ability score'
+                                : 'Ability check — d20 + relevant modifier vs DC'}
+                  </div>
+                  <div
+                    onClick={() => selectCompanionOption(idx)}
+                    className={`flex gap-3 p-3 rounded cursor-pointer transition-all mb-2 ${gameState.pendingCompanionChoice === idx
+                        ? 'border-2 border-[#7090c0] bg-gradient-to-r from-[rgba(40,60,100,.5)] to-[rgba(30,40,70,.4)] shadow-[inset_0_0_12px_rgba(100,140,200,.2)] choice-pulse-blue'
+                        : 'border border-[#3a4050] bg-gradient-to-b from-[#15181e] to-[#0e1015] hover:border-[#7090c0] hover:shadow-[0_0_10px_rgba(100,140,200,0.15)]'
+                      }`}
+                  >
+                    <div className={`font-bold font-title text-xl w-8 text-center ${gameState.pendingCompanionChoice === idx ? 'text-[#7090c0]' : 'text-[#5a6a80]'}`}>
+                      {String.fromCharCode(65 + idx)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[#f0e0c0] font-narrative text-base">{opt.action}</div>
+                      <div className="text-sm text-[#8090b0] mt-1 font-narrative flex items-center gap-1.5">
+                        {getAbilityIcon(opt.ability)}
+                        <span>[{opt.ability}]</span>
+                        {opt.align_note && (
+                          <Badge className="ml-2 text-xs bg-[rgba(100,140,200,.15)] text-[#90a0c0] border border-[#3a4050]">
+                            {opt.align_note}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════════
@@ -195,11 +252,17 @@ export function ChoicePanel({
             ═══════════════════════════════════════════════════════════════════════ */}
         <div className="flex items-center gap-3 pt-3 border-t border-[#3a3020]">
           <Button
-            onClick={confirmChoice}
+            onClick={() => {
+              if (canConfirm) {
+                setConfirmClicked(true)
+                setTimeout(() => setConfirmClicked(false), 300)
+                confirmChoice()
+              }
+            }}
             disabled={!canConfirm}
             className={`font-title tracking-wider px-6 text-lg py-5 transition-all ${
               canConfirm
-                ? 'bg-gradient-to-b from-[#5a3a10] to-[#3a2510] hover:from-[#7a5020] hover:to-[#5a3a15] text-[#f0d878] border-2 border-[#8a6020] shadow-[0_0_10px_rgba(200,160,60,.2)]'
+                ? `confirm-ready ${confirmClicked ? 'confirm-click' : ''} bg-gradient-to-b from-[#5a3a10] to-[#3a2510] hover:from-[#7a5020] hover:to-[#5a3a15] text-[#f0d878] border-2 border-[#8a6020] shadow-[0_0_10px_rgba(200,160,60,.2)]`
                 : 'bg-gradient-to-b from-[#2a2015] to-[#1a1510] text-[#5a4d30] border-2 border-[#3a3020] cursor-not-allowed'
             }`}
           >
@@ -213,6 +276,7 @@ export function ChoicePanel({
                 : `Option ${gameState.pendingHumanChoice! + 1}${compOptions.length > 0 ? ` + ${String.fromCharCode(65 + gameState.pendingCompanionChoice!)}` : ''} — Ready!`
             }
           </span>
+        </div>
         </div>
       </CardContent>
     </Card>

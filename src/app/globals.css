@@ -357,3 +357,861 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gold);
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TIER 1 — PARCHMENT & TEXTURE FOUNDATION
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Parchment Background for DM Narration */
+.parchment-bg-dm {
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(139,109,20,0.03) 28px,
+      rgba(139,109,20,0.03) 29px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 28px,
+      rgba(139,109,20,0.02) 28px,
+      rgba(139,109,20,0.02) 29px
+    ),
+    linear-gradient(135deg, #1e1a12 0%, #2a2218 15%, #241e14 50%, #1a1610 85%, #201c14 100%);
+  border: 2px solid #3a3020;
+  border-radius: 4px;
+  position: relative;
+  box-shadow: 
+    inset 0 0 40px rgba(0,0,0,0.3),
+    inset 0 0 80px rgba(42,34,24,0.2),
+    0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* Parchment paper grain noise effect */
+.parchment-bg-dm::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(ellipse at 20% 50%, rgba(139,109,20,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(139,109,20,0.04) 0%, transparent 40%),
+    radial-gradient(ellipse at 60% 80%, rgba(100,80,40,0.05) 0%, transparent 45%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* 2. Parchment Background for Choice Panel */
+.parchment-bg-choices {
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 28px,
+      rgba(139,109,20,0.03) 28px,
+      rgba(139,109,20,0.03) 29px
+    ),
+    linear-gradient(145deg, #1e1810 0%, #2a2018 30%, #221a12 70%, #1a1410 100%);
+  border: 2px solid #4a3a20;
+  border-radius: 6px;
+  position: relative;
+  box-shadow: 
+    inset 0 0 30px rgba(0,0,0,0.25),
+    0 4px 24px rgba(0,0,0,0.4);
+}
+
+.parchment-bg-choices::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(ellipse at 10% 90%, rgba(139,109,20,0.05) 0%, transparent 40%),
+    radial-gradient(ellipse at 90% 10%, rgba(139,109,20,0.04) 0%, transparent 35%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* 3. Ornate Frame Borders */
+.ornate-border {
+  position: relative;
+  border: 2px solid #4a3a20;
+}
+
+.ornate-border::before,
+.ornate-border::after {
+  content: '◆';
+  position: absolute;
+  color: #8b6914;
+  font-size: 12px;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(212,175,55,0.4);
+  z-index: 2;
+}
+
+.ornate-border::before {
+  top: -8px;
+  left: -8px;
+  background: #1e1a12;
+  padding: 2px;
+  border-radius: 2px;
+}
+
+.ornate-border::after {
+  bottom: -8px;
+  right: -8px;
+  background: #1e1a12;
+  padding: 2px;
+  border-radius: 2px;
+}
+
+/* Additional corner ornaments via CSS */
+.ornate-corners {
+  position: relative;
+}
+
+.ornate-corners .corner-tl,
+.ornate-corners .corner-tr,
+.ornate-corners .corner-bl,
+.ornate-corners .corner-br {
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  z-index: 2;
+}
+
+.ornate-corners .corner-tl {
+  top: -4px;
+  left: -4px;
+  border-top: 3px solid #d4af37;
+  border-left: 3px solid #d4af37;
+  border-top-left-radius: 6px;
+}
+
+.ornate-corners .corner-tr {
+  top: -4px;
+  right: -4px;
+  border-top: 3px solid #d4af37;
+  border-right: 3px solid #d4af37;
+  border-top-right-radius: 6px;
+}
+
+.ornate-corners .corner-bl {
+  bottom: -4px;
+  left: -4px;
+  border-bottom: 3px solid #d4af37;
+  border-left: 3px solid #d4af37;
+  border-bottom-left-radius: 6px;
+}
+
+.ornate-corners .corner-br {
+  bottom: -4px;
+  right: -4px;
+  border-bottom: 3px solid #d4af37;
+  border-right: 3px solid #d4af37;
+  border-bottom-right-radius: 6px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TIER 2 — FANTASY DECORATIVE ELEMENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 4. Celtic Knot Dividers */
+.celtic-divider {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0;
+  position: relative;
+}
+
+.celtic-divider::before {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #8b6914 30%, #8b6914 70%, transparent 100%);
+}
+
+.celtic-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #8b6914 30%, #8b6914 70%, transparent 100%);
+}
+
+.celtic-divider .knot-symbol {
+  color: #8b6914;
+  font-size: 16px;
+  text-shadow: 0 0 8px rgba(212,175,55,0.3);
+  animation: knot-glow 3s ease-in-out infinite;
+}
+
+@keyframes knot-glow {
+  0%, 100% { opacity: 0.6; text-shadow: 0 0 4px rgba(212,175,55,0.2); }
+  50% { opacity: 1; text-shadow: 0 0 12px rgba(212,175,55,0.5); }
+}
+
+/* 5. Dragon Motif Corner Decorations */
+.dragon-corner-tl,
+.dragon-corner-br {
+  position: absolute;
+  font-size: 28px;
+  opacity: 0.12;
+  color: #d4af37;
+  text-shadow: 0 0 10px rgba(212,175,55,0.2);
+  z-index: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 0 3px rgba(212,175,55,0.15));
+}
+
+.dragon-corner-tl {
+  top: 8px;
+  left: 8px;
+  transform: rotate(-15deg);
+}
+
+.dragon-corner-br {
+  bottom: 8px;
+  right: 8px;
+  transform: rotate(165deg);
+}
+
+/* 6. Shield Iconography for Stats */
+.shield-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 11px;
+  margin-right: 2px;
+}
+
+/* 7. Rune Decorations */
+.rune-accent {
+  font-size: 10px;
+  color: #5a4020;
+  opacity: 0.5;
+  letter-spacing: 0.3em;
+  text-shadow: 0 0 4px rgba(212,175,55,0.15);
+  user-select: none;
+}
+
+.rune-accent-left::before {
+  content: 'ᚠ ᚢ ᚦ ᚨ';
+  margin-right: 8px;
+}
+
+.rune-accent-right::after {
+  content: 'ᚱ ᚲ ᚷ ᚹ';
+  margin-left: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TIER 3 — VISUAL FEEDBACK & ANIMATION
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 8. Combat Screen Flash */
+.combat-flash-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.combat-flash-overlay.flash-damage {
+  animation: flash-damage 0.4s ease-out;
+}
+
+.combat-flash-overlay.flash-heal {
+  animation: flash-heal 0.4s ease-out;
+}
+
+.combat-flash-overlay.flash-crit {
+  animation: flash-crit 0.6s ease-out;
+}
+
+@keyframes flash-damage {
+  0% { opacity: 1; box-shadow: inset 0 0 120px rgba(200,0,0,0.4); }
+  100% { opacity: 0; box-shadow: inset 0 0 120px rgba(200,0,0,0); }
+}
+
+@keyframes flash-heal {
+  0% { opacity: 1; box-shadow: inset 0 0 120px rgba(0,180,60,0.3); }
+  100% { opacity: 0; box-shadow: inset 0 0 120px rgba(0,180,60,0); }
+}
+
+@keyframes flash-crit {
+  0% { opacity: 1; box-shadow: inset 0 0 150px rgba(212,175,55,0.5); }
+  30% { opacity: 1; box-shadow: inset 0 0 80px rgba(212,175,55,0.3); }
+  100% { opacity: 0; box-shadow: inset 0 0 150px rgba(212,175,55,0); }
+}
+
+/* 9. Dice Roll Enhancement */
+.dice-crit-gold {
+  animation: dice-glow-gold 0.6s ease-out;
+  text-shadow: 0 0 10px rgba(212,175,55,0.8), 0 0 20px rgba(212,175,55,0.5);
+}
+
+.dice-crit-fail {
+  animation: dice-glow-red 0.6s ease-out;
+  text-shadow: 0 0 10px rgba(200,0,0,0.8), 0 0 20px rgba(200,0,0,0.5);
+}
+
+@keyframes dice-glow-gold {
+  0% { transform: scale(1); }
+  30% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+@keyframes dice-glow-red {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.9); }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.dice-tumble {
+  animation: dice-tumble-anim 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes dice-tumble-anim {
+  0% { transform: rotate(0deg) scale(0.5); opacity: 0; }
+  40% { transform: rotate(720deg) scale(1.1); opacity: 1; }
+  70% { transform: rotate(1080deg) scale(0.95); }
+  100% { transform: rotate(1440deg) scale(1); opacity: 1; }
+}
+
+/* 10. Choice Selection Pulse */
+.choice-pulse-gold {
+  animation: pulse-gold 0.4s ease-out;
+}
+
+.choice-pulse-blue {
+  animation: pulse-blue 0.4s ease-out;
+}
+
+@keyframes pulse-gold {
+  0% { box-shadow: 0 0 0 0 rgba(212,175,55,0.5); }
+  100% { box-shadow: 0 0 20px 8px rgba(212,175,55,0); }
+}
+
+@keyframes pulse-blue {
+  0% { box-shadow: 0 0 0 0 rgba(112,144,192,0.5); }
+  100% { box-shadow: 0 0 20px 8px rgba(112,144,192,0); }
+}
+
+/* 11. Turn Transition Animation */
+.narration-fade-in {
+  animation: narration-enter 0.5s ease-out;
+}
+
+@keyframes narration-enter {
+  0% { opacity: 0; transform: translateY(16px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* 12. HP Bar Smooth Transitions */
+.hp-bar-smooth {
+  transition: width 800ms ease-out, background-color 500ms ease;
+}
+
+.hp-gradient-high { background: linear-gradient(90deg, #2d8a4e, #4ade80) !important; }
+.hp-gradient-mid { background: linear-gradient(90deg, #a16207, #fbbf24) !important; }
+.hp-gradient-low { background: linear-gradient(90deg, #991b1b, #ef4444) !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TIER 4 — TYPOGRAPHY & NARRATIVE POLISH
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 13. Illuminated Drop Caps */
+.drop-cap::first-letter {
+  float: left;
+  font-family: var(--font-cinzel), "Times New Roman", serif;
+  font-size: 3em;
+  line-height: 0.8;
+  padding-right: 8px;
+  padding-top: 4px;
+  color: #d4af37;
+  text-shadow: 0 0 8px rgba(212,175,55,0.3), 1px 1px 2px rgba(0,0,0,0.5);
+  font-weight: bold;
+}
+
+/* 14. Ink Blot Accents */
+.ink-blot {
+  position: relative;
+}
+
+.ink-blot::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  right: 10%;
+  width: 30px;
+  height: 6px;
+  background: radial-gradient(ellipse, rgba(26,21,16,0.6) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 15. Dialogue Text Styling */
+.dialogue-text {
+  font-family: var(--font-uncial), cursive;
+  color: #f0d8a0 !important;
+  font-style: italic;
+  display: inline;
+}
+
+.dialogue-text::before {
+  content: '❝';
+  color: #8b6914;
+  margin-right: 2px;
+  font-style: normal;
+  opacity: 0.7;
+}
+
+.dialogue-text::after {
+  content: '❞';
+  color: #8b6914;
+  margin-left: 2px;
+  font-style: normal;
+  opacity: 0.7;
+}
+
+/* 16. Combat Narration Styling */
+.combat-narration {
+  position: relative;
+  padding-left: 12px;
+}
+
+.combat-narration::before {
+  content: '⚔';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #8b2635;
+  font-size: 0.8em;
+  opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TIER 5 — SIDEBAR & HEADER FANTASY TREATMENT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 17. Sidebar Parchment Treatment */
+.sidebar-parchment {
+  background: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 100px,
+      rgba(139,109,20,0.02) 100px,
+      rgba(139,109,20,0.02) 101px
+    ),
+    linear-gradient(180deg, #110d07 0%, #0f0b05 50%, #110d07 100%) !important;
+  border-left: 2px solid #2a2010 !important;
+}
+
+.sidebar-parchment::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, #8b6914 20%, #8b6914 80%, transparent);
+  opacity: 0.3;
+}
+
+/* 18. Medieval Banner Header */
+.medieval-banner {
+  position: relative;
+  background: 
+    linear-gradient(180deg, 
+      #0f0b06 0%, 
+      #1a1510 15%,
+      #1e1812 50%,
+      #1a1510 85%,
+      #0f0b06 100%
+    );
+  border-bottom: 3px solid #3a2a10;
+}
+
+.medieval-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(180deg, #3a2a10 0%, transparent 100%);
+  opacity: 0.5;
+}
+
+/* Fabric texture overlay */
+.medieval-banner-texture {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 3px,
+      rgba(139,109,20,0.015) 3px,
+      rgba(139,109,20,0.015) 4px
+    );
+  pointer-events: none;
+}
+
+/* 19. Portrait Locket Frame */
+.portrait-locket {
+  border: 2px solid #3a2a10;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.portrait-locket::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.portrait-locket-active {
+  border-color: #d4af37;
+  animation: locket-glow 2s ease-in-out infinite;
+}
+
+@keyframes locket-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(212,175,55,0.2); }
+  50% { box-shadow: 0 0 16px rgba(212,175,55,0.4), 0 0 30px rgba(212,175,55,0.1); }
+}
+
+/* 20. Antagonist Dramatic Reveal */
+.antagonist-reveal {
+  animation: antagonist-reveal-anim 1.2s ease-out;
+}
+
+@keyframes antagonist-reveal-anim {
+  0% { transform: scaleX(0) rotateY(90deg); opacity: 0; filter: brightness(0) contrast(2); }
+  30% { transform: scaleX(0.3) rotateY(60deg); opacity: 0.5; filter: brightness(0.5) contrast(1.5); }
+  60% { transform: scaleX(1.05) rotateY(-5deg); opacity: 1; filter: brightness(1.2) contrast(1.1); }
+  80% { transform: scaleX(0.98) rotateY(2deg); filter: brightness(1); }
+  100% { transform: scaleX(1) rotateY(0deg); filter: brightness(1); }
+}
+
+.screen-shake {
+  animation: screen-shake-anim 0.5s ease-out;
+}
+
+@keyframes screen-shake-anim {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-3px, -2px); }
+  20% { transform: translate(3px, 2px); }
+  30% { transform: translate(-2px, 3px); }
+  40% { transform: translate(2px, -3px); }
+  50% { transform: translate(-3px, 1px); }
+  60% { transform: translate(3px, -1px); }
+  70% { transform: translate(-1px, 2px); }
+  80% { transform: translate(1px, -2px); }
+  90% { transform: translate(-2px, 1px); }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TIER 6 — CHOICE PANEL ENHANCEMENT
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 21. Ability Icons - small colored circle backgrounds for Lucide icons */
+.ability-icon-melee { color: #d4af37; }
+.ability-icon-spell { color: #a060d0; }
+.ability-icon-defense { color: #60a0c0; }
+.ability-icon-movement { color: #60c080; }
+.ability-icon-social { color: #d0a060; }
+.ability-icon-heal { color: #60c060; }
+
+/* 22. Confirm Button Dramatic */
+.confirm-ready {
+  animation: confirm-pulse 1.5s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.confirm-ready::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(45deg, #d4af37, #8b6914, #d4af37, #8b6914);
+  background-size: 400% 400%;
+  animation: confirm-shimmer 3s linear infinite;
+  z-index: -1;
+  border-radius: inherit;
+}
+
+@keyframes confirm-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(212,175,55,0.2); }
+  50% { box-shadow: 0 0 25px rgba(212,175,55,0.5), 0 0 50px rgba(212,175,55,0.2); }
+}
+
+@keyframes confirm-shimmer {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.confirm-click {
+  animation: sword-clash 0.3s ease-out;
+}
+
+@keyframes sword-clash {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* 23. Hover Tooltips */
+.fantasy-tooltip {
+  position: relative;
+}
+
+.fantasy-tooltip .tooltip-content {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #2a2218, #1e1a12);
+  border: 1px solid #4a3a20;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: #c9a84c;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+  font-family: var(--font-almendra), serif;
+}
+
+.fantasy-tooltip .tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #4a3a20;
+}
+
+.fantasy-tooltip:hover .tooltip-content {
+  display: block;
+  animation: tooltip-fade-in 0.2s ease-out;
+}
+
+@keyframes tooltip-fade-in {
+  0% { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* 24. Companion Visual Distinction */
+.companion-section {
+  position: relative;
+  border-left: 3px solid #4060a0;
+  padding-left: 12px;
+}
+
+.companion-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1px;
+  width: 3px;
+  background: linear-gradient(180deg, #4060a0, #6080c0, #4060a0);
+  border-radius: 2px;
+}
+
+/* Chain/rope divider between PC and Companion sections */
+.chain-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 8px 0;
+  opacity: 0.4;
+}
+
+.chain-divider span {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border: 1px solid #6a5a40;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.chain-divider span:nth-child(even) {
+  background: #6a5a40;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TIER 7 — ATMOSPHERIC EFFECTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 25. Screen Vignette */
+.vignette-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  box-shadow: 
+    inset 0 0 100px rgba(0,0,0,0.5),
+    inset 0 0 200px rgba(0,0,0,0.3),
+    inset 0 0 300px rgba(0,0,0,0.15);
+}
+
+/* 26. Floating Ember Particles */
+.ember-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.ember {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: radial-gradient(circle, rgba(212,175,55,0.8), rgba(212,175,55,0));
+  border-radius: 50%;
+  animation: ember-float linear infinite;
+  opacity: 0;
+}
+
+@keyframes ember-float {
+  0% { transform: translateY(100vh) translateX(0) scale(1); opacity: 0; }
+  10% { opacity: 0.6; }
+  50% { opacity: 0.4; }
+  90% { opacity: 0.2; }
+  100% { transform: translateY(-20px) translateX(30px) scale(0.3); opacity: 0; }
+}
+
+/* 27. Fog of War Effect */
+.fog-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to top, 
+    rgba(13,12,8,0.9) 0%, 
+    rgba(13,12,8,0.4) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* 28. Act-Dependent Atmosphere */
+.atmosphere-act1 {
+  --atmo-bg: rgba(6,4,3,0.98);
+  --atmo-glow: rgba(212,175,55,0.03);
+  --atmo-vignette-intensity: 0.4;
+}
+
+.atmosphere-act2 {
+  --atmo-bg: rgba(8,4,2,0.98);
+  --atmo-glow: rgba(180,60,30,0.04);
+  --atmo-vignette-intensity: 0.55;
+}
+
+.atmosphere-act3 {
+  --atmo-bg: rgba(12,2,2,0.98);
+  --atmo-glow: rgba(160,20,20,0.05);
+  --atmo-vignette-intensity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Scrollbar parchment */
+.scroll-parchment::-webkit-scrollbar-track {
+  background: #1a1510;
+  border-left: 1px solid #2a2010;
+}
+
+.scroll-parchment::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #4a3a20, #3a2a10);
+  border-radius: 2px;
+}
+
+.scroll-parchment::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Gold separator */
+.gold-separator {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, #d4af37 15%, #8b6914 50%, #d4af37 85%, transparent 100%);
+  margin: 8px 0;
+  opacity: 0.5;
+}
+
+/* Glowing text on hover */
+.glow-hover:hover {
+  text-shadow: 0 0 8px rgba(212,175,55,0.6), 0 0 16px rgba(212,175,55,0.3);
+}
+
+/* Mini class icons for party bar */
+.class-icon-warrior { color: #d4af37; }
+.class-icon-mage { color: #a060d0; }
+.class-icon-cleric { color: #f0ebe3; }
+.class-icon-rogue { color: #60c080; }
+.class-icon-ranger { color: #8b6914; }
+.class-icon-paladin { color: #f0c860; }
+
+/* Subtle background pattern for entire game */
+.game-bg-pattern {
+  background-image: 
+    radial-gradient(ellipse at 20% 50%, rgba(139,109,20,0.03) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(139,109,20,0.02) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 80%, rgba(100,80,40,0.02) 0%, transparent 45%);
+}
+
+/* Enhanced narrative header for DM narration */
+.dm-narration-header {
+  font-family: var(--font-cinzel), serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.16em;
+  color: #7a5f20;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 12px 0;
+}
+
+.dm-narration-header .header-rune-left {
+  opacity: 0.3;
+  color: #8b6914;
+  font-size: 14px;
+}
+
+.dm-narration-header .header-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, #3a2a10, transparent);
+}
+
+.dm-narration-header .header-rune-right {
+  opacity: 0.3;
+  color: #8b6914;
+  font-size: 14px;
+}

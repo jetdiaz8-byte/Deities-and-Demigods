@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -68,6 +68,8 @@ export default function MythworldEngine() {
     invokeShard,
     handleUseItem,
     resolveTestOfFaith,
+    // Combat Flash
+    combatFlashType,
     // Achievement System
     achievementTracker,
     achievementUnlocks,
@@ -78,8 +80,25 @@ export default function MythworldEngine() {
   // ── AUDIO ENGINE ─────────────────────────────────────────────────────
   const audio = useGameAudio()
 
+  // Combat flash overlay ref
+  const flashRef = useRef<HTMLDivElement>(null)
+
   // Typing mode toggle for narrative reveal
   const [typingMode, setTypingMode] = React.useState(false)
+
+  // Ember particle positions — generated once
+  const emberPositions = useMemo(() =>
+    Array.from({ length: 15 }).map(() => ({
+      left: `${Math.random() * 100}%`,
+      duration: `${8 + Math.random() * 12}s`,
+      delay: `${Math.random() * 10}s`,
+      width: `${2 + Math.random() * 3}px`,
+      height: `${2 + Math.random() * 3}px`,
+    })),
+  [])
+
+  // Act-dependent atmosphere class
+  const atmosphereClass = gameState.act === 'act1' ? 'atmosphere-act1' : gameState.act === 'act2' ? 'atmosphere-act2' : 'atmosphere-act3'
 
   // Achievement notification handler
   const [processedAchievements, setProcessedAchievements] = useState<Set<string>>(new Set())
@@ -300,7 +319,7 @@ export default function MythworldEngine() {
           {/* Narrative Panel */}
           <div
             ref={narrRef}
-            className="flex-1 overflow-y-auto p-3 md:p-4 md:mr-80 scroll-smooth"
+            className={`flex-1 overflow-y-auto p-3 md:p-4 md:mr-80 scroll-smooth ${atmosphereClass}`}
             style={{ 
               background: gameState.act === 'act1' 
                 ? 'rgba(6,4,3,.98)' 
@@ -310,13 +329,18 @@ export default function MythworldEngine() {
               transition: 'background 1s ease'
             }}
           >
-            {narrativeContent.map((item, idx) => {
-              const isLast = idx === narrativeContent.length - 1
-              if (typingMode && !isLast) {
-                return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} style={{ opacity: 0.6 }} />
-              }
-              return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} />
-            })}
+            {/* Ornate Corners Wrapper */}
+            <div className="relative">
+              <span className="dragon-corner-tl">🐉</span>
+              <span className="dragon-corner-br">🐉</span>
+              {narrativeContent.map((item, idx) => {
+                const isLast = idx === narrativeContent.length - 1
+                if (typingMode && !isLast) {
+                  return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} style={{ opacity: 0.6 }} />
+                }
+                return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} />
+              })}
+            </div>
 
             {/* Test of Faith Prompt */}
             <TestOfFaith
@@ -335,6 +359,8 @@ export default function MythworldEngine() {
 
             {/* Scroll anchor — auto-scroll targets this */}
             <div id="narrative-bottom" />
+            {/* Fog of War Overlay */}
+            <div className="fog-overlay" />
           </div>
 
           {/* Desktop Sidebar + Mobile Sheet Drawer */}
@@ -457,6 +483,29 @@ export default function MythworldEngine() {
                 <div className="text-xs text-[#a08060] font-narrative">{toast.desc}</div>
               </div>
             </div>
+          ))}
+        </div>
+
+        {/* Combat Flash Overlay */}
+        <div ref={flashRef} className={`combat-flash-overlay ${combatFlashType === 'damage' ? 'flash-damage' : combatFlashType === 'heal' ? 'flash-heal' : combatFlashType === 'crit' ? 'flash-crit' : ''}`} />
+
+        {/* Atmospheric Vignette */}
+        <div className="vignette-overlay" />
+
+        {/* Floating Embers */}
+        <div className="ember-container">
+          {emberPositions.map((e, i) => (
+            <div
+              key={i}
+              className="ember"
+              style={{
+                left: e.left,
+                animationDuration: e.duration,
+                animationDelay: e.delay,
+                width: e.width,
+                height: e.height,
+              }}
+            />
           ))}
         </div>
 
