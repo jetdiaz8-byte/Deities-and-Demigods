@@ -117,19 +117,6 @@ export function GameHeader({
             )}
           </button>
 
-          {/* Ambient Toggle */}
-          <button
-            onClick={toggleAmbient}
-            className="p-1.5 rounded transition-all"
-            title={ambientEnabled ? 'Disable Ambient Music' : 'Enable Ambient Music'}
-          >
-            {ambientEnabled ? (
-              <Music className="w-4 h-4 text-[#d4af37]" />
-            ) : (
-              <VolumeOff className="w-4 h-4 text-gray-500" />
-            )}
-          </button>
-
           {/* Volume Slider Panel - Desktop only */}
           <div className="hidden md:flex items-center gap-1">
             <button
@@ -264,17 +251,6 @@ export function GameHeader({
               </div>
             )}
           </button>
-          <button
-            onClick={toggleAmbient}
-            className="p-1.5 rounded transition-all"
-            title={ambientEnabled ? 'Disable Ambient Music' : 'Enable Ambient Music'}
-          >
-            {ambientEnabled ? (
-              <Music className="w-4 h-4 text-[#d4af37]" />
-            ) : (
-              <VolumeOff className="w-4 h-4 text-gray-500" />
-            )}
-          </button>
         </div>
         
         {/* Mobile Menu Button */}
@@ -406,3 +382,4 @@ export function GameHeader({
     </header>
   )
 }
+

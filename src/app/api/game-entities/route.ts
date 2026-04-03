@@ -124,11 +124,34 @@ export async function GET(request: NextRequest) {
           const dbEntities = await db.entity.findMany({
             where: { category: { in: ['heroes', 'demigods'] } }
           })
-          entities = dbEntities
-          // Check if ability scores are populated
-          const hasScores = dbEntities.some(e => e.str)
-          if (!hasScores) {
-            console.warn('DB has no ability scores, using JSON fallback')
+
+          if (dbEntities.length > 0) {
+            // ALWAYS load JSON fallback to supplement missing ability scores
+            const jsonEntities = getFallbackEntities('heroes', limit, excludeIds)
+            const jsonMap = new Map(jsonEntities.map(e => [e.id, e]))
+
+            // Check how many DB entities are missing ability scores
+            const missingScores = dbEntities.filter(e => !e.str).length
+            if (missingScores > 0) {
+              console.warn(`DB: ${missingScores}/${dbEntities.length} heroes missing ability scores, supplementing from JSON fallback`)
+            }
+
+            // Merge: use DB as primary, fill missing ability scores from JSON
+            entities = dbEntities.map(e => {
+              const jsonSupplement = jsonMap.get(e.id)
+              return {
+                ...e,
+                str: e.str || jsonSupplement?.str || null,
+                int: e.int || jsonSupplement?.int || null,
+                wis: e.wis || jsonSupplement?.wis || null,
+                dex: e.dex || jsonSupplement?.dex || null,
+                con: e.con || jsonSupplement?.con || null,
+                cha: e.cha || jsonSupplement?.cha || null,
+                level: e.level || jsonSupplement?.level || null,
+              }
+            })
+          } else {
+            // No DB entities, use JSON fallback
             entities = getFallbackEntities('heroes', limit, excludeIds)
           }
           break
