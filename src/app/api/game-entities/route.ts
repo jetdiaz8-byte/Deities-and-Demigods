@@ -3,7 +3,6 @@ import { db } from '@/lib/db'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
-// v1.9.106 - Dragon filter active
 // GET /api/game-entities - Game-specific entity queries
 // Supports: heroes (for party selection), antagonist (greater gods), npcs (all except selected)
 
@@ -139,8 +138,9 @@ export async function GET(request: NextRequest) {
     try {
       switch (type) {
         case 'heroes': {
+          const DRAGON_EXCLUDE = ['cyan_bloodbane', 'khellendros', 'beryllinthranox', 'malystryx']
           const dbEntities = await db.entity.findMany({
-            where: { category: { in: ['heroes', 'demigods'] } }
+            where: { category: { in: ['heroes', 'demigods'] }, id: { notIn: DRAGON_EXCLUDE } }
           })
 
           if (dbEntities.length > 0) {
