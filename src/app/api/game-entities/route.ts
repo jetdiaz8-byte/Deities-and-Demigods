@@ -1,135 +1,177 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { readFileSync } from 'fs'
+import { join } from 'path'
 
 // GET /api/game-entities - Game-specific entity queries
 // Supports: heroes (for party selection), antagonist (greater gods), npcs (all except selected)
 
+// Fallback: load from master_database.json if DB is unavailable
+function getFallbackEntities(type: string, limit: number, excludeIds: string[]) {
+  try {
+    const jsonPath = join(process.cwd(), 'master_database.json')
+    const raw = readFileSync(jsonPath, 'utf-8')
+    const data = JSON.parse(raw)
+
+    let entities: any[] = []
+    const categories = {
+      heroes: ['heroes', 'demigods'],
+      antagonist: ['greater_gods', 'monsters'],
+      npcs: ['heroes', 'demigods', 'lesser_gods', 'greater_gods', 'monsters'],
+    }
+
+    const targetCats = categories[type] || ['heroes', 'demigods']
+    for (const cat of targetCats) {
+      for (const [id, entity] of Object.entries(data[cat] || {})) {
+        const e = entity as any
+        if (type === 'npcs' && excludeIds.includes(id)) continue
+        const hp = typeof e.HP === 'string' ? parseInt(e.HP) || 100 : e.HP || 100
+        const ac = typeof e.AC === 'string' ? parseInt(e.AC) || 10 : e.AC || 10
+        entities.push({
+          id,
+          name: e.name || id,
+          title: e.title || null,
+          pantheon: e.pantheon || 'Unknown',
+          category: cat,
+          type: cat === 'heroes' ? 'hero' : cat === 'demigods' ? 'demigod' : cat === 'greater_gods' ? 'greater_god' : 'lesser_god',
+          hp,
+          maxHp: hp,
+          AC: ac,
+          MR: e.MR === 'Immune' ? 100 : parseInt(e.MR) || 0,
+          align: e.align || 'Neutral',
+          abilities: e.abilities || ['Basic Strike', 'Defend', 'Heroic Surge'],
+          personality: e.personality || null,
+          str: e.STR ? String(e.STR) : null,
+          int: e.INT ? String(e.INT) : null,
+          wis: e.WIS ? String(e.WIS) : null,
+          dex: e.DEX ? String(e.DEX) : null,
+          con: e.CON ? String(e.CON) : null,
+          cha: e.CHA ? String(e.CHA) : null,
+          level: e.level || null,
+          fighterLevel: null,
+          clericLevel: null,
+          magicUserLevel: null,
+          thiefLevel: null,
+          attacks: e.attacks || null,
+          damage: e.damage || null,
+          move: e.MV || null,
+        })
+      }
+    }
+    return entities
+  } catch {
+    return []
+  }
+}
+
+// Fisher-Yates shuffle
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const arr = [...array]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
+
+const formatEntity = (e: any) => ({
+  id: e.id,
+  name: e.name,
+  title: e.title,
+  epithet: e.title,
+  pantheon: e.pantheon,
+  category: e.category,
+  type: e.category === 'heroes' ? 'hero' : e.category === 'demigods' ? 'demigod' : e.category === 'greater_gods' ? 'greater_god' : 'lesser_god',
+  hp: e.hp,
+  maxHp: e.maxHp,
+  HP: e.hp,
+  AC: e.AC,
+  MR: typeof e.MR === 'string' ? (e.MR === 'Immune' ? 100 : parseInt(e.MR) || 0) : (e.MR || 0),
+  align: e.align,
+  abilities: typeof e.abilities === 'string' ? JSON.parse(e.abilities) : (e.abilities || ['Basic Strike', 'Defend', 'Heroic Surge']),
+  personality: e.personality || 'A mysterious figure.',
+  // Ability Scores (AD&D 1e format)
+  str: e.str,
+  int: e.int,
+  wis: e.wis,
+  dex: e.dex,
+  con: e.con,
+  cha: e.cha,
+  // Class Levels
+  level: e.level,
+  fighterLevel: e.fighterLevel,
+  clericLevel: e.clericLevel,
+  magicUserLevel: e.magicUserLevel,
+  thiefLevel: e.thiefLevel,
+  // Combat Stats
+  attacks: e.attacks,
+  damage: e.damage,
+  move: e.move
+})
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const type = searchParams.get('type') || 'heroes' // heroes, antagonist, npcs
+    const type = searchParams.get('type') || 'heroes'
     const limit = parseInt(searchParams.get('limit') || '12')
     const excludeIds = searchParams.get('exclude')?.split(',').filter(Boolean) || []
 
-    // Fisher-Yates shuffle for true randomization
-    const shuffleArray = <T,>(array: T[]): T[] => {
-      const arr = [...array]
-      for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1))
-        ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    // Try DB first, fall back to JSON file
+    let entities: any[]
+    try {
+      switch (type) {
+        case 'heroes': {
+          const dbEntities = await db.entity.findMany({
+            where: { category: { in: ['heroes', 'demigods'] } }
+          })
+          entities = dbEntities
+          // Check if ability scores are populated
+          const hasScores = dbEntities.some(e => e.str)
+          if (!hasScores) {
+            console.warn('DB has no ability scores, using JSON fallback')
+            entities = getFallbackEntities('heroes', limit, excludeIds)
+          }
+          break
+        }
+        case 'antagonist': {
+          const dbEntities = await db.entity.findMany({ where: { hp: { gte: 300 } } })
+          entities = dbEntities
+          break
+        }
+        case 'npcs': {
+          entities = await db.entity.findMany({ where: { id: { notIn: excludeIds } } })
+          break
+        }
+        case 'all': {
+          const counts = await db.entity.groupBy({ by: ['category'], _count: true })
+          return NextResponse.json({
+            counts: counts.reduce((acc, c) => { acc[c.category] = c._count; return acc }, {} as Record<string, number>)
+          })
+        }
+        default:
+          return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
       }
-      return arr
+    } catch (dbError) {
+      console.error('DB error, using JSON fallback:', dbError)
+      entities = getFallbackEntities(type, limit, excludeIds)
     }
 
-    const formatEntity = (e: any) => ({
-      id: e.id,
-      name: e.name,
-      title: e.title,
-      epithet: e.title,
-      pantheon: e.pantheon,
-      category: e.category,
-      type: e.category === 'heroes' ? 'hero' : e.category === 'demigods' ? 'demigod' : e.category === 'greater_gods' ? 'greater_god' : 'lesser_god',
-      hp: e.hp,
-      maxHp: e.maxHp,
-      HP: e.hp,
-      AC: e.AC,
-      MR: typeof e.MR === 'string' ? (e.MR === 'Immune' ? 100 : parseInt(e.MR) || 0) : (e.MR || 0),
-      align: e.align,
-      abilities: e.abilities ? JSON.parse(e.abilities) : ['Basic Strike', 'Defend', 'Heroic Surge'],
-      personality: e.personality || 'A mysterious figure.',
-      // Ability Scores (AD&D 1e format)
-      str: e.str,
-      int: e.int,
-      wis: e.wis,
-      dex: e.dex,
-      con: e.con,
-      cha: e.cha,
-      // Class Levels
-      level: e.level,
-      fighterLevel: e.fighterLevel,
-      clericLevel: e.clericLevel,
-      magicUserLevel: e.magicUserLevel,
-      thiefLevel: e.thiefLevel,
-      // Combat Stats
-      attacks: e.attacks,
-      damage: e.damage,
-      move: e.move
+    const shuffled = shuffleArray(entities)
+    const selected = shuffled.slice(0, limit)
+
+    return NextResponse.json({
+      count: selected.length,
+      total: entities.length,
+      entities: selected.map(formatEntity)
     })
-
-    switch (type) {
-      case 'heroes': {
-        // Fetch all heroes AND demigods for party selection (62 total: 35 heroes + 27 demigods)
-        const entities = await db.entity.findMany({
-          where: {
-            category: { in: ['heroes', 'demigods'] }
-          }
-        })
-        
-        // Shuffle and return limited amount
-        const shuffled = shuffleArray(entities)
-        const selected = shuffled.slice(0, limit)
-        
-        return NextResponse.json({
-          count: selected.length,
-          total: entities.length,
-          entities: selected.map(formatEntity)
-        })
-      }
-
-      case 'antagonist': {
-        // Fetch greater gods (HP >= 300) for main antagonist
-        const entities = await db.entity.findMany({
-          where: {
-            hp: { gte: 300 }
-          }
-        })
-        
-        // Shuffle and return limited amount
-        const shuffled = shuffleArray(entities)
-        const selected = shuffled.slice(0, limit)
-        
-        return NextResponse.json({
-          count: selected.length,
-          total: entities.length,
-          entities: selected.map(formatEntity)
-        })
-      }
-
-      case 'npcs': {
-        // Fetch ALL entities EXCEPT player-selected heroes for NPC pool
-        // Includes: Heroes not selected, Demigods not selected, Lesser Gods, Greater Gods, Monsters
-        const entities = await db.entity.findMany({
-          where: {
-            id: { notIn: excludeIds }
-          }
-        })
-        
-        return NextResponse.json({
-          count: entities.length,
-          entities: entities.map(formatEntity)
-        })
-      }
-
-      case 'all': {
-        // Get counts for all categories
-        const counts = await db.entity.groupBy({
-          by: ['category'],
-          _count: true
-        })
-        
-        return NextResponse.json({
-          counts: counts.reduce((acc, c) => {
-            acc[c.category] = c._count
-            return acc
-          }, {} as Record<string, number>)
-        })
-      }
-
-      default:
-        return NextResponse.json({ error: 'Invalid type. Use: heroes, antagonist, npcs, or all' }, { status: 400 })
-    }
   } catch (error) {
     console.error('Game entities error:', error)
-    return NextResponse.json({ error: 'Database error' }, { status: 500 })
+    // Last resort: pure JSON fallback
+    const fallback = getFallbackEntities('heroes', 999, [])
+    return NextResponse.json({
+      count: fallback.length,
+      total: fallback.length,
+      entities: fallback.map(formatEntity)
+    })
   }
 }
