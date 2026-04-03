@@ -207,7 +207,9 @@ export async function GET(request: NextRequest) {
     const shuffled = shuffleArray(entities)
     const selected = shuffled.slice(0, limit)
 
+    console.log("[DDG v1.9.106] API route loaded, filtering dragons...")
     return NextResponse.json({
+      _version: "1.9.106-dragonfix",
       count: selected.length,
       total: entities.length,
       entities: selected.map(formatEntity)
