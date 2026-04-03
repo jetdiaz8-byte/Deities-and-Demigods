@@ -205,7 +205,6 @@ export interface GameState {
   partyGold: number
   // Token tracking
   geminiTokensUsed: number
-  groqTokensUsed: number
   // Current dice rolls for display
   lastDiceRolls: DiceRoll[]
   // Antagonist identity mystery system

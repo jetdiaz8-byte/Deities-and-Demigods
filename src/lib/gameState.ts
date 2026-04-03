@@ -50,7 +50,6 @@ export const createInitialState = (): GameState => ({
   ],
   partyGold: 0,
   geminiTokensUsed: 0,
-  groqTokensUsed: 0,
   lastDiceRolls: [],
   // Antagonist identity mystery system
   antagonistCluesRevealed: [],

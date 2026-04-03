@@ -34,7 +34,6 @@ export function useGameEngine() {
 
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
-  const [groqKey, setGroqKey] = useState('')
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
@@ -82,36 +81,8 @@ export function useGameEngine() {
   // Token Tracking State
   const [tokenUsage, setTokenUsage] = useState({
     gemini: { input: 0, output: 0, total: 0 },
-    groq: { input: 0, output: 0, total: 0 },
     lastCall: { api: '', input: 0, output: 0 }
   })
-  
-  // Request Throttling State
-  const [throttleState, setThrottleState] = useState({
-    lastRequestTime: 0,
-    minInterval: 3000, // 3 seconds minimum between API calls
-    isThrottled: false,
-    cooldownRemaining: 0
-  })
-  
-  // Smart Caching for Groq Options
-  const optionsCacheRef = useRef<Map<string, { options: GameOption[], timestamp: number, pcId: string }>>(new Map())
-  const CACHE_TTL = 60000 // 1 minute cache TTL
-  
-  // Throttling helper
-  const waitForThrottle = async (): Promise<void> => {
-    const now = Date.now()
-    const timeSinceLastRequest = now - throttleState.lastRequestTime
-    const waitTime = Math.max(0, throttleState.minInterval - timeSinceLastRequest)
-    
-    if (waitTime > 0) {
-      setThrottleState(prev => ({ ...prev, isThrottled: true, cooldownRemaining: Math.ceil(waitTime / 1000) }))
-      setStatusMessage(`Cooling down... ${Math.ceil(waitTime / 1000)}s`)
-      await sleep(waitTime)
-    }
-    
-    setThrottleState(prev => ({ ...prev, lastRequestTime: Date.now(), isThrottled: false, cooldownRemaining: 0 }))
-  }
   
   // Token estimation helper (rough approximation: 1 token ≈ 4 characters)
   const estimateTokens = (text: string): number => {
@@ -119,32 +90,25 @@ export function useGameEngine() {
   }
   
   // Update token usage tracking
-  const updateTokenUsage = (api: 'gemini' | 'groq', inputText: string, outputText: string) => {
+  const updateTokenUsage = (inputText: string, outputText: string) => {
     const inputTokens = estimateTokens(inputText)
     const outputTokens = estimateTokens(outputText)
     
     setTokenUsage(prev => ({
       ...prev,
-      [api]: {
-        input: prev[api].input + inputTokens,
-        output: prev[api].output + outputTokens,
-        total: prev[api].total + inputTokens + outputTokens
+      gemini: {
+        input: prev.gemini.input + inputTokens,
+        output: prev.gemini.output + outputTokens,
+        total: prev.gemini.total + inputTokens + outputTokens
       },
-      lastCall: { api, input: inputTokens, output: outputTokens }
+      lastCall: { api: 'gemini', input: inputTokens, output: outputTokens }
     }))
     
     // Also update game state for persistence
-    if (api === 'gemini') {
-      setGameState(prev => ({
-        ...prev,
-        geminiTokensUsed: prev.geminiTokensUsed + inputTokens + outputTokens
-      }))
-    } else {
-      setGameState(prev => ({
-        ...prev,
-        groqTokensUsed: prev.groqTokensUsed + inputTokens + outputTokens
-      }))
-    }
+    setGameState(prev => ({
+      ...prev,
+      geminiTokensUsed: prev.geminiTokensUsed + inputTokens + outputTokens
+    }))
   }
 
   const narrRef = useRef<HTMLDivElement>(null)
@@ -153,9 +117,7 @@ export function useGameEngine() {
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
     const savedGemini = localStorage.getItem('mythworld_gemini') || ''
-    const savedGroq = localStorage.getItem('mythworld_groq') || ''
     setGeminiKey(savedGemini)
-    setGroqKey(savedGroq)
     loadSaveSlots()
   }, [])
 
@@ -164,9 +126,6 @@ export function useGameEngine() {
     if (geminiKey) localStorage.setItem('mythworld_gemini', geminiKey)
   }, [geminiKey])
 
-  useEffect(() => {
-    if (groqKey) localStorage.setItem('mythworld_groq', groqKey)
-  }, [groqKey])
 
   // ── AUTO SCROLL ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -827,9 +786,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ── API CALLS ──────────────────────────────────────────────────────────
   const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    // Apply throttling before API call
-    await waitForThrottle()
-    
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`
     const MAX_RETRIES = 3
     const BASE_DELAY = 6000
@@ -892,7 +848,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         console.log(`✅ Gemini response: ${raw.length} chars, ${isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn}`)
         
         // Track token usage
-        updateTokenUsage('gemini', totalInput, raw)
+        updateTokenUsage(totalInput, raw)
 
         return parseDMResponse(raw, gs)
 
@@ -1106,209 +1062,6 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       consequences: 'The moment stretches. Consequences await the next action.',
       tension_note: 'The story pauses at a turning point.'
     }
-  }
-
-  const callGroqForOptions = async (pc: Entity, sceneCtx: string, fallback: GameOption[]): Promise<GameOption[]> => {
-    let validFallback = fallback.length > 0 && fallback[0].action ? fallback : buildDefaultOptions(pc)
-    if (!groqKey) return validFallback
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // SMART CACHING - Reuse options for similar situations (SAVES API CALLS)
-    // ═══════════════════════════════════════════════════════════════════════
-    const cacheKey = `${pc.id}_${pc.hp}_${gameState.act}_${gameState.antagonistPhase}_${gameState.activeNPCs.length > 0 ? 'npcs' : 'no_npcs'}`
-    const cached = optionsCacheRef.current.get(cacheKey)
-    
-    if (cached && (Date.now() - cached.timestamp) < CACHE_TTL && cached.pcId === pc.id) {
-      setStatusMessage(`Using cached options for ${pc.name}`)
-      return cached.options
-    }
-    
-    // Check if last choice was "Skip Turn" - can reuse skip options
-    if (gameState.humanOptions.length > 0) {
-      const lastChoice = gameState.humanOptions[gameState.pendingHumanChoice || 0]
-      if (lastChoice?.action.toLowerCase().includes('skip') || lastChoice?.action.toLowerCase().includes('wait')) {
-        // Return skip-specific options without API call
-        setStatusMessage(`Quick options for ${pc.name}`)
-        return buildDefaultOptions(pc)
-      }
-    }
-
-    const alignRule = pc.align.includes('good')
-      ? 'Protect innocents, honor alliances, show mercy to the deserving.'
-      : pc.align.includes('evil')
-        ? 'Power and survival first. Exploit weaknesses. Show no mercy to enemies.'
-        : 'Balance all factors. Weigh costs vs benefits. Adapt to the situation.'
-
-    const personalityHint = pc.personality ? `PERSONALITY: ${pc.personality.slice(0, 100)}\n` : ''
-
-    // Get companion info if available
-    const companion = gameState.companionId ? gameState.pcs.find(p => p.id === gameState.companionId) : null
-    const companionAlignRule = companion?.align.includes('good')
-      ? 'Protect innocents, honor alliances, show mercy.'
-      : companion?.align.includes('evil')
-        ? 'Power and survival first. Exploit weaknesses.'
-        : 'Balance all factors. Adapt to the situation.'
-    
-    const affinityDesc = gameState.companionAffinity >= 75 ? 'devoted ally'
-      : gameState.companionAffinity >= 50 ? 'loyal companion'
-      : gameState.companionAffinity >= 25 ? 'concerned friend'
-      : gameState.companionAffinity >= 0 ? 'distant ally'
-      : gameState.companionAffinity >= -25 ? 'conflicted companion'
-      : gameState.companionAffinity >= -50 ? 'hostile partner'
-      : 'rival in name only'
-
-    const sys = gameState.turn === 0
-      ? `Generate 6 options for this scene with a STRUCTURED FORMAT:
-
-MAIN PC: ${pc.name} (${pc.align})
-${personalityHint}ALIGNMENT: ${alignRule}
-KEY ABILITIES: ${pc.abilities.slice(0, 4).join(' | ')}
-
-${companion ? `COMPANION: ${companion.name} (${companion.align})
-COMPANION AFFINITY WITH PC: ${affinityDesc} (${gameState.companionAffinity}/100)
-COMPANION ALIGNMENT: ${companionAlignRule}
-COMPANION ABILITIES: ${companion.abilities.slice(0, 3).join(' | ')}` : 'No companion present.'}
-
-═══════════════════════════════════════════════════════
-REQUIRED OUTPUT STRUCTURE (EXACTLY 6 OPTIONS):
-═══════════════════════════════════════════════════════
-
-OPTIONS 1-3: MAIN PC ACTIONS (according to ${pc.align} alignment)
-- Option 1: Direct action using abilities (attack, defend, investigate)
-- Option 2: Social/diplomatic action (persuade, negotiate, question)
-- Option 3: Strategic or signature ability use
-
-${companion ? `OPTIONS 4-5: COMPANION SUGGESTED ACTIONS (according to ${companion.align} alignment and ${affinityDesc} relationship)
-- Option 4: ${companion.name} suggests an action that supports ${pc.name}'s goal
-- Option 5: ${companion.name} suggests an alternative approach (based on their alignment and affinity)
-
-AFFINITY GUIDE: ${gameState.companionAffinity >= 50 
-  ? 'Positive affinity = supportive, protective, selfless suggestions' 
-  : gameState.companionAffinity >= 0 
-    ? 'Neutral affinity = practical, cautious, pragmatic suggestions' 
-    : 'Negative affinity = challenging, questioning, possibly selfish suggestions'}` : 'OPTIONS 4-5: Alternative PC actions (no companion present)'}
-
-OPTION 6: Skip Turn — Observe and Wait (always include this)
-
-CRITICAL: 
-- Options 1-3 MUST align with ${pc.name}'s ${pc.align} alignment
-- ${companion ? `Options 4-5 MUST reflect ${companion.name}'s ${companion.align} alignment AND their ${affinityDesc} relationship with ${pc.name}` : 'Options 4-5 should be alternative PC actions'}
-
-Output ONLY a JSON array: [{"num":1,"action":"Full action description","ability":"Relevant ability","align_note":"Why this fits","source":"pc"},{"num":2,...,"source":"pc"},{"num":3,...,"source":"pc"},{"num":4,...,"source":"companion","companion_name":"${companion?.name || ''}"},{"num":5,...,"source":"companion","companion_name":"${companion?.name || ''}"},{"num":6,"action":"Skip Turn — Observe and Wait","ability":"Observation","align_note":"Passive","source":"pc"}]`
-      : `Generate 6 options with STRUCTURED FORMAT:
-
-MAIN PC: ${pc.name} (${pc.align})
-${personalityHint}ALIGNMENT: ${alignRule}
-KEY ABILITIES: ${pc.abilities.slice(0, 4).join(' | ')}
-
-${companion ? `COMPANION: ${companion.name} (${companion.align})
-COMPANION AFFINITY WITH PC: ${affinityDesc} (${gameState.companionAffinity}/100)
-COMPANION ALIGNMENT: ${companionAlignRule}
-COMPANION ABILITIES: ${companion.abilities.slice(0, 3).join(' | ')}` : 'No companion present.'}
-
-═══════════════════════════════════════════════════════
-REQUIRED OUTPUT STRUCTURE (EXACTLY 6 OPTIONS):
-═══════════════════════════════════════════════════════
-
-OPTIONS 1-3: MAIN PC ACTIONS (according to ${pc.align} alignment)
-- Option 1: Direct action (offensive/defensive based on situation)
-- Option 2: Social/diplomatic action or ability use
-- Option 3: Strategic move or signature ability
-
-${companion ? `OPTIONS 4-5: COMPANION SUGGESTED ACTIONS (according to ${companion.align} alignment and ${affinityDesc} relationship)
-- Option 4: ${companion.name} suggests supportive action based on affinity
-- Option 5: ${companion.name} suggests alternative approach (reflects alignment + affinity)
-
-AFFINITY EFFECT: ${gameState.companionAffinity >= 50 
-  ? 'High affinity = supportive, protective suggestions' 
-  : gameState.companionAffinity >= 0 
-    ? 'Neutral affinity = practical, balanced suggestions' 
-    : 'Low affinity = challenging, questioning suggestions'}` : 'OPTIONS 4-5: Alternative PC actions'}
-
-OPTION 6: Skip Turn — Observe and Wait (always last)
-
-Output ONLY a JSON array with "source" field: "pc" for PC actions, "companion" for companion suggestions.`
-    
-    // Generate 6 options including skip turn
-    const optionsPrompt = `SCENE: ${toAscii(sceneCtx).slice(0, 500)}
-MAIN PC: ${pc.name} | HP:${pc.hp}/${pc.maxHp} | ${pc.align}
-${companion ? `COMPANION: ${companion.name} | ${companion.align} | Affinity: ${affinityDesc}` : ''}
-
-Generate EXACTLY 6 options:
-- Options 1-3: ${pc.name}'s actions (according to ${pc.align} alignment)
-- ${companion ? `Options 4-5: ${companion.name}'s suggestions (according to ${companion.align} alignment and ${affinityDesc} affinity)` : 'Options 4-5: Alternative PC actions'}
-- Option 6: Skip Turn
-
-Each option needs: num, action, ability, align_note, source ("pc" or "companion")${companion ? ', companion_name' : ''}`
-
-    // Apply throttling before Groq call
-    await waitForThrottle()
-
-    try {
-      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          max_tokens: 800, // Reduced from 1000 for optimization
-          temperature: 0.95, // Higher temp for variety
-          messages: [
-            { role: 'system', content: sys },
-            { role: 'user', content: optionsPrompt }
-          ]
-        })
-      })
-
-      if (!r.ok) throw new Error(`Groq ${r.status}`)
-      const data = await r.json()
-      const raw = (data.choices || [])[0]?.message?.content || ''
-      
-      // Track token usage
-      updateTokenUsage('groq', sys + optionsPrompt, raw)
-      
-      let s = raw.replace(/```json\s*/ig, '').replace(/```\s*/g, '').trim()
-      const f = s.indexOf('[')
-      const l = s.lastIndexOf(']')
-      if (f >= 0 && l >= f) s = s.substring(f, l + 1)
-      const arr = JSON.parse(s)
-      if (Array.isArray(arr) && arr.length >= 4 && arr[0].action && arr[0].ability) {
-        // Ensure source field is set for all options
-        const processedArr: GameOption[] = arr.map((o: GameOption, idx: number) => ({
-          ...o,
-          num: idx + 1,
-          source: o.source || (idx < 3 ? 'pc' : idx < 5 ? 'companion' : 'pc'),
-          companion_name: o.companion_name || (o.source === 'companion' && idx >= 3 && idx < 5 ? companion?.name : undefined)
-        }))
-        
-        // Add skip turn if not present
-        const hasSkip = processedArr.some((o: GameOption) => o.action.toLowerCase().includes('skip') || o.action.toLowerCase().includes('wait'))
-        if (!hasSkip && processedArr.length < 6) {
-          const skipOption: GameOption = { 
-            num: 6, 
-            action: 'Skip Turn — Observe and Wait', 
-            ability: 'Observation', 
-            align_note: 'Passive, waiting for opportunity',
-            source: 'pc'
-          }
-          processedArr.push(skipOption)
-        }
-        
-        const options = processedArr.slice(0, 6)
-        
-        // Cache the options for future use
-        optionsCacheRef.current.set(cacheKey, {
-          options,
-          timestamp: Date.now(),
-          pcId: pc.id
-        })
-        
-        return options
-      }
-    } catch (e) {
-      console.warn('Groq options failed:', e)
-    }
-    // Add skip turn to fallback
-    return buildDefaultOptions(pc)
   }
 
   const buildDefaultOptions = (pc: Entity): GameOption[] => {
@@ -2040,7 +1793,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         const sceneCtx = `Act ${gs.act}, Turn ${gs.turn}. SUMMARY: ${gs.storySummary}\nRECENT: ` + gs.log.slice(0, 3).map(l => l.msg).join(' | ')
         setStatusMessage(`Generating options for ${humanPC.name}...`)
 
-        const opts = await callGroqForOptions(humanPC, sceneCtx, buildDefaultOptions(humanPC))
+        const opts = buildDefaultOptions(humanPC)
         gs.humanOptions = opts
         gs.waitingForHuman = true
         gs.pendingHumanChoice = null
@@ -2520,7 +2273,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const nextPC = newGS.pcs.find(p => p.id === newGS.humanPCId && !p.dead) || living[0]
     if (nextPC) {
       const sceneCtx = `Act ${newGS.act}, Turn ${newGS.turn}. SUMMARY: ${newGS.storySummary}\nRECENT: ` + newGS.log.slice(0, 3).map(l => l.msg).join(' | ')
-      const opts = await callGroqForOptions(nextPC, sceneCtx, buildDefaultOptions(nextPC))
+      const opts = buildDefaultOptions(nextPC)
       newGS.humanOptions = opts
       newGS.waitingForHuman = true
       newGS.pendingHumanChoice = null
@@ -2707,7 +2460,7 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
       const nextPC = newGS.pcs.find(p => p.id === newGS.humanPCId && !p.dead) || living[0]
       if (nextPC) {
         const sceneCtx = `Act ${newGS.act}, Turn ${newGS.turn}. SUMMARY: ${newGS.storySummary}\nRECENT: ` + newGS.log.slice(0, 3).map(l => l.msg).join(' | ')
-        const opts = await callGroqForOptions(nextPC, sceneCtx, buildDefaultOptions(nextPC))
+        const opts = buildDefaultOptions(nextPC)
         newGS.humanOptions = opts
         newGS.waitingForHuman = true
         newGS.pendingHumanChoice = null
@@ -3033,7 +2786,6 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
     // ── STATE ──────────────────────────────────────────────────────────────
     gameState, setGameState,
     geminiKey, setGeminiKey,
-    groqKey, setGroqKey,
     gamePhase, setGamePhase,
     availableHeroes, setAvailableHeroes,
     selectedParty, setSelectedParty,
@@ -3064,11 +2816,8 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
     audioCache, setAudioCache,
     displayedNarrative, setDisplayedNarrative,
     tokenUsage, setTokenUsage,
-    throttleState, setThrottleState,
     // ── REFS ───────────────────────────────────────────────────────────────
     narrRef,
-    audioRef,
-    optionsCacheRef,
     // ── FUNCTIONS ──────────────────────────────────────────────────────────
     loadSaveSlots,
     saveGame,
@@ -3086,7 +2835,6 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
     parseDMResponse,
     generateSmartFallback,
     getTemplateFallback,
-    callGroqForOptions,
     buildDefaultOptions,
     applyMechanics,
     runTurn,
@@ -3100,8 +2848,6 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
     handleUseItem,
     exportStory,
     resolveTestOfFaith,
-    waitForThrottle,
-    estimateTokens,
     updateTokenUsage,
     // Achievement System
     achievementTracker: achievementTrackerRef.current,
