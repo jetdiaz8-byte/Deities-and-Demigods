@@ -74,6 +74,7 @@ export function useGameEngine() {
   const [ttsEnabled, setTtsEnabled] = useState(false)
   const [ttsVoice, setTtsVoice] = useState('guy') // Edge TTS - GuyNeural for DM narration
   const [ttsSpeed, setTtsSpeed] = useState(0.9) // Slightly slower for dramatic storytelling
+  const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
   // Store the exact displayed narrative text for TTS
@@ -270,56 +271,62 @@ export function useGameEngine() {
     return chunks.length > 0 ? chunks : [text.slice(0, maxLength)]
   }
 
+  const abortSpeakRef = useRef(false)
+
   // Edge TTS - Microsoft Neural Voices (FREE, unlimited)
   // Reads the EXACT displayed narrative text for perfect sync
   const speakText = async (text: string, voice?: string) => {
-    if (!text || isSpeaking) return
-    
-    setIsSpeaking(true)
-    setStatusMessage('Generating voice...')
-    
-    try {
-      // Stop any current audio
-      if (audioRef.current) {
-        audioRef.current.pause()
-        audioRef.current = null
-      }
+    if (!text) return
 
-      // Split long text into chunks (Edge TTS handles ~5K chars well)
+    // If already speaking, stop first
+    if (isSpeaking && audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+
+    setIsSpeaking(true)
+    abortSpeakRef.current = false
+    setStatusMessage('Generating voice...')
+
+    try {
       const chunks = splitTextIntoChunks(text, 2000)
       const selectedVoice = voice || ttsVoice
-      
-      // Process each chunk sequentially
+
       for (let i = 0; i < chunks.length; i++) {
+        if (abortSpeakRef.current) break
         const chunk = chunks[i]
         if (!chunk.trim()) continue
-        
+
         setStatusMessage(`Speaking... (${i + 1}/${chunks.length})`)
-        
-        // Call Edge TTS API
+
         const response = await fetch('/api/tts', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text: chunk,
             voice: selectedVoice,
-            rate: '-15%' // Slower for dramatic storytelling
+            rate: '-15%'
           })
         })
-        
+
+        if (abortSpeakRef.current) break
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}))
           throw new Error(errorData.error || 'TTS generation failed')
         }
-        
+
         const audioBlob = await response.blob()
         const audioUrl = URL.createObjectURL(audioBlob)
-        
-        // Play audio
+
         await new Promise<void>((resolve, reject) => {
+          if (abortSpeakRef.current) {
+            URL.revokeObjectURL(audioUrl)
+            resolve()
+            return
+          }
           const audio = new Audio(audioUrl)
           audioRef.current = audio
-          
+
           audio.onended = () => {
             URL.revokeObjectURL(audioUrl)
             resolve()
@@ -328,11 +335,11 @@ export function useGameEngine() {
             URL.revokeObjectURL(audioUrl)
             reject(new Error('Audio playback failed'))
           }
-          
+
           audio.play().catch(reject)
         })
       }
-      
+
       setStatusMessage('Ready')
     } catch (error) {
       console.error('TTS Error:', error)
@@ -345,10 +352,30 @@ export function useGameEngine() {
   }
 
   const stopSpeaking = () => {
-    // Stop any playing audio
+    abortSpeakRef.current = true
     if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current = null
+      // Smart fade over 300ms
+      try {
+        audioRef.current.volume = 0.6
+        const fadeInterval = setInterval(() => {
+          if (audioRef.current) {
+            const newVol = Math.max(0, (audioRef.current.volume || 0) - 0.15)
+            audioRef.current.volume = newVol
+            if (newVol <= 0) {
+              clearInterval(fadeInterval)
+              audioRef.current.pause()
+              audioRef.current = null
+            }
+          } else {
+            clearInterval(fadeInterval)
+          }
+        }, 50)
+      } catch {
+        if (audioRef.current) {
+          audioRef.current.pause()
+          audioRef.current = null
+        }
+      }
     }
     setIsSpeaking(false)
     setStatusMessage('Ready')
@@ -1913,6 +1940,15 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       gs = await applyMechanics(res, gs)
       await renderResult(res, isFirst, gs)
 
+      // Auto-speak in auto mode — fire and forget, don't block gameplay
+      if (narratorMode === 'auto' && res.dm_narration && !document.hidden) {
+        setTimeout(() => {
+          if (!abortSpeakRef.current) {
+            speakText(res.dm_narration)
+          }
+        }, 300)
+      }
+
       gs.humanPCId = humanPCId
       gs.isProcessing = false
 
@@ -2670,6 +2706,15 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
 
       await renderResult(res, false, newGS)
 
+      // Auto-speak in auto mode — fire and forget, don't block gameplay
+      if (narratorMode === 'auto' && res.dm_narration && !document.hidden) {
+        setTimeout(() => {
+          if (!abortSpeakRef.current) {
+            speakText(res.dm_narration)
+          }
+        }, 300)
+      }
+
       // ── ACHIEVEMENT CHECK ───────────────────────────────────────────
       const damageThisTurn = (res.damage_dealt?.length || 0) > 0
       const critThisTurn = !!(res.dice_rolls || []).find(d => d.roll >= 20 && d.die?.includes('d20'))
@@ -3062,12 +3107,14 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     ttsEnabled, setTtsEnabled,
     ttsVoice, setTtsVoice,
     ttsSpeed, setTtsSpeed,
+    narratorMode, setNarratorMode,
     isSpeaking, setIsSpeaking,
     audioCache, setAudioCache,
     displayedNarrative, setDisplayedNarrative,
     tokenUsage, setTokenUsage,
     // ── REFS ───────────────────────────────────────────────────────────────
     narrRef,
+    abortSpeakRef,
     // ── FUNCTIONS ──────────────────────────────────────────────────────────
     loadSaveSlots,
     saveGame,

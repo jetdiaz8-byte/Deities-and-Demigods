@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -52,6 +52,7 @@ export default function MythworldEngine() {
     selectedPortrait, setSelectedPortrait,
     ttsVoice, setTtsVoice,
     isSpeaking,
+    narratorMode, setNarratorMode,
     tokenUsage,
     narrRef,
     // ── FUNCTIONS ──────────────────────────────────────────────────────────
@@ -104,6 +105,19 @@ export default function MythworldEngine() {
 
   // Act-dependent atmosphere class
   const atmosphereClass = gameState.act === 'act1' ? 'atmosphere-act1' : gameState.act === 'act2' ? 'atmosphere-act2' : 'atmosphere-act3'
+
+  // Smart skip: fade out speech when player interacts
+  useEffect(() => {
+    if (gameState.waitingForHuman && narratorMode === 'auto') {
+      // Small delay to let narration render first
+      const timer = setTimeout(() => {
+        if (isSpeaking) {
+          // Don't auto-stop — let the player hear it, they can skip manually
+        }
+      }, 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [gameState.waitingForHuman, narratorMode, isSpeaking])
 
   // Day/night cycle based on turn count
   const timeOfDay = useMemo(() => {
@@ -365,6 +379,65 @@ export default function MythworldEngine() {
 
             {/* Combat Tracker */}
             <CombatTracker gameState={gameState} />
+
+            {/* Smart Narrator Controls */}
+            {lastDMNarrative && (
+              <div className="sticky bottom-0 left-0 right-0 z-20 mb-2 mt-4">
+                <div className="flex items-center justify-between p-2 rounded-lg border border-[#2a2010]" style={{
+                  background: 'linear-gradient(135deg, rgba(26,21,16,0.95), rgba(16,12,8,0.95))',
+                  backdropFilter: 'blur(8px)',
+                }}>
+                  {/* Narrator Mode Toggle */}
+                  <div className="flex items-center gap-1">
+                    {(['auto', 'manual', 'off'] as const).map(mode => (
+                      <button
+                        key={mode}
+                        onClick={() => setNarratorMode(mode)}
+                        className={`px-2 py-1 rounded text-[10px] font-title uppercase tracking-wider transition-all ${
+                          narratorMode === mode
+                            ? 'bg-[rgba(212,175,55,.15)] text-[#d4af37] border border-[#d4af37]'
+                            : 'text-[#5a4a30] border border-transparent hover:text-[#8a7a50] hover:border-[#3a3020]'
+                        }`}
+                      >
+                        {mode === 'auto' ? '\u{1F50A}' : mode === 'manual' ? '\u{1F508}' : '\u{1F507}'} {mode}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Speaking indicator */}
+                  <div className="flex items-center gap-2">
+                    {isSpeaking ? (
+                      <button
+                        onClick={stopSpeaking}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-all"
+                        style={{
+                          background: 'rgba(200,50,50,.15)',
+                          border: '1px solid rgba(200,50,50,.3)',
+                          color: '#e08080',
+                        }}
+                      >
+                        <span className="inline-block w-2 h-2 rounded-full bg-red-400 animate-pulse" />
+                        Speaking... Click to stop
+                      </button>
+                    ) : narratorMode === 'manual' ? (
+                      <button
+                        onClick={speakNarrative}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-all hover:bg-[rgba(212,175,55,.1)]"
+                        style={{
+                          background: 'rgba(42,32,16,.5)',
+                          border: '1px solid #3a3020',
+                          color: '#c9a84c',
+                        }}
+                      >
+                        {'\u{1F50A}'} Speak Narration
+                      </button>
+                    ) : narratorMode === 'auto' ? (
+                      <span className="text-[10px] text-[#5a4a30] italic font-narrative">Auto-narrating</span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Human Choice Panel */}
             <ChoicePanel

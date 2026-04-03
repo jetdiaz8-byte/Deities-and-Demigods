@@ -1331,3 +1331,32 @@
   color: #8b6914;
   font-size: 14px;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SMART NARRATOR STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Speaking pulse animation on narration block */
+.narration-speaking {
+  position: relative;
+}
+
+.narration-speaking::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  border: 2px solid rgba(212,175,55,0.4);
+  animation: narrator-pulse 1.5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes narrator-pulse {
+  0%, 100% { border-color: rgba(212,175,55,0.2); box-shadow: inset 0 0 10px rgba(212,175,55,0.05); }
+  50% { border-color: rgba(212,175,55,0.5); box-shadow: inset 0 0 20px rgba(212,175,55,0.1); }
+}
+
+/* Active narration highlight — last turn block */
+.narration-active {
+  border-color: rgba(212,175,55,0.15) !important;
+}

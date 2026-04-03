@@ -503,3 +503,48 @@ Created 3 new component files, enhanced 1 existing file, and integrated dice rol
 - Damage result highlighted in gold when >= 80% of max die value
 
 **Lint Status:** 9 remaining errors are all pre-existing (7 in scripts/ for require imports, 2 in AchievementNotification.tsx for setState-in-effect). Zero new errors from these changes.
+
+---
+## Task ID: 1 - Smart Narrator Builder
+### Work Task
+Build the "Smart Narrator" system — a hybrid TTS approach with 3 modes (Auto, Manual, Off) involving surgical modifications to 3 files: useGameEngine.ts, page.tsx, and globals.css.
+
+### Work Summary
+Implemented the complete Smart Narrator system across 3 files. All changes are surgical edits (no full rewrites). Zero new lint errors.
+
+**FILE 1: `src/hooks/useGameEngine.ts` — 5 modifications:**
+
+1. **narratorMode state (line 77):** Added `const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')` between ttsSpeed and isSpeaking states.
+
+2. **abortSpeakRef + speakText rewrite (lines 274-352):** Added `const abortSpeakRef = useRef(false)` before speakText. Replaced the entire speakText function with a smarter version that:
+   - Removes the `if (isSpeaking) return` guard — now allows re-entry by pausing current audio first
+   - Checks `abortSpeakRef.current` at multiple points (before fetch, during chunk loop, before audio playback)
+   - Resets abortSpeakRef on each new call
+   - Properly revokes ObjectURLs on abort
+
+3. **Smart fade stopSpeaking (lines 354-382):** Replaced hard `pause()` with a 300ms volume fade (0.6 → 0 in steps of -0.15 every 50ms via setInterval). Falls back to hard pause on error.
+
+4. **Auto-speak after renderResult (lines 1943-1950, 2709-2716):** Added auto-speak blocks at both call sites where renderResult is invoked (initial turn + choice resolution). Uses `setTimeout(300ms)` fire-and-forget so gameplay is never blocked. Guards: narratorMode==='auto', res.dm_narration exists, !document.hidden, !abortSpeakRef.current.
+
+5. **Export additions (lines 3110, 3117):** Added `narratorMode, setNarratorMode` to state exports and `abortSpeakRef` to refs exports in the return object.
+
+**FILE 2: `src/app/page.tsx` — 3 modifications:**
+
+1. **Destructuring (line 55):** Added `narratorMode, setNarratorMode` to the useGameEngine destructuring block.
+
+2. **Smart skip useEffect (lines 109-120):** Added a useEffect that watches `waitingForHuman`, `narratorMode`, and `isSpeaking`. Currently a no-op placeholder — designed to allow future auto-stop logic when player interacts, without interfering with narration playback.
+
+3. **Floating narrator controls (lines 383-440):** Added a sticky bottom control bar between CombatTracker and ChoicePanel. Features:
+   - 3 mode toggle buttons (Auto 🔊, Manual 🔈, Off 🔇) with active state styling in gold
+   - Conditional right-side indicators: "Speaking... Click to stop" (red, pulsing) when active, "Speak Narration" (gold) in manual mode, "Auto-narrating" (subtle italic) in auto mode
+   - Dark gradient background with backdrop blur, border-matching game theme
+   - Only visible when `lastDMNarrative` is truthy
+
+**FILE 3: `src/app/globals.css` — 1 addition (lines 1335-1362):**
+- `.narration-speaking` with `::after` pseudo-element creating a gold pulsing border (narrator-pulse animation, 1.5s ease-in-out infinite)
+- `.narration-active` with subtle gold border highlight
+- `@keyframes narrator-pulse` with 0.2→0.5 opacity border color transition
+
+**getTemplateFallback Check:** Confirmed the function already handles TURN 0 correctly — it selects appropriate templates based on game state and uses `buildDefaultOptions()` for default combat/social/exploration choices. The "No JSON in Gemini response" console warning is working as designed (fallback kicks in gracefully).
+
+**Lint Status:** 9 remaining errors are all pre-existing (7 in scripts/ for require imports, 2 in AchievementNotification.tsx for setState-in-effect). Zero new errors introduced.
