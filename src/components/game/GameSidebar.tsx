@@ -26,7 +26,7 @@ export interface GameSidebarProps {
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
   saveSlots: SaveSlot[]
-  tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
+  tokenUsage: { gemini: { input: number; output: number; total: number }; groq: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
 }
 
 export function GameSidebar({
@@ -46,8 +46,8 @@ export function GameSidebar({
 }: GameSidebarProps) {
   return (
     <>
-      {/* Desktop Sidebar */}
-      <div className="fixed right-0 top-0 h-screen w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-40 hidden md:flex">
+      {/* Desktop Sidebar - top offset accounts for sticky header */}
+      <div className="fixed right-0 top-0 h-screen w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-40 hidden md:flex pt-[300px]">
         {/* Story So Far - Collapsible at top of sidebar */}
         {gameState.storySummary && (
           <div className="border-b border-[#2e2008] p-3 flex-shrink-0 max-h-[200px] overflow-y-auto">
@@ -135,7 +135,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
   setExpandedNPC: (id: string | null) => void
   setSelectedPortrait: (portrait: CharacterPortrait | null) => void
   setPortraitModalOpen: (open: boolean) => void
-  tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
+  tokenUsage: { gemini: { input: number; output: number; total: number }; groq: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
 }) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
@@ -314,10 +314,14 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
         {/* Token Usage Summary */}
         <div className="mt-4 pt-3 border-t border-[#3a3020]">
           <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">Session Statistics</h4>
-          <div className="grid grid-cols-1 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="p-2 bg-[#1a1510] rounded">
               <div className="text-[#7a5f20]">Gemini Tokens</div>
               <div className="text-blue-400 font-bold">{tokenUsage.gemini.total.toLocaleString()}</div>
+            </div>
+            <div className="p-2 bg-[#1a1510] rounded">
+              <div className="text-[#7a5f20]">Groq Tokens</div>
+              <div className="text-purple-400 font-bold">{tokenUsage.groq.total.toLocaleString()}</div>
             </div>
           </div>
         </div>
@@ -325,7 +329,8 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
 
       <TabsContent value="rules" className="flex-1 overflow-y-auto p-3 m-0 text-sm text-[#9a8860] leading-relaxed min-h-0">
         <h3 className="text-[#c9a84c] mb-2 text-base" style={{ fontFamily: 'Cinzel, serif' }}>HOW IT WORKS</h3>
-        <p><strong className="text-[#9a8860]">Gemini 2.5 Flash</strong> is your AI DM — narrates in Neil Gaiman style, controls all NPCs, generates action options, and enforces D&D 5e + DDG rules.</p>
+        <p><strong className="text-[#9a8860]">Gemini 2.5 Flash</strong> is your DM — narrates in Neil Gaiman style, controls all NPCs, enforces D&D 5e + DDG rules.</p>
+        <p className="mt-2"><strong className="text-[#9a8860]">Groq llama-3.3-70b</strong> is each PC agent — acts strictly by alignment and personality.</p>
         <p className="mt-2"><strong className="text-[#9a8860]">You</strong> control one PC per turn — the one the story determines is most relevant.</p>
 
         <h3 className="text-[#c9a84c] mt-4 mb-2 text-base" style={{ fontFamily: 'Cinzel, serif' }}>ALIGNMENT RULES</h3>
@@ -355,7 +360,7 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
   setExpandedNPC: (id: string | null) => void
   setSelectedPortrait: (portrait: CharacterPortrait | null) => void
   setPortraitModalOpen: (open: boolean) => void
-  tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
+  tokenUsage: { gemini: { input: number; output: number; total: number }; groq: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
 }) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
@@ -591,10 +596,14 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
         {/* Token Usage Summary - Mobile */}
         <div className="mt-4 pt-3 border-t border-[#3a3020]">
           <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">Session Stats</h4>
-          <div className="grid grid-cols-1 gap-2 text-xs">
+          <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="p-2 bg-[#1a1510] rounded">
-              <div className="text-[#7a5f20]">Gemini Tokens</div>
+              <div className="text-[#7a5f20]">Gemini</div>
               <div className="text-blue-400 font-bold">{tokenUsage.gemini.total.toLocaleString()}</div>
+            </div>
+            <div className="p-2 bg-[#1a1510] rounded">
+              <div className="text-[#7a5f20]">Groq</div>
+              <div className="text-purple-400 font-bold">{tokenUsage.groq.total.toLocaleString()}</div>
             </div>
           </div>
         </div>

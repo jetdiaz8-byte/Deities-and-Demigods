@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   BookOpen, ScrollText, Volume2, VolumeX, Menu, X, Clock,
-  VolumeOff, Volume1, Swords, Trophy
+  Music, VolumeOff, Volume1, Swords, Trophy
 } from 'lucide-react'
 import { HealthBar, NarrativeSection, TokenCounter } from '@/components/game/GameComponents'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
@@ -29,11 +29,15 @@ export interface GameHeaderProps {
   setPortraitModalOpen: (open: boolean) => void
   // Audio
   sfxEnabled: boolean
+  ambientEnabled: boolean
   volume: number
   sfxVolume: number
+  ambientVolume: number
   toggleSfx: () => void
+  toggleAmbient: () => void
   setVolume: (v: number) => void
   setSfxVolume: (v: number) => void
+  setAmbientVolume: (v: number) => void
   // Achievements
   achievementCount: number
   achievementTotal: number
@@ -54,11 +58,15 @@ export function GameHeader({
   setPortraitModalOpen,
   // Audio
   sfxEnabled,
+  ambientEnabled,
   volume,
   sfxVolume,
+  ambientVolume,
   toggleSfx,
+  toggleAmbient,
   setVolume,
   setSfxVolume,
+  setAmbientVolume,
   // Achievements
   achievementCount,
   achievementTotal,
@@ -117,6 +125,19 @@ export function GameHeader({
             )}
           </button>
 
+          {/* Ambient Toggle */}
+          <button
+            onClick={toggleAmbient}
+            className="p-1.5 rounded transition-all"
+            title={ambientEnabled ? 'Disable Ambient Music' : 'Enable Ambient Music'}
+          >
+            {ambientEnabled ? (
+              <Music className="w-4 h-4 text-[#d4af37]" />
+            ) : (
+              <VolumeOff className="w-4 h-4 text-gray-500" />
+            )}
+          </button>
+
           {/* Volume Slider Panel - Desktop only */}
           <div className="hidden md:flex items-center gap-1">
             <button
@@ -171,7 +192,22 @@ export function GameHeader({
                     />
                   </div>
 
-
+                  {/* Music Volume */}
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] uppercase tracking-wider text-[#8a7040] font-title">Music</span>
+                      <span className="text-[10px] text-[#c9a84c]">{Math.round(ambientVolume * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.05"
+                      value={ambientVolume}
+                      onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
+                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#2a2015] accent-[#d4af37]"
+                    />
+                  </div>
                 </div>
               </div>
             )}
@@ -217,7 +253,7 @@ export function GameHeader({
           </Select>
         </div>
         
-        <TokenCounter geminiTokens={gameState.geminiTokensUsed} />
+        <TokenCounter geminiTokens={gameState.geminiTokensUsed} groqTokens={gameState.groqTokensUsed} />
 
         {/* Achievements Trophy Button */}
         <button
@@ -251,6 +287,17 @@ export function GameHeader({
               </div>
             )}
           </button>
+          <button
+            onClick={toggleAmbient}
+            className="p-1.5 rounded transition-all"
+            title={ambientEnabled ? 'Disable Ambient Music' : 'Enable Ambient Music'}
+          >
+            {ambientEnabled ? (
+              <Music className="w-4 h-4 text-[#d4af37]" />
+            ) : (
+              <VolumeOff className="w-4 h-4 text-gray-500" />
+            )}
+          </button>
         </div>
         
         {/* Mobile Menu Button */}
@@ -263,7 +310,7 @@ export function GameHeader({
       </div>
 
       {/* Party Bar - Sticky */}
-      <div className="flex gap-1 p-2 overflow-x-auto bg-[#0d0a08]">
+      <div className="flex gap-1 p-2 overflow-x-auto bg-[#0d0a08] md:pr-80">
         {gameState.pcs.map(pc => {
           const isActive = pc.id === gameState.humanPCId
           const injuries = gameState.injuries[pc.id] || []
@@ -367,7 +414,7 @@ export function GameHeader({
       
       {/* Journey So Far - TLDR Summary */}
       {gameState.journeySoFar && (
-        <div className="border-t border-[#2e2008] bg-gradient-to-r from-[#0d0a08] to-[#100a05]">
+        <div className="border-t border-[#2e2008] bg-gradient-to-r from-[#0d0a08] to-[#100a05] md:pr-80">
           <div className="px-3 py-2">
             <div className="flex items-center gap-2 mb-1">
               <Clock className="w-3 h-3 text-[#d4af37]" />
@@ -382,4 +429,3 @@ export function GameHeader({
     </header>
   )
 }
-
