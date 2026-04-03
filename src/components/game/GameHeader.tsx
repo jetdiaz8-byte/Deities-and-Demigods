@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   BookOpen, ScrollText, Volume2, VolumeX, Menu, X, Clock,
-  Music, VolumeOff, Volume1, Swords, Trophy
+  Music, VolumeOff, Volume1, Swords, Trophy, Skull
 } from 'lucide-react'
 import { HealthBar, NarrativeSection, TokenCounter } from '@/components/game/GameComponents'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
@@ -359,23 +359,24 @@ export function GameHeader({
           )
         })}
 
-        {/* Antagonist Card */}
+        {/* Antagonist Card — Identity hidden until Act III reveal */}
         {gameState.act !== ACTS.ONE && gameState.antagonistId && (() => {
           const antagonist = getAntagonist(gameState.antagonistId)
+          const revealed = gameState.act === ACTS.THREE
           return (
           <div
             onClick={() => {
-              if (antagonist) {
+              if (antagonist && revealed) {
                 setSelectedPortrait(antagonist as CharacterPortrait)
                 setPortraitModalOpen(true)
               }
             }}
-            className="flex-shrink-0 w-20 md:w-28 p-1.5 md:p-2 rounded text-xs border border-red-900/50 cursor-pointer hover:ring-2 hover:ring-red-500/50 transition-all"
-            style={{ background: 'linear-gradient(145deg, #1a1010 0%, #120808 100%)', borderTop: '3px solid #8b0000' }}
+            className={`flex-shrink-0 w-20 md:w-28 p-1.5 md:p-2 rounded text-xs border cursor-pointer hover:ring-2 transition-all ${revealed ? 'border-red-900/50 hover:ring-red-500/50' : 'border-[#2a2020] hover:ring-[#4a3030]'}`}
+            style={{ background: 'linear-gradient(145deg, #1a1010 0%, #120808 100%)', borderTop: `3px solid ${revealed ? '#8b0000' : '#3a2020'}` }}
           >
-            {/* Portrait thumbnail */}
-            <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] border border-red-900/50 mb-1" style={{ aspectRatio: '3/4' }}>
-              {antagonist && (
+            {/* Portrait thumbnail — shadow silhouette until Act III */}
+            <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] mb-1" style={{ aspectRatio: '3/4' }}>
+              {revealed && antagonist ? (
                 <Image
                   src={getEntityPortrait(antagonist)}
                   alt={antagonist.name}
@@ -383,17 +384,21 @@ export function GameHeader({
                   className="object-contain"
                   unoptimized
                 />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Skull className="w-8 h-8 text-[#3a2020]" />
+                </div>
               )}
             </div>
-            <div className="font-bold text-[#c04040] truncate font-name text-[10px] md:text-xs text-center">
-              {gameState.act === ACTS.THREE ? antagonist?.name : '???'}
+            <div className={`font-bold truncate font-name text-[10px] md:text-xs text-center ${revealed ? 'text-[#c04040]' : 'text-[#4a3030]'}`}>
+              {revealed ? antagonist?.name : 'The Shadow'}
             </div>
             <HealthBar current={gameState.antagonistHp} max={gameState.antagonistMaxHp} size="sm" showLabel={false} />
             <div className="text-[9px] text-center text-gray-400 mt-0.5">
-              {gameState.antagonistHp}/{gameState.antagonistMaxHp}
+              {revealed ? `${gameState.antagonistHp}/${gameState.antagonistMaxHp}` : '???'}
             </div>
-            <div className="text-[8px] text-center text-red-400 uppercase mt-0.5">
-              Phase {gameState.antagonistPhase}/3
+            <div className={`text-[8px] text-center uppercase mt-0.5 ${revealed ? 'text-red-400' : 'text-[#3a2020]'}`}>
+              {revealed ? `Phase ${gameState.antagonistPhase}/3` : 'Unknown'}
             </div>
           </div>
         )})()}

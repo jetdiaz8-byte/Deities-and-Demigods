@@ -678,24 +678,28 @@ export function useGameEngine() {
 CRITICAL RULES:
 1. DDG rulebook ONLY. Never invent stats.
 2. NPC actions governed strictly by alignment+personality.
-3. NARRATION STYLE — NEIL GAIMAN (CRITICAL - WRITE FULLY):
+3. NARRATION STYLE — NEIL GAIMAN:
    - OPENING SCENE (Turn 0): Write 4-6 paragraphs of RICH, ATMOSPHERIC prose (600-1000 words)
-   - REGULAR TURNS: Write 3-5 RICH, EVOCATIVE paragraphs (400-600 words MINIMUM)
-   - NEVER truncate or abbreviate your narration - write complete, full prose
-   - Write like Neil Gaiman in "American Gods" or "Norse Mythology" — lush, layered, deliberate
-   - Be mythic, poetic, dark — like a fairy tale for adults
-   - Use specific sensory language: the taste of copper, the weight of shadows, the whisper of old gods
-   - Paint scenes with words: describe the quality of light, the texture of stone, the smell of ancient air
-   - Every scene should feel ancient and dangerous
-   - Foreshadow doom, hint at larger mythic forces
-   - End each narration with tension or a pivotal moment
-   - MINIMUM 300 WORDS per narration - this is MANDATORY
-   - Include dialogue, internal thoughts, environmental details
-   - Reference past events and build on previous narrative threads
+   - REGULAR TURNS (Turn 1+): Write exactly 1 CONCISE paragraph (80-150 words). Quality over quantity.
+   - Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
+   - Use specific sensory language: the taste of copper, the weight of shadows
+   - For regular turns, ONE vivid paragraph that captures atmosphere, action, and consequence
+   - End each regular turn narration with tension or a pivotal moment
+   - DO NOT pad with extra paragraphs. Brevity is sacred for regular turns.
+   - Include key dialogue, environmental details, and mechanical outcomes
+   - Reference past events when relevant
 4. Permadeath. No stat/alignment changes mid-game.
 5. PCs=Heroes/Demigods (including Krynn). NPCs=Lesser/Greater Gods (including Krynn gods).
 6. Gods avoid direct combat. WIS>15=cannot be deceived. Ancient enmities override all.
 7. In Act I and II, DO NOT include the Antagonist in the "npc_encounters" array.
+7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
+    - If there are active ENEMY NPCs, they MUST attack the party every 2-3 turns
+    - Include enemy attacks in "damage_dealt" and "state_updates" with appropriate HP damage
+    - Use "dice_rolls" for enemy attack rolls against PC AC
+    - Describe enemy attacks vividly in narration — combat should feel dangerous and consequential
+    - PCs and companions take real damage. Injuries happen. This is D&D, not a theme park.
+    - If an enemy has not attacked in the last 2 turns, they MUST attack this turn
+    - Vary which PC is targeted — enemies are tactical
 8. Occasionally drop items into "item_drops" array for the party inventory.
 9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. Provide 3-4 action OPTIONS for the current PC, then WAIT for the human player to choose. NEVER auto-resolve PC actions.
 10. **PERSISTENT MEMORY** - Remember ALL previous events, decisions, and their consequences. Reference past events when narrating.
@@ -781,7 +785,7 @@ PARTY (ALL HUMAN-CONTROLLED):
 ${partyState}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (the prose you wrote - 300+ words)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}]}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (the prose you wrote - 1 paragraph for regular turns, full prose for opening)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}]}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -1073,144 +1077,149 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     const companionEvil = companion?.align.toLowerCase().includes('evil') || false
     const cab = companion?.abilities.map(toAscii) || []
     
+    // Detect context: combat vs social vs exploration
+    const inCombat = gameState.activeNPCs.some(n => !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'))
+    const hasActiveNPC = gameState.activeNPCs.some(n => !n.dead)
+    
     // ═══════════════════════════════════════════════════════════════════════════
-    // OPTIONS 1-3: PC ACTIONS (according to alignment)
+    // OPTIONS 1-3: PC ACTIONS (context-aware: combat/social/explore)
     // ═══════════════════════════════════════════════════════════════════════════
     const pcOptions: GameOption[] = [
       { 
         num: 1, 
-        action: evil 
-          ? 'Strike with merciless precision — ' + (ab[0] || 'weapon').split('(')[0].trim()
-          : 'Attack with righteous fury — ' + (ab[0] || 'weapon').split('(')[0].trim(), 
-        ability: ab[0] || 'melee', 
-        align_note: evil ? 'ruthless offensive' : 'righteous strike',
+        action: inCombat 
+          ? '⚔️ Attack — Strike with your weapon' 
+          : hasActiveNPC
+            ? `💬 Talk — ${evil ? 'Demand answers from the stranger' : 'Speak with the stranger, seek information'}`
+            : '🔍 Investigate — Examine your surroundings',
+        ability: inCombat ? 'melee_attack' : hasActiveNPC ? 'conversation' : 'investigation',
+        align_note: inCombat ? 'basic attack' : hasActiveNPC ? 'social interaction' : 'perception',
         source: 'pc'
       },
       { 
         num: 2, 
-        action: evil 
-          ? 'Dominate the situation through intimidation'
-          : 'Defend and protect allies — ' + (ab[1] || 'shield').split(':')[0].trim(), 
-        ability: evil ? 'intimidation' : (ab[1] || 'defend'), 
-        align_note: evil ? 'coercive control' : 'protective support',
+        action: inCombat 
+          ? `🛡️ Defend — Protect ${companion ? companion.name : 'yourself'} from harm` 
+          : hasActiveNPC
+            ? (evil 
+              ? '🎭 Deceive — Manipulate the situation to your advantage' 
+              : '🤝 Negotiate — Attempt diplomacy or persuasion')
+            : (evil 
+              ? '🗡️ Act — Take what you want by force' 
+              : '🚶 Move — Explore further ahead'),
+        ability: inCombat ? 'defend' : hasActiveNPC ? (evil ? 'deception' : 'persuasion') : (evil ? 'aggression' : 'exploration'),
+        align_note: inCombat ? 'protective stance' : hasActiveNPC ? (evil ? 'cunning manipulation' : 'peaceful diplomacy') : (evil ? 'bold action' : 'cautious advance'),
         source: 'pc'
       },
       { 
         num: 3, 
-        action: 'Unleash signature power — ' + (ab[2] || ab[0] || 'ability').split(':')[0].trim(), 
-        ability: ab[2] || ab[0] || 'signature', 
-        align_note: 'signature ability',
+        action: ab.length > 0
+          ? `✨ Use ${ab[0].split('(')[0].trim()} — Unleash your signature power`
+          : '✨ Use your innate power — Channel your divine essence',
+        ability: ab[0] || 'innate_power',
+        align_note: 'special ability',
         source: 'pc'
       }
     ]
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // OPTIONS 4-5: COMPANION ACTIONS (80% ability-driven, 20% dialogue)
-    // The PC suggests the companion use their specific powers
+    // OPTIONS 4-5: COMPANION ACTIONS (directed by PC — Kratos→Atreus style)
     // ═══════════════════════════════════════════════════════════════════════════
     let companionOptions: GameOption[]
     
     if (companion) {
-      const affinityPositive = gameState.companionAffinity >= 25
-      const affinityNegative = gameState.companionAffinity < 0
-      const useAbilities = Math.random() < 0.80 // 80% ability-driven
-
-      // Build companion ability descriptions from their actual power list
-      const companionAbilities = companion.abilities.map(a => a.split('(')[0].trim()).filter(a => a.length > 2)
-      const compAbility1 = companionAbilities[0] || 'their power'
-      const compAbility2 = companionAbilities[1] || companionAbilities[0] || 'another ability'
-      const compAbility3 = companionAbilities[2] || companionAbilities[1] || compAbility1
-
-      // Alignment-flavored action verbs
-      const attackVerb = companionEvil ? 'unleash' : 'channel'
-      const supportVerb = companionEvil ? 'exploit' : 'invoke'
-      const defendVerb = companionEvil ? 'dominate' : 'shield'
-
-      if (useAbilities) {
-        // ═══ ABILITY-DRIVEN OPTIONS — PC suggests companion use their powers ═══
-        const abilityPair = (() => {
-          // Pick 2 distinct abilities from companion's list
-          const pool = companionAbilities.length >= 2
-            ? companionAbilities
-            : [...companionAbilities, 'their innate power']
-          const idx1 = Math.floor(Math.random() * pool.length)
-          const remaining = pool.filter((_, i) => i !== idx1)
-          const idx2 = Math.floor(Math.random() * remaining.length)
-          return [pool[idx1], remaining[idx2]]
-        })()
-
+      const compName = companion.name.split(' ')[0]
+      const compAbilityName = cab.length > 0 ? cab[0].split('(')[0].trim() : ''
+      
+      if (inCombat) {
         companionOptions = [
           { 
             num: 4,
-            action: affinityNegative
-              ? `${companion.name} should ${attackVerb} ${abilityPair[0]} — "I don't trust this situation, use your power"`
-              : `Suggest ${companion.name} ${supportVerb} ${abilityPair[0]} — combine our strengths`,
-            ability: abilityPair[0],
-            align_note: companionEvil
-              ? (affinityNegative ? 'ruthless power, self-preserving' : 'calculated force')
-              : (affinityNegative ? 'cautious power use' : 'coordinated assault'),
+            action: `⚔️ ${compName}: Attack — Direct ${compName} to strike the enemy`,
+            ability: 'companion_attack',
+            align_note: 'companion combat action',
             source: 'companion',
             companion_name: companion.name
           },
           { 
             num: 5,
-            action: affinityNegative
-              ? `${companion.name} could ${attackVerb} ${abilityPair[1]} instead — "Let them handle this their way"`
-              : `Ask ${companion.name} to ${defendVerb} with ${abilityPair[1]} — trust their judgment`,
-            ability: abilityPair[1],
-            align_note: companionEvil
-              ? (affinityPositive ? 'strategic power combo' : 'delegated force')
-              : (affinityPositive ? 'trusted synergy' : 'shared burden'),
+            action: compAbilityName
+              ? `✨ ${compName}: Use ${compAbilityName} — "Now, ${compName}!"`
+              : `🛡️ ${compName}: Defend — "Cover me, ${compName}!"`,
+            ability: compAbilityName ? `companion_ability:${compAbilityName}` : 'companion_defend',
+            align_note: compAbilityName ? 'companion special ability' : 'companion defensive stance',
+            source: 'companion',
+            companion_name: companion.name
+          }
+        ]
+      } else if (hasActiveNPC) {
+        companionOptions = [
+          { 
+            num: 4,
+            action: `💬 ${compName}: Speak — "Let ${compName} handle this"`,
+            ability: 'companion_conversation',
+            align_note: 'companion social action',
+            source: 'companion',
+            companion_name: companion.name
+          },
+          { 
+            num: 5,
+            action: compAbilityName
+              ? `✨ ${compName}: Use ${compAbilityName} — Prepare for anything`
+              : `🤝 ${compName}: Support — ${companionEvil ? 'Back up the play' : 'Stand with the party'}`,
+            ability: compAbilityName
+              ? `companion_ability:${compAbilityName}`
+              : 'companion_support',
+            align_note: compAbilityName
+              ? 'companion special ability'
+              : companionEvil ? 'self-interested support' : 'loyal backing',
             source: 'companion',
             companion_name: companion.name
           }
         ]
       } else {
-        // ═══ DIALOGUE OPTIONS (20%) — Character-driven conversation ═══
         companionOptions = [
           { 
-            num: 4, 
-            action: affinityNegative
-              ? `${companion.name} questions: "Are you certain about this approach?"`
-              : affinityPositive
-                ? `${companion.name} offers: "Let me support you with ${compAbility1}"`
-                : `${companion.name} suggests: "We should proceed carefully"`,
-            ability: compAbility1, 
-            align_note: companionEvil 
-              ? (affinityNegative ? 'challenging from self-interest' : 'calculated support')
-              : (affinityNegative ? 'cautious disagreement' : 'loyal assistance'),
+            num: 4,
+            action: `🔍 ${compName}: Scout — "Check ahead, ${compName}"`,
+            ability: 'companion_scout',
+            align_note: 'companion exploration',
             source: 'companion',
             companion_name: companion.name
           },
           { 
-            num: 5, 
-            action: affinityNegative
-              ? `${companion.name} proposes an alternative: "${companionEvil ? 'Why not take what we want?' : 'There may be another way'}"`
-              : `${companion.name} advises: "${companionEvil ? 'Power favors the bold' : 'Consider all options before acting'}"`,
-            ability: compAbility2, 
-            align_note: companionEvil 
-              ? (affinityPositive ? 'strategic counsel' : 'self-serving suggestion')
-              : (affinityPositive ? 'wise guidance' : 'cautious alternative'),
+            num: 5,
+            action: compAbilityName
+              ? `✨ ${compName}: Use ${compAbilityName} — Might be useful here`
+              : `💬 ${compName}: Discuss — "What do you think, ${compName}?"`,
+            ability: compAbilityName
+              ? `companion_ability:${compAbilityName}`
+              : 'companion_discussion',
+            align_note: compAbilityName
+              ? 'companion special ability'
+              : 'companion dialogue',
             source: 'companion',
             companion_name: companion.name
           }
         ]
       }
     } else {
-      // No companion - provide alternative PC actions
+      // No companion — provide extra PC actions
       companionOptions = [
         { 
           num: 4, 
-          action: evil ? 'Attempt manipulation to gain advantage' : 'Attempt negotiation with authority', 
-          ability: 'persuasion/authority', 
-          align_note: evil ? 'cunning' : 'diplomatic',
+          action: inCombat ? '⚔️ Ranged Attack — Strike from distance' : '💬 Converse — Speak with those present', 
+          ability: inCombat ? 'ranged_attack' : 'conversation', 
+          align_note: inCombat ? 'distance combat' : 'social interaction',
           source: 'pc'
         },
         { 
           num: 5, 
-          action: evil ? 'Exploit the chaos for personal gain' : 'Rally allies with an inspiring act of heroism', 
-          ability: ab[3] || ab[0] || 'inspire', 
-          align_note: evil ? 'self-serving' : 'leadership',
+          action: ab.length > 1
+            ? `✨ Use ${ab[1].split('(')[0].trim()} — Secondary power`
+            : '🔍 Search — Look for clues or hidden paths', 
+          ability: ab.length > 1 ? ab[1] : 'search',
+          align_note: ab.length > 1 ? 'secondary ability' : 'investigation',
           source: 'pc'
         }
       ]
@@ -1221,9 +1230,9 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     // ═══════════════════════════════════════════════════════════════════════════
     const skipOption: GameOption = { 
       num: 6, 
-      action: 'Skip Turn — Observe and Wait', 
-      ability: 'Observation', 
-      align_note: 'Passive, waiting for opportunity',
+      action: '⏭️ Skip Turn — Observe and wait', 
+      ability: 'skip', 
+      align_note: 'passive',
       source: 'pc'
     }
     
@@ -1424,6 +1433,57 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
         newGS.injuries = {
           ...newGS.injuries,
           [ev.pc_id]: [...(newGS.injuries[ev.pc_id] || []), inj]
+        }
+      }
+    }
+
+    // ── ENEMY RETALIATION — If enemies exist but didn't hit PCs, force an attack ──
+    const enemyHitPC = (res.damage_dealt || []).some((d: DamageDealt) => {
+      const targetPc = newGS.pcs.find(p => p.id === d.to || p.name === d.to)
+      return !!targetPc
+    })
+    if (!enemyHitPC && newGS.turn > 1) {
+      const enemies = newGS.activeNPCs.filter(n => !n.dead && (
+        n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'
+      ))
+      if (enemies.length > 0 && Math.random() < 0.55) {
+        const attacker = enemies[Math.floor(Math.random() * enemies.length)]
+        const targets = newGS.pcs.filter(p => !p.dead)
+        const target = targets[Math.floor(Math.random() * targets.length)]
+        if (target) {
+          const atkRoll = Math.floor(Math.random() * 20) + 1
+          const targetAC = target.AC || 10
+          const hit = atkRoll >= targetAC || atkRoll === 20
+          const isCrit = atkRoll === 20
+          const baseDmg = Math.floor(Math.random() * 8) + 2
+          const dmg = hit ? baseDmg + (isCrit ? Math.floor(Math.random() * 8) + 2 : 0) : 0
+          const targetIdx = newGS.pcs.findIndex(p => p.id === target.id)
+
+          if (targetIdx >= 0 && dmg > 0) {
+            const updatedPc = { ...newGS.pcs[targetIdx] }
+            updatedPc.hp = Math.max(0, updatedPc.hp - dmg)
+            if (updatedPc.hp <= 0) { updatedPc.dead = true; updatedPc.hp = 0; soundEvents.emit({ type: 'death' }) }
+            newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
+            soundEvents.emit({ type: 'combat_hit', critical: isCrit })
+            const fellText = updatedPc.dead ? ` <span style="color:#ff3030">☠️ ${target.name} falls!</span>` : ` (${updatedPc.hp}/${updatedPc.maxHp} HP)`
+            newGS.log = [...newGS.log, {
+              msg: `__ENEMY_ATTACK__:${JSON.stringify({
+                attacker: attacker.name, target: target.name, roll: atkRoll, damage: dmg, critical: isCrit,
+                html: isCrit
+                  ? `<div style="color:#cc3030;border-left:3px solid #cc3030;padding:0.5rem 1rem;margin:0.5rem 0;background:rgba(204,48,48,0.08);border-radius:0 4px 4px 0"><strong>⚔️ ${attacker.name}</strong> strikes <strong>${target.name}</strong> — <span style="color:#ff6060;font-weight:bold">CRITICAL HIT</span>! (${atkRoll}) → <strong style="color:#ff8080">${dmg} damage</strong>${fellText}</div>`
+                  : `<div style="color:#cc8060;border-left:3px solid #a05030;padding:0.5rem 1rem;margin:0.5rem 0;background:rgba(160,80,48,0.08);border-radius:0 4px 4px 0"><strong>⚔️ ${attacker.name}</strong> attacks <strong>${target.name}</strong> (${atkRoll}) → <strong style="color:#cc8060">${dmg} damage</strong>${fellText}</div>`
+              })}`,
+              type: 'enemy_attack', turn: newGS.turn
+            }]
+          } else if (!hit && targetIdx >= 0) {
+            newGS.log = [...newGS.log, {
+              msg: `__ENEMY_MISS__:${JSON.stringify({
+                attacker: attacker.name, target: target.name, roll: atkRoll,
+                html: `<div style="color:#6a6a6a;border-left:3px solid #4a4a4a;padding:0.3rem 1rem;margin:0.5rem 0;background:rgba(100,100,100,0.05);border-radius:0 4px 4px 0;font-style:italic"><strong>${attacker.name}</strong> swings at <strong>${target.name}</strong> but misses (${atkRoll})</div>`
+              })}`,
+              type: 'enemy_miss', turn: newGS.turn
+            }]
+          }
         }
       }
     }
@@ -1860,6 +1920,22 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
           <div style="font-size:.95rem;color:#e08060;margin-top:.6rem;line-height:1.7">${phaseData.html}</div>
         </div>`
       } catch { /* ignore parse errors */ }
+    }
+
+    // Render enemy auto-attack / miss events from applyMechanics
+    const enemyAtkLog = gs.log.find(l => l.type === 'enemy_attack' && l.turn === gs.turn)
+    if (enemyAtkLog && enemyAtkLog.msg.startsWith('__ENEMY_ATTACK__:')) {
+      try {
+        const atkData = JSON.parse(enemyAtkLog.msg.replace('__ENEMY_ATTACK__:', ''))
+        html += atkData.html
+      } catch { /* ignore */ }
+    }
+    const enemyMissLog = gs.log.find(l => l.type === 'enemy_miss' && l.turn === gs.turn)
+    if (enemyMissLog && enemyMissLog.msg.startsWith('__ENEMY_MISS__:')) {
+      try {
+        const missData = JSON.parse(enemyMissLog.msg.replace('__ENEMY_MISS__:', ''))
+        html += missData.html
+      } catch { /* ignore */ }
     }
 
     // Narrative

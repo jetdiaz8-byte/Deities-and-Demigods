@@ -47,10 +47,16 @@ export function GameSidebar({
   return (
     <>
       {/* Desktop Sidebar - top offset accounts for sticky header */}
-      <div className="fixed right-0 top-0 h-screen w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-40 hidden md:flex pt-[200px]">
-        {/* Story So Far - Collapsible at top of sidebar */}
+      <div className="fixed right-0 top-0 h-screen w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-40 hidden md:flex">
+        {/* Spacer for sticky header — pushes all content below the header */}
+        <div className="flex-shrink-0 h-[190px]" />
+        
+        {/* Story So Far - Below header, inside scrollable area */}
+        
+        {/* Scrollable content area */}
+        <div className="flex-1 overflow-y-auto pb-24">
         {gameState.storySummary && (
-          <div className="border-b border-[#2e2008] p-3 flex-shrink-0 max-h-[200px] overflow-y-auto">
+          <div className="border-b border-[#2e2008] p-3 flex-shrink-0">
             <NarrativeSection 
               title="The Story So Far" 
               content={gameState.storySummary} 
@@ -60,7 +66,6 @@ export function GameSidebar({
             />
           </div>
         )}
-        
         <DesktopTabs
           gameState={gameState}
           activeTab={activeTab}
@@ -73,6 +78,7 @@ export function GameSidebar({
           setPortraitModalOpen={setPortraitModalOpen}
           tokenUsage={tokenUsage}
         />
+        </div>
       </div>
 
       {/* Mobile Sheet Drawer */}
