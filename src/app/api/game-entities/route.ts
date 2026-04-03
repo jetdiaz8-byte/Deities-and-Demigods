@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { readFileSync } from 'fs'
 import { join } from 'path'
 
+// v1.9.106 - Dragon filter active
 // GET /api/game-entities - Game-specific entity queries
 // Supports: heroes (for party selection), antagonist (greater gods), npcs (all except selected)
 
