@@ -13,11 +13,67 @@ interface AudioState {
   ambientVolume: number
 }
 
+/* ── Dark Fantasy Ambient Configs ─────────────────────────────────────
+   Each act creates layered procedural drones with distinct moods:
+   - Intro:   Ancient temple stillness — deep Om drone + breath
+   - Act 1:   Forgotten wilderness — tense low rumble + wind howl
+   - Act 2:   Ancient war-temple — dark choir + metallic resonance
+   - Act 3:   Abyssal boss domain — crushing dissonance + thunder
+   ─────────────────────────────────────────────────────────────────── */
 const AMBIENT: Record<ActName, { baseFreq: number; harmonics: { f: number; g: number; t: OscillatorType }[]; lfoF: number; lfoD: number; noiseG: number; filtF: number; filtQ: number }> = {
-  intro: { baseFreq: 55, harmonics: [{ f:55, g:.12, t:'sine' },{ f:82.5, g:.06, t:'sine' },{ f:110, g:.04, t:'triangle' }], lfoF:.15, lfoD:2, noiseG:.02, filtF:400, filtQ:1 },
-  act1: { baseFreq: 48, harmonics: [{ f:48, g:.15, t:'sine' },{ f:72, g:.07, t:'sine' },{ f:96, g:.04, t:'triangle' },{ f:144, g:.02, t:'sawtooth' }], lfoF:.2, lfoD:3, noiseG:.015, filtF:300, filtQ:2 },
-  act2: { baseFreq: 55, harmonics: [{ f:55, g:.12, t:'sine' },{ f:82.5, g:.08, t:'sine' },{ f:110, g:.06, t:'triangle' },{ f:165, g:.03, t:'sine' },{ f:220, g:.02, t:'triangle' }], lfoF:.3, lfoD:4, noiseG:.01, filtF:600, filtQ:1.5 },
-  act3: { baseFreq: 40, harmonics: [{ f:40, g:.18, t:'sawtooth' },{ f:60, g:.10, t:'square' },{ f:80, g:.07, t:'sawtooth' },{ f:120, g:.04, t:'square' },{ f:160, g:.02, t:'sawtooth' }], lfoF:.5, lfoD:5, noiseG:.025, filtF:500, filtQ:3 },
+  intro: {
+    baseFreq: 36.71, // D1 — deep meditation drone
+    harmonics: [
+      { f: 36.71, g: .14, t: 'sine' },        // fundamental drone
+      { f: 55,    g: .08, t: 'sine' },         // A1 — perfect fifth, sacred tone
+      { f: 73.42, g: .05, t: 'triangle' },     // D2 — octave, warmth
+      { f: 110,   g: .03, t: 'sine' },         // A2 — shimmering harmonic
+    ],
+    lfoF: .08, lfoD: 1.5,  // very slow breathing pulse
+    noiseG: .018,          // distant wind through stone halls
+    filtF: 350, filtQ: 0.8 // warm, soft filtering
+  },
+  act1: {
+    baseFreq: 32.70, // C1 — ominous low rumble
+    harmonics: [
+      { f: 32.70, g: .16, t: 'sine' },        // sub-bass rumble
+      { f: 49.00, g: .09, t: 'sawtooth' },     // G1 — dissonant fifth, tension
+      { f: 65.41, g: .06, t: 'triangle' },     // C2 — hollow resonance
+      { f: 98.00, g: .035, t: 'sine' },        // G2 — eerie overtone
+      { f: 130.81, g: .02, t: 'sawtooth' },    // C3 — distant horn echo
+    ],
+    lfoF: .12, lfoD: 2.5,  // slow undulation
+    noiseG: .025,          // wind through dead trees
+    filtF: 280, filtQ: 1.8 // darker, more muted
+  },
+  act2: {
+    baseFreq: 41.20, // E1 — dark choir root
+    harmonics: [
+      { f: 41.20, g: .13, t: 'sawtooth' },     // guttural choir base
+      { f: 55,    g: .08, t: 'square' },       // A1 — minor third tension
+      { f: 61.74, g: .06, t: 'sawtooth' },     // B1 — passing tone, sorrow
+      { f: 82.41, g: .05, t: 'triangle' },     // E2 — octave reinforcement
+      { f: 123.47, g: .03, t: 'sine' },        // B2 — distant bell tone
+      { f: 164.81, g: .015, t: 'triangle' },   // E3 — high spectral whisper
+    ],
+    lfoF: .25, lfoD: 3.5,  // slow choir vibrato
+    noiseG: .012,          // faint chains / distant activity
+    filtF: 520, filtQ: 1.2 // mid-range, allows choir texture
+  },
+  act3: {
+    baseFreq: 27.50, // A0 — abyssal sub-bass
+    harmonics: [
+      { f: 27.50, g: .20, t: 'sawtooth' },     // crushing low drone
+      { f: 36.71, g: .12, t: 'square' },       // D1 — tritone dissonance
+      { f: 41.20, g: .08, t: 'sawtooth' },     // E1 — minor second clash
+      { f: 55,    g: .06, t: 'square' },       // A1 — grinding overtone
+      { f: 82.41, g: .04, t: 'sawtooth' },     // E2 — metallic screech layer
+      { f: 110,   g: .025, t: 'square' },      // A2 — piercing harmonic
+    ],
+    lfoF: .4, lfoD: 5,    // heavy pulsing
+    noiseG: .035,          // thunder / stone grinding
+    filtF: 450, filtQ: 3.5 // resonant, metallic filtering
+  },
 }
 
 export function useGameAudio() {
@@ -132,15 +188,46 @@ export function useGameAudio() {
 
   const startAmbient = useCallback((act: ActName) => {
     const ctx = getCtx(); if (!ctx) return; stopAmbient(); const cfg = AMBIENT[act]; const vol = volR.current * ambVolR.current
-    const master = ctx.createGain(); master.gain.setValueAtTime(.001, ctx.currentTime); master.gain.linearRampToValueAtTime(vol, ctx.currentTime + 2)
+    const master = ctx.createGain(); master.gain.setValueAtTime(.001, ctx.currentTime); master.gain.linearRampToValueAtTime(vol, ctx.currentTime + 3)
+    const subBass = ctx.createBiquadFilter(); subBass.type = 'lowpass'; subBass.frequency.value = 80; subBass.Q.value = 1 // sub-only path for chest rumble
     const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = cfg.filtF; filter.Q.value = cfg.filtQ
-    const reverb = mkReverb(ctx, act === 'act3' ? 2 : act === 'act1' ? 4 : 3)
+    const reverb = mkReverb(ctx, act === 'act3' ? 2.5 : act === 'act1' ? 4.5 : 3.5)
+    // secondary reverb for extra depth on act2/act3
+    const reverb2 = (act === 'act2' || act === 'act3') ? mkReverb(ctx, 6) : null
     const oscs: OscillatorNode[] = []
-    cfg.harmonics.forEach(h => { const o=ctx.createOscillator(); o.type=h.t; o.frequency.value=h.f; const g=ctx.createGain(); g.gain.value=h.g; o.connect(g); g.connect(filter); o.start(); oscs.push(o) })
-    const lfo=ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value=cfg.lfoF; const lg=ctx.createGain(); lg.gain.value=cfg.lfoD; lfo.connect(lg); if(oscs.length>0)lg.connect(oscs[0].frequency); lfo.start()
-    const nDur=4; const nBuf=ctx.createBuffer(1,ctx.sampleRate*nDur,ctx.sampleRate); const nD=nBuf.getChannelData(0); for(let i=0;i<nD.length;i++)nD[i]=(Math.random()*2-1)
-    const noise=ctx.createBufferSource(); noise.buffer=nBuf; noise.loop=true; const nf=ctx.createBiquadFilter(); nf.type='lowpass'; nf.frequency.value=300; const ng=ctx.createGain(); ng.gain.value=cfg.noiseG; noise.connect(nf).connect(ng).connect(filter); noise.start()
-    filter.connect(reverb); filter.connect(master); reverb.connect(master); master.connect(ctx.destination)
+    cfg.harmonics.forEach((h, i) => {
+      const o = ctx.createOscillator(); o.type = h.t; o.frequency.value = h.f
+      const g = ctx.createGain(); g.gain.value = h.g
+      o.connect(g)
+      // First harmonic (sub-bass fundamental) bypasses main filter → direct sub path
+      if (i === 0) { g.connect(subBass) }
+      // Mid harmonics go through main filter for texture
+      else if (h.f < 100) { g.connect(filter) }
+      // High harmonics also through filter + optional second reverb
+      else { g.connect(filter); if (reverb2) { g.connect(reverb2) } }
+      o.start(); oscs.push(o)
+    })
+    // LFO modulates first oscillator pitch for slow breathing/pulsing
+    const lfo = ctx.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = cfg.lfoF
+    const lg = ctx.createGain(); lg.gain.value = cfg.lfoD; lfo.connect(lg)
+    if (oscs.length > 0) lg.connect(oscs[0].frequency)
+    // On act3, LFO also modulates filter cutoff for ominous pulsing sweep
+    if (act === 'act3' && oscs.length > 1) { const lg2 = ctx.createGain(); lg2.gain.value = 80; lfo.connect(lg2); lg2.connect(filter.frequency) }
+    lfo.start()
+    // Noise layer — wind / thunder / atmosphere
+    const nDur = 4; const nBuf = ctx.createBuffer(1, ctx.sampleRate * nDur, ctx.sampleRate); const nD = nBuf.getChannelData(0)
+    for (let i = 0; i < nD.length; i++) nD[i] = (Math.random() * 2 - 1)
+    const noise = ctx.createBufferSource(); noise.buffer = nBuf; noise.loop = true
+    const nf = ctx.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.value = act === 'act3' ? 500 : act === 'act1' ? 200 : 350
+    const ng = ctx.createGain(); ng.gain.value = cfg.noiseG
+    noise.connect(nf).connect(ng).connect(filter)
+    noise.start()
+    // Routing: subBass + filtered signal → master → output
+    subBass.connect(master)
+    filter.connect(reverb); filter.connect(master)
+    reverb.connect(master)
+    if (reverb2) reverb2.connect(master)
+    master.connect(ctx.destination)
     ambR.current = { oscs, lfo, noise, master }
   }, [getCtx, stopAmbient, mkReverb])
 

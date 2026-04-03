@@ -235,7 +235,7 @@ export function PartySelectionScreen({
                           ? 'bg-gradient-to-b from-[#2a2015] to-[#1a1510] border-2 border-[#d4af37] shadow-lg shadow-[rgba(212,175,55,0.3)]'
                           : isPreviewed
                             ? 'bg-gradient-to-b from-[#252015] to-[#1a1510] border-2 border-[#8a7a40]'
-                            : 'bg-gradient-to-b from-[#1e1a14] to-[#151210] border border-[#4a4030] hover:border-[#d4af37]'
+                            : 'bg-gradient-to-b from-[#1e1a14] to-[#151210] border border-[#4a4030] hover:border-[#7a5f20] hover:shadow-sm hover:shadow-[rgba(122,95,32,0.15)]'
                         }`}
                       onMouseEnter={() => setPreviewHero(hero)}
                       onClick={() => {
@@ -255,7 +255,7 @@ export function PartySelectionScreen({
                             src={getEntityPortrait(hero)}
                             alt={hero.name}
                             width={192}
-                            height={336}
+                            height={240}
                             className="w-full h-auto object-contain"
                             unoptimized
                           />
