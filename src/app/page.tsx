@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import { Package, Save, Upload, Download } from 'lucide-react'
+import { Package, Save, Upload, Download, X as XIcon } from 'lucide-react'
 import { VisualDiceRoll } from '@/components/game/GameComponents'
 import { IntroScreen } from '@/components/game/IntroScreen'
 import { PartySelectionScreen } from '@/components/game/PartySelectionScreen'
@@ -18,7 +18,7 @@ import { AchievementNotificationQueue } from '@/components/game/AchievementNotif
 import { AchievementsDialog } from '@/components/game/AchievementsDialog'
 import { useGameEngine } from '@/hooks/useGameEngine'
 import { useGameAudio } from '@/hooks/useGameAudio'
-import { getUnlockedCount, getTotalCount } from '@/lib/achievements'
+import { getUnlockedCount, getTotalCount, getAchievementDef } from '@/lib/achievements'
 import { version } from '../../package.json'
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -77,9 +77,69 @@ export default function MythworldEngine() {
   // ── AUDIO ENGINE ─────────────────────────────────────────────────────
   const audio = useGameAudio()
 
+  // Typing mode toggle for narrative reveal
+  const [typingMode, setTypingMode] = React.useState(false)
+
   // Achievement notification handler
   const [processedAchievements, setProcessedAchievements] = useState<Set<string>>(new Set())
   const pendingAchievements = achievementUnlocks.filter(a => !processedAchievements.has(a.id))
+
+  // ── TOAST NOTIFICATION SYSTEM ─────────────────────────────────────────
+  const [toasts, setToasts] = React.useState<{ id: string; title: string; desc: string; icon: string }[]>([])
+
+  const showToast = React.useCallback((title: string, desc: string, icon: string = '🏆') => {
+    const id = `toast-${Date.now()}`
+    setToasts(prev => [...prev, { id, title, desc, icon }])
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000)
+  }, [])
+
+  // Achievement toast — watch for newly unlocked achievements
+  const lastAchievementCount = React.useRef(0)
+  React.useEffect(() => {
+    if (achievementUnlocks.length > lastAchievementCount.current && lastAchievementCount.current > 0) {
+      const latest = achievementUnlocks[achievementUnlocks.length - 1]
+      const def = getAchievementDef(latest.id)
+      showToast(def?.name || 'Achievement Unlocked', def?.description || 'Something happened', '🏆')
+    }
+    lastAchievementCount.current = achievementUnlocks.length
+  }, [achievementUnlocks, showToast])
+
+  // ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────────
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Only handle keys when game is active and waiting for input
+      if (!gameState.waitingForHuman && !gameState.isProcessing && !gameState.ended) return
+
+      // Don't trigger if user is typing in an input
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return
+
+      const key = e.key
+
+      // Number keys 1-9 select options
+      if (key >= '1' && key <= '9' && gameState.waitingForHuman) {
+        const idx = parseInt(key) - 1
+        if (idx < gameState.humanOptions.length) {
+          e.preventDefault()
+          selectOption(idx)
+          return
+        }
+      }
+
+      // Enter confirms choice or advances turn
+      if (key === 'Enter') {
+        e.preventDefault()
+        if (gameState.pendingHumanChoice !== null) {
+          confirmChoice()
+        } else if (!gameState.waitingForHuman && !gameState.isProcessing) {
+          advanceTurn()
+        }
+        return
+      }
+    }
+
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [gameState.waitingForHuman, gameState.isProcessing, gameState.ended, gameState.humanOptions, gameState.pendingHumanChoice, selectOption, confirmChoice, advanceTurn])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER — Phase Routing
@@ -117,12 +177,47 @@ export default function MythworldEngine() {
   // ── MAIN GAME UI ───────────────────────────────────────────────────────
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-[#060403] flex flex-col">
+      <div className="min-h-screen bg-[#060403] flex flex-col" data-screen-root>
+        {/* Screen Effects */}
+        <style>{`
+          @keyframes screen-flash-red {
+            0% { box-shadow: inset 0 0 100px rgba(200,0,0,0.4); }
+            100% { box-shadow: inset 0 0 0 transparent; }
+          }
+          @keyframes screen-flash-gold {
+            0% { box-shadow: inset 0 0 100px rgba(200,170,50,0.3); }
+            100% { box-shadow: inset 0 0 0 transparent; }
+          }
+          @keyframes screen-flash-green {
+            0% { box-shadow: inset 0 0 80px rgba(0,180,80,0.3); }
+            100% { box-shadow: inset 0 0 0 transparent; }
+          }
+          @keyframes screen-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-4px) translateY(2px); }
+            40% { transform: translateX(4px) translateY(-2px); }
+            60% { transform: translateX(-3px) translateY(1px); }
+            80% { transform: translateX(3px); }
+          }
+          @keyframes screen-darken {
+            0% { filter: brightness(0.3); }
+            100% { filter: brightness(1); }
+          }
+          .screen-effect-red { animation: screen-flash-red 0.6s ease-out; }
+          .screen-effect-gold { animation: screen-flash-gold 0.8s ease-out; }
+          .screen-effect-green { animation: screen-flash-green 0.6s ease-out; }
+          .screen-effect-shake { animation: screen-shake 0.4s ease-out; }
+          .screen-effect-dark { animation: screen-darken 1.2s ease-out; }
+        `}</style>
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap');
           @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: none; }
+          }
+          @keyframes fadeOut {
+            from { opacity: 1; transform: none; }
+            to { opacity: 0; transform: translateY(-4px); }
           }
           @keyframes diceSpin {
             0% { transform: rotate(0deg) scale(1.05); }
@@ -194,11 +289,22 @@ export default function MythworldEngine() {
           <div
             ref={narrRef}
             className="flex-1 overflow-y-auto p-3 md:p-4 md:mr-80 scroll-smooth"
-            style={{ background: 'rgba(6,4,3,.98)' }}
+            style={{ 
+              background: gameState.act === 'act1' 
+                ? 'rgba(6,4,3,.98)' 
+                : gameState.act === 'act2' 
+                  ? 'rgba(8,4,2,.98)' 
+                  : 'rgba(12,2,2,.98)',
+              transition: 'background 1s ease'
+            }}
           >
-            {narrativeContent.map((item, idx) => (
-              <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} />
-            ))}
+            {narrativeContent.map((item, idx) => {
+              const isLast = idx === narrativeContent.length - 1
+              if (typingMode && !isLast) {
+                return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} style={{ opacity: 0.6 }} />
+              }
+              return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} />
+            })}
 
             {/* Test of Faith Prompt */}
             <TestOfFaith
@@ -246,6 +352,14 @@ export default function MythworldEngine() {
           >
             ☰ Menu
           </Button>
+
+          <button
+            onClick={() => setTypingMode(!typingMode)}
+            className={`p-1.5 rounded text-xs transition-all ${typingMode ? 'text-[#d4af37] bg-[#2a2015]' : 'text-[#5a4d30] hover:text-[#8a7040]'}`}
+            title={typingMode ? 'Typing mode ON' : 'Typing mode OFF'}
+          >
+            ✍️
+          </button>
 
           <Button
             onClick={advanceTurn}
@@ -314,6 +428,23 @@ export default function MythworldEngine() {
             onChange={e => setGeminiKey(e.target.value)}
             className="w-40 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] text-xs"
           />
+        </div>
+
+        {/* Achievement Toast Notifications */}
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] flex flex-col gap-2 pointer-events-none">
+          {toasts.map(toast => (
+            <div
+              key={toast.id}
+              className="pointer-events-auto px-4 py-3 rounded-lg border border-[#d4af37]/50 bg-gradient-to-r from-[#2a2015] to-[#1a1510] shadow-[0_0_20px_rgba(212,175,55,0.2)] flex items-center gap-3 animate-slide-in"
+              style={{ animation: 'fadeIn 0.3s ease, fadeOut 0.3s ease 3.7s' }}
+            >
+              <span className="text-2xl">{toast.icon}</span>
+              <div>
+                <div className="font-title text-sm text-[#d4af37]">{toast.title}</div>
+                <div className="text-xs text-[#a08060] font-narrative">{toast.desc}</div>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* All Dialogs */}

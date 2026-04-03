@@ -32,6 +32,17 @@ import {
 
 export function useGameEngine() {
 
+  // Screen effects — applies CSS class to body temporarily
+  const triggerScreenEffect = (effectClass: string) => {
+    if (typeof document === 'undefined') return
+    const main = document.querySelector('[data-screen-root]') || document.body
+    main.classList.remove(effectClass)
+    // Force reflow
+    void main.offsetWidth
+    main.classList.add(effectClass)
+    setTimeout(() => main.classList.remove(effectClass), 1500)
+  }
+
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
@@ -1240,6 +1251,25 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
+    // POTION OPTION: If in combat and have consumables, offer item use
+    // ═══════════════════════════════════════════════════════════════════════════
+    const consumables = gameState.inventory.filter(i => 
+      i.type === 'potion' && (i.charges ?? 0) > 0 && 
+      (i.effect?.toLowerCase().includes('heal') || i.effect?.toLowerCase().includes('restore'))
+    )
+    let potionOption: GameOption | null = null
+    if (inCombat && consumables.length > 0) {
+      const potion = consumables[0]
+      potionOption = {
+        num: 99,
+        action: `🧪 Use ${potion.name} — ${potion.effect}`,
+        ability: `use_item:${potion.id}`,
+        align_note: `${potion.charges} charge${potion.charges !== 1 ? 's' : ''} remaining`,
+        source: 'pc'
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     // OPTION 6: SKIP TURN (always available)
     // ═══════════════════════════════════════════════════════════════════════════
     const skipOption: GameOption = { 
@@ -1265,7 +1295,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       }
     }
     
-    return [...pcOptions, ...companionOptions, skipOption, ...(rivalOption ? [rivalOption] : [])]
+    return [...pcOptions, ...companionOptions, ...(potionOption ? [potionOption] : []), skipOption, ...(rivalOption ? [rivalOption] : [])]
   }
 
   // ── APPLY MECHANICS ────────────────────────────────────────────────────
@@ -1285,12 +1315,18 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       for (const d of res.damage_dealt) {
         const isCritical = d.damage && d.damage.includes('critical')
         setTimeout(() => soundEvents.emit({ type: 'combat_hit', critical: isCritical }), 300)
+        // Screen effect for PC taking damage
+        if (d.amount > 0 && d.to) {
+          const targetPc = newGS.pcs.find(p => p.id === d.to || p.name === d.to)
+          if (targetPc) triggerScreenEffect('screen-effect-red')
+        }
       }
     }
 
     // Shard event
     if (res.shard_event?.invoked) {
       soundEvents.emit({ type: 'shard_pulse' })
+      triggerScreenEffect('screen-effect-gold')
       newGS.pendingShardSummon = null
       if (res.shard_event.success && res.shard_event.summoned_name) {
         if (res.shard_event.is_greater) {
@@ -1347,6 +1383,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
             pc.dead = true
             pc.hp = 0
             soundEvents.emit({ type: 'death' })
+            triggerScreenEffect('screen-effect-shake')
 
             // ═══ PROPHECY TRANSFER ON DEATH — Story-Driven Chain ═══
             // Main PC falls → Companion becomes Chosen One
@@ -1476,9 +1513,10 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
           if (targetIdx >= 0 && dmg > 0) {
             const updatedPc = { ...newGS.pcs[targetIdx] }
             updatedPc.hp = Math.max(0, updatedPc.hp - dmg)
-            if (updatedPc.hp <= 0) { updatedPc.dead = true; updatedPc.hp = 0; soundEvents.emit({ type: 'death' }) }
+            if (updatedPc.hp <= 0) { updatedPc.dead = true; updatedPc.hp = 0; soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake') }
             newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
             soundEvents.emit({ type: 'combat_hit', critical: isCrit })
+            triggerScreenEffect('screen-effect-red')
             const fellText = updatedPc.dead ? ` <span style="color:#ff3030">☠️ ${target.name} falls!</span>` : ` (${updatedPc.hp}/${updatedPc.maxHp} HP)`
             newGS.log = [...newGS.log, {
               msg: `__ENEMY_ATTACK__:${JSON.stringify({
@@ -1532,6 +1570,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     // Log phase transitions for dramatic narration in renderResult
     if (newGS.antagonistPhase > oldPhase && newGS.act === ACTS.THREE) {
       soundEvents.emit({ type: 'boss_phase', phase: newGS.antagonistPhase })
+      triggerScreenEffect('screen-effect-dark')
       const phaseAnt = getAntagonist(newGS.antagonistId)
       const phaseDesc = newGS.antagonistPhase === 2
         ? phaseAnt?.phase2 || 'The adversary reveals deeper power, fury breaking through composure.'
@@ -2138,6 +2177,26 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     // Tension note
     if (res.tension_note) {
       html += `<div style="text-align:center;margin-top:1rem;font-size:.9rem;color:#5a4d30;font-style:italic">${toAscii(res.tension_note)}</div>`
+    }
+
+    // Enemy HP bars — show active enemies in combat
+    const activeEnemies = gs.activeNPCs.filter(n => !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'))
+    if (activeEnemies.length > 0) {
+      html += `<div style="margin-top:1rem;padding:0.75rem 1rem;border:1px solid #4a2020;background:rgba(60,20,20,0.15);border-radius:6px">
+        <div style="font-family:'Cinzel',serif;font-size:.75rem;color:#c05050;letter-spacing:.1em;margin-bottom:.5rem">⚔ ACTIVE ENEMIES</div>
+        ${activeEnemies.map(e => {
+          const pct = Math.max(0, Math.round((e.hp / (e.maxHp || 1)) * 100))
+          const barColor = pct <= 20 ? '#cc3030' : pct <= 50 ? '#cc8030' : '#cc5050'
+          const label = e.encounter_type === 'BOSS' ? '👑 ' : ''
+          return `<div style="display:flex;align-items:center;gap:.75rem;margin:.4rem 0">
+            <span style="font-size:.8rem;color:#e08080;min-width:120px;font-family:'Cinzel',serif">${label}${e.name}</span>
+            <div style="flex:1;height:8px;background:#1a1010;border-radius:4px;overflow:hidden;border:1px solid #3a2020">
+              <div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px;transition:width .5s"></div>
+            </div>
+            <span style="font-size:.75rem;color:#a06060;min-width:60px;text-align:right">${Math.max(0, e.hp)}/${e.maxHp}</span>
+          </div>`
+        }).join('')}
+      </div>`
     }
 
     html += '</div>'

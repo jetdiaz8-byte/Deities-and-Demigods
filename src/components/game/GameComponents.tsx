@@ -20,7 +20,7 @@ interface DiceRollProps {
   isAnimating?: boolean
 }
 
-const DiceFace = ({ sides, value, isRolling }: { sides: number; value: number; isRolling: boolean }) => {
+const DiceFace = ({ sides, value, isRolling }: { sides: number; value?: number; isRolling: boolean }) => {
   const getDiceColor = () => {
     switch (sides) {
       case 4: return 'from-red-800 to-red-600 border-red-400'
@@ -65,6 +65,13 @@ const DiceFace = ({ sides, value, isRolling }: { sides: number; value: number; i
 }
 
 export const VisualDiceRoll = ({ die, roll, dc, success, roller, notes, isAnimating }: DiceRollProps) => {
+  const [revealed, setRevealed] = React.useState(false)
+  React.useEffect(() => {
+    setRevealed(false)
+    const timer = setTimeout(() => setRevealed(true), 1200)
+    return () => clearTimeout(timer)
+  }, [roll, die])
+
   // Parse dice notation
   const parseDice = (notation: string): { count: number; sides: number }[] => {
     const dice: { count: number; sides: number }[] = []
@@ -118,8 +125,8 @@ export const VisualDiceRoll = ({ die, roll, dc, success, roller, notes, isAnimat
             <DiceFace
               key={`${i}`}
               sides={20}
-              value={val}
-              isRolling={isAnimating || false}
+              value={revealed ? val : undefined}
+              isRolling={!revealed || isAnimating || false}
             />
         ))}
       </div>
@@ -129,12 +136,18 @@ export const VisualDiceRoll = ({ die, roll, dc, success, roller, notes, isAnimat
         <div className="font-title text-base md:text-lg text-[#d4af37] mb-1">
           {roller} rolls {die.toUpperCase()}
         </div>
-        <div className={`font-bold text-2xl md:text-3xl ${success ? 'text-emerald-400' : 'text-rose-400'}`}>
-          {roll} {dc > 0 ? <span className="text-gray-400 text-lg">vs DC {dc}</span> : ''}
+        <div className={`font-bold text-2xl md:text-3xl ${revealed ? (success ? 'text-emerald-400' : 'text-rose-400') : 'text-gray-500 animate-pulse'}`}>
+          {revealed ? (
+            <>{roll} {dc > 0 ? <span className="text-gray-400 text-lg">vs DC {dc}</span> : ''}</>
+          ) : (
+            '⟳ Rolling...'
+          )}
         </div>
-        <div className={`text-sm mt-1 font-narrative ${success ? 'text-emerald-300' : 'text-rose-300'}`}>
-          {success ? '✦ SUCCESS ✦' : '✗ FAILURE ✗'}
-        </div>
+        {revealed && (
+          <div className={`text-sm mt-1 font-narrative ${success ? 'text-emerald-300' : 'text-rose-300'}`}>
+            {success ? '✦ SUCCESS ✦' : '✗ FAILURE ✗'}
+          </div>
+        )}
         {notes && (
           <div className="text-xs text-[#b0a080] mt-2 italic font-narrative px-2">
             "{notes}"

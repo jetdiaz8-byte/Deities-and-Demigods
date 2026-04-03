@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, ScrollText, Star, Crown, Skull, Sparkles, CheckCircle } from 'lucide-react'
+import { BookOpen, ScrollText, Star, Crown, Skull, Sparkles, CheckCircle, Swords } from 'lucide-react'
 import { NarrativeSection } from '@/components/game/GameComponents'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
 import { hpCls, aCol, getEntityPortrait, getAbilityBonus } from '@/lib/gameHelpers'
@@ -156,15 +156,77 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
       {/* PCs Tab */}
       <TabsContent value="pcs" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
         {gameState.pcs.map(pc => (
-          <PCDetailCard
-            key={pc.id}
-            pc={pc}
-            isHumanPC={pc.id === gameState.humanPCId}
-            expanded={expandedPC === pc.id}
-            injuries={gameState.injuries[pc.id] || []}
-            onToggle={() => setExpandedPC(expandedPC === pc.id ? null : pc.id)}
-          />
+          <React.Fragment key={pc.id}>
+            <PCDetailCard
+              pc={pc}
+              isHumanPC={pc.id === gameState.humanPCId}
+              expanded={expandedPC === pc.id}
+              injuries={gameState.injuries[pc.id] || []}
+              onToggle={() => setExpandedPC(expandedPC === pc.id ? null : pc.id)}
+            />
+            {pc.id === gameState.companionId && gameState.companionMood && (
+              <div className="mb-3 px-3 py-1.5 rounded-lg text-[10px]" style={{
+                background: 'rgba(100,140,200,0.1)',
+                border: '1px solid rgba(100,140,200,0.15)',
+                color: '#8090b0'
+              }}>
+                💭 Mood: {gameState.companionMood}
+                <span className="ml-1 text-[#607090]">
+                  (Affinity: {gameState.companionAffinity >= 25 ? '🤝' : gameState.companionAffinity < 0 ? '😠' : '😐'} {gameState.companionAffinity})
+                </span>
+              </div>
+            )}
+          </React.Fragment>
         ))}
+
+        {/* Combat Status — Active Enemies */}
+        {gameState.activeNPCs.filter(n => !n.dead).length > 0 && (
+          <div className="mt-3 p-3 rounded-lg border border-red-900/30 bg-gradient-to-b from-[#1a0f0f] to-[#120808]">
+            <div className="flex items-center gap-2 mb-2">
+              <Swords className="w-4 h-4 text-red-400" />
+              <span className="font-title text-xs text-red-400 uppercase tracking-wider">Active Combatants</span>
+            </div>
+            {gameState.activeNPCs.filter(n => !n.dead).map(npc => (
+              <div key={npc.id} className="flex items-center gap-2 p-2 rounded bg-[#0d0808] border border-red-900/20 mb-1.5">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1">
+                    {(npc as any).encounter_type === 'BOSS' && <span className="text-xs">👑</span>}
+                    <span className="text-xs text-red-300 font-title truncate">{npc.name}</span>
+                  </div>
+                  <div className="mt-1 h-1.5 bg-[#1a1010] rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${Math.max(0, Math.round(((npc.hp || 0) / (npc.maxHp || 1)) * 100))}%`,
+                        background: (npc.hp || 0) / (npc.maxHp || 1) <= 0.2 ? '#cc3030' : '#cc5050'
+                      }}
+                    />
+                  </div>
+                  <div className="text-[9px] text-gray-500 mt-0.5">
+                    HP: {Math.max(0, npc.hp || 0)}/{npc.maxHp || '?'}
+                    {(npc as any).encounter_type === 'BOSS' && ` · Phase ${(gameState.antagonistId === npc.id) ? gameState.antagonistPhase : '?'}/3`}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Battle Log — Recent Events */}
+        {gameState.log.length > 0 && (
+          <div className="mt-3">
+            <NarrativeSection 
+              title="Battle Log" 
+              content={gameState.log.slice(0, 15).map(l => {
+                if (l.msg.startsWith('__')) return null // Skip special log entries
+                return l.msg
+              }).filter(Boolean).join('\n\n') || 'No events yet.'}
+              icon={<ScrollText className="w-4 h-4 text-[#a08060]" />}
+              variant="default"
+              defaultOpen={false}
+            />
+          </div>
+        )}
       </TabsContent>
 
       {/* NPCs Tab */}
@@ -375,25 +437,39 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
 
       <TabsContent value="pcs" className="p-3 m-0">
         {gameState.pcs.map(pc => (
-          <Card key={pc.id} className={`mb-3 ${pc.dead ? 'opacity-30' : ''} ${pc.id === gameState.humanPCId ? 'border-2 border-[#d4af37]' : 'border border-[#4a4030]'}`}>
-            <CardHeader className="p-3 bg-gradient-to-r from-[rgba(60,45,15,.5)] to-[rgba(30,25,15,.3)]">
-              <CardTitle className="text-base text-[#d4af37] font-name">
-                {pc.name.replace(/\s*\([^)]*\)/g, '')} {pc.id === gameState.humanPCId && <span className="text-xs text-[#f0c860]">[YOU]</span>}
-              </CardTitle>
-              <CardDescription className="text-xs text-[#a08060]">{pc.epithet || pc.pantheon}</CardDescription>
-            </CardHeader>
-            <CardContent className="p-3 text-sm space-y-2">
-              <div className="flex justify-between"><span className="text-[#8a7040]">HP</span><span className={`font-bold ${hpCls(pc.hp, pc.maxHp)}`}>{Math.max(0, pc.hp)}/{pc.maxHp}</span></div>
-              <div className="flex justify-between"><span className="text-[#8a7040]">AC</span><span className="text-[#f0e0c0] font-bold">{pc.AC}</span></div>
-              <div className="flex justify-between"><span className="text-[#8a7040]">Align</span><span className="text-sm" style={{ color: aCol(pc.align) }}>{pc.align}</span></div>
-              <div className="flex justify-between">
-                <span className="text-[#8a7040]">Fight?</span>
-                <span className="font-bold text-sm" style={{ color: gameState.pcAgreements[pc.id] === true ? '#50c050' : gameState.pcAgreements[pc.id] === false ? '#c05050' : '#8a7040' }}>
-                  {gameState.pcAgreements[pc.id] === true ? 'Agreed' : gameState.pcAgreements[pc.id] === false ? 'Refused' : 'Undecided'}
+          <React.Fragment key={pc.id}>
+            <Card className={`mb-3 ${pc.dead ? 'opacity-30' : ''} ${pc.id === gameState.humanPCId ? 'border-2 border-[#d4af37]' : 'border border-[#4a4030]'}`}>
+              <CardHeader className="p-3 bg-gradient-to-r from-[rgba(60,45,15,.5)] to-[rgba(30,25,15,.3)]">
+                <CardTitle className="text-base text-[#d4af37] font-name">
+                  {pc.name.replace(/\s*\([^)]*\)/g, '')} {pc.id === gameState.humanPCId && <span className="text-xs text-[#f0c860]">[YOU]</span>}
+                </CardTitle>
+                <CardDescription className="text-xs text-[#a08060]">{pc.epithet || pc.pantheon}</CardDescription>
+              </CardHeader>
+              <CardContent className="p-3 text-sm space-y-2">
+                <div className="flex justify-between"><span className="text-[#8a7040]">HP</span><span className={`font-bold ${hpCls(pc.hp, pc.maxHp)}`}>{Math.max(0, pc.hp)}/{pc.maxHp}</span></div>
+                <div className="flex justify-between"><span className="text-[#8a7040]">AC</span><span className="text-[#f0e0c0] font-bold">{pc.AC}</span></div>
+                <div className="flex justify-between"><span className="text-[#8a7040]">Align</span><span className="text-sm" style={{ color: aCol(pc.align) }}>{pc.align}</span></div>
+                <div className="flex justify-between">
+                  <span className="text-[#8a7040]">Fight?</span>
+                  <span className="font-bold text-sm" style={{ color: gameState.pcAgreements[pc.id] === true ? '#50c050' : gameState.pcAgreements[pc.id] === false ? '#c05050' : '#8a7040' }}>
+                    {gameState.pcAgreements[pc.id] === true ? 'Agreed' : gameState.pcAgreements[pc.id] === false ? 'Refused' : 'Undecided'}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+            {pc.id === gameState.companionId && gameState.companionMood && (
+              <div className="mb-3 px-3 py-1.5 rounded-lg text-[10px]" style={{
+                background: 'rgba(100,140,200,0.1)',
+                border: '1px solid rgba(100,140,200,0.15)',
+                color: '#8090b0'
+              }}>
+                💭 Mood: {gameState.companionMood}
+                <span className="ml-1 text-[#607090]">
+                  (Affinity: {gameState.companionAffinity >= 25 ? '🤝' : gameState.companionAffinity < 0 ? '😠' : '😐'} {gameState.companionAffinity})
                 </span>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </React.Fragment>
         ))}
       </TabsContent>
 

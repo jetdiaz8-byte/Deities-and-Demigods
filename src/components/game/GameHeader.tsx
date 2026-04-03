@@ -341,6 +341,20 @@ export function GameHeader({
                   className="object-contain"
                   unoptimized
                 />
+                {/* Damage/Death overlay */}
+                {pc.dead && (
+                  <div className="absolute inset-0 bg-black/70 grayscale" />
+                )}
+                {!pc.dead && pc.hp > 0 && pc.hp < pc.maxHp * 0.3 && (
+                  <div className="absolute inset-0 bg-red-900/30 animate-pulse pointer-events-none" />
+                )}
+                {!pc.dead && injuries.length > 0 && (
+                  <div className="absolute top-0.5 right-0.5 flex flex-col gap-0.5 pointer-events-none">
+                    {injuries.slice(0, 3).map((inj, i) => (
+                      <span key={i} className="text-[10px] leading-none drop-shadow-lg">{inj.icon}</span>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="font-bold text-[#d4af37] truncate font-name text-[10px] md:text-xs text-center">
                 {pc.name.replace(/\s*\([^)]*\)/g, '').split(/\s+/).slice(-1)[0]}
@@ -349,6 +363,22 @@ export function GameHeader({
               <div className="text-[9px] text-center text-gray-400 mt-0.5">
                 {Math.max(0, pc.hp)}/{pc.maxHp}
               </div>
+              {injuries.length > 0 && (
+                <div className="mt-0.5 space-y-0.5">
+                  {injuries.slice(0, 2).map((inj, i) => (
+                    <div key={i} className="text-[7px] md:text-[8px] text-center truncate px-1 rounded" style={{ 
+                      background: 'rgba(180,60,40,0.15)', 
+                      color: '#cc8060',
+                      border: '1px solid rgba(180,60,40,0.2)'
+                    }}>
+                      {inj.icon} {inj.name} ({inj.turnsLeft}t)
+                    </div>
+                  ))}
+                  {injuries.length > 2 && (
+                    <div className="text-[7px] text-center text-[#806050]">+{injuries.length - 2} more</div>
+                  )}
+                </div>
+              )}
               {isActive && !pc.dead && (
                 <div className="text-[8px] text-center text-[#d4af37] uppercase mt-0.5">You</div>
               )}
