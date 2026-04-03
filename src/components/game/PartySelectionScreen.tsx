@@ -109,6 +109,68 @@ export function PartySelectionScreen({
           </div>
         </div>
 
+        {/* ── Sticky Action Bar ──────────────────────────────────────────── */}
+        <div className="sticky top-0 z-30 bg-[#0a0806]/95 backdrop-blur border border-[#2e2008] rounded-lg p-3 mb-4 shadow-lg">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              {fateRoll ? (
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col items-center justify-center w-11 h-11 rounded-full border-2 border-[#d4af37] bg-[#1a1510]">
+                    <span className="text-base font-bold text-[#d4af37] font-mono">{fateRoll.result}</span>
+                    <span className="text-[7px] text-[#7a5f20]">d100</span>
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[#7a5f20] text-xs">The dice have spoken. </span>
+                    <span className="text-[#f0c860] font-bold text-sm truncate">{fateRoll.heroName}</span>
+                    <span className="text-[#5a4d30] text-xs"> is your fate.</span>
+                  </div>
+                </div>
+              ) : selectedHero ? (
+                <div className="flex items-center gap-2 min-w-0">
+                  <Crown className="w-4 h-4 text-[#d4af37] flex-shrink-0" />
+                  <span className="text-[#f0c860] font-bold text-sm truncate">{selectedHero.name}</span>
+                  <span className="text-[#5a4d30] text-xs hidden sm:inline">
+                    ({selectedHero.pantheon} · {selectedHero.type === 'hero' ? '◆ Hero' : '◈ Demigod'})
+                  </span>
+                </div>
+              ) : (
+                <span className="text-[#5a4d30] italic text-sm">Choose a hero or let fate decide...</span>
+              )}
+            </div>
+            <div className="flex gap-2 flex-shrink-0">
+              <Button
+                onClick={handleFateRoll}
+                disabled={isRolling || filteredHeroes.length === 0}
+                className="bg-gradient-to-b from-[#3a1a08] to-[#1a0d04] hover:from-[#5a2a10] hover:to-[#2a1508] text-[#d4af37] border border-[#7a5f20] text-xs h-9 px-3"
+                style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}
+              >
+                {isRolling ? (
+                  <><Dices className="w-3.5 h-3.5 mr-1.5 animate-spin" />Rolling...</>
+                ) : fateRoll ? (
+                  <><Dices className="w-3.5 h-3.5 mr-1.5" />Re-Roll</>
+                ) : (
+                  <><Dices className="w-3.5 h-3.5 mr-1.5" />Let Fate Decide</>
+                )}
+              </Button>
+              <Button
+                onClick={() => { setGamePhase('intro'); setPreviewHero(null); setSelectedParty([]); setFateRoll(null) }}
+                variant="outline"
+                className="border-[#5a4018] text-[#9a8860] text-xs h-9 px-3"
+              >
+                Back
+              </Button>
+              <Button
+                onClick={confirmPartySelection}
+                disabled={selectedParty.length !== 1}
+                className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860] border border-[#7a5f20] text-xs h-9 px-3"
+                style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}
+              >
+                ⚔ The Shard Awakens ⚔
+              </Button>
+            </div>
+          </div>
+        </div>
+
         {/* ── Status Message ─────────────────────────────────────────────── */}
         {statusMessage && (
           <div className="text-center mb-4">
@@ -215,15 +277,18 @@ export function PartySelectionScreen({
                           </Badge>
                         </div>
 
-                        <div className="text-xs space-y-1 font-narrative">
-                          <div className="flex justify-between">
-                            <span className="text-[#b08050]">HP</span>
-                            <span className="text-[#f0e0c0] font-bold">{hero.hp}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-[#b08050]">AC</span>
-                            <span className="text-[#f0e0c0] font-bold">{hero.AC}</span>
-                          </div>
+                        <div className="grid grid-cols-3 gap-x-2 gap-y-0.5 text-[10px] font-narrative">
+                          <div className="flex justify-between"><span className="text-[#b08050]">STR</span><span className="text-[#f0e0c0] font-bold">{hero.str || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#b08050]">DEX</span><span className="text-[#f0e0c0] font-bold">{hero.dex || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#b08050]">CON</span><span className="text-[#f0e0c0] font-bold">{hero.con || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#b08050]">INT</span><span className="text-[#f0e0c0] font-bold">{hero.int || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#b08050]">WIS</span><span className="text-[#f0e0c0] font-bold">{hero.wis || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-[#b08050]">CHA</span><span className="text-[#f0e0c0] font-bold">{hero.cha || '-'}</span></div>
+                        </div>
+                        <div className="flex gap-2 mt-1 text-[10px] font-narrative">
+                          <span className="text-[#b08050]">HP <span className="text-[#f0e0c0] font-bold">{hero.hp}</span></span>
+                          <span className="text-[#b08050]">AC <span className="text-[#f0e0c0] font-bold">{hero.AC}</span></span>
+                          {hero.MR ? <span className="text-[#b08050]">MR <span className="text-[#f0e0c0] font-bold">{hero.MR}%</span></span> : null}
                         </div>
 
                         {isSelected && (
@@ -408,74 +473,6 @@ export function PartySelectionScreen({
           </div>
         )}
 
-        {/* ── Bottom Bar ────────────────────────────────────────────────── */}
-        <div className="flex justify-between items-center bg-[#110d07] border border-[#2e2008] rounded p-4 mt-4">
-          <div className="flex-1">
-            {fateRoll ? (
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col items-center justify-center w-12 h-12 rounded-full border-2 border-[#d4af37] bg-[#1a1510]">
-                  <span className="text-lg font-bold text-[#d4af37] font-mono">{fateRoll.result}</span>
-                  <span className="text-[8px] text-[#7a5f20]">d100</span>
-                </div>
-                <div>
-                  <span className="text-[#7a5f20] text-sm">The dice have spoken. </span>
-                  <span className="text-[#f0c860] font-bold">{fateRoll.heroName}</span>
-                  <span className="text-[#5a4d30] text-sm"> is your fate.</span>
-                </div>
-              </div>
-            ) : selectedHero ? (
-              <div>
-                <span className="text-[#9a8860]">Your Fate: </span>
-                <span className="text-[#f0c860] font-bold">{selectedHero.name}</span>
-                <span className="text-[#5a4d30] ml-2 text-sm">
-                  ({selectedHero.pantheon} · {selectedHero.type === 'hero' ? '◆ Hero' : '◈ Demigod'})
-                </span>
-              </div>
-            ) : (
-              <span className="text-[#5a4d30] italic">Choose a hero manually or let fate decide with a d100 roll...</span>
-            )}
-          </div>
-          <div className="flex gap-3">
-            <Button
-              onClick={handleFateRoll}
-              disabled={isRolling || filteredHeroes.length === 0}
-              className="bg-gradient-to-b from-[#3a1a08] to-[#1a0d04] hover:from-[#5a2a10] hover:to-[#2a1508] text-[#d4af37] border border-[#7a5f20] relative overflow-hidden"
-              style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.1em' }}
-            >
-              {isRolling ? (
-                <>
-                  <Dices className="w-4 h-4 mr-2 animate-spin" />
-                  Rolling...
-                </>
-              ) : fateRoll ? (
-                <>
-                  <Dices className="w-4 h-4 mr-2" />
-                  Re-Roll Fate
-                </>
-              ) : (
-                <>
-                  <Dices className="w-4 h-4 mr-2" />
-                  Let Fate Decide
-                </>
-              )}
-            </Button>
-            <Button
-              onClick={() => { setGamePhase('intro'); setPreviewHero(null); setSelectedParty([]); setFateRoll(null) }}
-              variant="outline"
-              className="border-[#5a4018] text-[#9a8860]"
-            >
-              Back
-            </Button>
-            <Button
-              onClick={confirmPartySelection}
-              disabled={selectedParty.length !== 1}
-              className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860] border border-[#7a5f20]"
-              style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.1em' }}
-            >
-              ⚔ The Shard Awakens ⚔
-            </Button>
-          </div>
-        </div>
       </div>
     </div>
   )
