@@ -74,6 +74,23 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return arr
 }
 
+// IDs of entities that are actual dragons (not dragon-slayers or dragon-riders)
+// These should NOT appear as selectable PCs — they are monsters/NPCs
+const DRAGON_IDS = new Set([
+  'cyan_bloodbane',      // Ancient Green Dragon
+  'khellendros',          // Ancient Blue Dragon (Skie)
+  'beryllinthranox',      // Great Green Dragon Overlord
+  'malystryx',           // Great Red Dragon Overlord
+])
+
+const isDragon = (e: any): boolean => {
+  if (DRAGON_IDS.has(e.id)) return true
+  // Also catch by level field: "Ancient Blue Dragon", "Great Red Dragon", etc.
+  const level = (e.level || '').toLowerCase()
+  if (level.includes('dragon') && !level.includes('dragonbane') && !level.includes('dragonlord') && !level.includes('dragon-slaying')) return true
+  return false
+}
+
 const formatEntity = (e: any) => ({
   id: e.id,
   name: e.name,
@@ -153,6 +170,13 @@ export async function GET(request: NextRequest) {
           } else {
             // No DB entities, use JSON fallback
             entities = getFallbackEntities('heroes', limit, excludeIds)
+          }
+
+          // Filter out dragons — they are monsters/NPCs, not playable PCs
+          const beforeCount = entities.length
+          entities = entities.filter(e => !isDragon(e))
+          if (entities.length < beforeCount) {
+            console.warn(`Filtered out ${beforeCount - entities.length} dragon(s) from hero selection`)
           }
           break
         }
