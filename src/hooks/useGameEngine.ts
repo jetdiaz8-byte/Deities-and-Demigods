@@ -128,10 +128,24 @@ export function useGameEngine() {
 
 
   // ── AUTO SCROLL ────────────────────────────────────────────────────────
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   useEffect(() => {
-    if (narrRef.current) {
-      narrRef.current.scrollTop = narrRef.current.scrollHeight
-    }
+    // Clear any pending scroll to avoid stacking
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+    // Delay scroll to ensure DOM has rendered new content
+    scrollTimeoutRef.current = setTimeout(() => {
+      // Try anchor-based scroll first (most reliable)
+      const anchor = document.getElementById('narrative-bottom')
+      if (anchor) {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        return
+      }
+      // Fallback to ref-based scroll
+      if (narrRef.current) {
+        narrRef.current.scrollTo({ top: narrRef.current.scrollHeight, behavior: 'smooth' })
+      }
+    }, 200)
+    return () => { if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current) }
   }, [narrativeContent])
 
   // ── SAVE/LOAD FUNCTIONS ────────────────────────────────────────────────

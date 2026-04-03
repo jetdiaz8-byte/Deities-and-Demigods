@@ -193,7 +193,7 @@ export default function MythworldEngine() {
           {/* Narrative Panel */}
           <div
             ref={narrRef}
-            className="flex-1 overflow-y-auto p-3 md:p-4 md:mr-80"
+            className="flex-1 overflow-y-auto p-3 md:p-4 md:mr-80 scroll-smooth"
             style={{ background: 'rgba(6,4,3,.98)' }}
           >
             {narrativeContent.map((item, idx) => (
@@ -213,6 +213,9 @@ export default function MythworldEngine() {
               confirmChoice={confirmChoice}
               setShardDialogOpen={setShardDialogOpen}
             />
+
+            {/* Scroll anchor — auto-scroll targets this */}
+            <div id="narrative-bottom" />
           </div>
 
           {/* Desktop Sidebar + Mobile Sheet Drawer */}
