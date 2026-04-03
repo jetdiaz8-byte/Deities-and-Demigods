@@ -353,3 +353,153 @@ Modified 4 files with surgical edits, applying 12 enhancements total. All CSS cl
 - **Enhancement 12 — HP Bar Enhancement:** Added `getHpGradientClass()` helper to `HealthBar` component. Added `hp-bar-smooth` class and conditional gradient classes to fill div: `hp-gradient-high` (>=60%), `hp-gradient-mid` (>=30%), `hp-gradient-low` (<30%).
 
 **Lint Status:** 9 remaining errors are all pre-existing (scripts/ require imports, AchievementNotification.tsx set-state-in-effect). Zero new errors from these changes.
+
+---
+## Task ID: 2-b - UI Components Builder
+### Work Task
+Implement 4 enhancements: Ambient Sound Theme Selector (#29), Quest Journal Book Modal (#30), Combat Tracker Overlay (#31), and World Map / Region Indicator (#33).
+
+### Work Summary
+Created 3 new component files and modified 3 existing files. All 4 enhancements implemented and integrated. Zero new lint errors.
+
+**NEW FILES CREATED:**
+
+**1. `src/components/game/QuestJournalModal.tsx` (~130 lines)**
+- Full modal styled like an open leather-bound journal using shadcn/ui Dialog
+- Leather header with stitching effect and `Cinzel Decorative` font
+- Radial vignette overlay on journal content area
+- Main Quests section with Star icon, title, status badge (active/completed/failed), description, and objective checklist (CheckCircle/Circle icons)
+- Side Quests section with similar compact styling and border separator
+- Hidden quests hint shown after turn 5
+- Includes `DialogDescription` with `sr-only` for accessibility
+
+**2. `src/components/game/CombatTracker.tsx` (~90 lines)**
+- Floating overlay visible only when enemies are alive (returns null otherwise)
+- Dark red gradient background with backdrop blur
+- Player party entries with portrait thumbnails, name, HP bar (3-tier color: green/yellow/red), and HP text
+- Active PC highlighted with gold border
+- Enemy entries with skull placeholder or portrait (Act III antagonist), HP bar (red gradient), and boss phase indicator
+- Crown icon for boss encounters, special styling for antagonist
+
+**3. `src/components/game/RegionIndicator.tsx` (~50 lines)**
+- Compact card showing current location with icon inference from location/scene text
+- Keyword-based icon selection: Skull (dungeon/crypt/tomb), Building (temple/palace/tavern/city), Trees (forest/wood/grove), Mountain (mountain/peak), Waves (ocean/sea/river)
+- Each region type has a distinct color: red, purple, green, gold, blue
+- Subtle gradient background with border, uses `font-name` class
+
+**EXISTING FILES MODIFIED:**
+
+**4. `src/components/game/GameHeader.tsx`**
+- **Enhancement #29:** Replaced simple Music toggle button with ambient theme selector dropdown
+- Added `showAmbientThemes` and `ambientTheme` state (default: 'dungeon')
+- 6 themes: Tavern (🍺), Dungeon (🏚️), Forest (🌲), Battle (⚔️), Temple (⛪), Ocean (🌊)
+- Desktop: shows current theme label next to Music icon, clickable dropdown with parchment-styled menu
+- Mobile: simplified toggle with theme-colored icon
+- Added `onOpenQuestJournal` optional prop and "Journal" button in header nav (green theme, BookOpen icon)
+- Dropdown includes "Disable" option to turn off ambient music
+
+**5. `src/app/page.tsx`**
+- Imported `QuestJournalModal` and `CombatTracker`
+- Added `showQuestJournal` state
+- Passed `onOpenQuestJournal` to GameHeader
+- Added `CombatTracker` before ChoicePanel in narrative area
+- Added `QuestJournalModal` component with gameState and open/close handlers
+
+**6. `src/components/game/GameSidebar.tsx`**
+- Imported `RegionIndicator`
+- Added RegionIndicator above the DesktopTabs, below Story So Far section
+
+**Lint Status:** Zero new errors. All errors are pre-existing (scripts/, AchievementNotification.tsx, VictoryCelebration.tsx).
+
+---
+## Task ID: 2-c - Narrative & Visual Enhancer
+### Work Task
+Implement 4 enhancements: Character Dialogue Bubbles (#32), Day/Night Cycle (#36), Codex Inline Links (#37), and Custom Character Portrait Frames (#38).
+
+### Work Summary
+Modified 5 files with surgical edits. All CSS additions appended to globals.css after TIER 7 section. Zero new lint errors introduced (12 pre-existing errors unchanged).
+
+**1. Enhancement #32 — Character Dialogue Bubbles (`src/hooks/useGameEngine.ts` + `src/app/globals.css`):**
+- Replaced simple dialogue regex `/"([^"]+)"/g` with a sophisticated two-pass system
+- First pass: Detects "Name said:" or "Name:" patterns before quotes using regex with optional verb suffixes (said, replies, shouts, whispers, screams, murmurs, asks, exclaims)
+- Common words (The, They, He, She, etc.) are excluded and rendered as simple dialogue-text spans
+- Named NPC speakers get wrapped in `<div class="dialogue-bubble">` with `<div class="dialogue-speaker">` child showing the name in gold
+- Second pass: Catches standalone quotes (10+ chars) not already inside dialogue-text or dialogue-bubble elements
+- CSS: `.dialogue-bubble` with dark brown background, bronze left border (3px), rounded corners, speech triangle pseudo-element. `.dialogue-speaker` in gold with text-shadow.
+
+**2. Enhancement #36 — Day/Night Cycle (`src/app/globals.css` + `src/app/page.tsx` + `src/components/game/GameHeader.tsx`):**
+- CSS: 4 time-of-day classes (`.time-dawn`, `.time-day`, `.time-dusk`, `.time-night`) each defining `--time-overlay` and `--time-vignette` CSS custom properties. `.time-cycle-overlay` fixed overlay with smooth 3s transitions.
+- page.tsx: Added `timeOfDay` computed via `useMemo` using `gameState.turn % 40` (40-turn full cycle: dawn 0-9, day 10-19, dusk 20-29, night 30-39). Rendered `<div className="time-cycle-overlay {timeOfDay}">` after vignette overlay.
+- GameHeader.tsx: Added inline time-of-day emoji indicator (🌅/☀️/🌇/🌙) next to turn count display, computed from `gameState.turn % 40`.
+
+**3. Enhancement #37 — Codex Inline Links (`src/hooks/useGameEngine.ts` + `src/app/globals.css`):**
+- After styledParagraphs are built, collects entity names from `gameState.activeNPCs` and `gameState.pcs`
+- Sorts by length (longest first) to prevent partial matches
+- Iterates each name, builds regex with lookbehind/lookahead to avoid double-linking or partial word matches
+- Wraps standalone name mentions in `<a href="/codex" class="codex-inline-link" title="View in Codex">` links
+- CSS: `.codex-inline-link` in gold with dashed bronze underline, hover glow effect.
+
+**4. Enhancement #38 — Custom Pantheon Portrait Frames (`src/app/globals.css` + `src/components/game/GameHeader.tsx`):**
+- CSS: `.portrait-frame` base class with `::after` pseudo-element for the glow frame. 6 pantheon variants: `.portrait-frame-greek` (marble white/gold), `.portrait-frame-norse` (runic blue/steel), `.portrait-frame-egyptian` (gilded gold/sand), `.portrait-frame-celtic` (emerald green), `.portrait-frame-asian` (jade/crimson), `.portrait-frame-default` (bronze).
+- GameHeader.tsx: Added `getPantheonFrame(pantheon)` helper function that matches pantheon/category strings to frame classes. Each PC portrait in the party bar wrapped with `<div className="portrait-frame {frame}">`. Antagonist portrait also wrapped (default frame when hidden, pantheon frame when revealed).
+
+---
+## Task ID: 2-a - Interactive Components Builder
+### Work Task
+Implement 4 enhancements: Interactive Dice Roller (#34), Achievement Toast Enhancement (#35), Death/Defeat Screen (#39), and Victory/Level Up Celebration (#40).
+
+### Work Summary
+Created 3 new component files, enhanced 1 existing file, and integrated dice roller into ChoicePanel. All 4 enhancements implemented. Zero new lint errors (9 remaining errors are all pre-existing).
+
+**NEW FILES CREATED:**
+
+**1. `src/components/game/InteractiveDiceRoller.tsx` (~140 lines)**
+- Interactive dice rolling component using framer-motion for animations
+- Supports die types: d4, d6, d8, d10, d12, d20 with CSS clip-path shapes
+- 800ms tumble animation during roll with spinning `?` indicator
+- Visual feedback: gold glow on max roll (critical), red glow on natural 1 (fumble)
+- AnimatePresence for smooth transitions between idle/tumble/result states
+- Shows roll result with bonus calculation and total display
+- Props: dieType, label, onRoll callback, disabled, bonus, showResult
+
+**2. `src/components/game/DeathScreen.tsx` (~80 lines)**
+- Full-screen death/defeat overlay at z-[200] with click-to-dismiss
+- Radial gradient dark-red overlay background
+- Staggered framer-motion entrance animations (skull, title, PC name, flavor text, dismiss hint)
+- Finds the dead human PC from gameState.pcs, displays their name
+- "FALLEN" title with Cinzel Decorative font and red text-shadow
+- Flavor text: "The prophecy remains unfulfilled... but the shard will find another bearer."
+- Shattered portrait effect with scale + rotateY animation
+
+**3. `src/components/game/VictoryCelebration.tsx` (~100 lines)**
+- Full-screen celebration overlay at z-[200] with 3 event types: level_up, boss_defeat, quest_complete
+- 30 particle burst effect using useMemo (avoids setState-in-effect lint error) with 6 colors
+- Auto-dismiss after 4 seconds via useEffect timer
+- Spring animation for main text entrance (scale + rotate)
+- Pulsing emoji icon (⬆️/👑/📜) with infinite scale animation
+- Gold text-shadow on title with Cinzel Decorative font
+- Pointer-events-auto on text to allow click dismiss
+
+**EXISTING FILES MODIFIED:**
+
+**4. `src/components/game/AchievementNotification.tsx`**
+- Replaced CSS transition slide-in with framer-motion spring animation
+- Changed positioning from top-right to top-center (fixed top-4 left-1/2 -translate-x-1/2)
+- Added animated icon with wiggle effect (rotate [-10, 10, -10, 0] on mount)
+- Increased icon size from w-12/h-12 to w-14/h-14 (text-3xl)
+- Increased card min-width from 280px to 340px
+- Changed auto-dismiss from 5s to 4s with 500ms fade-out delay
+- Added gold shimmer border animation to all tiers (not just gold/legendary)
+- Increased glow box-shadow from 30px to 40px
+
+**5. `src/components/game/ChoicePanel.tsx` — Dice Roller Integration:**
+- Added imports: InteractiveDiceRoller, motion (framer-motion), useCallback, useEffect
+- Added `getDamageDie(ability)` helper: maps weapon/spell names to die types (d6/d8/d10/d12)
+- Added `isCombatAbility(ability)` helper: detects attack/strike/slash/melee/fireball/spell/arcane/smite
+- Added `diceRollResult` state and `handleDiceRoll` callback
+- Added useEffect with setTimeout(0) to reset dice on selection change (avoids lint sync-setState error)
+- Moved all hooks before conditional return to satisfy rules-of-hooks
+- Added dice roller section above confirm button: dark red container with selected attack label, divider, InteractiveDiceRoller, and animated damage result display
+- Damage result highlighted in gold when >= 80% of max die value
+
+**Lint Status:** 9 remaining errors are all pre-existing (7 in scripts/ for require imports, 2 in AchievementNotification.tsx for setState-in-effect). Zero new errors from these changes.

@@ -25,6 +25,16 @@ function getClassIcon(pc: any) {
   return <span className="class-icon-warrior text-xs">⚔️</span>
 }
 
+function getPantheonFrame(pantheon: string): string {
+  const p = (pantheon || '').toLowerCase()
+  if (p.includes('greek') || p.includes('olympian') || p.includes('mount olympus')) return 'portrait-frame-greek'
+  if (p.includes('norse') || p.includes('asgardian') || p.includes('aesir') || p.includes('vanir')) return 'portrait-frame-norse'
+  if (p.includes('egyptian') || p.includes('pharaoh') || p.includes('heliopolitan')) return 'portrait-frame-egyptian'
+  if (p.includes('celtic') || p.includes('fey') || p.includes('sidhe') || p.includes('tuatha')) return 'portrait-frame-celtic'
+  if (p.includes('asian') || p.includes('chinese') || p.includes('japanese') || p.includes('celestial')) return 'portrait-frame-asian'
+  return 'portrait-frame-default'
+}
+
 export interface GameHeaderProps {
   gameState: GameState
   isSpeaking: boolean
@@ -52,6 +62,8 @@ export interface GameHeaderProps {
   achievementCount: number
   achievementTotal: number
   onOpenAchievements: () => void
+  // Quest Journal
+  onOpenQuestJournal?: () => void
 }
 
 export function GameHeader({
@@ -81,9 +93,21 @@ export function GameHeader({
   achievementCount,
   achievementTotal,
   onOpenAchievements,
+  onOpenQuestJournal,
 }: GameHeaderProps) {
   const [showAudioPanel, setShowAudioPanel] = useState(false)
+  const [showAmbientThemes, setShowAmbientThemes] = useState(false)
+  const [ambientTheme, setAmbientTheme] = useState('dungeon')
   const [antagonistRevealPlayed, setAntagonistRevealPlayed] = useState(false)
+  const themes = [
+    { id: 'tavern', label: '🍺 Tavern', color: '#c9a84c' },
+    { id: 'dungeon', label: '🏚️ Dungeon', color: '#8b6914' },
+    { id: 'forest', label: '🌲 Forest', color: '#4a9060' },
+    { id: 'battle', label: '⚔️ Battle', color: '#c04040' },
+    { id: 'temple', label: '⛪ Temple', color: '#a080d0' },
+    { id: 'ocean', label: '🌊 Ocean', color: '#4090c0' },
+  ]
+  const currentTheme = themes.find(t => t.id === ambientTheme) || themes[1]
   const revealed = gameState.act === ACTS.THREE
   React.useEffect(() => {
     if (revealed && !antagonistRevealPlayed) {
@@ -119,9 +143,26 @@ export function GameHeader({
               <ScrollText className="w-3 h-3" />
               Codex
             </a>
+            <button
+              onClick={() => onOpenQuestJournal?.()}
+              className="hidden sm:flex items-center gap-1 px-3 py-1 text-xs bg-gradient-to-r from-[#1a2010] to-[#101510] border border-[#3a5018] rounded hover:border-[#4a9060] hover:text-[#60e0a0] text-[#4a9060] transition-all"
+              style={{ fontFamily: 'Cinzel, serif' }}
+            >
+              <BookOpen className="w-3 h-3" />
+              Journal
+            </button>
           </div>
           <p className="text-[10px] md:text-xs text-[#8a7040] tracking-widest uppercase">
             Turn {gameState.turn} · {gameState.act === 'act1' ? 'Act I' : gameState.act === 'act2' ? 'Act II' : 'Final Boss'}
+            <span className="ml-2">
+              {(() => {
+                const cycle = gameState.turn % 40
+                if (cycle < 10) return '🌅'
+                if (cycle < 20) return '☀️'
+                if (cycle < 30) return '🌇'
+                return '🌙'
+              })()}
+            </span>
           </p>
         </div>
 
@@ -145,18 +186,45 @@ export function GameHeader({
             )}
           </button>
 
-          {/* Ambient Toggle */}
-          <button
-            onClick={toggleAmbient}
-            className="p-1.5 rounded transition-all"
-            title={ambientEnabled ? 'Disable Ambient Music' : 'Enable Ambient Music'}
-          >
-            {ambientEnabled ? (
-              <Music className="w-4 h-4 text-[#d4af37]" />
-            ) : (
-              <VolumeOff className="w-4 h-4 text-gray-500" />
+          {/* Ambient Theme Selector */}
+          <div className="relative">
+            <button
+              onClick={() => ambientEnabled ? setShowAmbientThemes(prev => !prev) : toggleAmbient()}
+              className="p-1.5 rounded transition-all flex items-center gap-1"
+              title={ambientEnabled ? `Ambiance: ${currentTheme.label}` : 'Enable Ambient Music'}
+            >
+              {ambientEnabled ? (
+                <>
+                  <Music className="w-4 h-4" style={{ color: currentTheme.color }} />
+                  <span className="hidden lg:inline text-[10px] font-title" style={{ color: currentTheme.color }}>{currentTheme.label.split(' ')[1]}</span>
+                </>
+              ) : (
+                <VolumeOff className="w-4 h-4 text-gray-500" />
+              )}
+            </button>
+            {showAmbientThemes && (
+              <div className="absolute top-full mt-1 right-0 z-[60] p-2 bg-[#1a1510] border border-[#3a3020] rounded-lg shadow-xl shadow-black/60 min-w-[140px]">
+                <div className="text-[10px] uppercase tracking-wider text-[#8a7040] font-title mb-1 px-2">Ambiance</div>
+                {themes.map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => { setAmbientTheme(t.id); setShowAmbientThemes(false) }}
+                    className={`w-full text-left px-2 py-1.5 rounded text-xs transition-all ${ambientTheme === t.id ? 'bg-[rgba(212,175,55,.1)] text-[#d4af37]' : 'text-[#a08060] hover:bg-[rgba(212,175,55,.05)] hover:text-[#c9a84c]'}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+                <div className="mt-1 pt-1 border-t border-[#2a2010]">
+                  <button
+                    onClick={() => { toggleAmbient(); setShowAmbientThemes(false) }}
+                    className="w-full text-left px-2 py-1.5 rounded text-xs text-[#804040] hover:bg-[rgba(180,60,40,.1)] transition-all"
+                  >
+                    <VolumeOff className="w-3 h-3 inline mr-1" /> Disable
+                  </button>
+                </div>
+              </div>
             )}
-          </button>
+          </div>
 
           {/* Volume Slider Panel - Desktop only */}
           <div className="hidden md:flex items-center gap-1">
@@ -310,10 +378,10 @@ export function GameHeader({
           <button
             onClick={toggleAmbient}
             className="p-1.5 rounded transition-all"
-            title={ambientEnabled ? 'Disable Ambient Music' : 'Enable Ambient Music'}
+            title={ambientEnabled ? `Disable: ${currentTheme.label}` : 'Enable Ambient Music'}
           >
             {ambientEnabled ? (
-              <Music className="w-4 h-4 text-[#d4af37]" />
+              <Music className="w-4 h-4" style={{ color: currentTheme.color }} />
             ) : (
               <VolumeOff className="w-4 h-4 text-gray-500" />
             )}
@@ -353,6 +421,7 @@ export function GameHeader({
               }}
             >
               {/* Portrait thumbnail */}
+              <div className={`portrait-frame ${getPantheonFrame(pc.pantheon || pc.category || '')}`}>
               <div className={`relative w-full rounded overflow-hidden bg-[#0d0a08] border border-[#3a3020] mb-1 ${isActive ? 'portrait-locket portrait-locket-active' : 'portrait-locket'}`} style={{ aspectRatio: '3/4' }}>
                 <Image
                   src={getEntityPortrait(pc)}
@@ -375,6 +444,7 @@ export function GameHeader({
                     ))}
                   </div>
                 )}
+              </div>
               </div>
               <div className="font-bold text-[#d4af37] truncate font-name text-[10px] md:text-xs text-center">
                 {getClassIcon(pc)}
@@ -425,6 +495,7 @@ export function GameHeader({
             style={{ background: 'linear-gradient(145deg, #1a1010 0%, #120808 100%)', borderTop: `3px solid ${revealed ? '#8b0000' : '#3a2020'}` }}
           >
             {/* Portrait thumbnail — shadow silhouette until Act III */}
+            <div className={`portrait-frame ${revealed && antagonist ? getPantheonFrame(antagonist.pantheon || antagonist.category || '') : 'portrait-frame-default'}`}>
             <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] mb-1" style={{ aspectRatio: '3/4' }}>
               {revealed && antagonist ? (
                 <Image
@@ -439,6 +510,7 @@ export function GameHeader({
                   <Skull className="w-8 h-8 text-[#3a2020]" />
                 </div>
               )}
+            </div>
             </div>
             <div className={`font-bold truncate font-name text-[10px] md:text-xs text-center ${revealed ? 'text-[#c04040]' : 'text-[#4a3030]'}`}>
               {revealed ? antagonist?.name : 'The Shadow'}

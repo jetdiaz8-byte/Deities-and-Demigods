@@ -1,11 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Sword, Users, Sparkles, SkipForward, Shield, Wand2, Footprints, MessageSquare, Heart, Target } from 'lucide-react'
 import type { GameState, GameOption } from '@/lib/gameTypes'
+import { InteractiveDiceRoller } from './InteractiveDiceRoller'
+import { motion } from 'framer-motion'
 
 function getAbilityIcon(ability: string) {
   const a = ability.toLowerCase()
@@ -16,6 +18,22 @@ function getAbilityIcon(ability: string) {
   if (a.includes('talk') || a.includes('persuade') || a.includes('intimidate') || a.includes('negotiate') || a.includes('deceive') || a.includes('charm')) return <MessageSquare className="w-4 h-4 ability-icon-social" />
   if (a.includes('heal') || a.includes('cure') || a.includes('restore') || a.includes('potion')) return <Heart className="w-4 h-4 ability-icon-heal" />
   return <Target className="w-4 h-4 text-[#8b6914]" />
+}
+
+function getDamageDie(ability: string): string {
+  const a = ability.toLowerCase()
+  if (a.includes('greatsword') || a.includes('greataxe')) return 'd12'
+  if (a.includes('longsword') || a.includes('battleaxe') || a.includes('warhammer') || a.includes('maul')) return 'd10'
+  if (a.includes('shortsword') || a.includes('scimitar') || a.includes('firebolt') || a.includes('sacred flame')) return 'd8'
+  if (a.includes('dagger') || a.includes('ray of frost') || a.includes('acid splash')) return 'd6'
+  return 'd8'
+}
+
+function isCombatAbility(ability: string): boolean {
+  const a = ability.toLowerCase()
+  return a.includes('attack') || a.includes('strike') || a.includes('slash') || a.includes('melee')
+    || a.includes('fireball') || a.includes('spell') || a.includes('magic') || a.includes('lightning')
+    || a.includes('arcane') || a.includes('smite') || a.includes('firebolt')
 }
 
 export interface ChoicePanelProps {
@@ -34,6 +52,18 @@ export function ChoicePanel({
   setShardDialogOpen,
 }: ChoicePanelProps) {
   const [confirmClicked, setConfirmClicked] = useState(false)
+  const [diceRollResult, setDiceRollResult] = useState<number | null>(null)
+
+  // All hooks must be called before any conditional return
+  const handleDiceRoll = useCallback((result: number) => {
+    setDiceRollResult(result)
+  }, [])
+
+  // Reset dice roll when selection changes (use setTimeout to avoid sync setState in effect)
+  useEffect(() => {
+    const id = setTimeout(() => setDiceRollResult(null), 0)
+    return () => clearTimeout(id)
+  }, [gameState.pendingHumanChoice])
 
   if (!gameState.waitingForHuman || gameState.humanOptions.length === 0) return null
 
@@ -46,6 +76,11 @@ export function ChoicePanel({
   const pcSelected = gameState.pendingHumanChoice !== null
   const compSelected = compOptions.length === 0 || gameState.pendingCompanionChoice !== null
   const canConfirm = pcSelected && compSelected
+
+  // Determine if the selected PC option is a combat ability
+  const selectedPCOption = pcSelected && gameState.pendingHumanChoice !== null ? pcOptions[gameState.pendingHumanChoice] : null
+  const isCombat = selectedPCOption ? isCombatAbility(selectedPCOption.ability) : false
+  const damageDie = selectedPCOption ? getDamageDie(selectedPCOption.ability) : 'd8'
 
   return (
     <Card className="mt-4 border-2 border-[#c9a84c] parchment-bg-choices shadow-[0_0_16px_rgba(200,160,60,.2)]">
@@ -244,6 +279,38 @@ export function ChoicePanel({
                 </div>
               )
             })}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            DICE ROLLER — Shows when a combat ability is selected
+            ═══════════════════════════════════════════════════════════════════════ */}
+        {isCombat && (
+          <div className="flex items-center justify-center gap-6 py-3 px-4 rounded-lg bg-[rgba(40,10,10,.3)] border border-[#5a2020]">
+            <div className="text-center">
+              <div className="text-xs font-title text-[#c08050] uppercase tracking-wider mb-1">Selected Attack</div>
+              <div className="text-sm text-[#f0e0c0] font-narrative">{selectedPCOption?.ability}</div>
+            </div>
+            <div className="w-px h-10 bg-[#5a2020]" />
+            <InteractiveDiceRoller
+              dieType={damageDie}
+              label="Roll Damage"
+              onRoll={handleDiceRoll}
+              disabled={false}
+              showResult={true}
+            />
+            {diceRollResult !== null && (
+              <motion.div
+                initial={{ opacity: 0, x: 10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="text-center"
+              >
+                <div className="text-xs text-[#5a4040] font-title uppercase">Damage Roll</div>
+                <div className={`text-xl font-bold ${diceRollResult >= parseInt(damageDie.replace('d', '')) * 0.8 ? 'text-[#d4af37]' : 'text-[#f0ebe3]'}`} style={{ fontFamily: 'Cinzel, serif' }}>
+                  {diceRollResult}
+                </div>
+              </motion.div>
+            )}
           </div>
         )}
 

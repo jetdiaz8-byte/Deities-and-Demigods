@@ -2030,9 +2030,22 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const combatKeywords = ['strikes', 'slashes', 'casts', 'attacks', 'hits', 'misses', 'damages', 'deals', 'critical']
     const isCombatParagraph = (p: string) => combatKeywords.some(kw => p.toLowerCase().includes(kw))
 
-    // Style dialogue: wrap "quoted text" in spans
+    // Style dialogue: wrap "quoted text" in spans with speaker attribution bubbles
+    const commonWords = ['The', 'They', 'He', 'She', 'It', 'We', 'You', 'This', 'That', 'There', 'Here', 'What', 'How', 'Why', 'When']
     const styledParagraphs = paragraphs.slice(0, 12).map((p, i) => {
-      const withDialogue = p.replace(/"([^"]+)"/g, '<span class="dialogue-text">"$1"</span>')
+      // Enhanced dialogue: detect "Name said:" or "Name:" patterns before quotes
+      let withDialogue = p.replace(/([A-Z][a-zA-Z\s]{1,20}?)(?:\s+said|\s+replies|\s+shouts|\s+whispers|\s+screams|\s+murmurs|\s+asks|\s+exclaims)?:?\s*[""\u201C\u201D]([^""\u201C\u201D]+)[""\u201C\u201D]/g,
+        (match, name, dialogue) => {
+          if (commonWords.includes(name.trim())) {
+            return `<span class="dialogue-text">"${dialogue}"</span>`
+          }
+          return `<div class="dialogue-bubble"><div class="dialogue-speaker">${name.trim()}</div><div class="dialogue-text">"${dialogue}"</div></div>`
+        }
+      )
+      // Also handle standalone quotes without speaker attribution (10+ chars)
+      withDialogue = withDialogue.replace(/(?<!class="dialogue-text">)(?<!dialogue-bubble[^>]*>)(?<!<\/div>)"([^"]{10,})"/g,
+        '<span class="dialogue-text">"$1"</span>'
+      )
       const isFirst = i === 0
       const pClass = `${isFirst ? 'drop-cap ' : ''}ink-blot`
       if (isCombatParagraph(p)) {
@@ -2040,6 +2053,22 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       }
       return `<p class="${pClass}" style="text-indent:1.5em;margin-bottom:.85em">${withDialogue}</p>`
     })
+
+    // Codex inline links for known entities
+    let codexLinked = [...styledParagraphs]
+    const allNames = [
+      ...gameState.activeNPCs.map(n => n.name),
+      ...gameState.pcs.map(p => p.name),
+    ]
+    const codexTerms = [...allNames]
+    codexTerms.sort((a, b) => b.length - a.length)
+    for (const name of codexTerms) {
+      const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const regex = new RegExp(`(?<!href="[^"]*)(?<!\\/a>)(?<![a-zA-Z])\\b${escaped}\\b(?![a-zA-Z])(?![^<]*<\\/a>)`, 'g')
+      codexLinked = codexLinked.map(p =>
+        p.replace(regex, `<a href="/codex" class="codex-inline-link" title="View in Codex">${name}</a>`)
+      )
+    }
 
     html += `<div class="parchment-bg-dm narration-fade-in" style="padding:20px;margin-bottom:12px">
       <div class="dm-narration-header">
@@ -2052,7 +2081,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         <span class="knot-symbol">❖</span>
       </div>
       <div style="font-size:1.25rem;line-height:2;color:#e8d9b0">
-        ${styledParagraphs.join('')}
+        ${codexLinked.join('')}
       </div>
     </div>`
 

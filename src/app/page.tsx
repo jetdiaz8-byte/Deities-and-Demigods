@@ -13,6 +13,8 @@ import { GameHeader } from '@/components/game/GameHeader'
 import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
 import { GameDialogs } from '@/components/game/GameDialogs'
+import { QuestJournalModal } from '@/components/game/QuestJournalModal'
+import { CombatTracker } from '@/components/game/CombatTracker'
 import { TestOfFaith } from '@/components/game/TestOfFaith'
 import { AchievementNotificationQueue } from '@/components/game/AchievementNotification'
 import { AchievementsDialog } from '@/components/game/AchievementsDialog'
@@ -86,6 +88,9 @@ export default function MythworldEngine() {
   // Typing mode toggle for narrative reveal
   const [typingMode, setTypingMode] = React.useState(false)
 
+  // Quest Journal modal state
+  const [showQuestJournal, setShowQuestJournal] = React.useState(false)
+
   // Ember particle positions — generated once
   const emberPositions = useMemo(() =>
     Array.from({ length: 15 }).map(() => ({
@@ -99,6 +104,15 @@ export default function MythworldEngine() {
 
   // Act-dependent atmosphere class
   const atmosphereClass = gameState.act === 'act1' ? 'atmosphere-act1' : gameState.act === 'act2' ? 'atmosphere-act2' : 'atmosphere-act3'
+
+  // Day/night cycle based on turn count
+  const timeOfDay = useMemo(() => {
+    const cycle = gameState.turn % 40 // Full cycle every 40 turns
+    if (cycle < 10) return 'time-dawn'
+    if (cycle < 20) return 'time-day'
+    if (cycle < 30) return 'time-dusk'
+    return 'time-night'
+  }, [gameState.turn])
 
   // Achievement notification handler
   const [processedAchievements, setProcessedAchievements] = useState<Set<string>>(new Set())
@@ -295,6 +309,7 @@ export default function MythworldEngine() {
           achievementCount={getUnlockedCount(achievementTracker)}
           achievementTotal={getTotalCount()}
           onOpenAchievements={() => setShowAchievementsDialog(true)}
+          onOpenQuestJournal={() => setShowQuestJournal(true)}
         />
 
         {/* Dice Rolls Display */}
@@ -347,6 +362,9 @@ export default function MythworldEngine() {
               gameState={gameState}
               resolveTestOfFaith={resolveTestOfFaith}
             />
+
+            {/* Combat Tracker */}
+            <CombatTracker gameState={gameState} />
 
             {/* Human Choice Panel */}
             <ChoicePanel
@@ -492,6 +510,9 @@ export default function MythworldEngine() {
         {/* Atmospheric Vignette */}
         <div className="vignette-overlay" />
 
+        {/* Day/Night Cycle Overlay */}
+        <div className={`time-cycle-overlay ${timeOfDay}`} />
+
         {/* Floating Embers */}
         <div className="ember-container">
           {emberPositions.map((e, i) => (
@@ -508,6 +529,13 @@ export default function MythworldEngine() {
             />
           ))}
         </div>
+
+        {/* Quest Journal Modal */}
+        <QuestJournalModal
+          open={showQuestJournal}
+          onOpenChange={setShowQuestJournal}
+          gameState={gameState}
+        />
 
         {/* All Dialogs */}
         <GameDialogs

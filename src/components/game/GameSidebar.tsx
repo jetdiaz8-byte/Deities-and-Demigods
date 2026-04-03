@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { BookOpen, ScrollText, Star, Crown, Skull, Sparkles, CheckCircle, Swords } from 'lucide-react'
 import { NarrativeSection } from '@/components/game/GameComponents'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
+import { RegionIndicator } from '@/components/game/RegionIndicator'
 import { hpCls, aCol, getEntityPortrait, getAbilityBonus } from '@/lib/gameHelpers'
 import { getProphecyById } from '@/lib/prophecyData'
 import type { GameState, SaveSlot } from '@/lib/gameTypes'
@@ -66,6 +67,10 @@ export function GameSidebar({
             />
           </div>
         )}
+        {/* Region Indicator — below Story So Far, above tabs */}
+        <div className="px-3 pt-2 pb-1 flex-shrink-0">
+          <RegionIndicator gameState={gameState} />
+        </div>
         <DesktopTabs
           gameState={gameState}
           activeTab={activeTab}
