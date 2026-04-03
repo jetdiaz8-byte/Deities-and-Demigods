@@ -332,8 +332,8 @@ export function GameHeader({
                 borderTop: `3px solid ${pc.type === 'hero' ? '#4a90c0' : '#a050a0'}` 
               }}
             >
-              {/* Full Portrait - 768x1344 aspect ratio */}
-              <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] border border-[#3a3020] mb-1" style={{ aspectRatio: '768/1344' }}>
+              {/* Portrait thumbnail */}
+              <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] border border-[#3a3020] mb-1" style={{ aspectRatio: '3/4' }}>
                 <Image
                   src={getEntityPortrait(pc)}
                   alt={pc.name}
@@ -373,8 +373,8 @@ export function GameHeader({
             className="flex-shrink-0 w-20 md:w-28 p-1.5 md:p-2 rounded text-xs border border-red-900/50 cursor-pointer hover:ring-2 hover:ring-red-500/50 transition-all"
             style={{ background: 'linear-gradient(145deg, #1a1010 0%, #120808 100%)', borderTop: '3px solid #8b0000' }}
           >
-            {/* Full Portrait - 768x1344 aspect ratio */}
-            <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] border border-red-900/50 mb-1" style={{ aspectRatio: '768/1344' }}>
+            {/* Portrait thumbnail */}
+            <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] border border-red-900/50 mb-1" style={{ aspectRatio: '3/4' }}>
               {antagonist && (
                 <Image
                   src={getEntityPortrait(antagonist)}

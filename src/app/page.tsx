@@ -234,7 +234,7 @@ export default function MythworldEngine() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap">
+        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap relative z-[41]">
           <Button
             onClick={() => setSidebarOpen(true)}
             variant="outline"

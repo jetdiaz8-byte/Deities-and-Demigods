@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -180,7 +180,7 @@ function CharacterDetail({ character, onClose, onNext, onPrev, hasNext, hasPrev 
   return (
     <Dialog open={!!character} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[90vh] bg-slate-900/95 border-slate-700 text-white overflow-hidden">
-        <DialogHeader><DialogTitle className="sr-only">{character.name}</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="sr-only">{character.name}</DialogTitle><DialogDescription className="sr-only">Character details for {character.name}</DialogDescription></DialogHeader>
         <ScrollArea className="max-h-[80vh]">
           <div className="flex items-center justify-between mb-4">
             <Button variant="ghost" size="sm" onClick={onPrev} disabled={!hasPrev} className="text-gray-400 hover:text-white disabled:opacity-30">

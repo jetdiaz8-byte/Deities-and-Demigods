@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react'
 import Image from 'next/image'
 import { getAbilityBonus } from '@/lib/gameHelpers'
-import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -161,6 +161,8 @@ export function PortraitModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-5xl max-h-[95vh] bg-slate-900/98 border-slate-700 text-white overflow-hidden p-0">
+        <DialogTitle className="sr-only">{character.name}</DialogTitle>
+        <DialogDescription className="sr-only">Character details for {character.name}</DialogDescription>
         {/* Navigation Header */}
         <div className="flex items-center justify-between p-3 border-b border-slate-700 bg-slate-800/50">
           <Button

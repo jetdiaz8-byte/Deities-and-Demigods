@@ -47,7 +47,7 @@ export function GameSidebar({
   return (
     <>
       {/* Desktop Sidebar - top offset accounts for sticky header */}
-      <div className="fixed right-0 top-0 h-screen w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-40 hidden md:flex pt-[300px]">
+      <div className="fixed right-0 top-0 h-screen w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-40 hidden md:flex pt-[200px]">
         {/* Story So Far - Collapsible at top of sidebar */}
         {gameState.storySummary && (
           <div className="border-b border-[#2e2008] p-3 flex-shrink-0 max-h-[200px] overflow-y-auto">
