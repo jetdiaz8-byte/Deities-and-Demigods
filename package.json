@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
-    "build": "bash -c 'mv .config .config_bak 2>/dev/null; prisma generate; res=$?; mv .config_bak .config 2>/dev/null; exit $res' && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
+    "build": "bash -c 'mv .config .config_bak 2>/dev/null; prisma generate; res=$?; mv .config_bak .config 2>/dev/null; exit $res' && next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/ && mkdir -p .next/standalone/db && cp db/custom.db .next/standalone/db/",
     "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
     "lint": "eslint .",
     "db:push": "prisma db push",
