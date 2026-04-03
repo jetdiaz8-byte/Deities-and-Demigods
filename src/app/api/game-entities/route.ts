@@ -58,7 +58,9 @@ function getFallbackEntities(type: string, limit: number, excludeIds: string[]) 
         })
       }
     }
-    return entities
+    // Filter out dragons at the source
+    const DRAGON_IDS = new Set(['cyan_bloodbane', 'khellendros', 'beryllinthranox', 'malystryx'])
+    return entities.filter(e => !DRAGON_IDS.has(e.id))
   } catch {
     return []
   }
@@ -174,8 +176,9 @@ export async function GET(request: NextRequest) {
           }
 
           // Filter out dragons — they are monsters/NPCs, not playable PCs
+          const DRAGON_FILTER = new Set(['cyan_bloodbane','khellendros','beryllinthranox','malystryx'])
           const beforeCount = entities.length
-          entities = entities.filter(e => !isDragon(e))
+          entities = entities.filter(e => !DRAGON_FILTER.has(e.id))
           if (entities.length < beforeCount) {
             console.warn(`Filtered out ${beforeCount - entities.length} dragon(s) from hero selection`)
           }
