@@ -717,8 +717,9 @@ CRITICAL RULES:
 2. NPC actions governed strictly by alignment+personality.
 3. NARRATION STYLE — NEIL GAIMAN (CRITICAL - WRITE FULLY):
    - OPENING SCENE (Turn 0): Write 4-6 paragraphs of RICH, ATMOSPHERIC prose (600-1000 words)
-   - REGULAR TURNS: Write 2-4 RICH, EVOCATIVE paragraphs (300-500 words MINIMUM)
+   - REGULAR TURNS: Write 3-5 RICH, EVOCATIVE paragraphs (400-600 words MINIMUM)
    - NEVER truncate or abbreviate your narration - write complete, full prose
+   - Write like Neil Gaiman in "American Gods" or "Norse Mythology" — lush, layered, deliberate
    - Be mythic, poetic, dark — like a fairy tale for adults
    - Use specific sensory language: the taste of copper, the weight of shadows, the whisper of old gods
    - Paint scenes with words: describe the quality of light, the texture of stone, the smell of ancient air
@@ -832,7 +833,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     // OPTIMIZATION: Balanced maxOutputTokens for rich Gaiman prose
     // Opening scene needs more tokens for atmospheric worldbuilding + companion origin
     // Regular turns need enough for 2-4 rich paragraphs (300+ words)
-    const maxTokens = isFirstTurn ? 8000 : 4000
+    const maxTokens = isFirstTurn ? 8000 : 6000
     
     // Track input tokens
     const systemPrompt = buildDMSystem(gs)
@@ -2788,7 +2789,7 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
 
   // ── SHARD INVOKE ───────────────────────────────────────────────────────
   const invokeShard = () => {
-    if (!shardSummonName.trim() || gameState.shardDark || gameState.waitingForHuman) return
+    if (!shardSummonName.trim() || gameState.shardDark) return
 
     const newGS = {
       ...gameState,

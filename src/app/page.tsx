@@ -157,15 +157,11 @@ export default function MythworldEngine() {
           setSelectedPortrait={setSelectedPortrait}
           setPortraitModalOpen={setPortraitModalOpen}
           sfxEnabled={audio.sfxEnabled}
-          ambientEnabled={audio.ambientEnabled}
           volume={audio.volume}
           sfxVolume={audio.sfxVolume}
-          ambientVolume={audio.ambientVolume}
           toggleSfx={audio.toggleSfx}
-          toggleAmbient={audio.toggleAmbient}
           setVolume={audio.setVolume}
           setSfxVolume={audio.setSfxVolume}
-          setAmbientVolume={audio.setAmbientVolume}
           achievementCount={getUnlockedCount(achievementTracker)}
           achievementTotal={getTotalCount()}
           onOpenAchievements={() => setShowAchievementsDialog(true)}

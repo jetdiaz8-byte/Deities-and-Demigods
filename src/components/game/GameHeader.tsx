@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   BookOpen, ScrollText, Volume2, VolumeX, Menu, X, Clock,
-  Music, VolumeOff, Volume1, Swords, Trophy
+  VolumeOff, Volume1, Swords, Trophy
 } from 'lucide-react'
 import { HealthBar, NarrativeSection, TokenCounter } from '@/components/game/GameComponents'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
@@ -29,15 +29,11 @@ export interface GameHeaderProps {
   setPortraitModalOpen: (open: boolean) => void
   // Audio
   sfxEnabled: boolean
-  ambientEnabled: boolean
   volume: number
   sfxVolume: number
-  ambientVolume: number
   toggleSfx: () => void
-  toggleAmbient: () => void
   setVolume: (v: number) => void
   setSfxVolume: (v: number) => void
-  setAmbientVolume: (v: number) => void
   // Achievements
   achievementCount: number
   achievementTotal: number
@@ -58,15 +54,11 @@ export function GameHeader({
   setPortraitModalOpen,
   // Audio
   sfxEnabled,
-  ambientEnabled,
   volume,
   sfxVolume,
-  ambientVolume,
   toggleSfx,
-  toggleAmbient,
   setVolume,
   setSfxVolume,
-  setAmbientVolume,
   // Achievements
   achievementCount,
   achievementTotal,
@@ -192,22 +184,7 @@ export function GameHeader({
                     />
                   </div>
 
-                  {/* Music Volume */}
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase tracking-wider text-[#8a7040] font-title">Music</span>
-                      <span className="text-[10px] text-[#c9a84c]">{Math.round(ambientVolume * 100)}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={ambientVolume}
-                      onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
-                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#2a2015] accent-[#d4af37]"
-                    />
-                  </div>
+
                 </div>
               </div>
             )}
