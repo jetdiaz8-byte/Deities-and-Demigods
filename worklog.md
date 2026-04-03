@@ -186,3 +186,170 @@ Fixed 3 bugs across 4 files:
 - `GameDialogs.tsx` already had both `DialogTitle` and `DialogDescription` on all 4 dialogs — no changes needed
 
 Lint passes with only pre-existing errors in AchievementNotification.tsx.
+
+---
+## Task ID: 1 - CSS Foundation Architect
+### Work Task
+Extend `/home/z/my-project/src/app/globals.css` with all CSS classes needed for 28 UX/UI enhancements for the "Deities & Demigods" D&D text adventure game. Dark fantasy theme with gold (#d4af37), bronze (#8b6914), parchment (#d4c4a8) colors and 4 custom fonts.
+
+### Work Summary
+Appended 858 lines of CSS (lines 360–1217) to globals.css without modifying any existing content. All 28 enhancements organized into 7 tiers plus a utility section:
+
+**TIER 1 — Parchment & Texture Foundation (3 classes):**
+- `.parchment-bg-dm` — DM narration with grid lines, radial grain noise `::before`, inset shadows
+- `.parchment-bg-choices` — Choice panel with grid lines and radial gradients
+- `.ornate-border` / `.ornate-corners` — Diamond corner ornaments via `::before`/`::after`, 4 gold corner borders (`.corner-tl/tr/bl/br`)
+
+**TIER 2 — Fantasy Decorative Elements (4 classes):**
+- `.celtic-divider` — Flex divider with gradient lines and glowing `.knot-symbol`, `knot-glow` animation
+- `.dragon-corner-tl` / `.dragon-corner-br` — Positioned decorative motifs with drop-shadow filter
+- `.shield-icon` — Inline-flex icon container (18×18px)
+- `.rune-accent` / `.rune-accent-left` / `.rune-accent-right` — Runic text with Elder Futhark characters via pseudo-elements
+
+**TIER 3 — Visual Feedback & Animation (5 classes):**
+- `.combat-flash-overlay` + `.flash-damage`/`.flash-heal`/`.flash-crit` — Full-screen flash overlays with 3 keyframe animations
+- `.dice-crit-gold` / `.dice-crit-fail` / `.dice-tumble` — Dice roll effects with scale/glow animations
+- `.choice-pulse-gold` / `.choice-pulse-blue` — Selection pulse with expanding box-shadow
+- `.narration-fade-in` — Slide-up fade transition
+- `.hp-bar-smooth` / `.hp-gradient-high/mid/low` — Smooth width transitions and 3-tier color gradients
+
+**TIER 4 — Typography & Narrative Polish (4 classes):**
+- `.drop-cap` — Illuminated first-letter styling with Cinzel font and gold glow
+- `.ink-blot` — Radial gradient pseudo-element for ink blot accent
+- `.dialogue-text` — Uncial italic with ❝❞ quotes via pseudo-elements
+- `.combat-narration` — Left-padded with ⚔ sword icon prefix
+
+**TIER 5 — Sidebar & Header Fantasy Treatment (4 classes):**
+- `.sidebar-parchment` — Vertical stripe texture with gold gradient edge line
+- `.medieval-banner` / `.medieval-banner-texture` — Fabric-weave header with bottom gradient fade
+- `.portrait-locket` / `.portrait-locket-active` — Double-border portrait frame with breathing glow
+- `.antagonist-reveal` / `.screen-shake` — Dramatic 3D reveal animation + screen shake
+
+**TIER 6 — Choice Panel Enhancement (4 classes):**
+- `.ability-icon-*` — 6 color variants (melee/spell/defense/movement/social/heal)
+- `.confirm-ready` / `.confirm-click` — Pulsing gold shimmer + sword-clash scale animation
+- `.fantasy-tooltip` — CSS-only tooltip with dark parchment background and arrow
+- `.companion-section` / `.chain-divider` — Blue left-border distinction + chain-link separator
+
+**TIER 7 — Atmospheric Effects (4 classes):**
+- `.vignette-overlay` — Triple-layer inset shadow for cinematic darkness
+- `.ember-container` / `.ember` — Floating ember particles with vertical float animation
+- `.fog-overlay` — Bottom-up gradient fog
+- `.atmosphere-act1/2/3` — CSS custom properties for act-dependent background, glow, and vignette intensity
+
+**Utility Classes:**
+- `.scroll-parchment` — Custom scrollbar styling (track + thumb + hover)
+- `.gold-separator` — Centered gradient line
+- `.glow-hover` — Text glow on hover
+- `.class-icon-*` — 6 class color variants (warrior/mage/cleric/rogue/ranger/paladin)
+- `.game-bg-pattern` — Subtle radial gradient background
+- `.dm-narration-header` — Flex header with rune accents and gradient line
+
+**Keyframes defined:** `knot-glow`, `flash-damage`, `flash-heal`, `flash-crit`, `dice-glow-gold`, `dice-glow-red`, `dice-tumble-anim`, `pulse-gold`, `pulse-blue`, `narration-enter`, `locket-glow`, `antagonist-reveal-anim`, `screen-shake-anim`, `confirm-pulse`, `confirm-shimmer`, `sword-clash`, `tooltip-fade-in`, `ember-float` (18 total animations)
+
+Lint verified: No new errors introduced. 12 pre-existing errors remain in AchievementNotification.tsx, ChoicePanel.tsx, and GameHeader.tsx.
+
+---
+## Task ID: 2 - Page & Narrative Enhancer
+### Work Task
+Enhance game page layout and DM narration HTML generation for the D&D text adventure. Modify page.tsx for atmospheric overlays (vignette, embers, fog, act-dependent atmosphere, combat flash, ornate corners) and useGameEngine.ts for richer DM narration HTML (parchment wrapper, drop caps, ink blot, dialogue styling, combat narration, celtic dividers, fade-in transitions, combat flash trigger).
+
+### Work Summary
+Modified 2 files with surgical edits (no full rewrites):
+
+**1. `src/hooks/useGameEngine.ts` — 7 enhancement patches:**
+
+- **Enhancement 8 — Combat Flash Trigger (lines 82-87, 1331-1334, 1532-1533, 2779, 2791, 3053-3054):**
+  - Added `combatFlashType` state (`'damage' | 'heal' | 'crit' | ''`) and `triggerCombatFlash()` helper
+  - Triggers `'damage'` when PC takes damage (both `res.damage_dealt` and auto-enemy attacks)
+  - Triggers `'crit'` for critical hits
+  - Triggers `'heal'` when using healing/full-heal items via `handleUseItem()`
+  - Auto-clears after 500ms
+  - Exported in return value for page.tsx consumption
+
+- **Enhancement 1 — Parchment BG for DM Narration (lines 2044-2057):**
+  - Replaced plain `<div>` wrapper with `class="parchment-bg-dm narration-fade-in"` + inline padding/margin
+  - Replaced inline header with `class="dm-narration-header"` containing Elder Futhark runes (ᚠ ᚢ ᚦ / ᚨ ᚱ ᚲ), header line span
+
+- **Enhancement 4 — Celtic Knot Divider (lines 2051-2053):**
+  - Added `<div class="celtic-divider"><span class="knot-symbol">❖</span></div>` between header and body
+
+- **Enhancement 11 — Turn Transition Fade-In (line 2044):**
+  - Added `narration-fade-in` class to outer parchment wrapper
+
+- **Enhancement 13 — Illuminated Drop Caps (line 2037):**
+  - First `<p>` in each DM narration block gets `drop-cap` class via `isFirst` check
+
+- **Enhancement 14 — Ink Blot (line 2037):**
+  - All narration paragraphs get `ink-blot` class
+
+- **Enhancement 15 — Dialogue Text Styling (line 2035):**
+  - Regex `/"([^"]+)"/g` wraps quoted text in `<span class="dialogue-text">` spans
+
+- **Enhancement 16 — Combat Narration Styling (lines 2029-2041):**
+  - Added `combatKeywords` array for combat detection
+  - Combat paragraphs wrapped in `<div class="combat-narration">` container
+
+**2. `src/app/page.tsx` — 7 enhancement patches:**
+
+- **Enhancement 25 — Screen Vignette (line 493):**
+  - Added `<div className="vignette-overlay" />` as last element inside main game div
+
+- **Enhancement 26 — Floating Ember Particles (lines 90-98, 496-510):**
+  - Used `useMemo` to pre-generate 15 ember positions (left, duration, delay, width, height) once
+  - Rendered ember container with particle divs using memoized positions
+
+- **Enhancement 27 — Fog of War (lines 362-363):**
+  - Added `<div className="fog-overlay" />` after `#narrative-bottom` anchor, inside scrollable narrative container
+
+- **Enhancement 28 — Act-Dependent Atmosphere (lines 100-101, 322):**
+  - Computed `atmosphereClass` from `gameState.act` (act1/act2/act3)
+  - Applied to narrative scrollable container via className
+
+- **Enhancement 8 — Combat Flash Overlay (lines 83-84, 489-490):**
+  - Added `flashRef` and combat flash overlay div with dynamic class based on `combatFlashType`
+  - Classes: `flash-damage`, `flash-heal`, `flash-crit` (matching CSS from CSS Foundation Architect)
+
+- **Enhancement 1 — Ornate Corners Wrapper (lines 332-343):**
+  - Wrapped narrative content map in `<div className="relative">` with dragon corner spans (`dragon-corner-tl`, `dragon-corner-br`)
+
+- **Import updates (line 3):**
+  - Added `useMemo` and `useRef` to React imports
+  - Added `combatFlashType` to useGameEngine destructuring
+
+**Lint Status:** All 12 lint errors are pre-existing (scripts/, AchievementNotification.tsx, ChoicePanel.tsx, GameHeader.tsx). No new errors introduced by these changes.
+
+---
+## Task ID: 3 - UI Components Enhancer
+### Work Task
+Enhance 4 UI component files for the D&D text adventure game with CSS classes defined by the CSS Foundation Architect. Modifications span ChoicePanel, GameHeader, GameSidebar, and GameComponents.
+
+### Work Summary
+Modified 4 files with surgical edits, applying 12 enhancements total. All CSS classes are defined in globals.css by the CSS Foundation Architect agent. Zero new lint errors introduced.
+
+**1. `src/components/game/ChoicePanel.tsx` — 6 enhancements:**
+
+- **Enhancement 2 — Parchment Background:** Changed outer Card className from inline gradient to `parchment-bg-choices`. Added `ornate-corners` wrapper div inside CardContent with 4 corner spans (`corner-tl/tr/bl/br`).
+- **Enhancement 21 — Ability Icons:** Added `getAbilityIcon()` helper function mapping ability keywords to Lucide icons (Sword, Wand2, Shield, Footprints, MessageSquare, Heart, Target). Added icons next to `[ability]` text in both PC and Companion option rendering with `flex items-center gap-1.5`. Added imports for Footprints, MessageSquare, Heart, Target.
+- **Enhancement 22 — Confirm Button:** Added `confirmClicked` state with `useState`. When `canConfirm` is true, adds `confirm-ready` class. On click, triggers `confirm-click` class briefly via `setTimeout(300ms)`.
+- **Enhancement 24 — Companion Visual Distinction:** Wrapped companion section in `companion-section` div. Added `chain-divider` with 9 spans between PC and Companion sections.
+- **Enhancement 10 — Choice Selection Pulse:** Added `choice-pulse-gold` class to PC option when selected, `choice-pulse-blue` class to Companion option when selected.
+- **Enhancement 23 — Hover Tooltips:** Wrapped each PC and Companion choice option div with `fantasy-tooltip` container including `tooltip-content` child showing mechanical description based on ability type (attack/spell/defend/move/talk/heal/generic).
+
+**2. `src/components/game/GameHeader.tsx` — 4 enhancements:**
+
+- **Enhancement 5 — Dragon Motif:** Added `dragon-corner-tl` and `dragon-corner-br` span elements inside the header element.
+- **Enhancement 18 — Medieval Banner:** Added `medieval-banner` class and `relative` positioning to header element. Added `medieval-banner-texture` div as first child.
+- **Enhancement 19 — Party Card Enhancement:** Changed portrait container div to use `portrait-locket` class (with `portrait-locket-active` for active PC). Added `getClassIcon()` helper function above component that maps PC abilities to emoji class icons (⚔️ paladin, 🔮 mage, ✝️ cleric, 🗡️ rogue, 🏹 ranger, ⚔️ warrior). Added class icon display above each party card name.
+- **Enhancement 20 — Antagonist Dramatic Reveal:** Added `antagonistRevealPlayed` state at component level with `useEffect` tracking Act III reveal. When revealed, applies `antagonist-reveal` class to the antagonist card (triggers once).
+
+**3. `src/components/game/GameSidebar.tsx` — 1 enhancement:**
+
+- **Enhancement 17 — Sidebar Parchment:** Added `sidebar-parchment` class to the desktop sidebar div. Added `scroll-parchment` class to the scrollable content area div.
+
+**4. `src/components/game/GameComponents.tsx` — 2 enhancements:**
+
+- **Enhancement 9 — Dice Roll Enhancement:** Added `tumbling` state to `VisualDiceRoll` component. Applied `dice-tumble` animation class to dice display container while tumbling. Added `dice-crit-gold` class to roll display when value is 20 (natural 20). Added `dice-crit-fail` class when value is 1 (natural 1).
+- **Enhancement 12 — HP Bar Enhancement:** Added `getHpGradientClass()` helper to `HealthBar` component. Added `hp-bar-smooth` class and conditional gradient classes to fill div: `hp-gradient-high` (>=60%), `hp-gradient-mid` (>=30%), `hp-gradient-low` (<30%).
+
+**Lint Status:** 9 remaining errors are all pre-existing (scripts/ require imports, AchievementNotification.tsx set-state-in-effect). Zero new errors from these changes.
