@@ -175,7 +175,13 @@ export async function GET(request: NextRequest) {
 
           // Filter out dragons — they are monsters/NPCs, not playable PCs
           const beforeCount = entities.length
-          entities = entities.filter(e => !isDragon(e))
+          entities = entities.filter(e => {
+            const DRAGON_SET = new Set(['cyan_bloodbane','khellendros','beryllinthranox','malystryx'])
+            if (DRAGON_SET.has(e.id)) return false
+            const lvl = (e.level || '').toLowerCase()
+            if (lvl.includes('dragon') && !lvl.includes('dragonbane') && !lvl.includes('dragonlord')) return false
+            return true
+          })
           if (entities.length < beforeCount) {
             console.warn(`Filtered out ${beforeCount - entities.length} dragon(s) from hero selection`)
           }
@@ -207,9 +213,7 @@ export async function GET(request: NextRequest) {
     const shuffled = shuffleArray(entities)
     const selected = shuffled.slice(0, limit)
 
-    console.log("[DDG v1.9.106] API route loaded, filtering dragons...")
     return NextResponse.json({
-      _version: "1.9.106-dragonfix",
       count: selected.length,
       total: entities.length,
       entities: selected.map(formatEntity)
