@@ -249,14 +249,15 @@ export function PartySelectionScreen({
                         }
                       }}
                     >
-                      <CardContent className="p-3">
-                        <div className="w-full mx-auto mb-2 rounded border border-[#5a4018] bg-[#1a1510] overflow-hidden h-28">
+                      <CardContent className="p-3 overflow-visible">
+                        <div className="w-full mx-auto mb-2 rounded border border-[#5a4018] bg-[#1a1510] overflow-hidden flex items-center justify-center" style={{ maxHeight: '9rem' }}>
                           <Image
                             src={getEntityPortrait(hero)}
                             alt={hero.name}
                             width={192}
                             height={224}
-                            className="w-full h-full object-cover"
+                            className="w-full h-auto object-contain"
+                            style={{ maxHeight: '9rem' }}
                             unoptimized
                           />
                         </div>
