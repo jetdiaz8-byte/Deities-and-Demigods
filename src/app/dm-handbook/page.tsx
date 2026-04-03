@@ -65,6 +65,10 @@ const SUCCESS_FACTORS = [
   { name: 'Alignment Harmony', formula: 'clamp(harmony, -5, +5)', range: '-5 to +5', cap: '±5', color: 'text-cyan-400', icon: ArrowDownUp, desc: 'Good+Evil:-3 | Law+Chaos:-2 | Unity:+1-2 each' },
   { name: 'Story Achievements', formula: 'min(achieve × 2, 12)', range: '+0 to +12', cap: '6 achievements', color: 'text-yellow-400', icon: Scroll, desc: '(completed quests + clues/2) × 2' },
   { name: 'Antagonist Type', formula: 'greater_god ? -5 : 0', range: '0 or -5', cap: '-5', color: 'text-red-400', icon: Skull, desc: 'Greater Gods impose -5% penalty; Monsters have no penalty' },
+  { name: 'Shard Charges', formula: 'min(shardCharges × 2, 6)', range: '+0 to +6', cap: '+6', color: 'text-amber-300', icon: Flame, desc: '+2 per remaining shard charge; resource preservation rewards careful play' },
+  { name: 'Shard Summoned', formula: 'min(summoned × 3, 9)', range: '+0 to +9', cap: '+9', color: 'text-amber-200', icon: Sparkles, desc: '+3 per god successfully summoned via shard; divine aid accumulates' },
+  { name: 'Companion Affinity', formula: 'affinity tiers', range: '-5 to +5', cap: '±5', color: 'text-teal-400', icon: Heart, desc: 'devoted(≥75):+5 | loyal(≥50):+3 | concerned(≥25):+1 | distant(≥0):0 | hostile:floor(aff/20)' },
+  { name: 'Injury Penalty', formula: 'clamp(Σ(mods), -15, 0)', range: '-15 to +0', cap: '-15', color: 'text-rose-400', icon: AlertTriangle, desc: 'Sum of all negative injury modifiers; DOT and debuff injuries stack' },
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -131,7 +135,6 @@ export default function DMHandbookPage() {
           <p className="text-sm text-gray-500">Deities &amp; Demigods Edition &mdash; How the engine thinks, decides, and narrates</p>
           <div className="flex justify-center mt-6 gap-3">
             <Badge className="bg-red-900/50 border border-red-700/50 text-red-300 text-xs">Gemini 2.5 Flash</Badge>
-            <Badge className="bg-slate-800 border border-slate-600 text-gray-400 text-xs">Groq (Optional)</Badge>
             <Badge className="bg-slate-800 border border-slate-600 text-gray-400 text-xs">TypeScript Engine</Badge>
           </div>
         </div>
@@ -195,21 +198,6 @@ export default function DMHandbookPage() {
                       { label: 'Temperature', value: '0.9 (creative)' },
                       { label: 'Retry Strategy', value: '3 attempts, exponential backoff' },
                       { label: 'Base Delay', value: '6,000ms' },
-                    ].map(r => (
-                      <div key={r.label} className="flex justify-between text-gray-400"><span>{r.label}</span><Badge className="bg-slate-700 text-xs">{r.value}</Badge></div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader><CardTitle className="text-white flex items-center gap-2"><Zap className="w-5 h-5 text-purple-400" />Groq (Optional)</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-gray-300">When configured, Groq provides ultra-fast action option generation. Falls back to Gemini if unavailable.</p>
-                  <div className="space-y-2 text-sm">
-                    {[
-                      { label: 'Speed', value: 'Ultra-low latency' },
-                      { label: 'Free Tier', value: '30 req/min, 14,400/day' },
-                      { label: 'Fallback', value: 'Uses Gemini if unavailable' },
                     ].map(r => (
                       <div key={r.label} className="flex justify-between text-gray-400"><span>{r.label}</span><Badge className="bg-slate-700 text-xs">{r.value}</Badge></div>
                     ))}

@@ -232,6 +232,10 @@ export interface GameState {
   powerBonus: number                 // Bonus from PC abilities/levels
   alignmentBonus: number             // Bonus from alignment synergy
   mythicalImpactBonus: number        // Bonus from story achievements
+  shardChargeBonus: number           // Bonus from remaining shard charges
+  shardSummonedBonus: number         // Bonus from gods summoned via shard
+  companionAffinityBonus: number     // Bonus from companion relationship
+  injuryPenaltyBonus: number         // Penalty from active injuries
   currentSuccessRate: number         // Calculated total success %
   // COMPANION SYSTEM - Affinity with main PC
   companionId: string | null          // ID of the main companion (2nd PC)
@@ -277,6 +281,10 @@ export interface SuccessRateFactors {
   alignmentHarmony: number // How well party alignments work together
   storyAchievements: number // Quests completed, clues found
   antagonistType: 'greater_god' | 'monster' | null
+  shardCharges: number       // 0-2: Shard charges remaining (summons gods)
+  shardSummoned: number      // How many gods have been summoned via shard
+  companionAffinity: number  // -100 to +100: Relationship with main PC
+  injuryPenalty: number      // Sum of all active injury modifiers
 }
 
 // Antagonist data for ALL_GREATER_GODS (includes phase descriptions)

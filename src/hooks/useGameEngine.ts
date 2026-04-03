@@ -34,7 +34,7 @@ export function useGameEngine() {
 
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
-  const [, setGroqKey] = useState('') // kept for storage cleanup
+  const [groqKey, setGroqKey] = useState('')
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
@@ -82,6 +82,7 @@ export function useGameEngine() {
   // Token Tracking State
   const [tokenUsage, setTokenUsage] = useState({
     gemini: { input: 0, output: 0, total: 0 },
+    groq: { input: 0, output: 0, total: 0 },
     lastCall: { api: '', input: 0, output: 0 }
   })
   
@@ -93,7 +94,7 @@ export function useGameEngine() {
     cooldownRemaining: 0
   })
   
-  // Smart Caching for Options
+  // Smart Caching for Groq Options
   const optionsCacheRef = useRef<Map<string, { options: GameOption[], timestamp: number, pcId: string }>>(new Map())
   const CACHE_TTL = 60000 // 1 minute cache TTL
   
@@ -118,25 +119,32 @@ export function useGameEngine() {
   }
   
   // Update token usage tracking
-  const updateTokenUsage = (api: 'gemini', inputText: string, outputText: string) => {
+  const updateTokenUsage = (api: 'gemini' | 'groq', inputText: string, outputText: string) => {
     const inputTokens = estimateTokens(inputText)
     const outputTokens = estimateTokens(outputText)
     
     setTokenUsage(prev => ({
       ...prev,
-      gemini: {
-        input: prev.gemini.input + inputTokens,
-        output: prev.gemini.output + outputTokens,
-        total: prev.gemini.total + inputTokens + outputTokens
+      [api]: {
+        input: prev[api].input + inputTokens,
+        output: prev[api].output + outputTokens,
+        total: prev[api].total + inputTokens + outputTokens
       },
       lastCall: { api, input: inputTokens, output: outputTokens }
     }))
     
     // Also update game state for persistence
-    setGameState(prev => ({
-      ...prev,
-      geminiTokensUsed: prev.geminiTokensUsed + inputTokens + outputTokens
-    }))
+    if (api === 'gemini') {
+      setGameState(prev => ({
+        ...prev,
+        geminiTokensUsed: prev.geminiTokensUsed + inputTokens + outputTokens
+      }))
+    } else {
+      setGameState(prev => ({
+        ...prev,
+        groqTokensUsed: prev.groqTokensUsed + inputTokens + outputTokens
+      }))
+    }
   }
 
   const narrRef = useRef<HTMLDivElement>(null)
@@ -145,9 +153,9 @@ export function useGameEngine() {
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
     const savedGemini = localStorage.getItem('mythworld_gemini') || ''
+    const savedGroq = localStorage.getItem('mythworld_groq') || ''
     setGeminiKey(savedGemini)
-    // Clean up old Groq key from storage
-    localStorage.removeItem('mythworld_groq')
+    setGroqKey(savedGroq)
     loadSaveSlots()
   }, [])
 
@@ -156,7 +164,9 @@ export function useGameEngine() {
     if (geminiKey) localStorage.setItem('mythworld_gemini', geminiKey)
   }, [geminiKey])
 
-  // Groq removed — Gemini-only architecture
+  useEffect(() => {
+    if (groqKey) localStorage.setItem('mythworld_groq', groqKey)
+  }, [groqKey])
 
   // ── AUTO SCROLL ────────────────────────────────────────────────────────
   useEffect(() => {
@@ -569,7 +579,11 @@ export function useGameEngine() {
       pcPower: pcs.reduce((sum, pc) => sum + pc.hp, 0) / 100,
       alignmentHarmony,
       storyAchievements: 0,
-      antagonistType: antagonist.type
+      antagonistType: antagonist.type,
+      shardCharges: 2,       // Start with 2 shard charges
+      shardSummoned: 0,      // No gods summoned yet
+      companionAffinity: 50,  // Starting affinity
+      injuryPenalty: 0        // No injuries at start
     })
 
     const newGameState: GameState = {
@@ -603,6 +617,10 @@ export function useGameEngine() {
       powerBonus: initialSuccess.breakdown.power,
       alignmentBonus: initialSuccess.breakdown.alignment,
       mythicalImpactBonus: initialSuccess.breakdown.mythical,
+      shardChargeBonus: initialSuccess.breakdown.shardCharge,
+      shardSummonedBonus: initialSuccess.breakdown.shardSummoned,
+      companionAffinityBonus: initialSuccess.breakdown.companionAffinity,
+      injuryPenaltyBonus: initialSuccess.breakdown.injury,
       // Companion System
       companionId: companion?.id || null,
       companionAffinity: 50,
@@ -1085,9 +1103,9 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     }
   }
 
-  const callGeminiForOptions = async (pc: Entity, sceneCtx: string, fallback: GameOption[]): Promise<GameOption[]> => {
+  const callGroqForOptions = async (pc: Entity, sceneCtx: string, fallback: GameOption[]): Promise<GameOption[]> => {
     let validFallback = fallback.length > 0 && fallback[0].action ? fallback : buildDefaultOptions(pc)
-    if (!geminiKey) return validFallback
+    if (!groqKey) return validFallback
 
     // ═══════════════════════════════════════════════════════════════════════
     // SMART CACHING - Reuse options for similar situations (SAVES API CALLS)
@@ -1218,30 +1236,30 @@ Generate EXACTLY 6 options:
 
 Each option needs: num, action, ability, align_note, source ("pc" or "companion")${companion ? ', companion_name' : ''}`
 
-    // Apply throttling before API call
+    // Apply throttling before Groq call
     await waitForThrottle()
 
     try {
-      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`, {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
         body: JSON.stringify({
-          contents: [
-            { role: 'user', parts: [{ text: `${sys}\n\n${optionsPrompt}` }] }
-          ],
-          generationConfig: {
-            maxOutputTokens: 1024,
-            temperature: 0.95,
-          }
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 800, // Reduced from 1000 for optimization
+          temperature: 0.95, // Higher temp for variety
+          messages: [
+            { role: 'system', content: sys },
+            { role: 'user', content: optionsPrompt }
+          ]
         })
       })
 
-      if (!r.ok) throw new Error(`Gemini options ${r.status}`)
+      if (!r.ok) throw new Error(`Groq ${r.status}`)
       const data = await r.json()
-      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      const raw = (data.choices || [])[0]?.message?.content || ''
       
       // Track token usage
-      updateTokenUsage('gemini', sys + optionsPrompt, raw)
+      updateTokenUsage('groq', sys + optionsPrompt, raw)
       
       let s = raw.replace(/```json\s*/ig, '').replace(/```\s*/g, '').trim()
       const f = s.indexOf('[')
@@ -1282,7 +1300,7 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
         return options
       }
     } catch (e) {
-      console.warn('Gemini options failed:', e)
+      console.warn('Groq options failed:', e)
     }
     // Add skip turn to fallback
     return buildDefaultOptions(pc)
@@ -1818,6 +1836,17 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
     const alliedNPCs = newGS.npcHistory.filter(n => 
       n.align.toLowerCase().includes('good')
     ).length
+
+    // Calculate injury penalty: sum all active injury modifiers
+    let totalInjuryPenalty = 0
+    for (const pc of livingPCs) {
+      const pcInjuries = newGS.injuries[pc.id] || []
+      for (const injury of pcInjuries) {
+        // Injury modifiers typically include negative values like { attack: -2, ac: -1 }
+        const vals = Object.values(injury.modifier).filter(v => typeof v === 'number')
+        totalInjuryPenalty += vals.reduce((sum, v) => sum + v, 0)
+      }
+    }
     
     const successUpdate = calculateSuccessRate({
       partySize: newGS.pcs.length,
@@ -1831,7 +1860,11 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
       pcPower: livingPCs.reduce((sum, pc) => sum + (pc.hp / 100), 0),
       alignmentHarmony: calculateAlignmentHarmony(livingPCs.map(p => p.align)),
       storyAchievements: completedQuests + Math.floor(newGS.antagonistCluesRevealed.length / 2),
-      antagonistType: newGS.antagonistType
+      antagonistType: newGS.antagonistType,
+      shardCharges: newGS.shardCharges,
+      shardSummoned: newGS.shardSummoned.length,
+      companionAffinity: newGS.companionAffinity,
+      injuryPenalty: totalInjuryPenalty
     })
     
     newGS.currentSuccessRate = successUpdate.total
@@ -1842,6 +1875,10 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
     newGS.powerBonus = successUpdate.breakdown.power
     newGS.alignmentBonus = successUpdate.breakdown.alignment
     newGS.mythicalImpactBonus = successUpdate.breakdown.mythical
+    newGS.shardChargeBonus = successUpdate.breakdown.shardCharge
+    newGS.shardSummonedBonus = successUpdate.breakdown.shardSummoned
+    newGS.companionAffinityBonus = successUpdate.breakdown.companionAffinity
+    newGS.injuryPenaltyBonus = successUpdate.breakdown.injury
 
     return newGS
   }
@@ -1998,7 +2035,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         const sceneCtx = `Act ${gs.act}, Turn ${gs.turn}. SUMMARY: ${gs.storySummary}\nRECENT: ` + gs.log.slice(0, 3).map(l => l.msg).join(' | ')
         setStatusMessage(`Generating options for ${humanPC.name}...`)
 
-        const opts = await callGeminiForOptions(humanPC, sceneCtx, buildDefaultOptions(humanPC))
+        const opts = await callGroqForOptions(humanPC, sceneCtx, buildDefaultOptions(humanPC))
         gs.humanOptions = opts
         gs.waitingForHuman = true
         gs.pendingHumanChoice = null
@@ -2478,7 +2515,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const nextPC = newGS.pcs.find(p => p.id === newGS.humanPCId && !p.dead) || living[0]
     if (nextPC) {
       const sceneCtx = `Act ${newGS.act}, Turn ${newGS.turn}. SUMMARY: ${newGS.storySummary}\nRECENT: ` + newGS.log.slice(0, 3).map(l => l.msg).join(' | ')
-      const opts = await callGeminiForOptions(nextPC, sceneCtx, buildDefaultOptions(nextPC))
+      const opts = await callGroqForOptions(nextPC, sceneCtx, buildDefaultOptions(nextPC))
       newGS.humanOptions = opts
       newGS.waitingForHuman = true
       newGS.pendingHumanChoice = null
@@ -2665,7 +2702,7 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
       const nextPC = newGS.pcs.find(p => p.id === newGS.humanPCId && !p.dead) || living[0]
       if (nextPC) {
         const sceneCtx = `Act ${newGS.act}, Turn ${newGS.turn}. SUMMARY: ${newGS.storySummary}\nRECENT: ` + newGS.log.slice(0, 3).map(l => l.msg).join(' | ')
-        const opts = await callGeminiForOptions(nextPC, sceneCtx, buildDefaultOptions(nextPC))
+        const opts = await callGroqForOptions(nextPC, sceneCtx, buildDefaultOptions(nextPC))
         newGS.humanOptions = opts
         newGS.waitingForHuman = true
         newGS.pendingHumanChoice = null
@@ -2991,6 +3028,7 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
     // ── STATE ──────────────────────────────────────────────────────────────
     gameState, setGameState,
     geminiKey, setGeminiKey,
+    groqKey, setGroqKey,
     gamePhase, setGamePhase,
     availableHeroes, setAvailableHeroes,
     selectedParty, setSelectedParty,
@@ -3043,7 +3081,7 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
     parseDMResponse,
     generateSmartFallback,
     getTemplateFallback,
-    callGeminiForOptions,
+    callGroqForOptions,
     buildDefaultOptions,
     applyMechanics,
     runTurn,

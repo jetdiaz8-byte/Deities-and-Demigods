@@ -82,6 +82,10 @@ export const createInitialState = (): GameState => ({
   powerBonus: 0,
   alignmentBonus: 0,
   mythicalImpactBonus: 0,
+  shardChargeBonus: 0,
+  shardSummonedBonus: 0,
+  companionAffinityBonus: 0,
+  injuryPenaltyBonus: 0,
   currentSuccessRate: 50,
   // ═══════════════════════════════════════════════════════════════════════════
   // COMPANION SYSTEM

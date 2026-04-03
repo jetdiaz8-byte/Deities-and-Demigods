@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useCallback } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Loader2, CheckCircle, Users, Sparkles, Crown } from 'lucide-react'
-import { getEntityPortrait, aCol, aShort } from '@/lib/gameHelpers'
+import { Loader2, CheckCircle, Users, Sparkles, Crown, Dices } from 'lucide-react'
+import { getEntityPortrait, aCol, aShort, rollDice } from '@/lib/gameHelpers'
 import type { Entity } from '@/lib/gameTypes'
 
 export interface PartySelectionScreenProps {
@@ -33,6 +33,8 @@ export function PartySelectionScreen({
 }: PartySelectionScreenProps) {
   const [pantheonFilter, setPantheonFilter] = useState<string>('all')
   const [typeFilter, setTypeFilter] = useState<string>('all')
+  const [fateRoll, setFateRoll] = useState<{ result: number; heroId: string; heroName: string } | null>(null)
+  const [isRolling, setIsRolling] = useState(false)
 
   const pantheons = useMemo(() => {
     const set = new Set(availableHeroes.map(h => h.pantheon).filter(Boolean))
@@ -46,6 +48,33 @@ export function PartySelectionScreen({
       return true
     })
   }, [availableHeroes, pantheonFilter, typeFilter])
+
+  const handleFateRoll = useCallback(() => {
+    if (filteredHeroes.length === 0) return
+    setIsRolling(true)
+    setFateRoll(null)
+    
+    // Animate the roll for 1.5 seconds
+    let ticks = 0
+    const maxTicks = 15
+    const interval = setInterval(() => {
+      const tempResult = Math.floor(Math.random() * 100) + 1
+      const tempHero = filteredHeroes[Math.floor(Math.random() * filteredHeroes.length)]
+      setFateRoll({ result: tempResult, heroId: tempHero.id, heroName: tempHero.name })
+      ticks++
+      if (ticks >= maxTicks) {
+        clearInterval(interval)
+        // Final roll: d100 determines which hero from the filtered pool
+        const finalRoll = Math.floor(Math.random() * 100) + 1
+        const index = Math.floor((finalRoll / 100) * filteredHeroes.length)
+        const chosen = filteredHeroes[Math.min(index, filteredHeroes.length - 1)]
+        setFateRoll({ result: finalRoll, heroId: chosen.id, heroName: chosen.name })
+        setSelectedParty([chosen.id])
+        setPreviewHero(chosen)
+        setIsRolling(false)
+      }
+    }, 100)
+  }, [filteredHeroes, setSelectedParty, setPreviewHero])
 
   const selectedHero = selectedParty.length > 0
     ? availableHeroes.find(h => h.id === selectedParty[0]) || null
@@ -70,8 +99,8 @@ export function PartySelectionScreen({
             </p>
             <p className="italic">
               Choose one hero. Just one. That is who you will be — completely, irrevocably, for better or worse
-              or stranger than either. The shard has been waiting for someone exactly like you, which is to say,
-              it has been waiting for anyone at all, and that is the most terrifying thing about it.
+              or stranger than either. Or, if you are the sort who trusts the universe more than their own judgment,
+              let the dice decide. Roll a d100 and see what the gods have in store.
             </p>
             <p className="italic text-[#7a5f20]" style={{ fontSize: '.85rem' }}>
               The Dungeon Master will choose your companion and assemble the world around you.
@@ -150,9 +179,11 @@ export function PartySelectionScreen({
                       onClick={() => {
                         if (isSelected) {
                           setSelectedParty([])
+                          setFateRoll(null)
                         } else {
                           setSelectedParty([hero.id])
                           setPreviewHero(hero)
+                          setFateRoll(null)
                         }
                       }}
                     >
@@ -314,6 +345,7 @@ export function PartySelectionScreen({
                           } else {
                             setSelectedParty([previewHero.id])
                           }
+                          setFateRoll(null)
                         }}
                         className={`w-full mt-2 ${selectedParty.includes(previewHero.id)
                             ? 'bg-[#5a3020] hover:bg-[#7a4030] text-[#e0a080]'
@@ -378,8 +410,20 @@ export function PartySelectionScreen({
 
         {/* ── Bottom Bar ────────────────────────────────────────────────── */}
         <div className="flex justify-between items-center bg-[#110d07] border border-[#2e2008] rounded p-4 mt-4">
-          <div>
-            {selectedHero ? (
+          <div className="flex-1">
+            {fateRoll ? (
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col items-center justify-center w-12 h-12 rounded-full border-2 border-[#d4af37] bg-[#1a1510]">
+                  <span className="text-lg font-bold text-[#d4af37] font-mono">{fateRoll.result}</span>
+                  <span className="text-[8px] text-[#7a5f20]">d100</span>
+                </div>
+                <div>
+                  <span className="text-[#7a5f20] text-sm">The dice have spoken. </span>
+                  <span className="text-[#f0c860] font-bold">{fateRoll.heroName}</span>
+                  <span className="text-[#5a4d30] text-sm"> is your fate.</span>
+                </div>
+              </div>
+            ) : selectedHero ? (
               <div>
                 <span className="text-[#9a8860]">Your Fate: </span>
                 <span className="text-[#f0c860] font-bold">{selectedHero.name}</span>
@@ -388,12 +432,35 @@ export function PartySelectionScreen({
                 </span>
               </div>
             ) : (
-              <span className="text-[#5a4d30] italic">Choose one hero to begin...</span>
+              <span className="text-[#5a4d30] italic">Choose a hero manually or let fate decide with a d100 roll...</span>
             )}
           </div>
           <div className="flex gap-3">
             <Button
-              onClick={() => { setGamePhase('intro'); setPreviewHero(null); setSelectedParty([]) }}
+              onClick={handleFateRoll}
+              disabled={isRolling || filteredHeroes.length === 0}
+              className="bg-gradient-to-b from-[#3a1a08] to-[#1a0d04] hover:from-[#5a2a10] hover:to-[#2a1508] text-[#d4af37] border border-[#7a5f20] relative overflow-hidden"
+              style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.1em' }}
+            >
+              {isRolling ? (
+                <>
+                  <Dices className="w-4 h-4 mr-2 animate-spin" />
+                  Rolling...
+                </>
+              ) : fateRoll ? (
+                <>
+                  <Dices className="w-4 h-4 mr-2" />
+                  Re-Roll Fate
+                </>
+              ) : (
+                <>
+                  <Dices className="w-4 h-4 mr-2" />
+                  Let Fate Decide
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={() => { setGamePhase('intro'); setPreviewHero(null); setSelectedParty([]); setFateRoll(null) }}
               variant="outline"
               className="border-[#5a4018] text-[#9a8860]"
             >

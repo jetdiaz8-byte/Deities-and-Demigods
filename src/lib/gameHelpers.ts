@@ -158,11 +158,31 @@ export const calculateSuccessRate = (factors: SuccessRateFactors) => {
   
   // ANTAGONIST TYPE PENALTY: Greater Gods are harder than Monsters
   const antagonistPenalty = factors.antagonistType === 'greater_god' ? -5 : 0
-  
+
+  // SHARD CHARGE BONUS: Each remaining shard charge is +2 (resource preservation)
+  const shardChargeBonus = Math.min(6, factors.shardCharges * 2)
+
+  // SHARD SUMMONED BONUS: Each god successfully summoned via shard is +3 (divine aid)
+  const shardSummonedBonus = Math.min(9, factors.shardSummoned * 3)
+
+  // COMPANION AFFINITY BONUS: High affinity = cooperative teamwork
+  // ≥75 devoted (+5), ≥50 loyal (+3), ≥25 concerned (+1), ≥0 distant (0), <0 conflicted/hostile (penalty)
+  let companionAffinityBonus = 0
+  if (factors.companionAffinity >= 75) companionAffinityBonus = 5
+  else if (factors.companionAffinity >= 50) companionAffinityBonus = 3
+  else if (factors.companionAffinity >= 25) companionAffinityBonus = 1
+  else if (factors.companionAffinity >= 0) companionAffinityBonus = 0
+  else companionAffinityBonus = Math.max(-5, Math.floor(factors.companionAffinity / 20))
+
+  // INJURY PENALTY: Sum of all active injury modifiers (negative values hurt success rate)
+  // Each injury typically has a modifier of -1 to -5; capped at -15 total
+  const injuryPenalty = Math.max(-15, factors.injuryPenalty)
+
   // CALCULATE TOTAL (capped 5-95 - always some chance)
   const total = Math.max(5, Math.min(95, 
     base + partyBonus + prophecyBonus + allyBonus + renownBonus + 
-    powerBonus + alignmentBonus + mythicalBonus + antagonistPenalty
+    powerBonus + alignmentBonus + mythicalBonus + antagonistPenalty +
+    shardChargeBonus + shardSummonedBonus + companionAffinityBonus + injuryPenalty
   ))
   
   return {
@@ -175,7 +195,12 @@ export const calculateSuccessRate = (factors: SuccessRateFactors) => {
       renown: renownBonus,
       power: powerBonus,
       alignment: alignmentBonus,
-      mythical: mythicalBonus
+      mythical: mythicalBonus,
+      antagonist: antagonistPenalty,
+      shardCharge: shardChargeBonus,
+      shardSummoned: shardSummonedBonus,
+      companionAffinity: companionAffinityBonus,
+      injury: injuryPenalty
     }
   }
 }
