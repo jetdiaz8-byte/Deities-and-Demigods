@@ -2567,6 +2567,17 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
 
     const gs = { ...gameState, waitingForHuman: false, isProcessing: true }
 
+    // Resolve choices first (needed for cooldown tracking)
+    const humanPC = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)
+    const choiceIdx = Math.min(gs.pendingHumanChoice ?? 0, gs.humanOptions.length - 1)
+    const chosen = gs.humanOptions[choiceIdx]
+    if (!chosen) return
+
+    // Resolve companion choice
+    const companion = gs.companionId ? gs.pcs.find(p => p.id === gs.companionId) : null
+    const compChoiceIdx = gs.pendingCompanionChoice != null ? Math.min(gs.pendingCompanionChoice, gs.companionOptions.length - 1) : null
+    const compChosen = compChoiceIdx != null ? gs.companionOptions[compChoiceIdx] : null
+
     // ── ABILITY COOLDOWN: Track used PC ability ──────────────────────────
     const humanPCForCD = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)
     if (humanPCForCD && chosen?.ability && chosen.ability !== 'skip') {
@@ -2586,16 +2597,6 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     }
 
     setGameState(gs)
-
-    const humanPC = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)
-    const choiceIdx = Math.min(gs.pendingHumanChoice ?? 0, gs.humanOptions.length - 1)
-    const chosen = gs.humanOptions[choiceIdx]
-    if (!chosen) return
-    
-    // Resolve companion choice
-    const companion = gs.companionId ? gs.pcs.find(p => p.id === gs.companionId) : null
-    const compChoiceIdx = gs.pendingCompanionChoice != null ? Math.min(gs.pendingCompanionChoice, gs.companionOptions.length - 1) : null
-    const compChosen = compChoiceIdx != null ? gs.companionOptions[compChoiceIdx] : null
     
     const ant = getAntagonist(gs.antagonistId)
 
