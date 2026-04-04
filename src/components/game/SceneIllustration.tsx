@@ -60,6 +60,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
   const [visible, setVisible] = useState(false)
   const cacheRef = useRef<Map<number, string>>(new Map())
   const prevActRef = useRef<string | null>(null)
+  const apiFailedRef = useRef(false) // Stop retrying after first API failure per session
 
   const isKey = useMemo(() => {
     if (turn === 0 || !narration) return false
@@ -78,6 +79,8 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
   // Generate image for key moments
   useEffect(() => {
     if (!isKey) return
+    // Don't retry if the API has already failed this session
+    if (apiFailedRef.current) return
 
     // Check cache
     const cached = cacheRef.current.get(turn)
@@ -117,6 +120,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
       })
       .catch(() => {
         if (cancelled) return
+        apiFailedRef.current = true // Mark API as failed for the rest of the session
         setLoading(false)
         setError(true)
       })

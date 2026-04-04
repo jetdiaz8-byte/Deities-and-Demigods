@@ -767,6 +767,22 @@ CRITICAL RULES:
 8. Occasionally drop items into "item_drops" array for the party inventory.
 9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. Provide 3-4 action OPTIONS for the current PC, then WAIT for the human player to choose. NEVER auto-resolve PC actions.
 10. **PERSISTENT MEMORY** - Remember ALL previous events, decisions, and their consequences. Reference past events when narrating.
+10a. **STORY PACING — THIS IS CRITICAL**:
+    - Act I (Turns 1-7): PURE EXPLORATION. NO enemies. NO combat. Build the world.
+      - Describe environments: ancient temples, dark forests, forgotten cities, divine realms
+      - Develop the main PC and companion through dialogue and shared experience
+      - The shard whispers, pulses, shows visions — build mystery around it
+      - Drop subtle antagonist clues through environmental details (shadows, omens, symbols)
+      - Introduce a MYSTERY or QUEST HOOK — something the PCs want to investigate
+      - Think Baldur's Gate exploration mode / Disco Elysium discovery
+    - Act I (Turns 8+): First encounter possible. Could be social, could turn hostile.
+      - Gradually introduce danger — a minor threat, not the antagonist
+      - An ancient guardian, a territorial creature, a rival adventurer
+    - Act II: Rising tension. Mix exploration, social encounters, and escalating combat.
+      - Introduce gods and demigods as NPCs with their own agendas
+      - Reveal more antagonist clues. Build dread.
+    - Act III: Boss fight. All-out confrontation with the antagonist.
+    - NEVER rush to combat. Let the story breathe. Players want to EXPLORE, not just fight.
 11. **THE SHARD IS CENTRAL** - The shard is the heart of this story:
     - The shard CHOSE the main PC. This is not coincidence—it is destiny.
     - Reference the shard's origin and nature constantly—it shapes everything
@@ -1142,54 +1158,115 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     const cab = companion?.abilities.map(toAscii) || []
     
     // Detect context: combat vs social vs exploration
-    const inCombat = gameState.activeNPCs.some(n => !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'))
+    const enemies = gameState.activeNPCs.filter(n => !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'))
+    const allies = gameState.activeNPCs.filter(n => !n.dead && (n.encounter_type === 'ALLY' || n.encounter_type === 'RIVAL'))
+    const neutrals = gameState.activeNPCs.filter(n => !n.dead && !['ENEMY', 'BOSS', 'ALLY', 'RIVAL'].includes(n.encounter_type || ''))
+    const inCombat = enemies.length > 0
     const hasActiveNPC = gameState.activeNPCs.some(n => !n.dead)
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // PC OPTIONS: 3 context-aware actions (combat/social/explore)
+    // PC OPTIONS: Context-aware RPG choices
+    // Inspired by Baldur's Gate / Disco Elysium / Fallout dialog systems
     // ═══════════════════════════════════════════════════════════════════════════
-    const pcOptions: GameOption[] = [
-      { 
-        num: 1, 
-        action: inCombat 
-          ? '⚔️ Attack — Strike with your weapon' 
-          : hasActiveNPC
-            ? `💬 Talk — ${evil ? 'Demand answers from the stranger' : 'Speak with the stranger, seek information'}`
-            : '🔍 Investigate — Examine your surroundings',
-        ability: inCombat ? 'melee_attack' : hasActiveNPC ? 'conversation' : 'investigation',
-        align_note: inCombat ? 'basic attack' : hasActiveNPC ? 'social interaction' : 'perception',
-        source: 'pc'
-      },
-      { 
-        num: 2, 
-        action: inCombat 
-          ? `🛡️ Defend — Protect ${companion ? companion.name : 'yourself'} from harm` 
-          : hasActiveNPC
-            ? (evil 
-              ? '🎭 Deceive — Manipulate the situation to your advantage' 
-              : '🤝 Negotiate — Attempt diplomacy or persuasion')
-            : (evil 
-              ? '🗡️ Act — Take what you want by force' 
-              : '🚶 Move — Explore further ahead'),
-        ability: inCombat ? 'defend' : hasActiveNPC ? (evil ? 'deception' : 'persuasion') : (evil ? 'aggression' : 'exploration'),
-        align_note: inCombat ? 'protective stance' : hasActiveNPC ? (evil ? 'cunning manipulation' : 'peaceful diplomacy') : (evil ? 'bold action' : 'cautious advance'),
-        source: 'pc'
-      },
-      { 
-        num: 3, 
-        action: ab.length > 0
-          ? `✨ Use ${ab[0].split('(')[0].trim()} — Unleash your signature power`
-          : '✨ Use your innate power — Channel your divine essence',
-        ability: ab[0] || 'innate_power',
-        align_note: 'special ability',
-        source: 'pc'
-      }
-    ]
+    const pcOptions: GameOption[] = []
+    
+    if (inCombat) {
+      // ── COMBAT MODE ──────────────────────────────────────────────
+      // Tactical options when enemies are present
+      pcOptions.push(
+        { 
+          num: 1, 
+          action: `⚔️ Attack — Strike at the nearest enemy with your weapon`, 
+          ability: 'melee_attack',
+          align_note: 'standard attack',
+          source: 'pc'
+        },
+        { 
+          num: 2, 
+          action: companion 
+            ? `🛡️ Defend — Protect ${companion.name.split(' ')[0]} and brace for incoming attacks` 
+            : '🛡️ Defend — Raise your guard and brace for impact', 
+          ability: 'defend',
+          align_note: 'protective stance +2 AC',
+          source: 'pc'
+        },
+        { 
+          num: 3, 
+          action: ab.length > 0
+            ? `✨ ${ab[0].split('(')[0].trim()} — Unleash your signature power`
+            : '✨ Channel Power — Draw on your divine essence',
+          ability: ab[0] || 'innate_power',
+          align_note: 'special ability',
+          source: 'pc'
+        }
+      )
+    } else if (hasActiveNPC) {
+      // ── SOCIAL MODE ─────────────────────────────────────────────
+      // Conversation and interaction when friendly/neutral NPCs are present
+      const npcName = neutrals.length > 0 ? neutrals[0].name : allies.length > 0 ? allies[0].name : 'the stranger'
+      pcOptions.push(
+        { 
+          num: 1, 
+          action: `💬 Talk to ${npcName} — Ask who they are and what brings them here`,
+          ability: 'conversation',
+          align_note: 'social interaction',
+          source: 'pc'
+        },
+        { 
+          num: 2, 
+          action: evil
+            ? `🎭 Intimidate ${npcName} — Demand information through fear`
+            : `🤝 Diplomacy — Attempt to persuade or negotiate with ${npcName}`,
+          ability: evil ? 'intimidation' : 'persuasion',
+          align_note: evil ? 'CHA check (intimidation)' : 'CHA check (persuasion)',
+          source: 'pc'
+        },
+        { 
+          num: 3, 
+          action: ab.length > 0
+            ? `✨ ${ab[0].split('(')[0].trim()} — Ready your power, just in case`
+            : '👁️ Observe — Study the situation carefully before acting',
+          ability: ab.length > 0 ? ab[0] : 'investigation',
+          align_note: ab.length > 0 ? 'special ability (ready)' : 'perception check',
+          source: 'pc'
+        }
+      )
+    } else {
+      // ── EXPLORATION MODE ────────────────────────────────────────
+      // Open-world discovery — this is the default for most of Act I
+      pcOptions.push(
+        { 
+          num: 1, 
+          action: '🔍 Investigate — Search the area for clues, hidden paths, or items of interest',
+          ability: 'investigation',
+          align_note: 'perception check',
+          source: 'pc'
+        },
+        { 
+          num: 2, 
+          action: evil
+            ? '🗡️ Seize — Take what you want and assert your dominance'
+            : '🚶 Travel — Press onward to new territory',
+          ability: evil ? 'aggression' : 'exploration',
+          align_note: evil ? 'bold action' : 'movement + discovery',
+          source: 'pc'
+        },
+        { 
+          num: 3, 
+          action: ab.length > 0
+            ? `✨ ${ab[0].split('(')[0].trim()} — Use your divine power to sense the world around you`
+            : '🔮 Sense — Reach out with your awareness, feel for divine or arcane presence',
+          ability: ab[0] || 'divine_sense',
+          align_note: 'special ability / magical detection',
+          source: 'pc'
+        }
+      )
+    }
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // COMPANION OPTIONS: 3 context-aware actions (player-controlled)
+    // COMPANION OPTIONS: Player-controlled companion actions
     // ═══════════════════════════════════════════════════════════════════════════
-    let compOptions: GameOption[]
+    let compOptions: GameOption[] = []
     
     if (companion) {
       const compName = companion.name.split(' ')[0]
@@ -1198,114 +1275,53 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       
       if (inCombat) {
         compOptions = [
-          { 
-            num: 1,
-            action: `⚔️ Attack — ${compName} strikes with their weapon`,
-            ability: 'companion_attack',
-            align_note: 'standard attack',
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 2,
-            action: compAbility1
-              ? `✨ ${compAbility1} — ${compName} unleashes their power`
-              : `🛡️ Defend — ${compName} guards against incoming attacks`,
-            ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_defend',
-            align_note: compAbility1 ? 'special ability' : 'defensive stance',
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 3,
-            action: compAbility2
-              ? `✨ ${compAbility2} — ${compName}'s secondary power`
-              : `💪 Assist — ${compName} aids your attack for a coordinated strike`,
-            ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_assist',
-            align_note: compAbility2 ? 'secondary ability' : 'coordinated assault',
-            source: 'companion',
-            companion_name: companion.name
-          }
+          { num: 1, action: `⚔️ Attack — ${compName} strikes with their weapon`, ability: 'companion_attack', align_note: 'standard attack', source: 'companion', companion_name: companion.name },
+          { num: 2, action: compAbility1 ? `✨ ${compAbility1} — ${compName} unleashes their power` : `🛡️ Defend — ${compName} guards against incoming attacks`, ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_defend', align_note: compAbility1 ? 'special ability' : 'defensive stance', source: 'companion', companion_name: companion.name },
+          { num: 3, action: compAbility2 ? `✨ ${compAbility2} — ${compName}'s secondary power` : `💪 Assist — ${compName} aids your attack for a coordinated strike`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_assist', align_note: compAbility2 ? 'secondary ability' : 'coordinated assault', source: 'companion', companion_name: companion.name }
         ]
       } else if (hasActiveNPC) {
+        // Social mode companion — conversation and support
         compOptions = [
-          { 
-            num: 1,
-            action: `💬 Talk — ${compName} joins the conversation`,
-            ability: 'companion_conversation',
-            align_note: 'social interaction',
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 2,
-            action: compAbility1
-              ? `✨ ${compAbility1} — ${compName} readies their power`
-              : `🤝 Support — ${companionEvil ? `${compName} watches for an opening` : `${compName} backs you up diplomatically`}`,
-            ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_support',
-            align_note: compAbility1 ? 'special ability' : (companionEvil ? 'calculated support' : 'loyal backing'),
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 3,
-            action: compAbility2
-              ? `✨ ${compAbility2} — ${compName}'s secondary power`
-              : `🔍 Observe — ${compName} studies the stranger carefully`,
-            ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_observe',
-            align_note: compAbility2 ? 'secondary ability' : 'perception check',
-            source: 'companion',
-            companion_name: companion.name
-          }
+          { num: 1, action: `💬 Talk — ${compName} joins the conversation`, ability: 'companion_conversation', align_note: 'social interaction', source: 'companion', companion_name: companion.name },
+          { num: 2, action: compAbility1 ? `✨ ${compAbility1} — ${compName} readies their power` : `🤝 Support — ${companionEvil ? `${compName} watches for an opening` : `${compName} backs you up diplomatically`}`, ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_support', align_note: compAbility1 ? 'special ability' : (companionEvil ? 'calculated support' : 'loyal backing'), source: 'companion', companion_name: companion.name },
+          { num: 3, action: compAbility2 ? `✨ ${compAbility2} — ${compName}'s secondary power` : `🔍 Observe — ${compName} studies the stranger carefully`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_observe', align_note: compAbility2 ? 'secondary ability' : 'perception check', source: 'companion', companion_name: companion.name }
         ]
       } else {
+        // Exploration mode companion — scouting and dialogue
         compOptions = [
-          { 
-            num: 1,
-            action: `🔍 Scout — ${compName} checks the area ahead`,
-            ability: 'companion_scout',
-            align_note: 'exploration',
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 2,
-            action: compAbility1
-              ? `✨ ${compAbility1} — ${compName} senses something`
-              : `💬 Discuss — "What do you think, ${compName}?"`,
-            ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_discussion',
-            align_note: compAbility1 ? 'special ability' : 'dialogue',
-            source: 'companion',
-            companion_name: companion.name
-          },
-          { 
-            num: 3,
-            action: compAbility2
-              ? `✨ ${compAbility2} — ${compName}'s secondary power`
-              : `🛡️ Guard — ${compName} stands watch while you investigate`,
-            ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_guard',
-            align_note: compAbility2 ? 'secondary ability' : 'defensive stance',
-            source: 'companion',
-            companion_name: companion.name
-          }
+          { num: 1, action: `🔍 Scout — ${compName} checks the area ahead for danger or points of interest`, ability: 'companion_scout', align_note: 'exploration / perception', source: 'companion', companion_name: companion.name },
+          { num: 2, action: `🗣️ Discuss — "What do you make of all this, ${compName}?"`, ability: 'companion_discussion', align_note: 'character dialogue / bonding', source: 'companion', companion_name: companion.name },
+          { num: 3, action: compAbility2 ? `✨ ${compAbility2} — ${compName}'s secondary power` : `🛡️ Guard — ${compName} stands watch while you investigate`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_guard', align_note: compAbility2 ? 'secondary ability' : 'defensive stance', source: 'companion', companion_name: companion.name }
         ]
       }
-    } else {
-      // No companion — empty companion options
-      compOptions = []
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // EXTRA OPTIONS: Potion, Skip, Archrival Summon
+    // EXTRA OPTIONS: Rest, Potion, Skip, Archrival Summon
     // ═══════════════════════════════════════════════════════════════════════════
     const extraOptions: GameOption[] = []
     
-    // Potion option in combat
+    // Rest option (outside combat) — recover HP and reduce injuries
+    if (!inCombat) {
+      const livingPCs = gameState.pcs.filter(p => !p.dead)
+      const injuredPCs = livingPCs.filter(p => (p.hp < p.maxHp) || (gameState.injuries[p.id]?.length > 0))
+      if (injuredPCs.length > 0) {
+        extraOptions.push({
+          num: 5,
+          action: `🏕️ Rest — Take a moment to tend wounds and recover strength (${injuredPCs.length} ${injuredPCs.length === 1 ? 'hero needs' : 'heroes need'} rest)`,
+          ability: 'rest',
+          align_note: 'recover HP, reduce injury duration',
+          source: 'pc'
+        })
+      }
+    }
+    
+    // Potion option in combat or when injured
     const consumables = gameState.inventory.filter(i => 
       i.type === 'potion' && (i.charges ?? 0) > 0 && 
       (i.effect?.toLowerCase().includes('heal') || i.effect?.toLowerCase().includes('restore'))
     )
-    if (inCombat && consumables.length > 0) {
+    if (consumables.length > 0) {
       const potion = consumables[0]
       extraOptions.push({
         num: 99,
@@ -1316,12 +1332,14 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       })
     }
 
-    // Skip turn
+    // Skip turn / Observe
     extraOptions.push({ 
       num: 6, 
-      action: '⏭️ Skip Turn — Observe and wait', 
+      action: inCombat 
+        ? '⏭️ Hold Action — Wait for the right moment to strike' 
+        : '⏭️ Observe — Watch and listen from where you are', 
       ability: 'skip', 
-      align_note: 'passive',
+      align_note: 'passive / delay action',
       source: 'pc'
     })
     
@@ -1667,36 +1685,36 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // ACT PROGRESSION - RNG Turn Limits
+    // ACT PROGRESSION - RNG Turn Limits with Minimum Turn Requirements
     // ═══════════════════════════════════════════════════════════════════════════
-    const allPCsIntroduced = newGS.pcQueue.length === 0
-    const allPCsAgreed = newGS.pcs.filter(p => !p.dead).every(p => newGS.pcAgreements[p.id] === true)
+    const MIN_ACT1_TURNS = 8   // Minimum 8 turns of exploration before Act II
+    const MIN_ACT2_TURNS = 15  // Minimum 15 turns before Act III boss fight
     
-    // ACT I -> ACT II: Either all PCs agreed OR RNG turn limit reached
+    // ACT I -> ACT II: RNG turn limit only (pcAgreements is legacy; companions start agreed)
     if (newGS.act === ACTS.ONE) {
       const turnLimitReached = newGS.turn >= newGS.act1TurnLimit
-      if ((allPCsIntroduced && allPCsAgreed) || turnLimitReached) {
+      const minTurnsMet = newGS.turn >= MIN_ACT1_TURNS
+      if (turnLimitReached && minTurnsMet) {
         newGS.act = ACTS.TWO
         soundEvents.emit({ type: 'act_transition', act: 'act2' })
         newGS.act2StartTurn = newGS.turn
         // Log the act transition
         newGS.log = [...newGS.log, {
-          msg: turnLimitReached 
-            ? `Act I ends after ${newGS.turn} turns. The shadow grows impatient.`
-            : `Act I complete. The party stands united. Act II begins.`,
+          msg: `Act I ends after ${newGS.turn} turns. The shadow grows impatient. Act II begins.`,
           type: 'discovery',
           turn: newGS.turn
         }]
       }
     }
     
-    // ACT II -> ACT III: After RNG turn duration for Act II
+    // ACT II -> ACT III: After RNG turn duration with minimum turns for story development
     if (newGS.act === ACTS.TWO) {
       const act2Duration = newGS.turn - newGS.act2StartTurn
       const act2Complete = act2Duration >= newGS.act2TurnLimit
       const storyReady = newGS.antagonistCluesRevealed.length >= 3 // At least 3 clues found
+      const minAct2Met = act2Duration >= MIN_ACT2_TURNS
       
-      if (act2Complete || (storyReady && act2Duration >= 20)) { // Minimum 20 turns in Act II
+      if ((act2Complete || storyReady) && minAct2Met) {
         newGS.act = ACTS.THREE
         soundEvents.emit({ type: 'act_transition', act: 'act3' })
         
@@ -1916,11 +1934,15 @@ JSON OUTPUT REQUIREMENTS
 ${companion ? `The companion ${companion.name} is already in the active party (pcs[1]). Do NOT set "next_pc_id" — no PC needs to be added from a queue.` : 'No companion to add.'}
 Write the full narrative prose first (800-1200 words minimum for this opening). Then append the JSON state payload.`
     } else {
+      const pacingGuide = gs.act === ACTS.ONE && gs.turn < 8
+        ? `\n**EARLY ACT I PACING** (Turn ${gs.turn}, < 8): This is EXPLORATION ONLY. Do NOT spawn enemies or introduce combat encounters. Focus on:\n- Describing the environment in rich detail (ancient ruins, mystical landscapes, divine realms)\n- Building the bond between ${living[0]?.name || 'the hero'} and their companion through dialogue\n- The shard reacting to the environment (pulsing near power sources, whispering warnings)\n- Dropping subtle clues about the antagonist through omens and environmental details\n- Creating MYSTERY — something the player wants to investigate further\n- Discovery: hidden paths, ancient inscriptions, forgotten lore, divine remnants\n- DO NOT include any "npc_encounters" with type "ENEMY" or "BOSS" this early.\n`
+        : gs.act === ACTS.ONE
+          ? `\n**LATE ACT I PACING** (Turn ${gs.turn}): Danger is now possible. You may introduce a minor threat (guardian creature, territorial spirit, rival adventurer) but NOT the antagonist. Combat should feel earned and meaningful.\n`
+          : ''
       userMsg = `TURN ${gs.turn}.
 Recent: ${recentLog}
 Act: ${gs.act}
-${gs.pendingShardSummon ? `${shard?.name} INVOKED — process summoning of "${gs.pendingShardSummon}" with d20 roll (DC10).\n` : ''}${pcIntroStr}${gs.act === ACTS.TWO ? 'Introduce 1-2 gods from the DDG roster this turn. Mix pantheons.\n' : ''}${gs.act === ACTS.THREE ? `BOSS FIGHT: ${ant?.name} Phase ${gs.antagonistPhase}. HP ${gs.antagonistHp}/${gs.antagonistMaxHp}.\n` : ''}
-
+${gs.pendingShardSummon ? `${shard?.name} INVOKED — process summoning of "${gs.pendingShardSummon}" with d20 roll (DC10).\n` : ''}${pcIntroStr}${gs.act === ACTS.TWO ? 'Introduce 1-2 gods from the DDG roster this turn. Mix pantheons.\n' : ''}${gs.act === ACTS.THREE ? `BOSS FIGHT: ${ant?.name} Phase ${gs.antagonistPhase}. HP ${gs.antagonistHp}/${gs.antagonistMaxHp}.\n` : ''}${pacingGuide}
 NARRATIVE STYLE — NEIL GAIMAN (1-2 RICH PARAGRAPHS):
 Write 1-2 paragraphs of rich, atmospheric prose. Quality over quantity.
 - Layer sensory details: the quality of light, texture of surfaces, sounds on the edge of hearing
