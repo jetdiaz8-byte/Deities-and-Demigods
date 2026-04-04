@@ -48,9 +48,9 @@ export async function POST(req: NextRequest) {
 
     console.log('[Edge TTS] Using voice:', voiceName, 'rate:', rate);
 
-    // Create temp file path
+    // Create temp file path (unique via random suffix to avoid collisions)
     const tempDir = '/tmp';
-    const audioFile = path.join(tempDir, `tts_${Date.now()}.mp3`);
+    const audioFile = path.join(tempDir, `tts_${Date.now()}_${Math.random().toString(36).slice(2,8)}.mp3`);
 
     // Create EdgeTTS instance with configuration
     const tts = new EdgeTTS({

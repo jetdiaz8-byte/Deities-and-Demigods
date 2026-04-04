@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type') || 'heroes'
-    const limit = parseInt(searchParams.get('limit') || '12')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '12'), 200)
     const excludeIds = searchParams.get('exclude')?.split(',').filter(Boolean) || []
 
     // Try DB first, fall back to JSON file

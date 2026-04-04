@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.json({ error: 'Entity ID required' }, { status: 400 })
     }
 
-    const cleanId = id.toLowerCase().replace(/[^a-z0-9_]/g, '')
+    const cleanId = id.toLowerCase().replace(/[^a-z0-9_-]/g, '')
     
     // Try to find by ID first, then by name (SQLite doesn't support mode: insensitive)
     let entity = await db.entity.findFirst({

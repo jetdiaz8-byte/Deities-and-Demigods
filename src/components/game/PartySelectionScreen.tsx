@@ -308,15 +308,16 @@ export function PartySelectionScreen({
             {/* ── Preview Panel - Right Side ──────────────────────────────── */}
             <div className="w-80 flex-shrink-0">
               <Card className="bg-[#110d07] border-[#3a3020] sticky top-4">
-                {(viewHero || selectedHero) ? (
+                {(viewHero || selectedHero) ? (() => {
+                  const previewHero = viewHero || selectedHero!
+                  return (
                   <>
                     <CardHeader className="p-4 bg-gradient-to-r from-[rgba(60,45,15,.5)] to-[rgba(30,25,15,.3)]">
                       <div className="text-center">
-                        const viewHero = viewHero || selectedHero
                       <div className="w-full mx-auto mb-3 rounded-lg border-2 border-[#5a4018] bg-gradient-to-b from-[#2a2015] to-[#1a1510] overflow-hidden shadow-lg">
                           <Image
-                            src={getEntityPortrait(viewHero)}
-                            alt={viewHero.name}
+                            src={getEntityPortrait(previewHero)}
+                            alt={previewHero.name}
                             width={384}
                             height={672}
                             className="w-full h-auto object-contain"
@@ -324,10 +325,10 @@ export function PartySelectionScreen({
                           />
                         </div>
                         <CardTitle className="text-xl text-[#d4af37] font-title">
-                          {viewHero.name}
+                          {previewHero.name}
                         </CardTitle>
                         <CardDescription className="text-sm text-[#a08060]">
-                          {viewHero.title || viewHero.epithet || viewHero.pantheon}
+                          {previewHero.title || previewHero.epithet || previewHero.pantheon}
                         </CardDescription>
                       </div>
                     </CardHeader>
@@ -336,19 +337,19 @@ export function PartySelectionScreen({
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div className="flex justify-between p-1 bg-[#1a1510] rounded">
                           <span className="text-[#8a7040]">HP</span>
-                          <span className="text-[#f0e0c0] font-bold">{viewHero.hp}</span>
+                          <span className="text-[#f0e0c0] font-bold">{previewHero.hp}</span>
                         </div>
                         <div className="flex justify-between p-1 bg-[#1a1510] rounded">
                           <span className="text-[#8a7040]">AC</span>
-                          <span className="text-[#f0e0c0] font-bold">{viewHero.AC}</span>
+                          <span className="text-[#f0e0c0] font-bold">{previewHero.AC}</span>
                         </div>
                         <div className="flex justify-between p-1 bg-[#1a1510] rounded">
                           <span className="text-[#8a7040]">MR</span>
-                          <span className="text-[#f0e0c0]">{viewHero.MR}{typeof viewHero.MR === 'number' ? '%' : ''}</span>
+                          <span className="text-[#f0e0c0]">{previewHero.MR}{typeof previewHero.MR === 'number' ? '%' : ''}</span>
                         </div>
                         <div className="flex justify-between p-1 bg-[#1a1510] rounded">
                           <span className="text-[#8a7040]">Align</span>
-                          <span style={{ color: aCol(viewHero.align) }} className="text-xs">{aShort(viewHero.align)}</span>
+                          <span style={{ color: aCol(previewHero.align) }} className="text-xs">{aShort(previewHero.align)}</span>
                         </div>
                       </div>
 
@@ -357,12 +358,12 @@ export function PartySelectionScreen({
                         <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-1 font-title">Ability Scores</div>
                         <div className="grid grid-cols-3 gap-1 text-xs">
                           {[
-                            { abbr: 'STR', val: viewHero.str },
-                            { abbr: 'DEX', val: viewHero.dex },
-                            { abbr: 'CON', val: viewHero.con },
-                            { abbr: 'INT', val: viewHero.int },
-                            { abbr: 'WIS', val: viewHero.wis },
-                            { abbr: 'CHA', val: viewHero.cha }
+                            { abbr: 'STR', val: previewHero.str },
+                            { abbr: 'DEX', val: previewHero.dex },
+                            { abbr: 'CON', val: previewHero.con },
+                            { abbr: 'INT', val: previewHero.int },
+                            { abbr: 'WIS', val: previewHero.wis },
+                            { abbr: 'CHA', val: previewHero.cha }
                           ].map(ability => (
                             <div key={ability.abbr} className="text-center p-1 bg-[#0d0a08] rounded">
                               <div className="text-[#c9a84c] font-bold text-[10px]">{ability.abbr}</div>
@@ -372,33 +373,33 @@ export function PartySelectionScreen({
                         </div>
                       </div>
 
-                      {viewHero.level && (
+                      {previewHero.level && (
                         <div className="text-xs">
                           <span className="text-[#8a7040]">Level: </span>
-                          <span className="text-[#c9a84c]">{viewHero.level}</span>
+                          <span className="text-[#c9a84c]">{previewHero.level}</span>
                         </div>
                       )}
 
-                      {viewHero.personality && (
+                      {previewHero.personality && (
                         <div>
                           <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-1 font-title">Destiny</div>
                           <div className="text-xs text-[#a08060] italic line-clamp-4">
-                            {viewHero.personality}
+                            {previewHero.personality}
                           </div>
                         </div>
                       )}
 
-                      {viewHero.abilities && viewHero.abilities.length > 0 && (
+                      {previewHero.abilities && previewHero.abilities.length > 0 && (
                         <div>
                           <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-1 font-title">Powers</div>
                           <div className="space-y-1 max-h-24 overflow-y-auto">
-                            {viewHero.abilities.slice(0, 4).map((ability, idx) => (
+                            {previewHero.abilities.slice(0, 4).map((ability, idx) => (
                               <div key={idx} className="text-[10px] text-[#c9a84c] bg-[#1a1510] p-1 rounded border-l-2 border-[#5a4018]">
                                 {ability.length > 50 ? ability.slice(0, 50) + '...' : ability}
                               </div>
                             ))}
-                            {viewHero.abilities.length > 4 && (
-                              <div className="text-[10px] text-[#5a4d30] italic">+{viewHero.abilities.length - 4} more...</div>
+                            {previewHero.abilities.length > 4 && (
+                              <div className="text-[10px] text-[#5a4d30] italic">+{previewHero.abilities.length - 4} more...</div>
                             )}
                           </div>
                         </div>
@@ -407,24 +408,25 @@ export function PartySelectionScreen({
                       {/* Select/Deselect Button */}
                       <Button
                         onClick={() => {
-                          if (selectedParty.includes(viewHero.id)) {
+                          if (selectedParty.includes(previewHero.id)) {
                             setSelectedParty([])
                           } else {
-                            setSelectedParty([viewHero.id])
+                            setSelectedParty([previewHero.id])
                           }
                           setFateRoll(null)
                         }}
-                        className={`w-full mt-2 ${selectedParty.includes(viewHero.id)
+                        className={`w-full mt-2 ${selectedParty.includes(previewHero.id)
                             ? 'bg-[#5a3020] hover:bg-[#7a4030] text-[#e0a080]'
                             : 'bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860]'
                           } border border-[#7a5f20]`}
                         style={{ fontFamily: 'Cinzel, serif' }}
                       >
-                        {selectedParty.includes(viewHero.id) ? '✦ Release This Fate' : '✦ This Is My Fate'}
+                        {selectedParty.includes(previewHero.id) ? '✦ Release This Fate' : '✦ This Is My Fate'}
                       </Button>
                     </CardContent>
                   </>
-                ) : (
+                  )
+                })() : (
                   <CardContent className="p-8 text-center">
                     <div className="w-24 h-24 mx-auto mb-4 rounded-full border-2 border-dashed border-[#3a3020] flex items-center justify-center">
                       <Users className="w-10 h-10 text-[#3a3020]" />

@@ -64,7 +64,6 @@ export function useGameEngine() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [statusMessage, setStatusMessage] = useState('Awaiting the gods...')
   const [lastDMNarrative, setLastDMNarrative] = useState('')
-  const [actionQueue, setActionQueue] = useState(Promise.resolve())
   // Portrait Modal State
   const [portraitModalOpen, setPortraitModalOpen] = useState(false)
   const [selectedPortrait, setSelectedPortrait] = useState<CharacterPortrait | null>(null)
@@ -142,7 +141,9 @@ export function useGameEngine() {
 
   // ── SAVE KEYS TO STORAGE ───────────────────────────────────────────────
   useEffect(() => {
-    if (geminiKey) localStorage.setItem('mythworld_gemini', geminiKey)
+    try { if (geminiKey) localStorage.setItem('mythworld_gemini', geminiKey) } catch (e: any) {
+      if (e?.name === 'QuotaExceededError') console.warn('localStorage full — key not saved')
+    }
   }, [geminiKey])
 
 
@@ -201,10 +202,14 @@ export function useGameEngine() {
       ttsSettings: { enabled: ttsEnabled, voice: ttsVoice, speed: ttsSpeed },
       achievementTracker: serializeTracker(achievementTrackerRef.current),
     }
-    localStorage.setItem(`mythworld_save_${slotNum}`, JSON.stringify(saveData))
-    loadSaveSlots()
-    toast({ title: 'Game Saved', description: `Saved to ${name}` })
-    setShowSaveDialog(false)
+    try {
+      localStorage.setItem(`mythworld_save_${slotNum}`, JSON.stringify(saveData))
+      loadSaveSlots()
+      toast({ title: 'Game Saved', description: `Saved to ${name}` })
+      setShowSaveDialog(false)
+    } catch (e: any) {
+      toast({ title: 'Save Failed', description: 'Storage full. Try deleting old saves.', variant: 'destructive' })
+    }
   }
 
   const loadGame = (slotId: string) => {
@@ -1792,6 +1797,11 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     newGS.companionAffinityBonus = successUpdate.breakdown.companionAffinity
     newGS.injuryPenaltyBonus = successUpdate.breakdown.injury
 
+    // ── TRIM LOG — prevent unbounded memory growth ─────────────────────
+    if (newGS.log.length > 200) {
+      newGS.log = newGS.log.slice(-150)
+    }
+
     return newGS
   }
 
@@ -3131,7 +3141,6 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     sidebarOpen, setSidebarOpen,
     statusMessage, setStatusMessage,
     lastDMNarrative, setLastDMNarrative,
-    actionQueue, setActionQueue,
     portraitModalOpen, setPortraitModalOpen,
     selectedPortrait, setSelectedPortrait,
     conversationHistory, setConversationHistory,

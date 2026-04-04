@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category')
     const pantheon = searchParams.get('pantheon')
     const search = searchParams.get('search')
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 200)
     const random = searchParams.get('random') === 'true'
     const minHp = searchParams.get('minHp') ? parseInt(searchParams.get('minHp')!) : null
     const excludeIds = searchParams.get('exclude')?.split(',').filter(Boolean) || []

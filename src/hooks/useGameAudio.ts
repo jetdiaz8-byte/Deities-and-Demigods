@@ -308,7 +308,7 @@ export function useGameAudio() {
   useEffect(() => {
     const handler = (e: SoundEvent) => {
       switch(e.type) {
-        case 'dice_roll': playDiceRoll(e.success); break; case 'combat_hit': playCombatHit(e.critical); break; case 'combat_miss': mkNoise(getCtx()!,.2,4000,.12*volR.current*sfxVolR.current,0); break
+        case 'dice_roll': playDiceRoll(e.success); break; case 'combat_hit': playCombatHit(e.critical); break; case 'combat_miss': { const _ctx = getCtx(); if (_ctx) mkNoise(_ctx,.2,4000,.12*volR.current*sfxVolR.current,0); break; }
         case 'injury': playInjury(); break; case 'level_up': playLevelUp(); break; case 'shard_pulse': playShardPulse(); break
         case 'act_transition': playActTransition(e.act as ActName); transitionAmbient(e.act as ActName); break; case 'boss_phase': playBossPhase(e.phase); break
         case 'victory': playVictory(); break; case 'death': playDeath(); break; case 'ambient_start': startAmbient(e.act as ActName); break
