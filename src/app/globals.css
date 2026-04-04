@@ -133,6 +133,41 @@
   --sidebar-ring: #c9a227;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL BEHAVIOR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+/* Mobile touch optimization */
+button, a, [role="button"], .fantasy-tooltip, select {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* iPhone safe-area handling */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Scrollbar-hide utility */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -1359,4 +1394,30 @@
 /* Active narration highlight — last turn block */
 .narration-active {
   border-color: rgba(212,175,55,0.15) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE ENHANCEMENTS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Touch support for fantasy tooltips */
+.fantasy-tooltip .tooltip-content.tooltip-touch-active {
+  display: block;
+  animation: tooltip-fade-in 0.2s ease-out;
+  white-space: normal;
+  min-width: 200px;
+  max-width: 280px;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ember-container, .vignette-overlay, .time-cycle-overlay, .fog-overlay {
+    display: none !important;
+  }
 }

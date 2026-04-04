@@ -1,12 +1,13 @@
 'use client'
 
-import React from 'react'
+import React, { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { Package, Save, Trash2, Sparkles } from 'lucide-react'
+import { Package, Save, Trash2, Sparkles, Shield, Swords, Heart } from 'lucide-react'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
+import { useEquipmentTooltip } from '@/components/game/EquipmentTooltip'
 import type { GameState, SaveSlot, Item } from '@/lib/gameTypes'
 
 export interface GameDialogsProps {
@@ -39,6 +40,197 @@ export interface GameDialogsProps {
   gameState: GameState
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// SAVE SLOT THUMBNAIL — Rich preview card for save slots
+// ═══════════════════════════════════════════════════════════════════════════
+
+function SaveSlotThumbnail({ slot, children, interactive = false }: {
+  slot: SaveSlot
+  children: React.ReactNode
+  interactive?: boolean
+}) {
+  const actConfig: Record<string, { label: string; color: string; bg: string }> = {
+    act1: { label: 'I', color: '#4a9060', bg: 'rgba(74,144,96,0.12)' },
+    act2: { label: 'II', color: '#d4af37', bg: 'rgba(212,175,55,0.12)' },
+    act3: { label: 'III', color: '#e05050', bg: 'rgba(224,80,80,0.12)' },
+  }
+  const act = actConfig[slot.act] || actConfig.act1
+
+  return (
+    <div
+      className={`relative p-3 sm:p-4 bg-[#181208] border border-[#2e2008] rounded-lg transition-all duration-200
+        ${interactive ? 'hover:border-[#d4af37]/60 hover:shadow-[0_0_15px_rgba(212,175,55,0.15)] cursor-pointer' : ''}
+      `}
+    >
+      {/* Turn number badge + Act indicator */}
+      <div className="flex items-center gap-2 mb-2">
+        <Badge
+          className="text-[10px] font-bold px-2 py-0.5"
+          style={{ background: '#2a2015', color: '#d4af37', border: '1px solid #5a4018' }}
+        >
+          T{slot.turn}
+        </Badge>
+        <div
+          className="text-[10px] font-bold px-2 py-0.5 rounded"
+          style={{ background: act.bg, color: act.color, border: `1px solid ${act.color}33` }}
+        >
+          Act {act.label}
+        </div>
+        {slot.totalGold !== undefined && (
+          <div className="ml-auto text-[10px] text-[#d4af37] font-title flex items-center gap-1">
+            <span className="text-xs">🪙</span> {slot.totalGold}
+          </div>
+        )}
+      </div>
+
+      {/* Party members with alive/dead status */}
+      <div className="flex flex-wrap gap-1.5 mb-2">
+        {slot.partyNames.map((name, idx) => {
+          const isAlive = slot.partyAlive?.[idx] !== false
+          return (
+            <div
+              key={idx}
+              className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded"
+              style={{
+                background: isAlive ? 'rgba(74,144,96,0.1)' : 'rgba(200,60,60,0.1)',
+                border: `1px solid ${isAlive ? 'rgba(74,144,96,0.2)' : 'rgba(200,60,60,0.2)'}`,
+                color: isAlive ? '#6ab07a' : '#c07070',
+              }}
+            >
+              <span className={`inline-block w-1.5 h-1.5 rounded-full ${isAlive ? 'bg-green-500' : 'bg-red-500'}`} />
+              {name.length > 14 ? name.slice(0, 14) + '...' : name}
+              {!isAlive && <span className="text-red-400 ml-0.5">✗</span>}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Last narration snippet */}
+      {slot.lastNarration && (
+        <div className="text-[11px] text-[#9a8860] italic leading-relaxed mb-3 line-clamp-2" style={{ fontFamily: '"IM Fell English", serif' }}>
+          &ldquo;{slot.lastNarration}&rdquo;
+        </div>
+      )}
+
+      {/* Date + actions */}
+      <div className="flex items-center justify-between mt-1">
+        <div className="text-[10px] text-[#5a4d30]">
+          {new Date(slot.timestamp).toLocaleDateString()} · {new Date(slot.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EMPTY SLOT — Placeholder for unused save slots
+// ═══════════════════════════════════════════════════════════════════════════
+
+function EmptySaveSlot({ index, onSave }: { index: number; onSave: () => void }) {
+  return (
+    <div className="relative p-4 bg-[#181208] border border-dashed border-[#2e2008] rounded-lg transition-all duration-200 hover:border-[#d4af37]/40">
+      <div className="text-center">
+        <div className="text-2xl text-[#2e2008] mb-1">📜</div>
+        <div className="text-xs text-[#5a4d30]">Slot {index + 1} — Empty</div>
+      </div>
+      <div className="flex justify-center mt-2">
+        <Button
+          onClick={onSave}
+          size="sm"
+          className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860] text-xs"
+        >
+          <Save className="w-3 h-3 mr-1" /> Save
+        </Button>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INVENTORY ITEM ROW — with tooltip support
+// ═══════════════════════════════════════════════════════════════════════════
+
+function InventoryItemRow({ item, onUse, disabled }: { item: Item; onUse: () => void; disabled: boolean }) {
+  const { showTooltip, hideTooltip } = useEquipmentTooltip()
+
+  const rarityColors: Record<string, string> = {
+    common: '#9a8860',
+    uncommon: '#4a9060',
+    rare: '#5a9fd4',
+    legendary: '#e8b040',
+  }
+
+  const typeIcons: Record<string, string> = {
+    equipment: '⚔️',
+    potion: '🧪',
+    scroll: '📜',
+    artifact: '✨',
+  }
+
+  const rarityBorder: Record<string, string> = {
+    common: '#3a3020',
+    uncommon: '#2a5030',
+    rare: '#2a3050',
+    legendary: '#504020',
+  }
+
+  return (
+    <div
+      className="flex items-start justify-between p-2 bg-[#181208] rounded transition-all duration-200"
+      style={{ borderLeft: `3px solid ${rarityBorder[item.rarity] || '#3a3020'}` }}
+    >
+      <div className="flex gap-2 flex-1 min-w-0">
+        <span className="text-xl flex-shrink-0">{item.icon}</span>
+        <div className="min-w-0">
+          <button
+            className="text-sm text-left hover:underline decoration-dotted underline-offset-2 cursor-help transition-all"
+            style={{ color: rarityColors[item.rarity] || '#9a8860' }}
+            onMouseEnter={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect()
+              showTooltip(item, rect)
+            }}
+            onMouseLeave={hideTooltip}
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect()
+              showTooltip(item, rect)
+              setTimeout(hideTooltip, 3000)
+            }}
+          >
+            {item.name}
+          </button>
+          <div className="text-[10px] text-[#5a4d30] flex items-center gap-1">
+            <span>{typeIcons[item.type] || '📦'}</span>
+            <span>{item.type}</span>
+            <span className="mx-0.5">·</span>
+            <span style={{ color: rarityColors[item.rarity] || '#9a8860' }}>{item.rarity}</span>
+          </div>
+          <div className="text-xs text-[#9a8860] italic mt-0.5" style={{ fontFamily: '"IM Fell English", serif' }}>
+            {item.description}
+          </div>
+          {item.charges && item.charges < 99 && (
+            <div className="text-xs text-[#c9a84c] mt-0.5">
+              ⚡ Charges: {item.charges}/{item.maxCharges}
+            </div>
+          )}
+        </div>
+      </div>
+      <Button
+        onClick={onUse}
+        size="sm"
+        disabled={disabled}
+        className="bg-gradient-to-b from-[#362200] to-[#1e1100] text-[#f0c860] flex-shrink-0 ml-2"
+      >
+        Use
+      </Button>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN GAME DIALOGS COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
 export function GameDialogs({
   showSaveDialog,
   setShowSaveDialog,
@@ -62,36 +254,58 @@ export function GameDialogs({
   setSelectedPortrait,
   gameState,
 }: GameDialogsProps) {
+  // Helper to build save data with thumbnails
+  const buildSaveData = useCallback((existing: SaveSlot | undefined, slotId: string) => {
+    const partyNames = gameState.pcs.map(p => p.name.replace(/\s*\([^)]*\)/g, ''))
+    const partyAlive = gameState.pcs.map(p => !p.dead)
+    // Get last narration from log
+    const narrativeEntries = gameState.log.filter(l => !l.msg.startsWith('__'))
+    const lastNarration = narrativeEntries.length > 0
+      ? narrativeEntries[narrativeEntries.length - 1].msg.slice(0, 100)
+      : undefined
+
+    return {
+      ...existing,
+      id: slotId,
+      name: existing?.name || `Save ${parseInt(slotId.split('_')[1]) + 1}`,
+      timestamp: Date.now(),
+      turn: gameState.turn,
+      act: gameState.act,
+      partyNames,
+      partyAlive,
+      lastNarration,
+      totalGold: gameState.partyGold,
+    }
+  }, [gameState])
+
   return (
     <>
       {/* Save Dialog */}
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent className="bg-[#110d07] border-[#5a4018]">
+        <DialogContent className="bg-[#110d07] border-[#5a4018] max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-[#f0c860]" style={{ fontFamily: 'Cinzel, serif' }}>Save Campaign</DialogTitle>
-            <DialogDescription className="text-[#9a8860]">Choose a slot to save your progress</DialogDescription>
+            <DialogDescription className="text-[#9a8860]">Choose a slot to preserve your legend</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto scroll-parchment">
             {[0, 1, 2, 3, 4].map(i => {
               const existing = saveSlots.find(s => s.id === `slot_${i}`)
-              return (
-                <div key={i} className="flex items-center justify-between p-2 bg-[#181208] border border-[#2e2008] rounded">
-                  <div>
-                    <div className="text-sm text-[#c9a84c]">Slot {i + 1}</div>
-                    {existing && (
-                      <div className="text-xs text-[#5a4d30]">
-                        {existing.name} · Turn {existing.turn} · {new Date(existing.timestamp).toLocaleDateString()}
-                      </div>
-                    )}
-                  </div>
+              return existing ? (
+                <SaveSlotThumbnail key={i} slot={existing} interactive>
                   <Button
-                    onClick={() => saveGame(`slot_${i}`, existing?.name || `Save ${i + 1}`)}
+                    onClick={() => saveGame(`slot_${i}`, buildSaveData(existing, `slot_${i}`).name)}
                     size="sm"
-                    className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860]"
+                    className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860] text-[10px] px-2"
                   >
-                    {existing ? 'Overwrite' : 'Save'}
+                    Overwrite
                   </Button>
-                </div>
+                </SaveSlotThumbnail>
+              ) : (
+                <EmptySaveSlot
+                  key={i}
+                  index={i}
+                  onSave={() => saveGame(`slot_${i}`, `Save ${i + 1}`)}
+                />
               )
             })}
           </div>
@@ -100,29 +314,22 @@ export function GameDialogs({
 
       {/* Load Dialog */}
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
-        <DialogContent className="bg-[#110d07] border-[#5a4018]">
+        <DialogContent className="bg-[#110d07] border-[#5a4018] max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-[#f0c860]" style={{ fontFamily: 'Cinzel, serif' }}>Load Campaign</DialogTitle>
-            <DialogDescription className="text-[#9a8860]">Select a saved game to continue</DialogDescription>
+            <DialogDescription className="text-[#9a8860]">Select a saved chronicle to continue</DialogDescription>
           </DialogHeader>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto scroll-parchment">
             {saveSlots.length === 0 ? (
-              <p className="text-[#5a4d30] italic p-4 text-center">No saved games found</p>
+              <p className="text-[#5a4d30] italic p-6 text-center col-span-full">No saved games found</p>
             ) : (
               saveSlots.map(slot => (
-                <div key={slot.id} className="flex items-center justify-between p-2 bg-[#181208] border border-[#2e2008] rounded">
-                  <div>
-                    <div className="text-sm text-[#c9a84c]">{slot.name}</div>
-                    <div className="text-xs text-[#5a4d30]">
-                      Turn {slot.turn} · {slot.act === 'act1' ? 'Act I' : slot.act === 'act2' ? 'Act II' : 'Final Boss'} · {new Date(slot.timestamp).toLocaleDateString()}
-                    </div>
-                    <div className="text-xs text-[#5a4d30]">{slot.partyNames.join(', ')}</div>
-                  </div>
+                <SaveSlotThumbnail key={slot.id} slot={slot} interactive>
                   <div className="flex gap-1">
-                    <Button onClick={() => loadGame(slot.id)} size="sm" className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860]">Load</Button>
-                    <Button onClick={() => deleteSave(slot.id)} size="sm" variant="destructive"><Trash2 className="w-4 h-4" /></Button>
+                    <Button onClick={() => loadGame(slot.id)} size="sm" className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860] text-[10px] px-2">Load</Button>
+                    <Button onClick={() => deleteSave(slot.id)} size="sm" variant="destructive" className="text-[10px] px-2"><Trash2 className="w-3 h-3" /></Button>
                   </div>
-                </div>
+                </SaveSlotThumbnail>
               ))
             )}
           </div>
@@ -138,44 +345,21 @@ export function GameDialogs({
               Party Inventory
             </DialogTitle>
             <DialogDescription className="text-[#9a8860]">
-              {gameState.partyGold} Gold · {gameState.inventory.length} Items
+              🪙 {gameState.partyGold} Gold · {gameState.inventory.length} Items
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
+          <div className="space-y-2 max-h-96 overflow-y-auto scroll-parchment">
             {gameState.inventory.length === 0 ? (
               <p className="text-[#5a4d30] italic p-4 text-center">No items in inventory</p>
             ) : (
-              gameState.inventory.map(item => {
-                const rarityColors: { [key: string]: string } = {
-                  common: '#9a8860',
-                  uncommon: '#4a9060',
-                  rare: '#5a9fd4',
-                  legendary: '#e8b040'
-                }
-                return (
-                  <div key={item.id} className="flex items-start justify-between p-2 bg-[#181208] border border-[#2e2008] rounded">
-                    <div className="flex gap-2">
-                      <span className="text-xl">{item.icon}</span>
-                      <div>
-                        <div className="text-sm" style={{ color: rarityColors[item.rarity] || '#9a8860' }}>{item.name}</div>
-                        <div className="text-xs text-[#5a4d30]">{item.type} · {item.rarity}</div>
-                        <div className="text-xs text-[#9a8860] italic">{item.description}</div>
-                        {item.charges && item.charges < 99 && (
-                          <div className="text-xs text-[#c9a84c]">Charges: {item.charges}/{item.maxCharges}</div>
-                        )}
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => handleUseItem(item)}
-                      size="sm"
-                      disabled={gameState.waitingForHuman || gameState.isProcessing}
-                      className="bg-gradient-to-b from-[#362200] to-[#1e1100] text-[#f0c860]"
-                    >
-                      Use
-                    </Button>
-                  </div>
-                )
-              })
+              gameState.inventory.map(item => (
+                <InventoryItemRow
+                  key={item.id}
+                  item={item}
+                  onUse={() => handleUseItem(item)}
+                  disabled={gameState.waitingForHuman || gameState.isProcessing}
+                />
+              ))
             )}
           </div>
         </DialogContent>

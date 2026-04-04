@@ -107,5 +107,9 @@ export const createInitialState = (): GameState => ({
   testOfFaithContext: null,
   testOfFaithMiraclesUsed: [],
   lastTestOfFaithTurn: -20,
-  totalTestOfFaith: 0
+  totalTestOfFaith: 0,
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ABILITY COOLDOWN SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+  abilityCooldowns: {},
 })

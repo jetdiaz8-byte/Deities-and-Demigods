@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sword, Users, Sparkles, SkipForward, Shield, Wand2, Footprints, MessageSquare, Heart, Target } from 'lucide-react'
+import { Sword, Users, Sparkles, SkipForward, Shield, Wand2, Footprints, MessageSquare, Heart, Target, Lock } from 'lucide-react'
 import type { GameState, GameOption } from '@/lib/gameTypes'
 import { InteractiveDiceRoller } from './InteractiveDiceRoller'
 import { motion } from 'framer-motion'
@@ -36,6 +36,73 @@ function isCombatAbility(ability: string): boolean {
     || a.includes('arcane') || a.includes('smite') || a.includes('firebolt')
 }
 
+// Check if a specific ability is on cooldown for a given PC
+function getAbilityCooldown(
+  pcId: string | null,
+  ability: string,
+  cooldowns: GameState['abilityCooldowns']
+): { turnsLeft: number; totalTurns: number } | null {
+  if (!pcId || !ability) return null
+  const key = `${pcId}_${ability}`
+  return cooldowns[key] || null
+}
+
+// Cooldown progress ring component
+function CooldownIndicator({ turnsLeft, totalTurns }: { turnsLeft: number; totalTurns: number }) {
+  const progress = 1 - turnsLeft / totalTurns
+  const circumference = 2 * Math.PI * 10
+  const strokeDashoffset = circumference * (1 - progress)
+  const radius = 10
+  const size = 28
+
+  return (
+    <div className="flex items-center gap-1.5">
+      {/* Circular progress */}
+      <svg width={size} height={size} className="flex-shrink-0 -rotate-90">
+        {/* Background circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#3a3020"
+          strokeWidth={2}
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="#d4af37"
+          strokeWidth={2}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          className="transition-all duration-500"
+          style={{ opacity: 0.6 }}
+        />
+        {/* Turns number */}
+        <text
+          x={size / 2}
+          y={size / 2}
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill="#d4af37"
+          fontSize={10}
+          fontFamily="Cinzel, serif"
+          fontWeight="bold"
+          className="rotate-90 origin-center"
+          style={{ transform: `rotate(90deg) translateX(0) translateY(-${size / 2}px) rotate(-90deg) translateX(-${size / 2}px)` }}
+        >
+          {turnsLeft}
+        </text>
+      </svg>
+      <span className="text-[10px] text-[#8a7040] font-title">{turnsLeft}t</span>
+    </div>
+  )
+}
+
 export interface ChoicePanelProps {
   gameState: GameState
   selectOption: (index: number) => void
@@ -57,6 +124,28 @@ export function ChoicePanel({
   // All hooks must be called before any conditional return
   const handleDiceRoll = useCallback((result: number) => {
     setDiceRollResult(result)
+  }, [])
+
+  // Tooltip touch handler for mobile
+  useEffect(() => {
+    const handleTouch = (e: TouchEvent) => {
+      const target = (e.target as HTMLElement).closest('.fantasy-tooltip')
+      if (!target) {
+        // Close all open tooltips
+        document.querySelectorAll('.tooltip-touch-active').forEach(el => el.classList.remove('tooltip-touch-active'))
+        return
+      }
+      const content = target.querySelector('.tooltip-content') as HTMLElement
+      if (content) {
+        // Close others first
+        document.querySelectorAll('.tooltip-touch-active').forEach(el => {
+          if (el !== content) el.classList.remove('tooltip-touch-active')
+        })
+        content.classList.toggle('tooltip-touch-active')
+      }
+    }
+    document.addEventListener('touchstart', handleTouch, { passive: true })
+    return () => document.removeEventListener('touchstart', handleTouch)
   }, [])
 
   // Reset dice roll when selection changes (use setTimeout to avoid sync setState in effect)
@@ -86,16 +175,16 @@ export function ChoicePanel({
     <Card className="mt-4 border-2 border-[#c9a84c] parchment-bg-choices shadow-[0_0_16px_rgba(200,160,60,.2)]">
       <CardHeader className="bg-gradient-to-r from-[rgba(80,55,0,.6)] to-[rgba(20,10,0,.4)] border-b border-[#7a5f20]">
         <div className="flex items-center gap-3">
-          <span style={{ fontFamily: '"Cinzel Decorative", serif', fontSize: '1.1rem', color: '#f0c860', letterSpacing: '.12em' }}>
+          <span style={{ fontFamily: '"Cinzel Decorative", serif', fontSize: '0.9rem', color: '#f0c860', letterSpacing: '.12em' }} className="text-sm sm:text-base">
             YOUR TURN
           </span>
-          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: '#c9a84c' }}>
+          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#c9a84c' }} className="text-sm sm:text-base">
             {pc?.name}
           </span>
           {companion && (
             <>
               <span className="text-[#7a5f20] mx-1">&</span>
-              <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1.2rem', color: '#90a0c0' }}>
+                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#90a0c0' }} className="text-sm sm:text-base">
                 {companion.name}
               </span>
             </>
@@ -113,7 +202,7 @@ export function ChoicePanel({
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 space-y-4">
+      <CardContent className="p-2 sm:p-4 space-y-4">
         <div className="ornate-corners">
           <span className="corner-tl" />
           <span className="corner-tr" />
@@ -130,8 +219,11 @@ export function ChoicePanel({
             {pcSelected && <span className="text-emerald-400 text-[10px]">✓ Selected</span>}
           </div>
 
-          {pcOptions.map((opt, idx) => (
-            <div key={idx} className="fantasy-tooltip">
+          {pcOptions.map((opt, idx) => {
+            const cd = getAbilityCooldown(pc?.id || null, opt.ability, gameState.abilityCooldowns)
+            const isOnCooldown = cd !== null
+            return (
+            <div key={idx} className="fantasy-tooltip relative">
               <div className="tooltip-content">
                 {(opt.ability || '').toLowerCase().includes('attack') || (opt.ability || '').toLowerCase().includes('strike')
                   ? 'Melee attack — uses STR modifier vs target AC'
@@ -148,16 +240,18 @@ export function ChoicePanel({
                             : 'Ability check — d20 + relevant modifier vs DC'}
               </div>
               <div
-                onClick={() => selectOption(idx)}
-                className={`flex gap-3 p-3 rounded cursor-pointer transition-all mb-2 ${gameState.pendingHumanChoice === idx
+                onClick={() => !isOnCooldown && selectOption(idx)}
+                className={`flex gap-3 p-2 sm:p-3 rounded cursor-pointer transition-all mb-2 min-h-[44px] ${isOnCooldown
+                    ? 'border border-[#2a2018] bg-gradient-to-b from-[#12100c] to-[#0d0a08] opacity-50'
+                    : gameState.pendingHumanChoice === idx
                     ? 'border-2 border-[#d4af37] bg-gradient-to-r from-[rgba(90,60,10,.5)] to-[rgba(60,40,10,.4)] shadow-[inset_0_0_12px_rgba(212,175,55,.2)] choice-pulse-gold'
                     : 'border border-[#4a4030] bg-gradient-to-b from-[#1a1610] to-[#12100c] hover:border-[#d4af37] hover:shadow-[0_0_10px_rgba(212,175,55,0.15)]'
                   }`}
               >
-                <div className="text-[#d4af37] font-bold font-title text-xl w-8 text-center">{opt.num}</div>
+                <div className={`font-bold font-title text-xl w-8 text-center ${isOnCooldown ? 'text-[#3a3020]' : 'text-[#d4af37]'}`}>{opt.num}</div>
                 <div className="flex-1">
-                  <div className="text-[#f0e0c0] font-narrative text-base">{opt.action}</div>
-                  <div className="text-sm text-[#b08050] mt-1 font-narrative flex items-center gap-1.5">
+                  <div className={`font-narrative text-sm sm:text-base ${isOnCooldown ? 'text-[#5a4d30]' : 'text-[#f0e0c0]'}`}>{opt.action}</div>
+                  <div className={`text-xs sm:text-sm mt-1 font-narrative flex items-center gap-1.5 break-words ${isOnCooldown ? 'text-[#4a3a20]' : 'text-[#b08050]'}`}>
                     {getAbilityIcon(opt.ability)}
                     <span>[{opt.ability}]</span>
                     {opt.align_note && (
@@ -167,9 +261,20 @@ export function ChoicePanel({
                     )}
                   </div>
                 </div>
+                {isOnCooldown && cd && (
+                  <div className="flex items-center pr-1">
+                    <CooldownIndicator turnsLeft={cd.turnsLeft} totalTurns={cd.totalTurns} />
+                  </div>
+                )}
               </div>
+              {isOnCooldown && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <Lock className="w-4 h-4 text-[#3a3020] opacity-40" />
+                </div>
+              )}
             </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════════
@@ -207,7 +312,7 @@ export function ChoicePanel({
                   </div>
                   <div
                     onClick={() => selectCompanionOption(idx)}
-                    className={`flex gap-3 p-3 rounded cursor-pointer transition-all mb-2 ${gameState.pendingCompanionChoice === idx
+                    className={`flex gap-3 p-2 sm:p-3 rounded cursor-pointer transition-all mb-2 min-h-[44px] ${gameState.pendingCompanionChoice === idx
                         ? 'border-2 border-[#7090c0] bg-gradient-to-r from-[rgba(40,60,100,.5)] to-[rgba(30,40,70,.4)] shadow-[inset_0_0_12px_rgba(100,140,200,.2)] choice-pulse-blue'
                         : 'border border-[#3a4050] bg-gradient-to-b from-[#15181e] to-[#0e1015] hover:border-[#7090c0] hover:shadow-[0_0_10px_rgba(100,140,200,0.15)]'
                       }`}
@@ -216,8 +321,8 @@ export function ChoicePanel({
                       {String.fromCharCode(65 + idx)}
                     </div>
                     <div className="flex-1">
-                      <div className="text-[#f0e0c0] font-narrative text-base">{opt.action}</div>
-                      <div className="text-sm text-[#8090b0] mt-1 font-narrative flex items-center gap-1.5">
+                      <div className="text-[#f0e0c0] font-narrative text-sm sm:text-base">{opt.action}</div>
+                      <div className="text-xs sm:text-sm text-[#8090b0] mt-1 font-narrative flex items-center gap-1.5 break-words">
                         {getAbilityIcon(opt.ability)}
                         <span>[{opt.ability}]</span>
                         {opt.align_note && (
@@ -259,7 +364,7 @@ export function ChoicePanel({
                       // Skip auto-confirms by setting a sentinel
                     }
                   }}
-                  className={`flex gap-3 p-3 rounded cursor-pointer transition-all mb-2 ${gameState.pendingHumanChoice === actualIdx
+                  className={`flex gap-3 p-2 sm:p-3 rounded cursor-pointer transition-all mb-2 min-h-[44px] ${gameState.pendingHumanChoice === actualIdx
                       ? isRival
                         ? 'border-2 border-[#c05050] bg-gradient-to-r from-[rgba(80,20,20,.3)] to-[rgba(50,15,15,.2)]'
                         : 'border-2 border-[#5a4d30] bg-gradient-to-r from-[rgba(50,40,20,.3)] to-[rgba(30,25,15,.2)]'
@@ -286,7 +391,7 @@ export function ChoicePanel({
             DICE ROLLER — Shows when a combat ability is selected
             ═══════════════════════════════════════════════════════════════════════ */}
         {isCombat && (
-          <div className="flex items-center justify-center gap-6 py-3 px-4 rounded-lg bg-[rgba(40,10,10,.3)] border border-[#5a2020]">
+          <div className="flex items-center justify-center gap-4 sm:gap-6 py-3 px-2 sm:px-4 rounded-lg bg-[rgba(40,10,10,.3)] border border-[#5a2020] overflow-x-auto scrollbar-hide">
             <div className="text-center">
               <div className="text-xs font-title text-[#c08050] uppercase tracking-wider mb-1">Selected Attack</div>
               <div className="text-sm text-[#f0e0c0] font-narrative">{selectedPCOption?.ability}</div>
@@ -317,7 +422,7 @@ export function ChoicePanel({
         {/* ═══════════════════════════════════════════════════════════════════════
             CONFIRM BUTTON — Both PC and Companion must be selected
             ═══════════════════════════════════════════════════════════════════════ */}
-        <div className="flex items-center gap-3 pt-3 border-t border-[#3a3020]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-3 border-t border-[#3a3020]">
           <Button
             onClick={() => {
               if (canConfirm) {
@@ -327,7 +432,7 @@ export function ChoicePanel({
               }
             }}
             disabled={!canConfirm}
-            className={`font-title tracking-wider px-6 text-lg py-5 transition-all ${
+            className={`font-title tracking-wider px-6 text-lg py-5 transition-all w-full sm:w-auto min-h-[44px] ${
               canConfirm
                 ? `confirm-ready ${confirmClicked ? 'confirm-click' : ''} bg-gradient-to-b from-[#5a3a10] to-[#3a2510] hover:from-[#7a5020] hover:to-[#5a3a15] text-[#f0d878] border-2 border-[#8a6020] shadow-[0_0_10px_rgba(200,160,60,.2)]`
                 : 'bg-gradient-to-b from-[#2a2015] to-[#1a1510] text-[#5a4d30] border-2 border-[#3a3020] cursor-not-allowed'
@@ -335,7 +440,7 @@ export function ChoicePanel({
           >
             ⚔ Confirm Choice ⚔
           </Button>
-          <span className="text-sm text-[#a08050] italic font-narrative">
+          <span className="text-sm text-[#a08050] italic font-narrative break-words">
             {!pcSelected
               ? 'Select your action above'
               : !compSelected

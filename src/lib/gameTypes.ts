@@ -169,6 +169,9 @@ export interface SaveSlot {
   turn: number
   act: string
   partyNames: string[]
+  partyAlive?: boolean[]     // alive status per party member
+  lastNarration?: string    // snapshot of last DM narration (max 100 chars)
+  totalGold?: number        // party gold at save time
 }
 
 export interface GameState {
@@ -259,6 +262,8 @@ export interface GameState {
   testOfFaithMiraclesUsed: string[]    // PC IDs that have used their miracle
   lastTestOfFaithTurn: number          // Cooldown tracking
   totalTestOfFaith: number             // How many offered this campaign
+  // ABILITY COOLDOWN SYSTEM
+  abilityCooldowns: { [key: string]: { ability: string; turnsLeft: number; totalTurns: number } }
 }
 
 // Antagonist Clue - Identity revealed progressively through Acts
@@ -320,3 +325,14 @@ export interface InjuryTemplate {
 
 // ACT constants
 export const ACTS = { ONE: 'act1', TWO: 'act2', THREE: 'act3' } as const
+
+// Lore Glossary Entry — used for hover cards on codex-inline-link elements
+export interface LoreEntry {
+  name: string
+  title?: string
+  pantheon: string
+  portrait?: string
+  personality?: string
+  description?: string
+  type?: 'hero' | 'demigod' | 'greater_god' | 'lesser_god' | 'monster'
+}

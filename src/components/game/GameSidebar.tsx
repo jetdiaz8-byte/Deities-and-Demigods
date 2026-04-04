@@ -28,6 +28,7 @@ export interface GameSidebarProps {
   setSidebarOpen: (open: boolean) => void
   saveSlots: SaveSlot[]
   tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
+  onOpenQuestJournal?: () => void
 }
 
 export function GameSidebar({
@@ -44,9 +45,18 @@ export function GameSidebar({
   setSidebarOpen,
   saveSlots,
   tokenUsage,
+  onOpenQuestJournal,
 }: GameSidebarProps) {
   return (
     <>
+      {/* Timeline animation keyframe injection */}
+      <style>{`
+        @keyframes timelineFadeIn {
+          from { opacity: 0; transform: translateX(-4px); }
+          to { opacity: 1; transform: translateX(0); }
+        }
+      `}</style>
+
       {/* Desktop Sidebar - top offset accounts for sticky header */}
       <div className="fixed right-0 top-0 h-screen w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-40 hidden md:flex sidebar-parchment">
         {/* Spacer for sticky header — pushes all content below the header */}
@@ -90,16 +100,37 @@ export function GameSidebar({
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="w-[85%] max-w-sm bg-[#110d07] border-[#2e2008] p-0 overflow-y-auto">
           <SheetHeader className="p-3 border-b border-[#2e2008]">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <SheetTitle className="text-[#d4af37] font-title">Game Info</SheetTitle>
-              <a 
-                href="/codex" 
-                className="flex items-center gap-1 px-3 py-1.5 text-xs bg-gradient-to-r from-[#2a2010] to-[#1a1510] border border-[#5a4018] rounded hover:border-[#d4af37] hover:text-[#f0c860] text-[#c9a84c] transition-all"
-                style={{ fontFamily: 'Cinzel, serif' }}
-              >
-                <BookOpen className="w-3 h-3" />
-                Codex
-              </a>
+              <div className="flex items-center gap-2">
+                <a 
+                  href="/rulebook" 
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-gradient-to-r from-[#1a2a20] to-[#0d1510] border border-[#2a5038] rounded hover:border-[#40c080] hover:text-[#60e0a0] text-[#40a070] transition-all"
+                  style={{ fontFamily: 'Cinzel, serif' }}
+                >
+                  <BookOpen className="w-3 h-3" />
+                  Guide
+                </a>
+                <button
+                  onClick={() => {
+                    setSidebarOpen(false)
+                    onOpenQuestJournal?.()
+                  }}
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-gradient-to-r from-[#1a2010] to-[#101510] border border-[#3a5018] rounded hover:border-[#4a9060] hover:text-[#60e0a0] text-[#4a9060] transition-all"
+                  style={{ fontFamily: 'Cinzel, serif' }}
+                >
+                  <ScrollText className="w-3 h-3" />
+                  Journal
+                </button>
+                <a 
+                  href="/codex" 
+                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-gradient-to-r from-[#2a2010] to-[#1a1510] border border-[#5a4018] rounded hover:border-[#d4af37] hover:text-[#f0c860] text-[#c9a84c] transition-all"
+                  style={{ fontFamily: 'Cinzel, serif' }}
+                >
+                  <BookOpen className="w-3 h-3" />
+                  Codex
+                </a>
+              </div>
             </div>
           </SheetHeader>
           
@@ -358,29 +389,45 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
         </div>
       </TabsContent>
 
-      {/* Logs Tab */}
-      <TabsContent value="logs" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
+      {/* Logs Tab — Visual Timeline */}
+      <TabsContent value="logs" className="flex-1 overflow-y-auto p-3 m-0 min-h-0 scroll-parchment">
         <h3 className="text-[#c9a84c] mb-3 text-base flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
           <BookOpen className="w-4 h-4" /> Chronicle of Events
         </h3>
         {gameState.log.length === 0 ? (
           <p className="text-[#5a4d30] italic text-sm">The story has not yet begun...</p>
         ) : (
-          <div className="space-y-2">
-            {gameState.log.slice().reverse().map((entry, idx) => (
-              <div 
-                key={idx} 
-                className={`p-2 rounded border-l-2 text-xs ${
-                  entry.type === 'combat' ? 'border-red-600 bg-red-950/20' :
-                  entry.type === 'discovery' ? 'border-blue-500 bg-blue-950/20' :
-                  entry.type === 'dialogue' ? 'border-purple-500 bg-purple-950/20' :
-                  'border-[#5a4018] bg-[#1a1510]'
-                }`}
-              >
-                <div className="text-[#7a5f20] text-[10px] uppercase tracking-wider mb-1">Turn {entry.turn}</div>
-                <div className="text-[#c9a84c] font-narrative leading-relaxed">{entry.msg}</div>
+          <div>
+            {gameState.log.slice().reverse().map((entry, idx) => {
+              const dotColor = getLogDotColor(entry.type)
+              const glowColor = getLogGlowColor(entry.type)
+              return (
+                <div key={idx} className="flex gap-3" style={{ animation: 'timelineFadeIn 0.3s ease-out' }}>
+                  {/* Timeline line + dot */}
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5"
+                      style={{ background: dotColor, boxShadow: `0 0 6px ${glowColor}` }}
+                    />
+                    <div className="w-px flex-1 bg-[#3a3020]" />
+                  </div>
+                  {/* Content */}
+                  <div className="flex-1 pb-4 min-w-0">
+                    <div className="text-[10px] text-[#7a5f20] uppercase tracking-wider font-title">Turn {entry.turn}</div>
+                    <div className="text-xs text-[#c9a84c] font-narrative leading-relaxed mt-0.5">{entry.msg}</div>
+                  </div>
+                </div>
+              )
+            })}
+            {/* Campaign Begin marker */}
+            <div className="flex gap-3 items-center">
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div className="text-sm text-[#d4af37]" style={{ textShadow: '0 0 8px rgba(212,175,55,0.5)' }}>✦</div>
               </div>
-            ))}
+              <div className="text-xs text-[#d4af37] font-title italic" style={{ fontFamily: 'Cinzel, serif' }}>
+                Campaign Begin
+              </div>
+            </div>
           </div>
         )}
         
@@ -650,6 +697,7 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
         )}
       </TabsContent>
       
+      {/* Mobile Logs Tab — Compact Timeline */}
       <TabsContent value="logs" className="p-3 m-0">
         <h3 className="text-[#c9a84c] mb-3 text-sm flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
           <BookOpen className="w-4 h-4" /> Chronicle
@@ -657,21 +705,39 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
         {gameState.log.length === 0 ? (
           <p className="text-[#5a4d30] italic text-sm">The story has not yet begun...</p>
         ) : (
-          <div className="space-y-2">
-            {gameState.log.slice().reverse().slice(0, 20).map((entry, idx) => (
-              <div 
-                key={idx} 
-                className={`p-2 rounded border-l-2 text-xs ${
-                  entry.type === 'combat' ? 'border-red-600 bg-red-950/20' :
-                  entry.type === 'discovery' ? 'border-blue-500 bg-blue-950/20' :
-                  entry.type === 'dialogue' ? 'border-purple-500 bg-purple-950/20' :
-                  'border-[#5a4018] bg-[#1a1510]'
-                }`}
-              >
-                <div className="text-[#7a5f20] text-[10px] uppercase tracking-wider mb-1">Turn {entry.turn}</div>
-                <div className="text-[#c9a84c] font-narrative leading-relaxed">{entry.msg}</div>
+          <div>
+            {gameState.log.slice().reverse().slice(0, 20).map((entry, idx) => {
+              const dotColor = getLogDotColor(entry.type)
+              const glowColor = getLogGlowColor(entry.type)
+              return (
+                <div key={idx} className="flex gap-2">
+                  {/* Timeline line + dot — compact */}
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <div
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1"
+                      style={{ background: dotColor, boxShadow: `0 0 4px ${glowColor}` }}
+                    />
+                    <div className="w-px flex-1 bg-[#3a3020]" />
+                  </div>
+                  {/* Content — compact */}
+                  <div className="flex-1 pb-3 min-w-0">
+                    <div className="text-[9px] text-[#7a5f20] uppercase tracking-wider font-title">Turn {entry.turn}</div>
+                    <div className="text-[11px] text-[#c9a84c] font-narrative leading-relaxed mt-0.5">
+                      {entry.msg.length > 80 ? entry.msg.slice(0, 80) + '...' : entry.msg}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+            {/* Campaign Begin marker */}
+            <div className="flex gap-2 items-center">
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div className="text-xs text-[#d4af37]" style={{ textShadow: '0 0 6px rgba(212,175,55,0.5)' }}>✦</div>
               </div>
-            ))}
+              <div className="text-[11px] text-[#d4af37] font-title italic" style={{ fontFamily: 'Cinzel, serif' }}>
+                Campaign Begin
+              </div>
+            </div>
           </div>
         )}
         
@@ -693,6 +759,34 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
 // ═══════════════════════════════════════════════════════════════════════════
 // SHARED SUB-COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TIMELINE HELPERS — Color-coded dots for log event types
+// ═══════════════════════════════════════════════════════════════════════════
+
+function getLogDotColor(type: string): string {
+  switch (type) {
+    case 'combat': return '#ef4444'
+    case 'discovery': return '#3b82f6'
+    case 'dialogue': return '#a855f7'
+    case 'injury': return '#f97316'
+    case 'level_up': return '#d4af37'
+    case 'quest': return '#22c55e'
+    default: return '#8b6914'
+  }
+}
+
+function getLogGlowColor(type: string): string {
+  switch (type) {
+    case 'combat': return 'rgba(239,68,68,0.5)'
+    case 'discovery': return 'rgba(59,130,246,0.5)'
+    case 'dialogue': return 'rgba(168,85,247,0.5)'
+    case 'injury': return 'rgba(249,115,22,0.5)'
+    case 'level_up': return 'rgba(212,175,55,0.5)'
+    case 'quest': return 'rgba(34,197,94,0.5)'
+    default: return 'rgba(139,105,20,0.4)'
+  }
+}
 
 function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
   pc: import('@/lib/gameTypes').Entity

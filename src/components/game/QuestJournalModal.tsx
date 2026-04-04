@@ -17,7 +17,7 @@ export function QuestJournalModal({ open, onOpenChange, gameState }: QuestJourna
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden p-0 border-2 border-[#5a4a30]" 
+      <DialogContent className="max-w-2xl w-[95vw] sm:w-auto max-h-[80vh] overflow-hidden p-0 border-2 border-[#5a4a30]" 
         style={{ background: 'linear-gradient(135deg, #1e1a12, #2a2218)' }}>
         {/* Leather journal header */}
         <div className="relative p-4 border-b-2 border-[#3a2a10]" style={{
@@ -30,7 +30,7 @@ export function QuestJournalModal({ open, onOpenChange, gameState }: QuestJourna
             ))}
           </div>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-[#d4af37]" style={{ fontFamily: '"Cinzel Decorative", serif', fontSize: '1.4rem' }}>
+            <DialogTitle className="flex items-center gap-3 text-[#d4af37]" style={{ fontFamily: '"Cinzel Decorative", serif', fontSize: 'clamp(1.1rem, 4vw, 1.4rem)' }}>
               <ScrollText className="w-6 h-6" />
               Quest Journal
             </DialogTitle>
@@ -39,7 +39,7 @@ export function QuestJournalModal({ open, onOpenChange, gameState }: QuestJourna
         </div>
 
         {/* Journal pages */}
-        <div className="relative overflow-y-auto p-6 space-y-6" style={{ 
+        <div className="relative overflow-y-auto p-3 sm:p-6 space-y-6" style={{ 
           minHeight: '300px',
         }}>
           {/* Page vignette */}

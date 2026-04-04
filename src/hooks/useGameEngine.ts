@@ -2566,6 +2566,25 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     if (needsCompanionChoice) return
 
     const gs = { ...gameState, waitingForHuman: false, isProcessing: true }
+
+    // ── ABILITY COOLDOWN: Track used PC ability ──────────────────────────
+    const humanPCForCD = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)
+    if (humanPCForCD && chosen?.ability && chosen.ability !== 'skip') {
+      const cdKey = `${humanPCForCD.id}_${chosen.ability}`
+      gs.abilityCooldowns = {
+        ...gs.abilityCooldowns,
+        [cdKey]: { ability: chosen.ability, turnsLeft: 3, totalTurns: 3 }
+      }
+    }
+    // Track companion ability cooldown too
+    if (compChosen && companion && compChosen.ability && compChosen.ability !== 'skip') {
+      const compCdKey = `${companion.id}_${compChosen.ability}`
+      gs.abilityCooldowns = {
+        ...gs.abilityCooldowns,
+        [compCdKey]: { ability: compChosen.ability, turnsLeft: 3, totalTurns: 3 }
+      }
+    }
+
     setGameState(gs)
 
     const humanPC = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)
@@ -2644,6 +2663,17 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       const res = await callGeminiDM(userMsg, gs, false)
 
       gs.turn++
+
+      // ── ABILITY COOLDOWN: Decrement turns ────────────────────────────────
+      const updatedCooldowns: typeof gs.abilityCooldowns = {}
+      for (const [key, cd] of Object.entries(gs.abilityCooldowns)) {
+        const remaining = cd.turnsLeft - 1
+        if (remaining > 0) {
+          updatedCooldowns[key] = { ...cd, turnsLeft: remaining }
+        }
+        // Remove expired cooldowns (turnsLeft <= 0)
+      }
+      gs.abilityCooldowns = updatedCooldowns
 
       let newGS = await applyMechanics(res, gs)
       newGS.humanPCId = res.human_pc_id || newGS.pcs.find(p => !p.dead)?.id || null

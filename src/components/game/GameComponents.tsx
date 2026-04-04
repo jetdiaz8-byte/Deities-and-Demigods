@@ -299,3 +299,6 @@ export const TokenCounter = ({ geminiTokens }: TokenCounterProps) => {
 }
 
 export type { DiceRollProps, HealthBarProps, NarrativeSectionProps, TokenCounterProps }
+
+// Re-export LoreGlossaryProvider for convenience
+export { LoreGlossaryProvider, useLoreGlossary } from './LoreGlossaryCard'

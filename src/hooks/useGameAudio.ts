@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react'
 import { soundEvents, type SoundEvent } from '@/lib/soundEvents'
 
 type ActName = 'act1' | 'act2' | 'act3' | 'intro'
+type SceneTheme = ActName | 'tavern' | 'forest' | 'battle' | 'temple' | 'ocean'
 
 interface AudioState {
   sfxEnabled: boolean
@@ -20,7 +21,9 @@ interface AudioState {
    - Act 2:   Ancient war-temple — dark choir + metallic resonance
    - Act 3:   Abyssal boss domain — crushing dissonance + thunder
    ─────────────────────────────────────────────────────────────────── */
-const AMBIENT: Record<ActName, { baseFreq: number; harmonics: { f: number; g: number; t: OscillatorType }[]; lfoF: number; lfoD: number; noiseG: number; filtF: number; filtQ: number }> = {
+type AmbientConfig = { baseFreq: number; harmonics: { f: number; g: number; t: OscillatorType }[]; lfoF: number; lfoD: number; noiseG: number; filtF: number; filtQ: number }
+
+const AMBIENT: Record<SceneTheme, AmbientConfig> = {
   intro: {
     baseFreq: 36.71, // D1 — deep meditation drone
     harmonics: [
@@ -73,6 +76,69 @@ const AMBIENT: Record<ActName, { baseFreq: number; harmonics: { f: number; g: nu
     lfoF: .4, lfoD: 5,    // heavy pulsing
     noiseG: .035,          // thunder / stone grinding
     filtF: 450, filtQ: 3.5 // resonant, metallic filtering
+  },
+  // ── Scene-specific themes ─────────────────────────────────────────────
+  tavern: {
+    baseFreq: 73.42, // D2 — warm hearth tones
+    harmonics: [
+      { f: 73.42, g: .10, t: 'sine' },       // warm fundamental
+      { f: 110,   g: .07, t: 'sine' },       // A2 — cheerful fifth
+      { f: 146.83, g: .05, t: 'triangle' },  // D3 — bright melody hint
+      { f: 220,   g: .03, t: 'sine' },       // A3 — high shimmer
+    ],
+    lfoF: .05, lfoD: 0.8,  // gentle warmth pulse
+    noiseG: .008,          // distant chatter
+    filtF: 600, filtQ: 0.5 // warm, open filtering
+  },
+  forest: {
+    baseFreq: 55, // A1 — deep earth rumble
+    harmonics: [
+      { f: 55,    g: .12, t: 'sine' },       // root tone
+      { f: 82.41, g: .07, t: 'triangle' },  // E2 — natural fifth
+      { f: 110,   g: .04, t: 'sine' },       // A2 — wind overtone
+      { f: 164.81, g: .02, t: 'sine' },      // E3 — bird song hint
+    ],
+    lfoF: .1, lfoD: 2.0,  // slow wind sway
+    noiseG: .03,           // wind through canopy
+    filtF: 400, filtQ: 1.0 // organic filtering
+  },
+  battle: {
+    baseFreq: 41.20, // E1 — aggressive root
+    harmonics: [
+      { f: 41.20, g: .18, t: 'sawtooth' },   // grinding bass
+      { f: 55,    g: .10, t: 'square' },      // dissonant clash
+      { f: 82.41, g: .07, t: 'sawtooth' },   // battle horn
+      { f: 110,   g: .05, t: 'square' },      // war drums
+      { f: 164.81, g: .03, t: 'sawtooth' },   // clashing steel
+    ],
+    lfoF: .35, lfoD: 4.0,  // pounding rhythm
+    noiseG: .04,           // chaos / clashing
+    filtF: 600, filtQ: 2.5 // aggressive filtering
+  },
+  temple: {
+    baseFreq: 65.41, // C2 — sacred tone
+    harmonics: [
+      { f: 65.41, g: .12, t: 'sine' },       // pure sacred drone
+      { f: 98,    g: .08, t: 'sine' },        // G2 — perfect fifth
+      { f: 130.81, g: .05, t: 'sine' },       // C3 — octave
+      { f: 196,   g: .03, t: 'sine' },        // G3 — angelic third
+      { f: 261.63, g: .015, t: 'triangle' },  // C4 — celestial shimmer
+    ],
+    lfoF: .04, lfoD: 1.0,  // meditative breathing
+    noiseG: .005,          // near silence
+    filtF: 800, filtQ: 0.3 // cathedral reverb feel
+  },
+  ocean: {
+    baseFreq: 36.71, // D1 — deep wave
+    harmonics: [
+      { f: 36.71, g: .11, t: 'sine' },       // tidal drone
+      { f: 55,    g: .07, t: 'sine' },        // undertone
+      { f: 73.42, g: .04, t: 'triangle' },   // wave crest
+      { f: 110,   g: .025, t: 'sine' },       // sea foam shimmer
+    ],
+    lfoF: .06, lfoD: 3.0,  // wave-like LFO
+    noiseG: .04,           // water sounds
+    filtF: 350, filtQ: 0.7 // muffled underwater
   },
 }
 
@@ -262,5 +328,74 @@ export function useGameAudio() {
     setSfxVolume: useCallback((v: number) => setS(p => ({...p, sfxVolume: Math.max(0, Math.min(1, v))})), []),
     setAmbientVolume: useCallback((v: number) => setS(p => ({...p, ambientVolume: Math.max(0, Math.min(1, v))})), []),
     playDiceRoll, playCombatHit, playInjury, playLevelUp, playShardPulse, playActTransition, playBossPhase, playVictory, playDeath, startAmbient, stopAmbient, transitionAmbient,
+  }
+}
+
+// ── Scene Theme Detection ───────────────────────────────────────────────
+const SCENE_THEMES = ['tavern', 'forest', 'battle', 'temple', 'ocean'] as const
+const ACT_DEFAULTS: Record<string, SceneTheme> = { act1: 'forest', act2: 'battle', act3: 'battle' }
+
+function detectSceneTheme(gameState: {
+  act: string
+  storySummary: string
+  activeNPCs: { id: string; conditions: string[] }[]
+  turn: number
+}): SceneTheme {
+  const summary = (gameState.storySummary || '').toLowerCase()
+  // Check for enemy NPCs — battle scene
+  const hasEnemies = gameState.activeNPCs.some(npc =>
+    npc.conditions.some(c => c.toLowerCase().includes('hostile') || c.toLowerCase().includes('enemy'))
+  )
+  if (hasEnemies) return 'battle'
+  // Check scene keywords
+  if (summary.includes('tavern') || summary.includes('inn') || summary.includes('bar') || summary.includes('pub') || summary.includes('alehouse')) return 'tavern'
+  if (summary.includes('forest') || summary.includes('woods') || summary.includes('grove') || summary.includes('jungle') || summary.includes('wilderness')) return 'forest'
+  if (summary.includes('temple') || summary.includes('shrine') || summary.includes('sanctum') || summary.includes('altar') || summary.includes('cathedral') || summary.includes('chapel')) return 'temple'
+  if (summary.includes('ocean') || summary.includes('sea') || summary.includes('ship') || summary.includes('harbor') || summary.includes('coast') || summary.includes('shore') || summary.includes('port')) return 'ocean'
+  // Act-based fallback
+  return ACT_DEFAULTS[gameState.act] || 'forest'
+}
+
+export function useSceneMusic(gameState: {
+  act: string
+  storySummary: string
+  activeNPCs: { id: string; conditions: string[] }[]
+  turn: number
+} | null) {
+  const manualOverride = useRef<SceneTheme | null>(null)
+  const [detectedTheme, setDetectedTheme] = useState<SceneTheme>('forest')
+  const audio = useGameAudio()
+
+  const autoTheme = useMemo(() => {
+    if (!gameState) return 'forest'
+    return detectSceneTheme(gameState)
+  }, [gameState?.act, gameState?.storySummary, gameState?.activeNPCs, gameState?.turn])
+
+  useEffect(() => {
+    if (manualOverride.current) return // respect manual selection
+    setDetectedTheme(autoTheme)
+  }, [autoTheme])
+
+  // Auto-switch ambient when theme changes
+  useEffect(() => {
+    if (!audio.ambientEnabled || manualOverride.current) return
+    if (autoTheme !== detectedTheme) {
+      setDetectedTheme(autoTheme)
+    }
+  }, [autoTheme, audio.ambientEnabled])
+
+  const setManualOverride = useCallback((theme: SceneTheme | null) => {
+    manualOverride.current = theme
+    if (theme) {
+      setDetectedTheme(theme)
+      audio.transitionAmbient(theme as ActName)
+    }
+  }, [audio])
+
+  return {
+    detectedTheme,
+    autoTheme,
+    setManualOverride,
+    isAutoMode: manualOverride.current === null,
   }
 }

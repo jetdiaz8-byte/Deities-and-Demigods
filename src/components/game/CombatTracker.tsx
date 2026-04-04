@@ -38,7 +38,7 @@ export function CombatTracker({ gameState }: CombatTrackerProps) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1">
                   <span className="text-xs font-name text-[#d4af37] truncate">{pc.name.split(' ').pop()}</span>
-                  {isActive && <span className="text-[8px] text-[#d4af37] uppercase">You</span>}
+                  {isActive && <span className="text-[10px] text-[#d4af37] uppercase">You</span>}
                 </div>
                 <div className="mt-1 h-1.5 bg-[#1a1010] rounded-full overflow-hidden">
                   <div className="h-full rounded-full hp-bar-smooth transition-all" style={{
@@ -46,7 +46,7 @@ export function CombatTracker({ gameState }: CombatTrackerProps) {
                     background: hpPct > 0.6 ? 'linear-gradient(90deg, #2d8a4e, #4ade80)' : hpPct > 0.3 ? 'linear-gradient(90deg, #a16207, #fbbf24)' : 'linear-gradient(90deg, #991b1b, #ef4444)',
                   }} />
                 </div>
-                <div className="text-[9px] text-gray-400 mt-0.5">{Math.max(0, pc.hp)}/{pc.maxHp} HP</div>
+                <div className="text-[11px] text-gray-400 mt-0.5">{Math.max(0, pc.hp)}/{pc.maxHp} HP</div>
               </div>
             </div>
           )
@@ -79,7 +79,7 @@ export function CombatTracker({ gameState }: CombatTrackerProps) {
                     background: hpPct <= 0.2 ? 'linear-gradient(90deg, #991b1b, #ef4444)' : 'linear-gradient(90deg, #8b2635, #cc5050)',
                   }} />
                 </div>
-                <div className="text-[9px] text-gray-400 mt-0.5">
+                <div className="text-[11px] text-gray-400 mt-0.5">
                   {isAntagonist ? `${gameState.antagonistHp}/${gameState.antagonistMaxHp}` : `${Math.max(0, npc.hp || 0)}/${npc.maxHp || '?'}`}
                   {isBoss && ` · Phase ${isAntagonist ? gameState.antagonistPhase : '?'}/3`}
                 </div>

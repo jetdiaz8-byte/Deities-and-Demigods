@@ -10,6 +10,9 @@ import { VisualDiceRoll } from '@/components/game/GameComponents'
 import { IntroScreen } from '@/components/game/IntroScreen'
 import { PartySelectionScreen } from '@/components/game/PartySelectionScreen'
 import { GameHeader } from '@/components/game/GameHeader'
+import { LoreGlossaryProvider } from '@/components/game/LoreGlossaryCard'
+import { EquipmentTooltipProvider } from '@/components/game/EquipmentTooltip'
+import { SceneIllustration } from '@/components/game/SceneIllustration'
 import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
 import { GameDialogs } from '@/components/game/GameDialogs'
@@ -19,7 +22,7 @@ import { TestOfFaith } from '@/components/game/TestOfFaith'
 import { AchievementNotificationQueue } from '@/components/game/AchievementNotification'
 import { AchievementsDialog } from '@/components/game/AchievementsDialog'
 import { useGameEngine } from '@/hooks/useGameEngine'
-import { useGameAudio } from '@/hooks/useGameAudio'
+import { useGameAudio, useSceneMusic } from '@/hooks/useGameAudio'
 import { getUnlockedCount, getTotalCount, getAchievementDef } from '@/lib/achievements'
 import { version } from '../../package.json'
 
@@ -82,6 +85,7 @@ export default function MythworldEngine() {
 
   // ── AUDIO ENGINE ─────────────────────────────────────────────────────
   const audio = useGameAudio()
+  const sceneMusic = useSceneMusic(gameState)
 
   // Combat flash overlay ref
   const flashRef = useRef<HTMLDivElement>(null)
@@ -236,6 +240,8 @@ export default function MythworldEngine() {
   // ── MAIN GAME UI ───────────────────────────────────────────────────────
   return (
     <TooltipProvider>
+      <EquipmentTooltipProvider>
+      <LoreGlossaryProvider pcs={gameState.pcs} activeNPCs={gameState.activeNPCs} npcHistory={gameState.npcHistory}>
       <div className="min-h-screen bg-[#060403] flex flex-col" data-screen-root>
         {/* Screen Effects */}
         <style>{`
@@ -270,6 +276,7 @@ export default function MythworldEngine() {
         `}</style>
         <style jsx global>{`
           @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap');
+          button, a, [role="button"], .fantasy-tooltip { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
           @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
             to { opacity: 1; transform: none; }
@@ -324,6 +331,8 @@ export default function MythworldEngine() {
           achievementTotal={getTotalCount()}
           onOpenAchievements={() => setShowAchievementsDialog(true)}
           onOpenQuestJournal={() => setShowQuestJournal(true)}
+          detectedSceneTheme={sceneMusic.detectedTheme}
+          isAutoSceneMode={sceneMusic.isAutoMode}
         />
 
         {/* Dice Rolls Display */}
@@ -362,6 +371,13 @@ export default function MythworldEngine() {
             <div className="relative">
               <span className="dragon-corner-tl">🐉</span>
               <span className="dragon-corner-br">🐉</span>
+              {/* Scene Illustration — auto-generates at key moments */}
+              <SceneIllustration
+                narration={lastDMNarrative}
+                act={gameState.act}
+                turn={gameState.turn}
+                gameState={gameState}
+              />
               {narrativeContent.map((item, idx) => {
                 const isLast = idx === narrativeContent.length - 1
                 if (typingMode && !isLast) {
@@ -383,7 +399,7 @@ export default function MythworldEngine() {
             {/* Smart Narrator Controls */}
             {lastDMNarrative && (
               <div className="sticky bottom-0 left-0 right-0 z-20 mb-2 mt-4">
-                <div className="flex items-center justify-between p-2 rounded-lg border border-[#2a2010]" style={{
+                <div className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg border border-[#2a2010]" style={{
                   background: 'linear-gradient(135deg, rgba(26,21,16,0.95), rgba(16,12,8,0.95))',
                   backdropFilter: 'blur(8px)',
                 }}>
@@ -393,13 +409,13 @@ export default function MythworldEngine() {
                       <button
                         key={mode}
                         onClick={() => setNarratorMode(mode)}
-                        className={`px-2 py-1 rounded text-[10px] font-title uppercase tracking-wider transition-all ${
+                        className={`min-h-[44px] min-w-[44px] flex items-center justify-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[8px] sm:text-[10px] font-title uppercase tracking-wider transition-all ${
                           narratorMode === mode
                             ? 'bg-[rgba(212,175,55,.15)] text-[#d4af37] border border-[#d4af37]'
                             : 'text-[#5a4a30] border border-transparent hover:text-[#8a7a50] hover:border-[#3a3020]'
                         }`}
                       >
-                        {mode === 'auto' ? '\u{1F50A}' : mode === 'manual' ? '\u{1F508}' : '\u{1F507}'} {mode}
+                        {mode === 'auto' ? '\u{1F50A}' : mode === 'manual' ? '\u{1F508}' : '\u{1F507}'} <span className="hidden sm:inline">{mode}</span>
                       </button>
                     ))}
                   </div>
@@ -409,7 +425,7 @@ export default function MythworldEngine() {
                     {isSpeaking ? (
                       <button
                         onClick={stopSpeaking}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-all"
+                        className="min-h-[44px] flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded text-xs transition-all"
                         style={{
                           background: 'rgba(200,50,50,.15)',
                           border: '1px solid rgba(200,50,50,.3)',
@@ -417,22 +433,22 @@ export default function MythworldEngine() {
                         }}
                       >
                         <span className="inline-block w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-                        Speaking... Click to stop
+                        <span className="hidden sm:inline">Speaking... Click to stop</span>
                       </button>
                     ) : narratorMode === 'manual' ? (
                       <button
                         onClick={speakNarrative}
-                        className="flex items-center gap-1.5 px-3 py-1 rounded text-xs transition-all hover:bg-[rgba(212,175,55,.1)]"
+                        className="min-h-[44px] flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded text-xs transition-all hover:bg-[rgba(212,175,55,.1)]"
                         style={{
                           background: 'rgba(42,32,16,.5)',
                           border: '1px solid #3a3020',
                           color: '#c9a84c',
                         }}
                       >
-                        {'\u{1F50A}'} Speak Narration
+                        {'\u{1F50A}'} <span className="hidden sm:inline">Speak Narration</span>
                       </button>
                     ) : narratorMode === 'auto' ? (
-                      <span className="text-[10px] text-[#5a4a30] italic font-narrative">Auto-narrating</span>
+                      <span className="text-[10px] text-[#5a4a30] italic font-narrative hidden sm:inline">Auto-narrating</span>
                     ) : null}
                   </div>
                 </div>
@@ -469,23 +485,24 @@ export default function MythworldEngine() {
             setSidebarOpen={setSidebarOpen}
             saveSlots={saveSlots}
             tokenUsage={tokenUsage}
+            onOpenQuestJournal={() => setShowQuestJournal(true)}
           />
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap relative z-[41] md:mr-80">
+        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap relative z-[41] md:mr-80 safe-bottom">
           <Button
             onClick={() => setSidebarOpen(true)}
             variant="outline"
             size="sm"
-            className="md:hidden border-[#5a4018] text-[#9a8860]"
+            className="md:hidden border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             ☰ Menu
           </Button>
 
           <button
             onClick={() => setTypingMode(!typingMode)}
-            className={`p-1.5 rounded text-xs transition-all ${typingMode ? 'text-[#d4af37] bg-[#2a2015]' : 'text-[#5a4d30] hover:text-[#8a7040]'}`}
+            className={`min-h-[44px] min-w-[44px] flex items-center justify-center p-1.5 rounded text-xs transition-all ${typingMode ? 'text-[#d4af37] bg-[#2a2015]' : 'text-[#5a4d30] hover:text-[#8a7040]'}`}
             title={typingMode ? 'Typing mode ON' : 'Typing mode OFF'}
           >
             ✍️
@@ -494,27 +511,27 @@ export default function MythworldEngine() {
           <Button
             onClick={advanceTurn}
             disabled={gameState.ended || gameState.waitingForHuman || gameState.isProcessing}
-            className="bg-gradient-to-b from-[#362200] to-[#1e1100] hover:from-[#502f00] hover:to-[#301a00] text-[#f0c860] border border-[#7a5f20]"
+            className="bg-gradient-to-b from-[#362200] to-[#1e1100] hover:from-[#502f00] hover:to-[#301a00] text-[#f0c860] border border-[#7a5f20] min-h-[44px]"
             style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.12em' }}
           >
             ⚡ Next Turn
           </Button>
 
-          <span className="flex-1 text-xs text-[#5a4d30] italic truncate min-w-[150px]">{statusMessage}</span>
+          <span className="flex-1 text-xs text-[#5a4d30] italic truncate min-w-0">{statusMessage}</span>
 
           {/* Key Status */}
           <div className="flex items-center gap-1">
             <div className={`w-2 h-2 rounded-full ${geminiKey ? 'bg-[#40c080]' : 'bg-[#804040]'}`} />
             <span className="text-[10px] text-[#5a4d30]">Gem2.5</span>
           </div>
-          <span className="text-[8px] text-[#3a3020]">v{version}</span>
+          <span className="text-[8px] text-[#3a3020] hidden md:inline">v{version}</span>
 
           {/* Inventory Button */}
           <Button
             onClick={() => setShowInventoryDialog(true)}
             variant="outline"
             size="sm"
-            className="border-[#5a4018] text-[#9a8860]"
+            className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             <Package className="w-4 h-4 mr-1" />
             <Badge variant="secondary" className="ml-1 text-[10px]">{gameState.inventory.length}</Badge>
@@ -525,7 +542,7 @@ export default function MythworldEngine() {
             onClick={() => setShowSaveDialog(true)}
             variant="outline"
             size="sm"
-            className="border-[#5a4018] text-[#9a8860]"
+            className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             <Save className="w-4 h-4 mr-1" /> Save
           </Button>
@@ -535,29 +552,31 @@ export default function MythworldEngine() {
             onClick={() => setShowLoadDialog(true)}
             variant="outline"
             size="sm"
-            className="border-[#5a4018] text-[#9a8860]"
+            className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             <Upload className="w-4 h-4 mr-1" /> Load
           </Button>
 
-          {/* Export Button */}
+          {/* Export Button - hidden on mobile */}
           <Button
             onClick={exportStory}
             variant="outline"
             size="sm"
-            className="border-[#5a4018] text-[#9a8860]"
+            className="hidden md:flex border-[#5a4018] text-[#9a8860]"
           >
             <Download className="w-4 h-4 mr-1" /> Export
           </Button>
 
-          {/* API Key Input (bottom bar) */}
-          <Input
-            type="password"
-            placeholder="Gemini key..."
-            value={geminiKey}
-            onChange={e => setGeminiKey(e.target.value)}
-            className="w-40 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] text-xs"
-          />
+          {/* API Key Input - hidden on mobile */}
+          <div className="hidden md:flex">
+            <Input
+              type="password"
+              placeholder="Gemini key..."
+              value={geminiKey}
+              onChange={e => setGeminiKey(e.target.value)}
+              className="w-40 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] text-xs"
+            />
+          </div>
         </div>
 
         {/* Achievement Toast Notifications */}
@@ -635,6 +654,8 @@ export default function MythworldEngine() {
           gameState={gameState}
         />
       </div>
+      </LoreGlossaryProvider>
+      </EquipmentTooltipProvider>
 
       {/* Achievement Notification Toasts */}
       <AchievementNotificationQueue

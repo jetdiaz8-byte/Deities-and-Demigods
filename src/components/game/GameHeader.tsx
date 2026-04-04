@@ -64,6 +64,9 @@ export interface GameHeaderProps {
   onOpenAchievements: () => void
   // Quest Journal
   onOpenQuestJournal?: () => void
+  // Scene Music
+  detectedSceneTheme?: string
+  isAutoSceneMode?: boolean
 }
 
 export function GameHeader({
@@ -94,11 +97,26 @@ export function GameHeader({
   achievementTotal,
   onOpenAchievements,
   onOpenQuestJournal,
+  detectedSceneTheme,
+  isAutoSceneMode,
 }: GameHeaderProps) {
   const [showAudioPanel, setShowAudioPanel] = useState(false)
   const [showAmbientThemes, setShowAmbientThemes] = useState(false)
   const [ambientTheme, setAmbientTheme] = useState('dungeon')
   const [antagonistRevealPlayed, setAntagonistRevealPlayed] = useState(false)
+  const [sceneNotification, setSceneNotification] = useState<string | null>(null)
+
+  // Show notification when auto-detected theme changes
+  const prevAutoThemeRef = React.useRef(detectedSceneTheme)
+  React.useEffect(() => {
+    if (isAutoSceneMode && detectedSceneTheme && detectedSceneTheme !== prevAutoThemeRef.current && prevAutoThemeRef.current) {
+      const themeLabel = themes.find(t => t.id === detectedSceneTheme)?.label || detectedSceneTheme
+      setSceneNotification(`🎵 Scene: ${themeLabel}`)
+      const timer = setTimeout(() => setSceneNotification(null), 3000)
+      return () => clearTimeout(timer)
+    }
+    prevAutoThemeRef.current = detectedSceneTheme
+  }, [detectedSceneTheme, isAutoSceneMode])
   const themes = [
     { id: 'tavern', label: '🍺 Tavern', color: '#c9a84c' },
     { id: 'dungeon', label: '🏚️ Dungeon', color: '#8b6914' },
@@ -116,14 +134,14 @@ export function GameHeader({
   }, [revealed, antagonistRevealPlayed])
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0a0806]/95 backdrop-blur-sm border-b-2 border-[#5a4018] medieval-banner relative">
+    <header className="sticky top-0 z-50 bg-[#0a0806]/95 backdrop-blur-sm border-b-2 border-[#5a4018] medieval-banner relative safe-top">
       <div className="medieval-banner-texture" />
       <span className="dragon-corner-tl">🐉</span>
       <span className="dragon-corner-br">🐉</span>
       {/* Top Bar - Title, Voice Controls & Token Counter */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-[#2a2015]">
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-[#2a2015] overflow-x-auto scrollbar-hide">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <h1 className="font-title text-lg md:text-2xl text-[#d4af37] tracking-wider" style={{ fontFamily: '"Cinzel Decorative", serif' }}>
               DEITIES & DEMIGODS
             </h1>
@@ -167,11 +185,11 @@ export function GameHeader({
         </div>
 
         {/* Audio Toggle Buttons */}
-        <div className="flex items-center gap-1.5">
-          {/* SFX Toggle */}
+        <div className="hidden md:flex items-center gap-1.5">
+          {/* SFX Toggle - desktop only */}
           <button
             onClick={toggleSfx}
-            className="relative p-1.5 rounded transition-all"
+            className="relative p-1.5 rounded transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
             title={sfxEnabled ? 'Disable SFX' : 'Enable SFX'}
           >
             <Swords
@@ -190,7 +208,7 @@ export function GameHeader({
           <div className="relative">
             <button
               onClick={() => ambientEnabled ? setShowAmbientThemes(prev => !prev) : toggleAmbient()}
-              className="p-1.5 rounded transition-all flex items-center gap-1"
+              className="p-2.5 md:p-1.5 rounded transition-all flex items-center gap-1 min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
               title={ambientEnabled ? `Ambiance: ${currentTheme.label}` : 'Enable Ambient Music'}
             >
               {ambientEnabled ? (
@@ -230,7 +248,7 @@ export function GameHeader({
           <div className="hidden md:flex items-center gap-1">
             <button
               onClick={() => setShowAudioPanel(!showAudioPanel)}
-              className="p-1.5 rounded text-[#d4af37] hover:bg-[#3a3020] transition-all"
+              className="p-2.5 md:p-1.5 rounded text-[#d4af37] hover:bg-[#3a3020] transition-all min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
               title="Volume Settings"
             >
               {volume === 0 ? (
@@ -302,8 +320,15 @@ export function GameHeader({
           </div>
         </div>
         
-        {/* Voice Narration Controls - Prominent */}
-        <div className="flex items-center gap-2 px-3 py-1 bg-[#1a1510] border border-[#3a3020] rounded-lg">
+        {/* Scene Theme Notification */}
+        {sceneNotification && (
+          <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-[70] px-3 py-1.5 rounded-lg bg-[#1a1510] border border-[#d4af37]/40 shadow-lg animate-slide-in" style={{ animation: 'fadeIn 0.3s ease' }}>
+            <span className="text-xs text-[#d4af37] font-title">{sceneNotification}</span>
+          </div>
+        )}
+
+        {/* Voice Narration Controls - Prominent - hidden on mobile (narrator panel handles it) */}
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-[#1a1510] border border-[#3a3020] rounded-lg min-w-0">
           {isSpeaking ? (
             <Button
               onClick={stopSpeaking}
@@ -327,7 +352,7 @@ export function GameHeader({
             </Button>
           )}
           <Select value={ttsVoice} onValueChange={setTtsVoice}>
-            <SelectTrigger className="w-[110px] h-8 text-xs bg-[#0d0a08] border-[#3a3020] text-[#c9a84c]">
+            <SelectTrigger className="w-[80px] md:w-[110px] h-8 text-xs bg-[#0d0a08] border-[#3a3020] text-[#c9a84c]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-[#1a1510] border-[#3a3020]">
@@ -346,7 +371,7 @@ export function GameHeader({
         {/* Achievements Trophy Button */}
         <button
           onClick={onOpenAchievements}
-          className="relative p-2 text-[#d4af37] hover:bg-[#1a1510] border border-[#3a3020] rounded-lg transition-all hover:border-[#d4af37]/60"
+          className="relative p-2 text-[#d4af37] hover:bg-[#1a1510] border border-[#3a3020] rounded-lg transition-all hover:border-[#d4af37]/60 min-h-[44px] min-w-[44px] flex items-center justify-center"
           title={`Achievements: ${achievementCount}/${achievementTotal}`}
         >
           <Trophy className="w-4 h-4" />
@@ -361,7 +386,7 @@ export function GameHeader({
         <div className="flex items-center gap-1 md:hidden">
           <button
             onClick={toggleSfx}
-            className="relative p-1.5 rounded transition-all"
+            className="relative p-2.5 rounded transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
             title={sfxEnabled ? 'Disable SFX' : 'Enable SFX'}
           >
             <Swords
@@ -377,7 +402,7 @@ export function GameHeader({
           </button>
           <button
             onClick={toggleAmbient}
-            className="p-1.5 rounded transition-all"
+            className="p-2.5 rounded transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
             title={ambientEnabled ? `Disable: ${currentTheme.label}` : 'Enable Ambient Music'}
           >
             {ambientEnabled ? (
@@ -391,14 +416,14 @@ export function GameHeader({
         {/* Mobile Menu Button */}
         <button 
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="md:hidden ml-2 p-2 text-[#d4af37] hover:bg-[#3a3020] rounded"
+          className="md:hidden ml-2 p-2 text-[#d4af37] hover:bg-[#3a3020] rounded min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
       </div>
 
       {/* Party Bar - Sticky */}
-      <div className="flex gap-1 p-2 overflow-x-auto bg-[#0d0a08] md:pr-80">
+      <div className="flex gap-1 p-2 overflow-x-auto scrollbar-hide bg-[#0d0a08] md:pr-80">
         {gameState.pcs.map(pc => {
           const isActive = pc.id === gameState.humanPCId
           const injuries = gameState.injuries[pc.id] || []
@@ -457,7 +482,7 @@ export function GameHeader({
               {injuries.length > 0 && (
                 <div className="mt-0.5 space-y-0.5">
                   {injuries.slice(0, 2).map((inj, i) => (
-                    <div key={i} className="text-[7px] md:text-[8px] text-center truncate px-1 rounded" style={{ 
+                    <div key={i} className="text-[9px] md:text-[10px] text-center truncate px-1 rounded" style={{ 
                       background: 'rgba(180,60,40,0.15)', 
                       color: '#cc8060',
                       border: '1px solid rgba(180,60,40,0.2)'
@@ -466,15 +491,12 @@ export function GameHeader({
                     </div>
                   ))}
                   {injuries.length > 2 && (
-                    <div className="text-[7px] text-center text-[#806050]">+{injuries.length - 2} more</div>
+                    <div className="text-[9px] text-center text-[#806050]">+{injuries.length - 2} more</div>
                   )}
                 </div>
               )}
               {isActive && !pc.dead && (
-                <div className="text-[8px] text-center text-[#d4af37] uppercase mt-0.5">You</div>
-              )}
-              {injuries.length > 0 && (
-                <div className="text-[8px] text-center">{injuries.map(i => i.icon).join('')}</div>
+                <div className="text-[10px] text-center text-[#d4af37] uppercase mt-0.5">You</div>
               )}
             </div>
           )

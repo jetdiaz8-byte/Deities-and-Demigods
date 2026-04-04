@@ -1,11 +1,12 @@
 'use client'
 
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BookOpen, Users, Package, ScrollText, Save, Upload } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { version } from '../../../package.json'
 
 export interface IntroScreenProps {
@@ -22,117 +23,392 @@ export function IntroScreen({
   saveSlots,
   setShowLoadDialog,
 }: IntroScreenProps) {
+  // Generate golden ember particles
+  const particles = useMemo(() =>
+    Array.from({ length: 25 }).map((_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      size: `${2 + Math.random() * 4}px`,
+      duration: `${6 + Math.random() * 10}s`,
+      delay: `${Math.random() * 8}s`,
+      opacity: 0.2 + Math.random() * 0.5,
+      drift: `${(Math.random() - 0.5) * 40}px`,
+    })),
+  [])
+
+  // Title letters for stagger animation
+  const titleText = 'DEITIES & DEMIGODS'
+  const titleLetters = titleText.split('')
+
+  const subtitleText = 'Mythworld Engine · AI-Powered D&D'
+
+  const features = [
+    { icon: <Users className="w-5 h-5" />, label: 'Party Selection', desc: 'Choose your heroes' },
+    { icon: <Package className="w-5 h-5" />, label: 'Inventory System', desc: 'Artifacts & potions' },
+    { icon: <ScrollText className="w-5 h-5" />, label: 'Quest Tracking', desc: 'Main & side quests' },
+    { icon: <Save className="w-5 h-5" />, label: 'Save/Load', desc: 'Multiple slots' },
+  ]
+
   return (
-    <div className="min-h-screen bg-[#060403] flex flex-col items-center justify-center p-4">
-      <style jsx global>{`
+    <div className="min-h-screen bg-[#060403] flex flex-col items-center justify-center p-4 overflow-hidden relative">
+      <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap');
-        @keyframes pulse-glow {
-          0%, 100% { text-shadow: 0 0 12px rgba(200,160,60,.18); }
-          50% { text-shadow: 0 0 28px rgba(200,160,60,.55); }
+
+        /* ── Ember Particle Animation ── */
+        @keyframes intro-ember-rise {
+          0% {
+            transform: translateY(100vh) translateX(0);
+            opacity: 0;
+          }
+          10% {
+            opacity: var(--ember-opacity, 0.4);
+          }
+          90% {
+            opacity: var(--ember-opacity, 0.4);
+          }
+          100% {
+            transform: translateY(-20vh) translateX(var(--ember-drift, 0px));
+            opacity: 0;
+          }
         }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(4px); }
-          to { opacity: 1; transform: none; }
+
+        .intro-ember {
+          position: fixed;
+          border-radius: 50%;
+          background: radial-gradient(circle, #f0c860, #d4af37);
+          pointer-events: none;
+          z-index: 1;
+          animation: intro-ember-rise var(--ember-duration, 8s) var(--ember-delay, 0s) infinite ease-out;
+        }
+
+        /* ── Parallax Background Layers ── */
+        @keyframes parallax-fog-drift {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          50% { transform: translateY(-8px) translateX(12px); }
+        }
+
+        @keyframes parallax-rune-rotate {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        .parallax-layer-deep {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          background: 
+            radial-gradient(ellipse at 20% 50%, rgba(212,175,55,0.03) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 30%, rgba(160,80,40,0.03) 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 80%, rgba(60,40,20,0.05) 0%, transparent 60%);
+        }
+
+        .parallax-layer-fog {
+          position: fixed;
+          inset: -20px;
+          z-index: 0;
+          opacity: 0.3;
+          background:
+            radial-gradient(ellipse at 30% 60%, rgba(42,32,16,0.6) 0%, transparent 50%),
+            radial-gradient(ellipse at 70% 40%, rgba(26,21,16,0.5) 0%, transparent 60%);
+          animation: parallax-fog-drift 20s ease-in-out infinite;
+        }
+
+        .parallax-layer-runes {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          opacity: 0.04;
+          background-image: 
+            radial-gradient(circle at 15% 25%, rgba(212,175,55,0.5) 1px, transparent 1px),
+            radial-gradient(circle at 85% 15%, rgba(212,175,55,0.5) 1px, transparent 1px),
+            radial-gradient(circle at 50% 80%, rgba(212,175,55,0.5) 1px, transparent 1px),
+            radial-gradient(circle at 25% 70%, rgba(212,175,55,0.3) 1px, transparent 1px),
+            radial-gradient(circle at 75% 60%, rgba(212,175,55,0.3) 1px, transparent 1px);
+          background-size: 120px 120px, 100px 100px, 150px 150px, 80px 80px, 110px 110px;
+          animation: parallax-fog-drift 30s ease-in-out infinite reverse;
+        }
+
+        /* ── Button Shimmer ── */
+        @keyframes btn-shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+
+        @keyframes btn-glow-pulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(212,175,55,0.25), inset 0 1px 0 rgba(255,255,255,0.05); }
+          50% { box-shadow: 0 0 35px rgba(212,175,55,0.45), inset 0 1px 0 rgba(255,255,255,0.08); }
+        }
+
+        .btn-begin-legend {
+          animation: btn-glow-pulse 2.5s ease-in-out infinite;
+          background-size: 200% auto;
+          background-image: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(212,175,55,0.08) 25%,
+            rgba(240,200,96,0.15) 50%,
+            rgba(212,175,55,0.08) 75%,
+            transparent 100%
+          );
+          animation: btn-shimmer 4s linear infinite, btn-glow-pulse 2.5s ease-in-out infinite;
+        }
+
+        /* ── Reduced Motion ── */
+        @media (prefers-reduced-motion: reduce) {
+          .intro-ember,
+          .parallax-layer-fog,
+          .parallax-layer-runes,
+          .btn-begin-legend {
+            animation: none !important;
+          }
+          .intro-ember { display: none; }
         }
       `}</style>
 
-      <div className="text-center mb-8">
-        <div style={{ fontSize: '3.5rem', marginBottom: '1rem', animation: 'pulse-glow 3s infinite' }}>✦</div>
-        <h1 style={{ fontFamily: '"Cinzel Decorative", serif', fontSize: 'clamp(1.4rem, 2.5vw, 2rem)', color: '#f0c860', letterSpacing: '.16em', textShadow: '0 0 10px rgba(200,160,60,.2)', marginBottom: '.8rem' }}>
-          DEITIES & DEMIGODS
-        </h1>
-        <p style={{ fontFamily: 'Cinzel, serif', fontSize: '.75rem', color: '#9a8860', letterSpacing: '.25em', textTransform: 'uppercase' }}>
-          Mythworld Engine · AI-Powered D&D
-        </p>
-      </div>
+      {/* ═══ PARALLAX BACKGROUND LAYERS ═══ */}
+      <div className="parallax-layer-deep" />
+      <div className="parallax-layer-fog" />
+      <div className="parallax-layer-runes" />
 
-      <Card className="w-full max-w-2xl bg-[#110d07] border-[#2e2008]">
-        <CardContent className="p-6">
-          <p className="text-[#9a8860] text-center mb-6 italic leading-relaxed" style={{ fontFamily: '"IM Fell English", serif' }}>
-            There is an object. It has had several names. The people who found it gave it names the way people give names to things they cannot explain: carefully, with a kind of reverence that is indistinguishable from fear.
-            <br /><br />
-            Each time a new campaign begins, the object has a different name. Each time, the gods react differently. Each time, the heroes are different, and what they lose along the way is different.
-            <br /><br />
-            The gods do not play fair. The stories do not end cleanly. And sometimes, the prophecy chooses the wrong hero on purpose.
-            <br /><br />
-            <span className="text-[#7a5f20] not-italic text-sm" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.15em' }}>
-              ✦ Created by the imagination of JeTZone2k26 ✦
-            </span>
-            <br />
-            <span className="text-[#5a4d30] not-italic text-xs" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.1em' }}>
-              v{version}
-            </span>
-            <br />
-            <span className="text-[#c9a84c] not-italic" style={{ fontFamily: 'Cinzel, serif', fontSize: '.8rem', letterSpacing: '.1em' }}>
-              Enter your keys. Let the story begin.
-            </span>
-          </p>
+      {/* ═══ FLOATING EMBER PARTICLES ═══ */}
+      {particles.map(p => (
+        <div
+          key={p.id}
+          className="intro-ember"
+          style={{
+            left: p.left,
+            width: p.size,
+            height: p.size,
+            '--ember-duration': p.duration,
+            '--ember-delay': p.delay,
+            '--ember-opacity': p.opacity,
+            '--ember-drift': p.drift,
+          } as React.CSSProperties}
+        />
+      ))}
 
-          <div className="space-y-4">
-            <div className="flex gap-3 items-center">
-              <span className="text-[#9a8860] text-xs uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Cinzel, serif' }}>Gemini 2.5 Key</span>
-              <Input
-                type="password"
-                placeholder="AIza... — aistudio.google.com"
-                value={geminiKey}
-                onChange={e => setGeminiKey(e.target.value)}
-                className="flex-1 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30]"
-              />
-              <Badge className="bg-[#0a2820] text-[#40c0a0] border-[#208060]">AI</Badge>
-            </div>
-          </div>
-
-          <p className="text-[#5a4d30] text-xs text-center mt-4 italic">
-            Key auto-saves to browser memory · Direct browser calls to Gemini
-          </p>
-          
-          {/* Help Link */}
-          <div className="text-center mt-4">
-            <a href="/rulebook" className="text-[#40a070] text-sm hover:text-[#60e0a0] transition-colors inline-flex items-center gap-1" style={{ fontFamily: 'Cinzel, serif' }}>
-              <BookOpen className="w-4 h-4" />
-              How to Play (Player's Guide)
-            </a>
-          </div>
-
-          <div className="flex gap-3 mt-6 justify-center flex-wrap">
-            <Button
-              onClick={startNewCampaign}
-              disabled={!geminiKey}
-              className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860] border border-[#7a5f20] px-8 py-3"
-              style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.17em' }}
+      {/* ═══ MAIN CONTENT (z-10, above particles) ═══ */}
+      <div className="relative z-10 w-full max-w-2xl">
+        {/* Title Section */}
+        <div className="text-center mb-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
+            className="mb-4"
+          >
+            <span
+              className="inline-block text-5xl sm:text-6xl"
+              style={{
+                filter: 'drop-shadow(0 0 12px rgba(212,175,55,0.4))',
+                animation: 'pulse-glow 3s infinite',
+              }}
             >
-              ⚔ Begin New Campaign ⚔
-            </Button>
+              ✦
+            </span>
+          </motion.div>
 
-            {saveSlots.length > 0 && (
-              <Button
-                onClick={() => setShowLoadDialog(true)}
-                variant="outline"
-                className="border-[#5a4018] text-[#9a8860] hover:bg-[#1a1205] px-6 py-3"
-                style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.1em' }}
+          <motion.h1
+            className="flex justify-center flex-wrap"
+            style={{ fontFamily: '"Cinzel Decorative", serif' }}
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: {},
+              visible: { transition: { staggerChildren: 0.04 } },
+            }}
+          >
+            {titleLetters.map((char, i) => (
+              <motion.span
+                key={i}
+                className="inline-block"
+                style={{
+                  fontSize: 'clamp(1.4rem, 2.5vw, 2.2rem)',
+                  color: '#f0c860',
+                  letterSpacing: '0.16em',
+                  textShadow: '0 0 10px rgba(200,160,60,0.2)',
+                }}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: {
+                    opacity: 1,
+                    y: 0,
+                    transition: {
+                      delay: i * 0.04,
+                      duration: 0.4,
+                      ease: 'easeOut',
+                    },
+                  },
+                }}
               >
-                <Upload className="w-4 h-4 mr-2" /> Load Save
-              </Button>
-            )}
-          </div>
-
-          {/* Enhanced Features Preview */}
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { icon: <Users className="w-5 h-5" />, label: 'Party Selection', desc: 'Choose your heroes' },
-              { icon: <Package className="w-5 h-5" />, label: 'Inventory System', desc: 'Artifacts & potions' },
-              { icon: <ScrollText className="w-5 h-5" />, label: 'Quest Tracking', desc: 'Main & side quests' },
-              { icon: <Save className="w-5 h-5" />, label: 'Save/Load', desc: 'Multiple slots' }
-            ].map((feature, i) => (
-              <div key={i} className="text-center p-3 bg-[#181208] border border-[#2e2008] rounded">
-                <div className="text-[#c9a84c] mb-1">{feature.icon}</div>
-                <div className="text-xs text-[#9a8860]" style={{ fontFamily: 'Cinzel, serif' }}>{feature.label}</div>
-                <div className="text-[10px] text-[#5a4d30]">{feature.desc}</div>
-              </div>
+                {char === ' ' ? '\u00A0' : char}
+              </motion.span>
             ))}
-          </div>
-        </CardContent>
-      </Card>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2, duration: 0.6 }}
+            style={{
+              fontFamily: 'Cinzel, serif',
+              fontSize: '.75rem',
+              color: '#9a8860',
+              letterSpacing: '.25em',
+              textTransform: 'uppercase',
+            }}
+            className="mt-3"
+          >
+            {subtitleText}
+          </motion.p>
+        </div>
+
+        {/* Main Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0, duration: 0.5 }}
+        >
+          <Card className="w-full bg-[#110d07]/90 backdrop-blur-sm border-[#2e2008]">
+            <CardContent className="p-6">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.5 }}
+                className="text-[#9a8860] text-center mb-6 italic leading-relaxed"
+                style={{ fontFamily: '"IM Fell English", serif' }}
+              >
+                There is an object. It has had several names. The people who found it gave it names the way people give names to things they cannot explain: carefully, with a kind of reverence that is indistinguishable from fear.
+                <br /><br />
+                Each time a new campaign begins, the object has a different name. Each time, the gods react differently. Each time, the heroes are different, and what they lose along the way is different.
+                <br /><br />
+                The gods do not play fair. The stories do not end cleanly. And sometimes, the prophecy chooses the wrong hero on purpose.
+                <br /><br />
+                <span className="text-[#7a5f20] not-italic text-sm" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.15em' }}>
+                  ✦ Created by the imagination of JeTZone2k26 ✦
+                </span>
+                <br />
+                <span className="text-[#5a4d30] not-italic text-xs" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.1em' }}>
+                  v{version}
+                </span>
+                <br />
+                <span className="text-[#c9a84c] not-italic" style={{ fontFamily: 'Cinzel, serif', fontSize: '.8rem', letterSpacing: '.1em' }}>
+                  Enter your keys. Let the story begin.
+                </span>
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.4, duration: 0.4 }}
+                className="space-y-4"
+              >
+                <div className="flex gap-3 items-center">
+                  <span className="text-[#9a8860] text-xs uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Cinzel, serif' }}>Gemini 2.5 Key</span>
+                  <Input
+                    type="password"
+                    placeholder="AIza... — aistudio.google.com"
+                    value={geminiKey}
+                    onChange={e => setGeminiKey(e.target.value)}
+                    className="flex-1 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30]"
+                  />
+                  <Badge className="bg-[#0a2820] text-[#40c0a0] border-[#208060]">AI</Badge>
+                </div>
+              </motion.div>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5, duration: 0.4 }}
+                className="text-[#5a4d30] text-xs text-center mt-4 italic"
+              >
+                Key auto-saves to browser memory · Direct browser calls to Gemini
+              </motion.p>
+
+              {/* Help Link */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.5, duration: 0.4 }}
+                className="text-center mt-4"
+              >
+                <a href="/rulebook" className="text-[#40a070] text-sm hover:text-[#60e0a0] transition-colors inline-flex items-center gap-1" style={{ fontFamily: 'Cinzel, serif' }}>
+                  <BookOpen className="w-4 h-4" />
+                  How to Play (Player&apos;s Guide)
+                </a>
+              </motion.div>
+
+              {/* ═══ DRAMATIC BEGIN BUTTON ═══ */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.8, duration: 0.5 }}
+                className="flex gap-3 mt-6 justify-center flex-wrap"
+              >
+                <Button
+                  onClick={startNewCampaign}
+                  disabled={!geminiKey}
+                  className="btn-begin-legend bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860] border border-[#7a5f20] px-8 sm:px-12 py-3 sm:py-4 text-sm sm:text-base transition-all disabled:opacity-40 disabled:animate-none"
+                  style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.17em' }}
+                >
+                  ⚔ Begin Your Legend ⚔
+                </Button>
+
+                {saveSlots.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 2.1, duration: 0.4 }}
+                  >
+                    <Button
+                      onClick={() => setShowLoadDialog(true)}
+                      variant="outline"
+                      className="border-[#5a4018] text-[#9a8860] hover:bg-[#1a1205] px-6 py-3"
+                      style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.1em' }}
+                    >
+                      <Upload className="w-4 h-4 mr-2" /> Load Save
+                    </Button>
+                  </motion.div>
+                )}
+              </motion.div>
+
+              {/* ═══ FEATURE GRID — Stagger entrance ═══ */}
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: {},
+                  visible: { transition: { staggerChildren: 0.1 } },
+                }}
+                className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3"
+              >
+                {features.map((feature, i) => (
+                  <motion.div
+                    key={i}
+                    variants={{
+                      hidden: { opacity: 0, y: 15 },
+                      visible: {
+                        opacity: 1,
+                        y: 0,
+                        transition: {
+                          delay: 2.0 + i * 0.1,
+                          duration: 0.4,
+                          ease: 'easeOut',
+                        },
+                      },
+                    }}
+                    className="text-center p-3 bg-[#181208] border border-[#2e2008] rounded"
+                  >
+                    <div className="text-[#c9a84c] mb-1">{feature.icon}</div>
+                    <div className="text-xs text-[#9a8860]" style={{ fontFamily: 'Cinzel, serif' }}>{feature.label}</div>
+                    <div className="text-[10px] text-[#5a4d30]">{feature.desc}</div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   )
 }
