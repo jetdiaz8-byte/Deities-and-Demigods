@@ -1,6 +1,6 @@
 {
   "name": "deities-and-demigods",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3000 2>&1 | tee dev.log",
@@ -93,6 +93,6 @@
     "eslint-config-next": "^16.1.1",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.5",
-    "typescript": "^5"
+    "typescript": "^6.0.2"
   }
 }

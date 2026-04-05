@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sword, Users, Sparkles, SkipForward, Shield, Wand2, Footprints, MessageSquare, Heart, Target, Lock } from 'lucide-react'
+import { Sword, Users, Sparkles, SkipForward, Shield, Wand2, Footprints, MessageSquare, Heart, Target, Lock, Zap } from 'lucide-react'
 import type { GameState, GameOption } from '@/lib/gameTypes'
 import { InteractiveDiceRoller } from './InteractiveDiceRoller'
 import { motion } from 'framer-motion'
@@ -209,6 +209,55 @@ export function ChoicePanel({
           <span className="corner-bl" />
           <span className="corner-br" />
         {/* ═══════════════════════════════════════════════════════════════════════
+            OUTCOME TIER DISPLAY
+            ═══════════════════════════════════════════════════════════════════════ */}
+        {gameState.lastOutcomeTier && (
+          <div className={`text-center py-2 px-4 rounded-lg mb-3 ${
+            gameState.lastOutcomeTier === 'critical_success' ? 'bg-gradient-to-r from-[rgba(212,175,55,.2)] to-[rgba(160,120,20,.1)] border border-[#d4af37] text-[#ffd700]' :
+            gameState.lastOutcomeTier === 'full_success' ? 'bg-gradient-to-r from-[rgba(34,197,94,.15)] to-[rgba(34,197,94,.05)] border border-[#22c55e] text-[#4ade80]' :
+            gameState.lastOutcomeTier === 'partial_success' ? 'bg-gradient-to-r from-[rgba(245,158,11,.15)] to-[rgba(245,158,11,.05)] border border-[#f59e0b] text-[#fbbf24]' :
+            gameState.lastOutcomeTier === 'miss' ? 'bg-gradient-to-r from-[rgba(239,68,68,.15)] to-[rgba(239,68,68,.05)] border border-[#ef4444] text-[#f87171]' :
+            'bg-gradient-to-r from-[rgba(160,80,200,.15)] to-[rgba(160,80,200,.05)] border border-[#a050c8] text-[#c090e0]'
+          }`}>
+            {gameState.lastOutcomeTier === 'critical_success' ? '✦ CRITICAL SUCCESS ✦' :
+             gameState.lastOutcomeTier === 'full_success' ? '✦ SUCCESS ✦' :
+             gameState.lastOutcomeTier === 'partial_success' ? '⚡ PARTIAL SUCCESS — Success at a cost' :
+             gameState.lastOutcomeTier === 'miss' ? '✗ MISS — The world pushes back' :
+             '◉ CONSEQUENCES'}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            FATE POINTS BAR
+            ═══════════════════════════════════════════════════════════════════════ */}
+        {gameState.fatePoints > 0 && (
+          <div className="flex items-center gap-2 mb-3 px-2 py-1.5 rounded bg-[rgba(100,50,150,.1)] border border-[rgba(150,100,200,.2)]">
+            <Sparkles className="w-4 h-4 text-purple-400" />
+            <span className="text-xs text-purple-300 font-title">FATE POINTS: {gameState.fatePoints}/5</span>
+            {gameState.aspects.length > 0 && (
+              <span className="text-[10px] text-purple-400/60 ml-auto">
+                {gameState.aspects.slice(0, 2).map(a => a.name).join(' · ')}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
+            STAMINA BAR
+            ═══════════════════════════════════════════════════════════════════════ */}
+        {gameState.stamina < gameState.maxStamina && (
+          <div className="flex items-center gap-2 mb-2 px-2">
+            <Zap className="w-3 h-3 text-[#80a060]" />
+            <span className="text-[10px] text-[#80a060] font-title">STAMINA</span>
+            <div className="flex-1 h-2 bg-[#1a1a10] rounded-full overflow-hidden border border-[#2a3020]">
+              <div className="h-full bg-gradient-to-r from-[#406030] to-[#60a040] rounded-full transition-all duration-300"
+                style={{ width: `${(gameState.stamina / gameState.maxStamina) * 100}%` }} />
+            </div>
+            <span className="text-[10px] text-[#608040]">{gameState.stamina}/{gameState.maxStamina}</span>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════════
             PC ACTIONS — 3 context-aware choices
             ═══════════════════════════════════════════════════════════════════════ */}
         <div>
@@ -354,6 +403,7 @@ export function ChoicePanel({
               const actualIdx = idx + 3
               const isRival = opt.source === 'archrival_summon'
               const isSkip = opt.ability === 'skip'
+              const isFateInvoke = opt.ability === 'invoke_aspect'
               return (
                 <div
                   key={actualIdx}
@@ -373,17 +423,35 @@ export function ChoicePanel({
                         : 'border border-dashed border-[#3a3020] bg-[#0d0a08] hover:border-[#5a4d30]'
                     }`}
                 >
-                  <div className={`font-bold font-title text-lg w-8 text-center ${isRival ? 'text-[#c05050]' : 'text-[#5a4d30]'}`}>
-                    {isRival ? '⚡' : isSkip ? '⏭' : opt.num}
+                  <div className={`font-bold font-title text-lg w-8 text-center ${isRival ? 'text-[#c05050]' : isFateInvoke ? 'text-[#a060d0]' : 'text-[#5a4d30]'}`}>
+                    {isRival ? '⚡' : isFateInvoke ? '✦' : isSkip ? '⏭' : opt.num}
                   </div>
                   <div className="flex-1">
                     <div className={`font-narrative ${isRival ? 'text-[#d09090]' : isSkip ? 'text-[#7a6a50]' : 'text-[#b08050]'}`}>{opt.action}</div>
                   </div>
                   {isRival && <Sparkles className="w-5 h-5 text-[#c05050]" />}
                   {isSkip && <SkipForward className="w-5 h-5 text-[#5a4d30]" />}
+                  {isFateInvoke && <Sparkles className="w-5 h-5 text-[#a060d0]" />}
                 </div>
               )
             })}
+
+            {/* ═══════════════════════════════════════════════════════════════════════
+                CUSTOM ACTION INPUT — Fate Point info
+                ═══════════════════════════════════════════════════════════════════════ */}
+            {gameState.fatePoints > 0 && (
+              <div className="mt-2 p-2 rounded border border-dashed border-[#6040a0] bg-[rgba(60,20,100,.08)]">
+                <div className="text-[10px] text-purple-400/60 font-title uppercase tracking-wider mb-1">
+                  ✦ Free Action — Spend 1 Fate Point
+                </div>
+                <div className="text-[9px] text-purple-400/40 italic mb-1.5">
+                  Your aspects: {gameState.aspects.slice(0, 3).map(a => `"${a.name}"`).join(', ') || 'None yet'}
+                </div>
+                <div className="text-[9px] text-purple-300/50">
+                  Select "✦ Invoke Aspect" above to spend a Fate Point for +2 to your next roll.
+                </div>
+              </div>
+            )}
           </div>
         )}
 

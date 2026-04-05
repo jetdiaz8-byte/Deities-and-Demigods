@@ -4,12 +4,12 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import type {
   ProphecyState, Ability, Item, Quest, Injury, Entity, ShardEvent, DiceRoll, DamageDealt,
   StateUpdate, DMResponse, GameOption, SaveSlot, GameState, AntagonistClue, SuccessRateFactors,
-  GreaterGodData, ShardType, InjuryTemplate
+  GreaterGodData, ShardType, InjuryTemplate, PlayerSkills, Aspect
 } from '@/lib/gameTypes'
-import { ACTS } from '@/lib/gameTypes'
+import { ACTS, SKILL_ABILITY_MAP } from '@/lib/gameTypes'
 import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES } from '@/lib/gameConstants'
 import { createInitialState } from '@/lib/gameState'
-import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity } from '@/lib/gameHelpers'
+import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, fullStaminaRestore, assignSkillProficiencies } from '@/lib/gameHelpers'
 import { getRandomHeroes } from '@/lib/fallbackEntities'
 import { KRYNN_HEROES, KRYNN_DEMIGODS } from '@/lib/krynnCharacters'
 import { PROPHECIES, rollProphecies, getProphecyById, Prophecy } from '@/lib/prophecyData'
@@ -651,7 +651,36 @@ export function useGameEngine() {
       // Companion System
       companionId: companion?.id || null,
       companionAffinity: 50,
-      companionMood: 'loyal'
+      companionMood: 'loyal',
+      // ═════════════════════════════════════════════════════════════════════
+      // D&D 5e SKILL SYSTEM — Auto-assign proficiencies at party creation
+      // ═════════════════════════════════════════════════════════════════════
+      ...(function() {
+        const { skills: pcSkills, proficiencies } = assignSkillProficiencies(mainPC)
+        return {
+          skills: pcSkills,
+          skillProficiencies: proficiencies
+        }
+      })(),
+      // ═════════════════════════════════════════════════════════════════════
+      // FATE CORE — Generate starting aspects
+      // ═════════════════════════════════════════════════════════════════════
+      aspects: generateStartingAspects(mainPC),
+      fatePoints: 3,
+      fatePointHistory: [],
+      customActionPending: null,
+      // ═════════════════════════════════════════════════════════════════════
+      // DARK SOULS — Stamina from CON
+      // ═════════════════════════════════════════════════════════════════════
+      ...(function() {
+        const conScore = getAbilityScore(mainPC, 'con')
+        const stam = calculateStamina(conScore)
+        return {
+          stamina: stam.maxStamina,
+          maxStamina: stam.maxStamina,
+          staminaRegenRate: stam.regenRate
+        }
+      })()
     }
 
     setGameState(newGameState)
@@ -814,6 +843,31 @@ CRITICAL RULES:
     - Party Bonus: +${gs.partyBonus}% | Prophecy: +${gs.prophecyBonus}% | Allies: +${gs.allyBonus}%
     - Renown: +${gs.renownBonus}% | Power: +${gs.powerBonus}% | Alignment: ${gs.alignmentBonus >= 0 ? '+' : ''}${gs.alignmentBonus}% | Mythical: +${gs.mythicalImpactBonus}%
     - The party's choices and achievements affect their chance of victory
+16. **PbTA OUTCOME TIERS** — Every player action MUST have an outcome_tier:
+    - "critical_success" (natural 20 or exceptional): Full success + bonus (extra damage, discover hidden thing, enemy fumbles)
+    - "full_success" (roll 10+): The player gets what they want, cleanly
+    - "partial_success" (roll 7-9): Success at a cost — "Yes, but..." (take damage, use a resource, enemy gets advantage)
+    - "miss" (roll 6 or less): "No, and..." — things get worse (take damage, enemy acts, lose a resource)
+    - ALWAYS include "outcome_tier" in the JSON response. This is MANDATORY.
+    - NEVER make a turn boring. Even failure must be interesting and advance the story.
+17. **PARAGON/RENEGADE POINTS** (Mass Effect):
+    - Track moral choices: "paragon_delta" (+1 to +3) for diplomatic/honorable actions
+    - "renegade_delta" (+1 to +3) for ruthless/pragmatic actions
+    - Include whichever is relevant in the JSON response. Can be 0 for neutral actions.
+    - These accumulate over the campaign and affect ending.
+    - Current paragon: ${gs.paragonPoints} | Current renegade: ${gs.renegadePoints} | Morality: ${gs.moralityQuotient >= 0 ? '+' : ''}${gs.moralityQuotient}
+18. **ASPECT TRACKING** (Fate Core):
+    - When the player spends a Fate Point to invoke an aspect, they get +2 to a roll or reroll, AND the narrative must reflect the aspect.
+    - Earn Fate Points: when aspects COMPLICATE the story (trouble aspect triggers), award +1 FP via paragon_delta or narration.
+    - Max 5 Fate Points. Player starts each scene with refresh if below 3.
+    - If the narrative would logically award or change an aspect, include "new_aspect": A new aspect name the player earns.
+    - Current Fate Points: ${gs.fatePoints}/5
+    - Active Aspects: ${gs.aspects.map(a => `${a.name} (${a.type})`).join(', ') || 'None yet'}
+19. **STAMINA SYSTEM** (Dark Souls):
+    - The PC has stamina that limits actions in combat. Current: ${gs.stamina}/${gs.maxStamina} (regen ${gs.staminaRegenRate}/turn)
+    - Attack costs 2 stamina, Defend costs 1, Special abilities cost 3
+    - If stamina is insufficient, the action fails or is weakened
+    - Stamina regenerates each turn by ${gs.staminaRegenRate}
 ${journeySection}${historySection}
 ═══════════════════════════════════════════════════════════════════════════
 THE SHARD — ${shard?.name} [${shard?.pantheon || 'Unknown'} Pantheon]
@@ -865,7 +919,7 @@ PARTY (ALL HUMAN-CONTROLLED):
 ${partyState}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (the prose you wrote - 1 paragraph for regular turns, full prose for opening)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}]}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (the prose you wrote - 1 paragraph for regular turns, full prose for opening)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"new_aspect":"string|null"}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -1172,31 +1226,46 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     
     if (inCombat) {
       // ── COMBAT MODE ──────────────────────────────────────────────
-      // Tactical options when enemies are present
+      // Tactical options when enemies are present (with stamina costs)
+      const stam = gameState.stamina
+      const canAttack = stam >= 2
+      const canDefend = stam >= 1
+      const canSpecial = stam >= 3
+
       pcOptions.push(
         { 
           num: 1, 
-          action: `⚔️ Attack — Strike at the nearest enemy with your weapon`, 
+          action: canAttack 
+            ? `⚔️ Attack — Strike at the nearest enemy with your weapon (⚡2)` 
+            : `⚔️ Attack — Too exhausted to attack [Stamina: ${stam}]`, 
           ability: 'melee_attack',
-          align_note: 'standard attack',
+          align_note: canAttack ? 'standard attack · ⚡2 stamina' : '[Not enough stamina]',
           source: 'pc'
         },
         { 
           num: 2, 
           action: companion 
-            ? `🛡️ Defend — Protect ${companion.name.split(' ')[0]} and brace for incoming attacks` 
-            : '🛡️ Defend — Raise your guard and brace for impact', 
+            ? (canDefend
+              ? `🛡️ Defend — Protect ${companion.name.split(' ')[0]} and brace for incoming attacks (⚡1)`
+              : `🛡️ Defend — Too exhausted to defend [Stamina: ${stam}]`)
+            : (canDefend
+              ? '🛡️ Defend — Raise your guard and brace for impact (⚡1)'
+              : '🛡️ Defend — Too exhausted to defend [Stamina: ${stam}]'),
           ability: 'defend',
-          align_note: 'protective stance +2 AC',
+          align_note: canDefend ? 'protective stance +2 AC · ⚡1 stamina' : '[Not enough stamina]',
           source: 'pc'
         },
         { 
           num: 3, 
-          action: ab.length > 0
-            ? `✨ ${ab[0].split('(')[0].trim()} — Unleash your signature power`
-            : '✨ Channel Power — Draw on your divine essence',
+          action: canSpecial
+            ? (ab.length > 0
+              ? `✨ ${ab[0].split('(')[0].trim()} — Unleash your signature power (⚡3)`
+              : '✨ Channel Power — Draw on your divine essence (⚡3)')
+            : (ab.length > 0
+              ? `✨ ${ab[0].split('(')[0].trim()} — Too exhausted for special abilities [Stamina: ${stam}]`
+              : `✨ Channel Power — Too exhausted [Stamina: ${stam}]`),
           ability: ab[0] || 'innate_power',
-          align_note: 'special ability',
+          align_note: canSpecial ? 'special ability · ⚡3 stamina' : '[Not enough stamina]',
           source: 'pc'
         }
       )
@@ -1355,12 +1424,23 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       })
     }
     
+    // Fate Point invoke — free action option
+    if (gameState.fatePoints > 0 && gameState.aspects.length > 0) {
+      extraOptions.push({
+        num: 8,
+        action: `✦ Invoke Aspect — Spend 1 Fate Point to invoke "${gameState.aspects[0].name}" for +2 to your next roll`,
+        ability: 'invoke_aspect',
+        align_note: `✦ ${gameState.fatePoints} FP remaining`,
+        source: 'pc'
+      })
+    }
+    
     return { pcOptions, compOptions, extraOptions }
   }
 
   // ── APPLY MECHANICS ────────────────────────────────────────────────────
   const applyMechanics = async (res: DMResponse, gs: GameState): Promise<GameState> => {
-    const newGS = { ...gs }
+    let newGS = { ...gs }
 
     if (res.story_summary) newGS.storySummary = res.story_summary
     if (res.journey_so_far) newGS.journeySoFar = res.journey_so_far
@@ -1815,6 +1895,114 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     newGS.companionAffinityBonus = successUpdate.breakdown.companionAffinity
     newGS.injuryPenaltyBonus = successUpdate.breakdown.injury
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PbtA OUTCOME TIER — Process outcome from DM response
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (res.outcome_tier) {
+      newGS.lastOutcomeTier = res.outcome_tier
+      newGS.outcomeHistory = [...newGS.outcomeHistory, {
+        turn: newGS.turn,
+        tier: res.outcome_tier,
+        description: res.dm_narration?.slice(0, 100) || ''
+      }]
+
+      // Apply tier-specific mechanical effects
+      if (res.outcome_tier === 'partial_success') {
+        // Success at a cost: -1 HP to random living PC, or reduce a potion charge
+        const livingPCs = newGS.pcs.filter(p => !p.dead)
+        if (livingPCs.length > 0) {
+          const target = livingPCs[Math.floor(Math.random() * livingPCs.length)]
+          const targetIdx = newGS.pcs.findIndex(p => p.id === target.id)
+          if (targetIdx >= 0) {
+            const updatedPc = { ...newGS.pcs[targetIdx] }
+            updatedPc.hp = Math.max(1, updatedPc.hp - 1) // Minimum 1 HP loss
+            newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
+          }
+        }
+      } else if (res.outcome_tier === 'miss') {
+        // Failure costs more: -5 HP to random PC
+        const livingPCs = newGS.pcs.filter(p => !p.dead)
+        if (livingPCs.length > 0) {
+          const target = livingPCs[Math.floor(Math.random() * livingPCs.length)]
+          const targetIdx = newGS.pcs.findIndex(p => p.id === target.id)
+          if (targetIdx >= 0) {
+            const updatedPc = { ...newGS.pcs[targetIdx] }
+            updatedPc.hp = Math.max(1, updatedPc.hp - 5)
+            if (updatedPc.hp <= 0) {
+              updatedPc.dead = true
+              soundEvents.emit({ type: 'death' })
+            }
+            newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
+          }
+        }
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MASS EFFECT PARAGON/RENEGADE — Process morality from DM response
+    // ═══════════════════════════════════════════════════════════════════════════
+    let paragonDelta = (res.paragon_delta ?? 0) as number
+    let renegadeDelta = 0
+    // Check for renegade_delta if it exists in the response
+    const rawRes = res as unknown as Record<string, unknown>
+    if (rawRes.renegade_delta && typeof rawRes.renegade_delta === 'number') {
+      renegadeDelta = rawRes.renegade_delta
+    }
+
+    if (paragonDelta > 0 || renegadeDelta > 0) {
+      const newParagon = newGS.paragonPoints + paragonDelta
+      const newRenegade = newGS.renegadePoints + renegadeDelta
+      newGS.paragonPoints = newParagon
+      newGS.renegadePoints = newRenegade
+      newGS.moralityQuotient = Math.max(-100, Math.min(100, newParagon - newRenegade))
+
+      // Log milestone every 10 points
+      const prevMilestone = Math.floor((newGS.paragonPoints - paragonDelta) / 10)
+      const newMilestone = Math.floor(newGS.paragonPoints / 10)
+      if (newMilestone > prevMilestone) {
+        newGS.interruptHistory = [...newGS.interruptHistory, {
+          turn: newGS.turn,
+          type: 'paragon' as const,
+          description: `Paragon milestone reached: ${newGS.paragonPoints} points`
+        }]
+      }
+      const prevRenMilestone = Math.floor((newGS.renegadePoints - renegadeDelta) / 10)
+      const newRenMilestone = Math.floor(newGS.renegadePoints / 10)
+      if (newRenMilestone > prevRenMilestone) {
+        newGS.interruptHistory = [...newGS.interruptHistory, {
+          turn: newGS.turn,
+          type: 'renegade' as const,
+          description: `Renegade milestone reached: ${newGS.renegadePoints} points`
+        }]
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FATE CORE — Process new aspects from DM response
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (res.new_aspect && typeof res.new_aspect === 'string' && res.new_aspect.length > 0) {
+      const newAspect: Aspect = {
+        name: toAscii(res.new_aspect),
+        type: 'earned',
+        invokes: 0,
+        fate_points_spent: 0,
+        description: `Earned through actions on Turn ${newGS.turn}`
+      }
+      newGS = addAspect(newGS, newAspect)
+      // Also award a fate point for earning an aspect
+      newGS = earnFatePoint(newGS, `Earned aspect: ${newAspect.name}`)
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DARK SOULS — Stamina regeneration after turn resolution
+    // ═══════════════════════════════════════════════════════════════════════════
+    newGS = regenStamina(newGS)
+
+    // Fate Point refresh: if below 3 at start of new turn, refresh to 3
+    if (newGS.fatePoints < 3) {
+      newGS = earnFatePoint(newGS, 'Scene refresh — fate replenishes')
+    }
+
     // ── TRIM LOG — prevent unbounded memory growth ─────────────────────
     if (newGS.log.length > 200) {
       newGS.log = newGS.log.slice(-150)
@@ -2085,6 +2273,50 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     // Store the exact displayed narrative for TTS - MUST match what's rendered
     const displayedText = paragraphs.slice(0, 12).join(' ')
     setDisplayedNarrative(displayedText)
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // OUTCOME TIER BANNER — PbtA visual feedback
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (gs.lastOutcomeTier) {
+      const tierStyles: Record<string, { bg: string; border: string; color: string; text: string }> = {
+        critical_success: { bg: 'rgba(212,175,55,.15)', border: '#d4af37', color: '#ffd700', text: '✦ CRITICAL SUCCESS ✦' },
+        full_success: { bg: 'rgba(34,197,94,.12)', border: '#22c55e', color: '#4ade80', text: '✦ SUCCESS ✦' },
+        partial_success: { bg: 'rgba(245,158,11,.12)', border: '#f59e0b', color: '#fbbf24', text: '⚡ PARTIAL SUCCESS — Success at a cost' },
+        miss: { bg: 'rgba(239,68,68,.12)', border: '#ef4444', color: '#f87171', text: '✗ MISS — The world pushes back' },
+        consequences: { bg: 'rgba(160,80,200,.12)', border: '#a050c8', color: '#c090e0', text: '◉ CONSEQUENCES' }
+      }
+      const style = tierStyles[gs.lastOutcomeTier] || tierStyles.full_success
+      html += `<div style="text-align:center;padding:.6rem 1rem;margin:.8rem 0;border:1px solid ${style.border};background:${style.bg};border-radius:5px">
+        <div style="font-family:'Cinzel Decorative',serif;font-size:.9rem;color:${style.color};letter-spacing:.12em">${style.text}</div>
+      </div>`
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MORALITY SHIFT — Paragon/Renegade display
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (res.paragon_delta && res.paragon_delta > 0) {
+      html += `<div style="text-align:center;padding:.3rem .8rem;margin:.3rem 0;border:1px solid rgba(80,140,220,.3);background:rgba(80,140,220,.08);border-radius:4px">
+        <span style="color:#60a0e0;font-family:Cinzel,serif;font-size:.8rem;letter-spacing:.08em">+${res.paragon_delta} Paragon</span>
+      </div>`
+    }
+    const renegadeDeltaVal = (res as unknown as Record<string, unknown>).renegade_delta
+    if (renegadeDeltaVal && typeof renegadeDeltaVal === 'number' && renegadeDeltaVal > 0) {
+      html += `<div style="text-align:center;padding:.3rem .8rem;margin:.3rem 0;border:1px solid rgba(220,60,60,.3);background:rgba(220,60,60,.08);border-radius:4px">
+        <span style="color:#e06060;font-family:Cinzel,serif;font-size:.8rem;letter-spacing:.08em">+${renegadeDeltaVal} Renegade</span>
+      </div>`
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // NEW ASPECT NOTIFICATION
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (res.new_aspect && typeof res.new_aspect === 'string' && res.new_aspect.length > 0) {
+      html += `<div style="text-align:center;padding:.5rem .8rem;margin:.5rem 0;border:1px dashed rgba(150,100,200,.4);background:rgba(100,50,150,.08);border-radius:4px">
+        <div style="font-family:Cinzel,serif;font-size:.75rem;color:#9070b0;letter-spacing:.08em">✦ NEW ASPECT EARNED ✦</div>
+        <div style="color:#c0a0e0;font-size:.9rem;font-style:italic;margin-top:.2rem">"${toAscii(res.new_aspect)}"</div>
+      </div>`
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
     
     // Update conversation history for persistent DM memory
     if (res.dm_narration && res.dm_narration.length > 30) {
@@ -2626,6 +2858,29 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         ...gs.abilityCooldowns,
         [compCdKey]: { ability: compChosen.ability, turnsLeft: 3, totalTurns: 3 }
       }
+    }
+
+    // ── STAMINA COST — Deduct stamina for combat actions ─────────────────
+    if (chosen?.ability === 'melee_attack') {
+      gs.stamina = Math.max(0, gs.stamina - 2)
+    } else if (chosen?.ability === 'defend') {
+      gs.stamina = Math.max(0, gs.stamina - 1)
+    } else if (chosen?.ability !== 'skip' && chosen?.ability !== 'invoke_aspect' && chosen?.source !== 'archrival_summon') {
+      // Special abilities cost 3 stamina
+      gs.stamina = Math.max(0, gs.stamina - 3)
+    }
+
+    // ── FATE POINT — Spend FP when invoking aspect ──────────────────────────
+    if (chosen?.ability === 'invoke_aspect' && gs.fatePoints > 0 && gs.aspects.length > 0) {
+      const invokeGS = spendFatePoint(gs, gs.aspects[0].name, `Invoked "${gs.aspects[0].name}" for +2 to next roll`)
+      gs.fatePoints = invokeGS.fatePoints
+      gs.aspects = invokeGS.aspects
+      gs.fatePointHistory = invokeGS.fatePointHistory
+      toast({
+        title: `✦ ${gs.aspects[0].name} Invoked`,
+        description: `Spent 1 Fate Point. +2 to your next roll. ${gs.fatePoints} FP remaining.`,
+        duration: 3000
+      })
     }
 
     setGameState(gs)

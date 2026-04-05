@@ -112,4 +112,41 @@ export const createInitialState = (): GameState => ({
   // ABILITY COOLDOWN SYSTEM
   // ═══════════════════════════════════════════════════════════════════════════
   abilityCooldowns: {},
+  // ═══════════════════════════════════════════════════════════════════════════
+  // D&D 5e FORMAL SKILL SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+  skills: {
+    athletics: 0, intimidation: 0,
+    acrobatics: 0, sleight_of_hand: 0, stealth: 0,
+    arcana: 0, history: 0, investigation: 0, nature: 0, religion: 0,
+    animal_handling: 0, insight: 0, medicine: 0, perception: 0, survival: 0,
+    deception: 0, performance: 0, persuasion: 0
+  },
+  skillProficiencies: [],
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FATE CORE — ASPECTS + FATE POINTS
+  // ═══════════════════════════════════════════════════════════════════════════
+  aspects: [],
+  fatePoints: 3,
+  fatePointHistory: [],
+  customActionPending: null,
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PbtA PARTIAL SUCCESS OUTCOMES
+  // ═══════════════════════════════════════════════════════════════════════════
+  lastOutcomeTier: null,
+  outcomeHistory: [],
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DARK SOULS — STAMINA & BONFIRE SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+  stamina: 10,
+  maxStamina: 10,
+  staminaRegenRate: 3,
+  bonfireRestCount: 0,
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MASS EFFECT — PARAGON/RENEGADE MORALITY
+  // ═══════════════════════════════════════════════════════════════════════════
+  paragonPoints: 0,
+  renegadePoints: 0,
+  moralityQuotient: 0,
+  interruptHistory: [],
 })

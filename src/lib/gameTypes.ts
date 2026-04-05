@@ -151,6 +151,57 @@ export interface DMResponse {
   tension_note?: string
   item_drops?: Item[]
   quest_updates?: Quest[]
+  outcome_tier?: 'critical_success' | 'full_success' | 'partial_success' | 'miss' | null
+  paragon_delta?: number
+  new_aspect?: string | null
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// D&D 5e FORMAL SKILL SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════
+export interface PlayerSkills {
+  // STR skills
+  athletics: number          // 0 = no proficiency, +2 = proficient, +3 = expert
+  intimidation: number       // Actually CHA-based but grouped
+  // DEX skills
+  acrobatics: number
+  sleight_of_hand: number
+  stealth: number
+  // INT skills
+  arcana: number
+  history: number
+  investigation: number
+  nature: number
+  religion: number
+  // WIS skills
+  animal_handling: number
+  insight: number
+  medicine: number
+  perception: number
+  survival: number
+  // CHA skills
+  deception: number
+  performance: number
+  persuasion: number
+}
+
+export const SKILL_ABILITY_MAP: Record<keyof PlayerSkills, string> = {
+  athletics: 'str', intimidation: 'cha',
+  acrobatics: 'dex', sleight_of_hand: 'dex', stealth: 'dex',
+  arcana: 'int', history: 'int', investigation: 'int', nature: 'int', religion: 'int',
+  animal_handling: 'wis', insight: 'wis', medicine: 'wis', perception: 'wis', survival: 'wis',
+  deception: 'cha', performance: 'cha', persuasion: 'cha'
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FATE CORE — ASPECTS
+// ═══════════════════════════════════════════════════════════════════════════
+export interface Aspect {
+  name: string              // "Blood of the Ancient Kings"
+  type: 'high_concept' | 'trouble' | 'situation' | 'character' | 'earned'
+  invokes: number           // Times successfully invoked
+  fate_points_spent: number // Total FP spent on this aspect
+  description?: string
 }
 
 export interface GameOption {
@@ -264,6 +315,37 @@ export interface GameState {
   totalTestOfFaith: number             // How many offered this campaign
   // ABILITY COOLDOWN SYSTEM
   abilityCooldowns: { [key: string]: { ability: string; turnsLeft: number; totalTurns: number } }
+  // ═══════════════════════════════════════════════════════════════════════════
+  // D&D 5e FORMAL SKILL SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+  skills: PlayerSkills                        // 18 D&D 5e skills with proficiency
+  skillProficiencies: string[]                 // Names of skills the PC is proficient in
+  // ═══════════════════════════════════════════════════════════════════════════
+  // FATE CORE — ASPECTS + FATE POINTS
+  // ═══════════════════════════════════════════════════════════════════════════
+  aspects: Aspect[]                           // Player-defined narrative tags
+  fatePoints: number                          // Start with 3, max 5
+  fatePointHistory: { turn: number; type: 'earned' | 'spent'; reason: string }[]
+  customActionPending: string | null          // Free-text custom action input
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PbtA PARTIAL SUCCESS OUTCOMES
+  // ═══════════════════════════════════════════════════════════════════════════
+  lastOutcomeTier: 'critical_success' | 'full_success' | 'partial_success' | 'miss' | 'consequences' | null
+  outcomeHistory: { turn: number; tier: string; description: string }[]
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DARK SOULS — STAMINA & BONFIRE SYSTEM
+  // ═══════════════════════════════════════════════════════════════════════════
+  stamina: number                             // Current stamina (max = con-based)
+  maxStamina: number                          // Maximum stamina
+  staminaRegenRate: number                    // Stamina recovered per turn (1 + con bonus)
+  bonfireRestCount: number                    // How many times player has rested at a bonfire
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MASS EFFECT — PARAGON/RENEGADE MORALITY
+  // ═══════════════════════════════════════════════════════════════════════════
+  paragonPoints: number                       // Diplomatic/honorable actions
+  renegadePoints: number                      // Ruthless/pragmatic actions
+  moralityQuotient: number                    // -100 (pure renegade) to +100 (pure paragon)
+  interruptHistory: { turn: number; type: 'paragon' | 'renegade'; description: string }[]
 }
 
 // Antagonist Clue - Identity revealed progressively through Acts

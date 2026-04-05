@@ -1,7 +1,8 @@
 // gameHelpers.ts — Helper/utility functions extracted from page.tsx
 // Pure utility functions, success rate calculators, and entity lookup
 
-import type { Entity, SuccessRateFactors } from '@/lib/gameTypes'
+import type { Entity, PlayerSkills, SuccessRateFactors, Aspect, GameState } from '@/lib/gameTypes'
+import { SKILL_ABILITY_MAP } from '@/lib/gameTypes'
 import { NPC_NAMES, ALL_GREATER_GODS } from '@/lib/gameConstants'
 import { getAntagonistById } from '@/lib/antagonistPool'
 
@@ -308,4 +309,243 @@ export const lookupEntity = async (nameOrId: string): Promise<Entity | null> => 
     dead: false,
     inventory: []
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// D&D 5e SKILL SYSTEM HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Get a specific ability score as integer (default 10)
+export const getAbilityScore = (pc: Entity, abilityName: string): number => {
+  const raw = (pc as unknown as Record<string, unknown>)[abilityName]
+  if (typeof raw === 'string') return parseInt(raw) || 10
+  if (typeof raw === 'number') return raw
+  return 10
+}
+
+// Get skill modifier: proficiency bonus + ability modifier
+export const getSkillModifier = (pc: Entity, skillName: keyof PlayerSkills, skills: PlayerSkills): number => {
+  const proficiency = skills[skillName] || 0
+  const abilityKey = SKILL_ABILITY_MAP[skillName]
+  const abilityMod = getAbilityBonus(getAbilityScore(pc, abilityKey).toString()).value
+  return proficiency + abilityMod
+}
+
+// Perform a skill check: d20 + modifier vs DC
+export const performSkillCheck = (
+  pc: Entity,
+  skillName: keyof PlayerSkills,
+  dc: number,
+  skills: PlayerSkills
+): { roll: number; modifier: number; total: number; success: boolean } => {
+  const modifier = getSkillModifier(pc, skillName, skills)
+  const roll = Math.floor(Math.random() * 20) + 1
+  const total = roll + modifier
+  return { roll, modifier, total, success: total >= dc }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FATE CORE HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Spend a Fate Point to invoke an aspect
+export const spendFatePoint = (
+  gs: GameState,
+  aspectName: string,
+  reason: string
+): GameState => {
+  if (gs.fatePoints <= 0) return gs
+  const updatedAspects = gs.aspects.map(a =>
+    a.name === aspectName
+      ? { ...a, invokes: a.invokes + 1, fate_points_spent: a.fate_points_spent + 1 }
+      : a
+  )
+  return {
+    ...gs,
+    fatePoints: Math.max(0, gs.fatePoints - 1),
+    aspects: updatedAspects,
+    fatePointHistory: [...gs.fatePointHistory, { turn: gs.turn, type: 'spent', reason }]
+  }
+}
+
+// Earn a Fate Point (compel or refresh)
+export const earnFatePoint = (gs: GameState, reason: string): GameState => {
+  return {
+    ...gs,
+    fatePoints: Math.min(5, gs.fatePoints + 1),
+    fatePointHistory: [...gs.fatePointHistory, { turn: gs.turn, type: 'earned', reason }]
+  }
+}
+
+// Add a new aspect to the player
+export const addAspect = (gs: GameState, aspect: Aspect): GameState => {
+  // Don't add duplicates
+  if (gs.aspects.find(a => a.name === aspect.name)) return gs
+  return {
+    ...gs,
+    aspects: [...gs.aspects, aspect]
+  }
+}
+
+// Generate starting aspects based on PC characteristics
+export const generateStartingAspects = (pc: Entity): Aspect[] => {
+  const aspects: Aspect[] = []
+
+  // 1. High Concept: Based on pantheon + class
+  const fighterLvl = pc.fighterLevel || 0
+  const clericLvl = pc.clericLevel || 0
+  const muLvl = pc.magicUserLevel || 0
+  const thiefLvl = pc.thiefLevel || 0
+  const primaryClass = fighterLvl >= clericLvl && fighterLvl >= muLvl && fighterLvl >= thiefLvl
+    ? 'Warrior'
+    : clericLvl >= muLvl && clericLvl >= thiefLvl ? 'Priest'
+    : muLvl >= thiefLvl ? 'Mage' : 'Shadow'
+
+  const className = primaryClass === 'Warrior' ? 'Warrior'
+    : primaryClass === 'Priest' ? 'Priest'
+    : primaryClass === 'Mage' ? 'Mage'
+    : 'Rogue'
+
+  aspects.push({
+    name: `${pc.pantheon} ${className}`,
+    type: 'high_concept',
+    invokes: 0,
+    fate_points_spent: 0,
+    description: `A ${className.toLowerCase()} of the ${pc.pantheon} pantheon`
+  })
+
+  // 2. Trouble: Based on alignment
+  const alignLower = pc.align.toLowerCase()
+  if (alignLower.includes('good')) {
+    aspects.push({
+      name: 'Cannot Abandon the Helpless',
+      type: 'trouble',
+      invokes: 0,
+      fate_points_spent: 0,
+      description: 'Your compassion makes you predictable and exploitable'
+    })
+  } else if (alignLower.includes('evil')) {
+    aspects.push({
+      name: 'Ambition Outpaces Wisdom',
+      type: 'trouble',
+      invokes: 0,
+      fate_points_spent: 0,
+      description: 'Your hunger for power blinds you to consequences'
+    })
+  } else {
+    aspects.push({
+      name: 'Torn Between Worlds',
+      type: 'trouble',
+      invokes: 0,
+      fate_points_spent: 0,
+      description: 'Your neutrality leaves you without allies in either camp'
+    })
+  }
+
+  // 3. Character: Based on personality (first 8 words)
+  const personality = pc.personality || 'Mysterious and resolute'
+  const personalityWords = personality.split(/\s+/).slice(0, 8).join(' ')
+  const cleanPersonality = toAscii(personalityWords)
+    .replace(/[."']/g, '')
+    .trim()
+
+  aspects.push({
+    name: cleanPersonality.length > 3 ? cleanPersonality : 'Enigmatic Stranger',
+    type: 'character',
+    invokes: 0,
+    fate_points_spent: 0,
+    description: personality
+  })
+
+  return aspects
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STAMINA HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Calculate stamina values from CON score
+export const calculateStamina = (conScore: number): { maxStamina: number; regenRate: number } => {
+  const conMod = Math.floor((conScore - 10) / 2)
+  return {
+    maxStamina: Math.max(10, 10 + conMod),
+    regenRate: Math.max(1, 1 + conMod)
+  }
+}
+
+// Regenerate stamina after a turn
+export const regenStamina = (gs: GameState): GameState => {
+  const newStamina = Math.min(gs.maxStamina, gs.stamina + gs.staminaRegenRate)
+  return { ...gs, stamina: newStamina }
+}
+
+// Restore stamina to full (bonfire rest)
+export const fullStaminaRestore = (gs: GameState): GameState => {
+  return { ...gs, stamina: gs.maxStamina, bonfireRestCount: gs.bonfireRestCount + 1 }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SKILL PROFICIENCY ASSIGNMENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Auto-assign proficiencies based on PC class levels and ability scores
+export const assignSkillProficiencies = (pc: Entity): { skills: PlayerSkills; proficiencies: string[] } => {
+  const skills: PlayerSkills = {
+    athletics: 0, intimidation: 0,
+    acrobatics: 0, sleight_of_hand: 0, stealth: 0,
+    arcana: 0, history: 0, investigation: 0, nature: 0, religion: 0,
+    animal_handling: 0, insight: 0, medicine: 0, perception: 0, survival: 0,
+    deception: 0, performance: 0, persuasion: 0
+  }
+  const proficiencies: string[] = []
+  const prof = (skill: keyof PlayerSkills) => {
+    if (skills[skill] === 0) {
+      skills[skill] = 2
+      proficiencies.push(skill)
+    }
+  }
+
+  // Class-based proficiencies
+  if ((pc.fighterLevel || 0) > 0) {
+    prof('athletics')
+    prof('intimidation')
+  }
+  if ((pc.clericLevel || 0) > 0) {
+    prof('religion')
+    prof('medicine')
+    prof('insight')
+  }
+  if ((pc.magicUserLevel || 0) > 0) {
+    prof('arcana')
+    prof('history')
+    prof('investigation')
+  }
+  if ((pc.thiefLevel || 0) > 0) {
+    prof('stealth')
+    prof('sleight_of_hand')
+    prof('acrobatics')
+  }
+
+  // Ability score-based proficiencies
+  const cha = getAbilityScore(pc, 'cha')
+  if (cha >= 15) {
+    prof('deception')
+    prof('persuasion')
+    prof('performance')
+  }
+
+  const wis = getAbilityScore(pc, 'wis')
+  if (wis >= 15) {
+    prof('perception')
+    prof('survival')
+    prof('animal_handling')
+  }
+
+  const dex = getAbilityScore(pc, 'dex')
+  if (dex >= 15) {
+    prof('acrobatics')
+    prof('stealth')
+  }
+
+  return { skills, proficiencies }
 }
