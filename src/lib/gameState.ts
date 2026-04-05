@@ -71,7 +71,7 @@ export const createInitialState = (): GameState => ({
   // ═══════════════════════════════════════════════════════════════════════════
   act1TurnLimit: 50,   // Overwritten by confirmPartySelection with RNG 10-100
   act2TurnLimit: 40,   // Overwritten by confirmPartySelection with RNG 20-60
-  act2StartTurn: 0,
+  act2StartTurn: -1,
   // ═══════════════════════════════════════════════════════════════════════════
   // SUCCESS RATE CALCULATOR
   // ═══════════════════════════════════════════════════════════════════════════

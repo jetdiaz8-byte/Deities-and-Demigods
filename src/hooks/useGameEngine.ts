@@ -939,7 +939,7 @@ PARTY (ALL HUMAN-CONTROLLED):
 ${partyState}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (the prose you wrote - 1 paragraph for regular turns, full prose for opening)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"new_aspect":"string|null"}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (the prose you wrote - 1 paragraph for regular turns, full prose for opening)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -1812,10 +1812,9 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
           turn: newGS.turn
         }]
       }
-    }
-    
-    // ACT II -> ACT III: After RNG turn duration with minimum turns for story development
-    if (newGS.act === ACTS.TWO) {
+    } else if (newGS.act === ACTS.TWO && newGS.act2StartTurn > 0) {
+      // ACT II -> ACT III: After RNG turn duration with minimum turns for story development
+      // Guard: act2StartTurn must be positive (set when Act I → II fires; default -1 prevents instant Act III)
       const act2Duration = newGS.turn - newGS.act2StartTurn
       const act2Complete = act2Duration >= newGS.act2TurnLimit
       const storyReady = newGS.antagonistCluesRevealed.length >= 3 // At least 3 clues found
@@ -1867,6 +1866,14 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
         }
       }
       newGS.quests = updatedQuests
+    }
+
+    // Clue revealed — populate antagonistCluesRevealed for story-driven Act II → III transition
+    if (res.clue_revealed && typeof res.clue_revealed === 'string' && res.clue_revealed.length > 0) {
+      const clueText = res.clue_revealed.trim()
+      if (!newGS.antagonistCluesRevealed.includes(clueText)) {
+        newGS.antagonistCluesRevealed = [...newGS.antagonistCluesRevealed, clueText]
+      }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

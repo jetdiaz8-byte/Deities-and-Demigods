@@ -155,6 +155,7 @@ export interface DMResponse {
   paragon_delta?: number
   renegade_delta?: number
   new_aspect?: string | null
+  clue_revealed?: string // Short description of an antagonist clue revealed this turn
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
