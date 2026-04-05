@@ -1193,8 +1193,9 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     }
     
     // Select appropriate template based on game state
+    const hasLivingEnemies = gs.activeNPCs.some(n => !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'))
     let category: keyof typeof templates = 'tension'
-    if (gs.act === ACTS.THREE && ant) category = 'combat'
+    if (hasLivingEnemies) category = 'combat'
     else if (reason.toLowerCase().includes('quota') || reason.toLowerCase().includes('exceeded')) category = 'quota_exceeded'
     else if (gs.activeNPCs.length > 0) category = 'dialogue'
     else if (gs.turn > 0) category = 'exploration'
@@ -1438,6 +1439,18 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       align_note: 'passive / delay action',
       source: 'pc'
     })
+
+    // Parley / Disengage option (combat only) — lets player exit combat without killing
+    if (inCombat) {
+      const enemyNames = enemies.map(e => e.name).join(', ')
+      extraOptions.push({
+        num: 6,
+        action: `🤝 Parley — Attempt to negotiate or disengage from combat with ${enemyNames}`,
+        ability: 'disengage_combat',
+        align_note: 'CHA check · may end combat peacefully',
+        source: 'pc'
+      })
+    }
     
     // Archrival summon (Act III only)
     if (gameState.act === ACTS.THREE && gameState.antagonistBanished && gameState.antagonistRival) {
@@ -1637,6 +1650,21 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
           }
         }
       }
+    }
+
+    // ── CLEANUP: Remove enemies with 0 HP that weren't caught by state_updates ──
+    // The DM may narrate an enemy's defeat without including it in state_updates.
+    // Also removes enemies from Act I turns 1-7 (no combat in Act I opening).
+    const currentEnemies = newGS.activeNPCs.filter(n => !n.dead && (
+      n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'
+    ))
+    // Auto-purge enemies that are at 0 HP but not marked dead
+    const zeroHpEnemies = newGS.activeNPCs.filter(n => (
+      !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS') && n.hp <= 0
+    ))
+    if (zeroHpEnemies.length > 0) {
+      const deadIds = new Set(zeroHpEnemies.map(n => n.id))
+      newGS.activeNPCs = newGS.activeNPCs.filter(n => !deadIds.has(n.id))
     }
 
     // Injuries
@@ -2924,7 +2952,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       gs.stamina = Math.max(0, gs.stamina - 2)
     } else if (chosen?.ability === 'defend') {
       gs.stamina = Math.max(0, gs.stamina - 1)
-    } else if (chosen?.ability !== 'skip' && !chosen?.ability.startsWith('invoke_aspect:') && chosen?.source !== 'archrival_summon') {
+    } else if (chosen?.ability !== 'skip' && !chosen?.ability.startsWith('invoke_aspect:') && chosen?.source !== 'archrival_summon' && chosen?.ability !== 'disengage_combat') {
       // Special abilities cost 3 stamina
       gs.stamina = Math.max(0, gs.stamina - 3)
     }
@@ -2972,6 +3000,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       'medicine': 'medicine', 'survival': 'survival', 'animal_handling': 'animal_handling',
       'history': 'history', 'nature': 'nature', 'performance': 'performance',
       'conversation': 'persuasion', 'exploration': 'survival', 'divine_sense': 'perception',
+      'disengage_combat': 'persuasion',
     }
     let skillCheckLine = ''
     const skillKey = ABILITY_TO_SKILL[chosen?.ability || '']
@@ -2984,6 +3013,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const userMsg = `TURN ${gs.turn} RESOLUTION.
 
 Human player chose for ${toAscii(humanPC?.name || 'PC')}: "${toAscii(chosen?.action || 'acts')}"[${toAscii(chosen?.ability || '')}].${companionActionLine}
+${chosen?.ability === 'disengage_combat' ? `\n⚠️ PARRY/DISENGAGE: The player is attempting to end combat through negotiation or retreat. Roll a Persuasion check. On success: narrate the enemies backing down, fleeing, or agreeing to talk. Include state_updates with {pc_id:"ENEMY", dead: true} for each enemy to remove them from active combat. On failure: enemies remain hostile but the player takes no damage this turn.` : ''}
 
 RESOLVE THIS ACTION:
 1. Execute ${toAscii(humanPC?.name || 'PC')}'s choice with full mechanical detail (d20 vs AC, damage, saves). ROLL DICE.${compChosen ? `\n2. Execute ${toAscii(companion?.name || 'Companion')}'s action with full mechanical detail too (d20 vs AC, damage, saves). ROLL DICE for both characters.` : ''}
