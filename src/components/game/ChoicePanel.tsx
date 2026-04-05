@@ -235,8 +235,8 @@ export function ChoicePanel({
             <Sparkles className="w-4 h-4 text-purple-400" />
             <span className="text-xs text-purple-300 font-title">FATE POINTS: {gameState.fatePoints}/5</span>
             {gameState.aspects.length > 0 && (
-              <span className="text-[10px] text-purple-400/60 ml-auto">
-                {gameState.aspects.slice(0, 2).map(a => a.name).join(' · ')}
+              <span className="text-[10px] text-purple-400/60 ml-auto truncate max-w-[200px]">
+                {gameState.aspects.map(a => a.name).join(' · ')}
               </span>
             )}
           </div>
@@ -430,7 +430,7 @@ export function ChoicePanel({
               const actualIdx = idx + 3
               const isRival = opt.source === 'archrival_summon'
               const isSkip = opt.ability === 'skip'
-              const isFateInvoke = opt.ability === 'invoke_aspect'
+              const isFateInvoke = opt.ability === 'invoke_aspect' || opt.ability.startsWith('invoke_aspect:')
               return (
                 <div
                   key={actualIdx}
@@ -472,10 +472,10 @@ export function ChoicePanel({
                   ✦ Free Action — Spend 1 Fate Point
                 </div>
                 <div className="text-[9px] text-purple-400/40 italic mb-1.5">
-                  Your aspects: {gameState.aspects.slice(0, 3).map(a => `"${a.name}"`).join(', ') || 'None yet'}
+                  Your aspects: {gameState.aspects.map(a => `"${a.name}"`).join(', ') || 'None yet'}
                 </div>
                 <div className="text-[9px] text-purple-300/50">
-                  Select "✦ Invoke Aspect" above to spend a Fate Point for +2 to your next roll.
+                  Select an aspect above to spend a Fate Point for +2 to your next roll.
                 </div>
               </div>
             )}

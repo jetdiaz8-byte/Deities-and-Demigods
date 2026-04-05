@@ -1451,14 +1451,18 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       })
     }
     
-    // Fate Point invoke — free action option
+    // Fate Point invoke — one option per aspect so player can choose
     if (gameState.fatePoints > 0 && gameState.aspects.length > 0) {
-      extraOptions.push({
-        num: 8,
-        action: `✦ Invoke Aspect — Spend 1 Fate Point to invoke "${gameState.aspects[0].name}" for +2 to your next roll`,
-        ability: 'invoke_aspect',
-        align_note: `✦ ${gameState.fatePoints} FP remaining`,
-        source: 'pc'
+      gameState.aspects.forEach((aspect, idx) => {
+        const typeBadge = aspect.type === 'high_concept' ? '◆' : aspect.type === 'trouble' ? '⚡' : aspect.type === 'earned' ? '★' : '○'
+        const descSnippet = aspect.description ? ` — ${aspect.description.slice(0, 50)}${aspect.description.length > 50 ? '…' : ''}` : ''
+        extraOptions.push({
+          num: 8,
+          action: `✦ Invoke "${aspect.name}" — Spend 1 FP for +2 to next roll${descSnippet}`,
+          ability: `invoke_aspect:${aspect.name}`,
+          align_note: `${typeBadge} ${aspect.type.replace('_', ' ')} · ✦ ${gameState.fatePoints} FP remaining`,
+          source: 'pc'
+        })
       })
     }
     
@@ -2920,22 +2924,26 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       gs.stamina = Math.max(0, gs.stamina - 2)
     } else if (chosen?.ability === 'defend') {
       gs.stamina = Math.max(0, gs.stamina - 1)
-    } else if (chosen?.ability !== 'skip' && chosen?.ability !== 'invoke_aspect' && chosen?.source !== 'archrival_summon') {
+    } else if (chosen?.ability !== 'skip' && !chosen?.ability.startsWith('invoke_aspect:') && chosen?.source !== 'archrival_summon') {
       // Special abilities cost 3 stamina
       gs.stamina = Math.max(0, gs.stamina - 3)
     }
 
     // ── FATE POINT — Spend FP when invoking aspect ──────────────────────────
-    if (chosen?.ability === 'invoke_aspect' && gs.fatePoints > 0 && gs.aspects.length > 0) {
-      const invokeGS = spendFatePoint(gs, gs.aspects[0].name, `Invoked "${gs.aspects[0].name}" for +2 to next roll`)
-      gs.fatePoints = invokeGS.fatePoints
-      gs.aspects = invokeGS.aspects
-      gs.fatePointHistory = invokeGS.fatePointHistory
-      toast({
-        title: `✦ ${gs.aspects[0].name} Invoked`,
-        description: `Spent 1 Fate Point. +2 to your next roll. ${gs.fatePoints} FP remaining.`,
-        duration: 3000
-      })
+    if (chosen?.ability.startsWith('invoke_aspect:') && gs.fatePoints > 0 && gs.aspects.length > 0) {
+      const aspectName = chosen.ability.replace('invoke_aspect:', '')
+      const matchedAspect = gs.aspects.find(a => a.name === aspectName)
+      if (matchedAspect) {
+        const invokeGS = spendFatePoint(gs, matchedAspect.name, `Invoked "${matchedAspect.name}" for +2 to next roll`)
+        gs.fatePoints = invokeGS.fatePoints
+        gs.aspects = invokeGS.aspects
+        gs.fatePointHistory = invokeGS.fatePointHistory
+        toast({
+          title: `✦ ${matchedAspect.name} Invoked`,
+          description: `Spent 1 Fate Point. +2 to your next roll. ${gs.fatePoints} FP remaining.`,
+          duration: 3000
+        })
+      }
     }
 
     setGameState(gs)
