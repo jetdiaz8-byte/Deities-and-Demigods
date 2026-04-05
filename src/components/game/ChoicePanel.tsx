@@ -272,17 +272,15 @@ export function ChoicePanel({
             )}
           </div>
         )}
-        {gameState.stamina < gameState.maxStamina && (
-          <div className="flex items-center gap-2 mb-2 px-2">
-            <Zap className="w-3 h-3 text-[#80a060]" />
-            <span className="text-[10px] text-[#80a060] font-title">STAMINA</span>
-            <div className="flex-1 h-2 bg-[#1a1a10] rounded-full overflow-hidden border border-[#2a3020]">
-              <div className="h-full bg-gradient-to-r from-[#406030] to-[#60a040] rounded-full transition-all duration-300"
-                style={{ width: `${(gameState.stamina / gameState.maxStamina) * 100}%` }} />
-            </div>
-            <span className="text-[10px] text-[#608040]">{gameState.stamina}/{gameState.maxStamina}</span>
+        <div className="flex items-center gap-2 mb-2 px-2">
+          <Zap className="w-3 h-3 text-[#80a060]" />
+          <span className="text-[10px] text-[#80a060] font-title">STAMINA</span>
+          <div className="flex-1 h-2 bg-[#1a1a10] rounded-full overflow-hidden border border-[#2a3020]">
+            <div className={`h-full rounded-full transition-all duration-300 ${gameState.stamina <= gameState.maxStamina * 0.3 ? 'bg-gradient-to-r from-[#804020] to-[#a05030]' : 'bg-gradient-to-r from-[#406030] to-[#60a040]'}`}
+              style={{ width: `${(gameState.stamina / gameState.maxStamina) * 100}%` }} />
           </div>
-        )}
+          <span className="text-[10px] text-[#608040]">{gameState.stamina}/{gameState.maxStamina}</span>
+        </div>
 
         {/* ═══════════════════════════════════════════════════════════════════════
             PC ACTIONS — 3 context-aware choices
