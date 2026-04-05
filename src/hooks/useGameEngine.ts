@@ -1557,6 +1557,30 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
           if (targetPc) {
             triggerScreenEffect('screen-effect-red')
             triggerCombatFlash(isCritical ? 'crit' : 'damage')
+            // P4.1 FIX: Actually deduct HP and check for death
+            const targetIdx = newGS.pcs.findIndex(p => p.id === targetPc.id)
+            if (targetIdx >= 0) {
+              const updatedPc = { ...newGS.pcs[targetIdx] }
+              updatedPc.hp = Math.max(0, updatedPc.hp - d.amount)
+              if (updatedPc.hp <= 0) {
+                // Check Death Ward before marking dead
+                const wardResult = tryConsumeDeathWard(
+                  { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
+                  updatedPc.id, gs.turn
+                )
+                if (wardResult.warded) {
+                  newGS = wardResult.gs
+                } else {
+                  updatedPc.dead = true; updatedPc.hp = 0
+                  soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
+                  newGS = transferProphecyOnDeath(
+                    { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
+                    updatedPc.id, gs.turn
+                  )
+                }
+              }
+              newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
+            }
           }
         }
       }
@@ -2010,7 +2034,24 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
           const targetIdx = newGS.pcs.findIndex(p => p.id === target.id)
           if (targetIdx >= 0) {
             const updatedPc = { ...newGS.pcs[targetIdx] }
-            updatedPc.hp = Math.max(1, updatedPc.hp - 1) // Minimum 1 HP loss
+            updatedPc.hp = Math.max(0, updatedPc.hp - 1)
+            // P4.2 FIX: Check death for partial_success too
+            if (updatedPc.hp <= 0) {
+              const wardResult = tryConsumeDeathWard(
+                { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
+                updatedPc.id, gs.turn
+              )
+              if (wardResult.warded) {
+                newGS = wardResult.gs
+              } else {
+                updatedPc.dead = true; updatedPc.hp = 0
+                soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
+                newGS = transferProphecyOnDeath(
+                  { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
+                  updatedPc.id, gs.turn
+                )
+              }
+            }
             newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
           }
         }
@@ -2022,10 +2063,23 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
           const targetIdx = newGS.pcs.findIndex(p => p.id === target.id)
           if (targetIdx >= 0) {
             const updatedPc = { ...newGS.pcs[targetIdx] }
-            updatedPc.hp = Math.max(1, updatedPc.hp - 5)
+            updatedPc.hp = Math.max(0, updatedPc.hp - 5) // P4.2 FIX: was Math.max(1, ...) — death was unreachable
             if (updatedPc.hp <= 0) {
-              updatedPc.dead = true
-              soundEvents.emit({ type: 'death' })
+              // P4.2 FIX: Full death chain with Death Ward + prophecy transfer
+              const wardResult = tryConsumeDeathWard(
+                { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
+                updatedPc.id, gs.turn
+              )
+              if (wardResult.warded) {
+                newGS = wardResult.gs
+              } else {
+                updatedPc.dead = true; updatedPc.hp = 0
+                soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
+                newGS = transferProphecyOnDeath(
+                  { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
+                  updatedPc.id, gs.turn
+                )
+              }
             }
             newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
           }
@@ -2929,7 +2983,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const needsCompanionChoice = gameState.companionOptions.length > 0 && gameState.pendingCompanionChoice === null && gameState.pendingCompanionChoice !== undefined
     if (needsCompanionChoice) return
 
-    const gs = { ...gameState, waitingForHuman: false, isProcessing: true, lastOutcomeTier: null, customActionPending: null }
+    let gs = { ...gameState, waitingForHuman: false, isProcessing: true, lastOutcomeTier: null, customActionPending: null }
 
     // Resolve choices first (needed for cooldown tracking)
     const humanPC = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)
@@ -3006,6 +3060,35 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
           description: `Spent 1 Fate Point. +2 to your next roll. ${gs.fatePoints} FP remaining.`,
           duration: 3000
         })
+      }
+    }
+
+    // ── POTION USE — Decrement charges when used via choice panel (P4.4 FIX) ──
+    if (chosen?.ability.startsWith('use_item:')) {
+      const itemId = chosen.ability.replace('use_item:', '')
+      const item = gs.inventory.find(i => i.id === itemId || i.id.startsWith(itemId))
+      if (item) {
+        // Apply healing effect locally (same as handleUseItem)
+        const targetPC = gs.pcs.find(p => p.id === gs.humanPCId && !p.dead) || gs.pcs.find(p => !p.dead)
+        if (targetPC && item.modifier?.healing) {
+          const healAmount = typeof item.modifier.healing === 'number' ? item.modifier.healing : Math.floor(Math.random() * 8 + Math.random() * 8) + 4
+          gs.pcs = gs.pcs.map(p => p.id !== targetPC.id ? p : { ...p, hp: Math.min(p.maxHp, p.hp + healAmount) })
+          toast({ title: `${item.name} Used`, description: `${targetPC.name} healed for ${healAmount} HP` })
+        }
+        // Death ward
+        if (targetPC && item.modifier?.death_ward) {
+          const currentConditions = targetPC.conditions || []
+          if (!currentConditions.includes('Death Ward')) {
+            gs.pcs = gs.pcs.map(p => p.id !== targetPC.id ? p : { ...p, conditions: [...currentConditions, 'Death Ward'] })
+            toast({ title: `${item.name} Used`, description: `${targetPC.name} is warded against death!` })
+          }
+        }
+        // Decrement charges or remove item
+        if (item.charges && item.charges > 1) {
+          gs.inventory = gs.inventory.map(i => i.id !== item.id ? i : { ...i, charges: (i.charges || 1) - 1 })
+        } else {
+          gs.inventory = gs.inventory.filter(i => i.id !== item.id)
+        }
       }
     }
 
@@ -3100,6 +3183,18 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
           const newHp = Math.max(0, p.hp + dmg)
           return { ...p, hp: newHp, dead: newHp <= 0 ? true : p.dead }
         })
+        // P4.3 FIX: Handle DOT deaths with full Death Ward + prophecy chain
+        for (const pc of gs.pcs) {
+          if (pc.dead && pc.hp <= 0) {
+            const wardResult = tryConsumeDeathWard(gs, pc.id, gs.turn)
+            if (wardResult.warded) {
+              gs = wardResult.gs
+            } else {
+              soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
+              gs = transferProphecyOnDeath(gs, pc.id, gs.turn)
+            }
+          }
+        }
       }
       gs.injuries = newInjuries
 
@@ -3268,7 +3363,10 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     const unlockedCount = getUnlockedCount(tracker)
     const totalCount = getTotalCount()
     const unlockedDefs = ACHIEVEMENT_DEFS.filter(d => tracker.records[d.id]?.unlocked)
-      .sort((a, b) => (TIER_CONFIG[b.tier] ? 0 : 1) - (TIER_CONFIG[a.tier] ? 0 : 1))
+      .sort((a, b) => {
+        const tierOrder: Record<string, number> = { bronze: 0, silver: 1, gold: 2, legendary: 3 }
+        return (tierOrder[a.tier] ?? 9) - (tierOrder[b.tier] ?? 9)
+      })
     const achievementCards = unlockedDefs.length > 0
       ? unlockedDefs.slice(0, 12).map(def => {
           const tier = TIER_CONFIG[def.tier]
