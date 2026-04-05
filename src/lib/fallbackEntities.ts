@@ -46,7 +46,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Lay on hands 28 HP/day"
     ],
     personality: "Noble, absolutely principled. Will sacrifice himself before abandoning an ally.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "18",
+    WIS: "19",
+    DEX: "16",
+    CON: "18",
+    CHA: "18",
+    level: "14th paladin",
+    attacks: 2,
+    damage: "Excalibur +5",
+    MV: "12\""
   },
   {
     id: "galahad",
@@ -64,7 +74,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Immune to all diseases and poisons"
     ],
     personality: "Absolutely pure. No moral compromise possible. Will shield any innocent.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "18",
+    WIS: "18",
+    DEX: "18",
+    CON: "18",
+    CHA: "18",
+    level: "20th paladin",
+    attacks: 3,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "lancelot",
@@ -82,7 +102,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Cannot be surprised"
     ],
     personality: "Tormented, magnificent. Will never break a sworn word.",
-    category: "heroes"
+    category: "heroes",
+    STR: "19",
+    INT: "14",
+    WIS: "13",
+    DEX: "18",
+    CON: "18",
+    CHA: "18",
+    level: "20th paladin",
+    attacks: 2,
+    damage: "by weapon (+3 hit/+6 dmg)",
+    MV: "12\""
   },
   {
     id: "gawaine",
@@ -116,7 +146,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Exceptional horseman: +2 all mounted rolls"
     ],
     personality: "Romantic, tragic, fierce. Love and duty perpetually in conflict.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18(99%)",
+    INT: "16",
+    WIS: "14",
+    DEX: "18",
+    CON: "18",
+    CHA: "18",
+    level: "17th fighter",
+    attacks: 2,
+    damage: "by weapon (+3/+6)",
+    MV: "12\""
   },
   {
     id: "merlin",
@@ -134,7 +174,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Immune to charm and disease"
     ],
     personality: "Supremely powerful but haunted by future-visions. Acts obliquely, plans deeply.",
-    category: "heroes"
+    category: "heroes",
+    STR: "15",
+    INT: "19",
+    WIS: "19",
+    DEX: "18",
+    CON: "18",
+    CHA: "18",
+    level: "15th MU/10th illusionist/14th druid",
+    attacks: 1,
+    damage: "1-10 staff",
+    MV: "15\""
   },
   {
     id: "morgan_le_fay",
@@ -152,7 +202,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Cause disease by touch"
     ],
     personality: "Scheming, brilliant, bitter. Uses beauty as a weapon. Hates Arthur.",
-    category: "heroes"
+    category: "heroes",
+    STR: "11",
+    INT: "18",
+    WIS: "16",
+    DEX: "16",
+    CON: "12",
+    CHA: "18",
+    level: "12th MU/12th illusionist",
+    attacks: 1,
+    damage: "1-4 dagger",
+    MV: "12\""
   },
   {
     id: "lamorak",
@@ -169,7 +229,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Jousting mastery: +4 vs mounted opponents"
     ],
     personality: "Fierce and direct. Loyal to the point of stubbornness.",
-    category: "heroes"
+    category: "heroes",
+    STR: "19",
+    INT: "14",
+    WIS: "13",
+    DEX: "17",
+    CON: "18",
+    CHA: "16",
+    level: "18th fighter",
+    attacks: 2,
+    damage: "by weapon (+3/+6)",
+    MV: "12\""
   },
   {
     id: "gareth",
@@ -185,7 +255,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Recognizes disguises 75%"
     ],
     personality: "Humble, genuinely kind. The most beloved of Arthur's knights.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18(75%)",
+    INT: "14",
+    WIS: "15",
+    DEX: "17",
+    CON: "17",
+    CHA: "17",
+    level: "16th fighter",
+    attacks: 2,
+    damage: "by weapon (+2/+4)",
+    MV: "12\""
   },
   {
     id: "palomides",
@@ -201,7 +281,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Pursuit of Questing Beast: immune to fear when on quest"
     ],
     personality: "Earnest convert. Driven by honor and unrequited love. Seeks redemption.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18(90%)",
+    INT: "15",
+    WIS: "14",
+    DEX: "17",
+    CON: "17",
+    CHA: "16",
+    level: "16th fighter",
+    attacks: 2,
+    damage: "by weapon (+2/+5)",
+    MV: "12\""
   },
   {
     id: "pellinore",
@@ -217,7 +307,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Immune to confusion and fear"
     ],
     personality: "Singleminded. The hunt is everything. Loyal, simple, devastating.",
-    category: "heroes"
+    category: "heroes",
+    STR: "19",
+    INT: "13",
+    WIS: "12",
+    DEX: "16",
+    CON: "18",
+    CHA: "15",
+    level: "18th fighter",
+    attacks: 2,
+    damage: "by weapon (+3/+6)",
+    MV: "12\""
   },
   {
     id: "gilgamesh",
@@ -235,7 +335,18 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Two-thirds divine blood"
     ],
     personality: "Mighty, tyrannical, secretly tender. Terrified of death since Enkidu died.",
-    category: "heroes"
+    category: "heroes",
+    STR: "20",
+    INT: "18",
+    WIS: "17",
+    DEX: "18",
+    CON: "19",
+    CHA: "18",
+    level: "12th ranger/10th MU",
+    attacks: 2,
+    damage: "2-20+8",
+    MV: "15\"",
+    MR: 10
   },
   {
     id: "cuchulainn",
@@ -253,7 +364,18 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Battle cry stuns opponents 1 round"
     ],
     personality: "Blazing, joyful, doomed. Born to die young and gloriously. Never retreats.",
-    category: "heroes"
+    category: "heroes",
+    STR: "20",
+    INT: "17",
+    WIS: "16",
+    DEX: "19",
+    CON: "18",
+    CHA: "17",
+    level: "18th ranger/12th illusionist",
+    attacks: 2,
+    damage: "4-40+8",
+    MV: "15\"",
+    MR: 20
   },
   {
     id: "heracles_hero",
@@ -271,7 +393,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "12 labors experience: +2 vs monsters"
     ],
     personality: "Naive, explosive, genuinely heroic. Erupts at any perceived ingratitude.",
-    category: "heroes"
+    category: "heroes",
+    STR: "25",
+    INT: "11",
+    WIS: "9",
+    DEX: "19",
+    CON: "20",
+    CHA: "17",
+    level: "15th ranger",
+    attacks: 2,
+    damage: "5-50+14",
+    MV: "15\""
   },
   {
     id: "perseus",
@@ -289,7 +421,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "25% divine protection"
     ],
     personality: "Methodical hero. Plans carefully. Grateful to the gods who aid him.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "16",
+    WIS: "15",
+    DEX: "18",
+    CON: "17",
+    CHA: "17",
+    level: "15th paladin",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "15\"/24\" fly"
   },
   {
     id: "odysseus",
@@ -307,7 +449,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Cannot be permanently charmed"
     ],
     personality: "Cunning, patient, homesick. Never lies when truth is more useful. Often it is.",
-    category: "heroes"
+    category: "heroes",
+    STR: "16",
+    INT: "18",
+    WIS: "17",
+    DEX: "18",
+    CON: "16",
+    CHA: "17",
+    level: "13th fighter/9th thief",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "jason",
@@ -325,7 +477,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Inspire loyalty: followers fight to death"
     ],
     personality: "Bold, charismatic leader. Glory-seeker who gets others killed for it.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18(00)",
+    INT: "16",
+    WIS: "14",
+    DEX: "17",
+    CON: "17",
+    CHA: "18",
+    level: "16th ranger",
+    attacks: 2,
+    damage: "by weapon (+3/+8)",
+    MV: "12\""
   },
   {
     id: "theseus",
@@ -342,7 +504,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Athenian law: +2 all social interactions in civilized areas"
     ],
     personality: "Civic-minded hero. Genuinely wants to help the city. Romantically tragic.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "16",
+    WIS: "15",
+    DEX: "17",
+    CON: "16",
+    CHA: "17",
+    level: "13th paladin",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "bellerophon",
@@ -359,7 +531,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Heroic destiny: re-roll 1 failed save per day"
     ],
     personality: "Ambitious hero. Seeks glory but tempers it with honor.",
-    category: "heroes"
+    category: "heroes",
+    STR: "16",
+    INT: "15",
+    WIS: "13",
+    DEX: "17",
+    CON: "15",
+    CHA: "16",
+    level: "10th ranger",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "12\"/36\" fly (Pegasus)"
   },
   {
     id: "vainamoinen",
@@ -377,7 +559,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Crossbow of accuracy: never misses at 1 mile"
     ],
     personality: "Ancient, patient, sorrowful. Negotiates before fighting. Devastating when he acts.",
-    category: "heroes"
+    category: "heroes",
+    STR: "23",
+    INT: "18",
+    WIS: "18",
+    DEX: "24",
+    CON: "20",
+    CHA: "18",
+    level: "20th paladin/12th cleric/12th illusionist/23rd bard",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "15\""
   },
   {
     id: "ilmarinen",
@@ -394,7 +586,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Crafted the sky: divine crafting ability"
     ],
     personality: "Patient craftsman. Values creation over destruction. Will work for worthy cause.",
-    category: "heroes"
+    category: "heroes",
+    STR: "20",
+    INT: "18",
+    WIS: "15",
+    DEX: "17",
+    CON: "18",
+    CHA: "15",
+    level: "15th fighter/9th MU",
+    attacks: 2,
+    damage: "2-12+9",
+    MV: "15\""
   },
   {
     id: "lemminkainen",
@@ -411,7 +613,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Wanderer luck: re-roll failed saves vs traps"
     ],
     personality: "Wild, reckless, beloved by women. Lives for adventure and glory.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "17",
+    WIS: "12",
+    DEX: "20",
+    CON: "17",
+    CHA: "18",
+    level: "18th fighter/15th illusionist",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "18\""
   },
   {
     id: "kullervo",
@@ -428,7 +640,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Vengeful rage: +10 damage vs those who wronged him"
     ],
     personality: "Cursed from birth. Everything he touches turns to ash. Driven by revenge.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18(75%)",
+    INT: "14",
+    WIS: "8",
+    DEX: "16",
+    CON: "16",
+    CHA: "13",
+    level: "19th fighter",
+    attacks: 2,
+    damage: "by weapon (+2/+4)",
+    MV: "15\""
   },
   {
     id: "elric",
@@ -446,7 +668,18 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Sword sentient: 15%/battle Stormbringer acts against Elric"
     ],
     personality: "Tormented, brilliant, self-loathing. The sword will betray everyone eventually.",
-    category: "heroes"
+    category: "heroes",
+    STR: "6",
+    INT: "17",
+    WIS: "17",
+    DEX: "17",
+    CON: "3",
+    CHA: "18",
+    level: "15th fighter/19th MU",
+    attacks: 2,
+    damage: "Stormbringer (drains)",
+    MV: "6\"/15\"",
+    MR: 85
   },
   {
     id: "moonglum",
@@ -464,7 +697,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Loyal friend: +2 all rolls when Elric is threatened"
     ],
     personality: "Cheerful, steadfast, quietly remarkable. The only person Elric trusts.",
-    category: "heroes"
+    category: "heroes",
+    STR: "16",
+    INT: "17",
+    WIS: "15",
+    DEX: "20",
+    CON: "16",
+    CHA: "16",
+    level: "14th fighter/13th thief",
+    attacks: 4,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "fafhrd",
@@ -482,7 +725,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Bardic knowledge: knows legends of all cultures"
     ],
     personality: "Huge, warm-hearted, storytelling. Will die for his friend. Acts on feeling first.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18(00)",
+    INT: "17",
+    WIS: "14",
+    DEX: "18",
+    CON: "18",
+    CHA: "17",
+    level: "15th ranger/13th thief",
+    attacks: 2,
+    damage: "by weapon (+3/+6)",
+    MV: "12\""
   },
   {
     id: "gray_mouser",
@@ -500,7 +753,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Minor sorcery: knows 10 wizard spells 1st-4th level"
     ],
     personality: "Witty, cynical, agile. Thinks faster than he should. Loyal to exactly one person.",
-    category: "heroes"
+    category: "heroes",
+    STR: "15",
+    INT: "18",
+    WIS: "14",
+    DEX: "20",
+    CON: "15",
+    CHA: "16",
+    level: "11th fighter/15th thief",
+    attacks: 3,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "movarl",
@@ -517,7 +780,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Political savvy: can negotiate with any faction"
     ],
     personality: "Ambitious ruler. Seeks to unite Lankhmar. Values competent allies.",
-    category: "heroes"
+    category: "heroes",
+    STR: "17",
+    INT: "16",
+    WIS: "17",
+    DEX: "16",
+    CON: "16",
+    CHA: "16",
+    level: "12th paladin",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "raiko",
@@ -535,7 +808,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Never surprised"
     ],
     personality: "Silent, swift, duty-bound. The hunt for demons is his purpose and peace.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "16",
+    WIS: "15",
+    DEX: "20",
+    CON: "18",
+    CHA: "17",
+    level: "18th ranger/12th assassin",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "29\""
   },
   {
     id: "yamamoto_date",
@@ -552,7 +835,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Cannot be surprised"
     ],
     personality: "Patient, calculating, absolutely lethal. The sword is his life.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "15",
+    WIS: "14",
+    DEX: "18",
+    CON: "19",
+    CHA: "16",
+    level: "15th paladin/11th assassin",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "yoshmye",
@@ -568,7 +861,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Poison mastery: all poisons known"
     ],
     personality: "Silent, efficient, honor-bound to a code only he knows.",
-    category: "heroes"
+    category: "heroes",
+    STR: "17",
+    INT: "15",
+    WIS: "16",
+    DEX: "18",
+    CON: "16",
+    CHA: "16",
+    level: "13th ranger",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "hiawatha",
@@ -585,7 +888,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "+2 to all saves"
     ],
     personality: "Wise peacemaker. Seeks unity. Will fight only as absolute last resort.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "17",
+    WIS: "17",
+    DEX: "16",
+    CON: "16",
+    CHA: "18",
+    level: "15th ranger/10th druid",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "qagwaaz",
@@ -602,7 +915,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "STR 19: +3 to hit +6 damage"
     ],
     personality: "Fierce, silent, protects his people above all else.",
-    category: "heroes"
+    category: "heroes",
+    STR: "19",
+    INT: "14",
+    WIS: "13",
+    DEX: "16",
+    CON: "17",
+    CHA: "14",
+    level: "12th ranger",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "12\""
   },
   {
     id: "stoneribs",
@@ -619,7 +942,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Berserker rage at <=25% HP"
     ],
     personality: "Direct, powerful, fights like elemental force of nature.",
-    category: "heroes"
+    category: "heroes",
+    STR: "20",
+    INT: "13",
+    WIS: "12",
+    DEX: "15",
+    CON: "20",
+    CHA: "15",
+    level: "14th fighter",
+    attacks: 2,
+    damage: "2-12+8",
+    MV: "12\""
   },
   {
     id: "hunapu",
@@ -637,7 +970,17 @@ export const FALLBACK_HEROES: FallbackEntity[] = [
       "Underworld knowledge: +4 vs undead"
     ],
     personality: "Two as one. Playful but deadly serious about their divine mission.",
-    category: "heroes"
+    category: "heroes",
+    STR: "17",
+    INT: "16",
+    WIS: "14",
+    DEX: "18",
+    CON: "16",
+    CHA: "15",
+    level: "10th ranger/8th MU/10th druid",
+    attacks: 2,
+    damage: "by weapon",
+    MV: "12\""
   }
 ]
 
@@ -658,7 +1001,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "2%/round chance of divine miracle"
     ],
     personality: "Pure engine of righteous war. No deliberation. No mercy for evil.",
-    category: "demigods"
+    category: "demigods",
+    STR: "25",
+    INT: "16",
+    WIS: "20",
+    DEX: "25",
+    CON: "20",
+    CHA: "18",
+    attacks: 10,
+    damage: "2-12+14 each",
+    MV: "18\"",
+    MR: 50
   },
   {
     id: "yama",
@@ -676,7 +1029,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "100% MR in red robes (25% otherwise)"
     ],
     personality: "Utterly impartial. Not cruel - just inevitable. He has seen your ending already.",
-    category: "demigods"
+    category: "demigods",
+    STR: "21",
+    INT: "18",
+    WIS: "18",
+    DEX: "24",
+    CON: "18",
+    CHA: "18",
+    attacks: 2,
+    damage: "2-12+9",
+    MV: "15\"",
+    MR: 25
   },
   {
     id: "ratri",
@@ -694,7 +1057,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "15th assassin: backstab x5"
     ],
     personality: "Night goddess. Seductive, dangerous, plays with victims like a cat.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "18",
+    WIS: "17",
+    DEX: "20",
+    CON: "20",
+    CHA: "18",
+    attacks: 2,
+    damage: "2-12+8",
+    MV: "15\"",
+    MR: 25
   },
   {
     id: "tvashtri",
@@ -712,7 +1085,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "20th MU/15th cleric"
     ],
     personality: "The divine artificer. Precise, cold, creative. Dislikes waste of any kind.",
-    category: "demigods"
+    category: "demigods",
+    STR: "22",
+    INT: "22",
+    WIS: "20",
+    DEX: "18",
+    CON: "20",
+    CHA: "17",
+    attacks: 3,
+    damage: "4-40 never miss",
+    MV: "15\"",
+    MR: 65
   },
   {
     id: "hachiman",
@@ -730,7 +1113,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Banner presence: all within 60ft immune to fear"
     ],
     personality: "God of war AND peace. Values worthy combat. Loathes meaningless slaughter.",
-    category: "demigods"
+    category: "demigods",
+    STR: "25",
+    INT: "17",
+    WIS: "18",
+    DEX: "18",
+    CON: "20",
+    CHA: "18",
+    attacks: 3,
+    damage: "2-12+14",
+    MV: "12\"",
+    MR: 35
   },
   {
     id: "oh_kuni_nushi",
@@ -748,7 +1141,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Sake blessing: those he drinks with gain +2 all rolls next day"
     ],
     personality: "Warm, accessible god of the earth. Genuinely cares about mortals.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "18",
+    WIS: "20",
+    DEX: "18",
+    CON: "18",
+    CHA: "20",
+    attacks: 2,
+    damage: "2-12+8",
+    MV: "12\"",
+    MR: 20
   },
   {
     id: "surma",
@@ -766,7 +1169,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "15th ranger/15th assassin: backstab x5"
     ],
     personality: "He challenges everyone. He is the test the universe places before heroes.",
-    category: "demigods"
+    category: "demigods",
+    STR: "25",
+    INT: "19",
+    WIS: "19",
+    DEX: "23",
+    CON: "22",
+    CHA: "18",
+    attacks: 2,
+    damage: "3-30+14",
+    MV: "18\"",
+    MR: 40
   },
   {
     id: "loviatar",
@@ -784,7 +1197,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Nine daughters serve her (each 8HD)"
     ],
     personality: "Goddess of pain. Cold, clinical, curious about suffering. Never angry.",
-    category: "demigods"
+    category: "demigods",
+    STR: "16",
+    INT: "18",
+    WIS: "17",
+    DEX: "18",
+    CON: "18",
+    CHA: "18",
+    attacks: 2,
+    damage: "1-8 ice dagger",
+    MV: "12\"",
+    MR: 25
   },
   {
     id: "kiputytto",
@@ -801,7 +1224,16 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Plague aura: all within 10ft save or -2 CON"
     ],
     personality: "Goddess of disease. Spreads suffering methodically. Unhurried.",
-    category: "demigods"
+    category: "demigods",
+    STR: "15",
+    INT: "16",
+    WIS: "17",
+    DEX: "16",
+    CON: "18",
+    CHA: "14",
+    attacks: 1,
+    damage: "touch",
+    MV: "12\""
   },
   {
     id: "aarth",
@@ -818,7 +1250,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Justice strike: double damage to evil creatures"
     ],
     personality: "Champion of justice in a chaotic multiverse. Trusts actions over words.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "24",
+    WIS: "25",
+    DEX: "25",
+    CON: "23",
+    CHA: "22",
+    attacks: 3,
+    damage: "by weapon (+3/+8)",
+    MV: "18\"",
+    MR: 25
   },
   {
     id: "issek_of_jug",
@@ -835,7 +1277,16 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Devotees gain +2 on all saves"
     ],
     personality: "Quiet, persistent, patient. Violence is a last resort.",
-    category: "demigods"
+    category: "demigods",
+    STR: "25",
+    INT: "20",
+    WIS: "25",
+    DEX: "18",
+    CON: "22",
+    CHA: "24",
+    attacks: 2,
+    damage: "2-12+11",
+    MV: "12\""
   },
   {
     id: "spider_god",
@@ -853,7 +1304,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Can summon 2d6 giant spiders"
     ],
     personality: "Patient predator. Plays with prey. Unreadable motives.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "17",
+    WIS: "15",
+    DEX: "18",
+    CON: "20",
+    CHA: "14",
+    attacks: 2,
+    damage: "2-12+8",
+    MV: "15\"",
+    MR: 10
   },
   {
     id: "votishal",
@@ -870,7 +1331,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "20% MR"
     ],
     personality: "Ancient, hungry, patient. Waits for the right moment.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "17",
+    WIS: "18",
+    DEX: "18",
+    CON: "22",
+    CHA: "18",
+    attacks: 3,
+    damage: "2-12+8",
+    MV: "15\"",
+    MR: 35
   },
   {
     id: "gods_of_lankhmar",
@@ -887,7 +1358,16 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Cannot directly intervene in mortal affairs"
     ],
     personality: "Many voices, one purpose. The city's fate is their fate.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "20",
+    WIS: "18",
+    DEX: "18",
+    CON: "20",
+    CHA: "18",
+    attacks: 4,
+    damage: "2-12 each",
+    MV: "12\""
   },
   {
     id: "apshai",
@@ -904,7 +1384,16 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Underground sense: knows all tunnels"
     ],
     personality: "Ancient hunger. Wants only to consume. No reasoning with the swarm.",
-    category: "demigods"
+    category: "demigods",
+    STR: "22",
+    INT: "17",
+    WIS: "16",
+    DEX: "18",
+    CON: "20",
+    CHA: "16",
+    attacks: 2,
+    damage: "never misses",
+    MV: "15\""
   },
   {
     id: "ithaqua",
@@ -922,7 +1411,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Those killed rise as wind-walking servants"
     ],
     personality: "The wind walker. Hungers for warm flesh. Stalks the north.",
-    category: "demigods"
+    category: "demigods",
+    STR: "25",
+    INT: "17",
+    WIS: "16",
+    DEX: "16",
+    CON: "22",
+    CHA: "10",
+    attacks: 2,
+    damage: "3-30 each",
+    MV: "18\"/fly 48\"",
+    MR: 30
   },
   {
     id: "chao_kung_ming",
@@ -939,7 +1438,16 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Commands celestial soldiers (1d4/turn)"
     ],
     personality: "Divine general. Expects discipline. Rewards loyalty with power.",
-    category: "demigods"
+    category: "demigods",
+    STR: "21",
+    INT: "17",
+    WIS: "16",
+    DEX: "18",
+    CON: "18",
+    CHA: "17",
+    attacks: 2,
+    damage: "2-12+9",
+    MV: "18\"/fly (tiger)"
   },
   {
     id: "chih_chiang_fyu_ya",
@@ -956,7 +1464,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Allies gain +2 to hit with missile weapons"
     ],
     personality: "Divine archer. Patient, precise, devastating when he acts.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "18",
+    WIS: "17",
+    DEX: "20",
+    CON: "20",
+    CHA: "18",
+    attacks: 3,
+    damage: "2-12+8",
+    MV: "12\"",
+    MR: 20
   },
   {
     id: "no_cha",
@@ -973,7 +1491,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Immortal: cannot be permanently killed"
     ],
     personality: "Rebellious child-god. Fights authority. Powerful beyond reason.",
-    category: "demigods"
+    category: "demigods",
+    STR: "22",
+    INT: "15",
+    WIS: "13",
+    DEX: "22",
+    CON: "20",
+    CHA: "17",
+    attacks: 8,
+    damage: "2-12 each",
+    MV: "24\"",
+    MR: 20
   },
   {
     id: "wen_chung",
@@ -990,7 +1518,16 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Knows all official decrees of heaven"
     ],
     personality: "Divine bureaucrat. Follows protocol. Punishes disorder.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "20",
+    WIS: "18",
+    DEX: "18",
+    CON: "18",
+    CHA: "17",
+    attacks: 2,
+    damage: "2-12+8",
+    MV: "15\""
   },
   {
     id: "fei_lien",
@@ -1007,7 +1544,16 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Cannot be pinned or restrained"
     ],
     personality: "Mercurial, flighty, dangerous. Changes mood like the wind.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "16",
+    WIS: "14",
+    DEX: "20",
+    CON: "20",
+    CHA: "16",
+    attacks: 2,
+    damage: "2-12+8",
+    MV: "18\""
   },
   {
     id: "fileet",
@@ -1024,7 +1570,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Always lands on feet: immune to fall damage"
     ],
     personality: "The cat-god. Curious, playful, lethal. Sides with whoever amuses them.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "17",
+    WIS: "16",
+    DEX: "18",
+    CON: "18",
+    CHA: "16",
+    attacks: 2,
+    damage: "2-12+8",
+    MV: "15\"",
+    MR: 50
   },
   {
     id: "haaashastaak",
@@ -1041,7 +1597,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Cannot be surprised in swamps"
     ],
     personality: "Ancient reptile god. Cold. Patient. The swamp belongs to him.",
-    category: "demigods"
+    category: "demigods",
+    STR: "25",
+    INT: "16",
+    WIS: "14",
+    DEX: "16",
+    CON: "22",
+    CHA: "10",
+    attacks: 2,
+    damage: "7-70 bite never misses",
+    MV: "15\"",
+    MR: 75
   },
   {
     id: "meerclar",
@@ -1058,7 +1624,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Enhanced senses: nothing escapes notice"
     ],
     personality: "Lord of cats. Aloof but protective of felines. Respects independence.",
-    category: "demigods"
+    category: "demigods",
+    STR: "22",
+    INT: "16",
+    WIS: "14",
+    DEX: "22",
+    CON: "18",
+    CHA: "12",
+    attacks: 3,
+    damage: "6-72/10-100 bite",
+    MV: "18\"",
+    MR: 50
   },
   {
     id: "nnuuurrrrc",
@@ -1075,7 +1651,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Telepathy: knows your fears"
     ],
     personality: "The thing that should not be. Alien. Hungry. Patient beyond comprehension.",
-    category: "demigods"
+    category: "demigods",
+    STR: "22",
+    INT: "15",
+    WIS: "13",
+    DEX: "18",
+    CON: "22",
+    CHA: "6",
+    attacks: 3,
+    damage: "5-50+8",
+    MV: "18\"/fly 24\"",
+    MR: 15
   },
   {
     id: "vaprak",
@@ -1092,7 +1678,17 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Cannot be killed by dismemberment"
     ],
     personality: "Father of trolls. Hungry. Always hungry. Eats anything that moves.",
-    category: "demigods"
+    category: "demigods",
+    STR: "25",
+    INT: "8",
+    WIS: "8",
+    DEX: "15",
+    CON: "22",
+    CHA: "6",
+    attacks: 2,
+    damage: "2-12+14",
+    MV: "15\"",
+    MR: 50
   },
   {
     id: "laogzed",
@@ -1109,7 +1705,16 @@ export const FALLBACK_DEMIGODS: FallbackEntity[] = [
       "Amphibious: fights equally on land or water"
     ],
     personality: "The troglodyte god. Sees all as food. Breeds chaos.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "8",
+    WIS: "8",
+    DEX: "12",
+    CON: "20",
+    CHA: "4",
+    attacks: 2,
+    damage: "3-30+8",
+    MV: "12\""
   }
 ]
 
@@ -1133,7 +1738,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Dragonlance proficiency: +3 to hit and damage vs. dragons"
     ],
     personality: "He is the man who does not know what he is — half of everything, whole of nothing. He leads because no one else will, and hates himself for being good at it.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "16",
+    WIS: "15",
+    DEX: "17",
+    CON: "16",
+    CHA: "16",
+    level: "10th ranger/8th fighter"
   },
   {
     id: "sturm_brightblade",
@@ -1150,7 +1762,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "STR 19: +3 to hit +6 damage"
     ],
     personality: "A knight from a time when knights meant something. He follows a code that the world has stopped believing in, and follows it anyway.",
-    category: "heroes"
+    category: "heroes",
+    STR: "19",
+    INT: "14",
+    WIS: "16",
+    DEX: "14",
+    CON: "17",
+    CHA: "17",
+    level: "12th paladin"
   },
   {
     id: "raistlin_majere_hero",
@@ -1167,7 +1786,15 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Spell mastery: casts all spells at +2 levels of effectiveness"
     ],
     personality: "He was broken on purpose, and he accepted the breaking. His eyes see time as a wound that never closes.",
-    category: "heroes"
+    category: "heroes",
+    STR: "6",
+    INT: "20",
+    WIS: "17",
+    DEX: "16",
+    CON: "6",
+    CHA: "10",
+    level: "18th magic-user",
+    MR: 35
   },
   {
     id: "caramon_majere",
@@ -1184,7 +1811,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Gladiatorial training: extra attack/round"
     ],
     personality: "He is the strongest man in the room in every room he enters. He loves without condition or strategy or self-preservation.",
-    category: "heroes"
+    category: "heroes",
+    STR: "20",
+    INT: "12",
+    WIS: "12",
+    DEX: "16",
+    CON: "20",
+    CHA: "16",
+    level: "12th fighter"
   },
   {
     id: "goldmoon",
@@ -1201,7 +1835,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Turn undead as 16th level cleric"
     ],
     personality: "She walked across a world that had forgotten the gods and proved they still answered prayers.",
-    category: "heroes"
+    category: "heroes",
+    STR: "15",
+    INT: "16",
+    WIS: "19",
+    DEX: "16",
+    CON: "15",
+    CHA: "20",
+    level: "14th cleric (Mishakal)"
   },
   {
     id: "riverwind",
@@ -1218,7 +1859,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Protective rage: +4 all combat rolls when Goldmoon threatened"
     ],
     personality: "He ran the length of a continent to prove himself worthy and found gods instead.",
-    category: "heroes"
+    category: "heroes",
+    STR: "19",
+    INT: "14",
+    WIS: "15",
+    DEX: "19",
+    CON: "18",
+    CHA: "14",
+    level: "13th ranger"
   },
   {
     id: "laurana",
@@ -1235,7 +1883,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Immune to dragon fear aura"
     ],
     personality: "She left home a princess and came back a general who had changed the course of a war.",
-    category: "heroes"
+    category: "heroes",
+    STR: "14",
+    INT: "17",
+    WIS: "16",
+    DEX: "20",
+    CON: "14",
+    CHA: "20",
+    level: "10th fighter/6th ranger"
   },
   {
     id: "kitiara_uth_matar",
@@ -1252,7 +1907,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Sword mastery: 3 attacks/round"
     ],
     personality: "She wants power the way some people want air. She is brilliant enough to get it.",
-    category: "heroes"
+    category: "heroes",
+    STR: "18",
+    INT: "18",
+    WIS: "13",
+    DEX: "19",
+    CON: "17",
+    CHA: "19",
+    level: "14th fighter/6th thief"
   },
   {
     id: "flint_fireforge",
@@ -1269,7 +1931,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Battle axe +3: returns when thrown"
     ],
     personality: "He is old and he knows it and has decided that old means experienced rather than diminished.",
-    category: "heroes"
+    category: "heroes",
+    STR: "19",
+    INT: "15",
+    WIS: "14",
+    DEX: "12",
+    CON: "19",
+    CHA: "13",
+    level: "11th fighter/9th thief (craft)"
   },
   {
     id: "tasslehoff_burrfoot",
@@ -1286,7 +1955,15 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "25% MR — kender are inherently resistant to mind magic"
     ],
     personality: "He is the most dangerous creature on Krynn because he has no fear and therefore no sense of scale.",
-    category: "heroes"
+    category: "heroes",
+    STR: "12",
+    INT: "16",
+    WIS: "6",
+    DEX: "22",
+    CON: "14",
+    CHA: "18",
+    level: "9th thief/7th fighter",
+    MR: 25
   },
   {
     id: "tika_waylan",
@@ -1303,7 +1980,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Loves Caramon: +3 all rolls when he is threatened"
     ],
     personality: "She was a barmaid and became a hero by refusing the alternative when it was put in front of her.",
-    category: "heroes"
+    category: "heroes",
+    STR: "15",
+    INT: "14",
+    WIS: "14",
+    DEX: "17",
+    CON: "15",
+    CHA: "18",
+    level: "9th fighter"
   },
   {
     id: "gilthanas",
@@ -1320,7 +2004,14 @@ export const KRYNN_HEROES_FALLBACK: FallbackEntity[] = [
       "Elven magic: 4th level MU spells"
     ],
     personality: "An elf prince discovering what his arrogance cost everyone, trying to settle the debt ever since.",
-    category: "heroes"
+    category: "heroes",
+    STR: "14",
+    INT: "17",
+    WIS: "14",
+    DEX: "20",
+    CON: "13",
+    CHA: "17",
+    level: "10th ranger/7th MU"
   }
 ]
 
@@ -1344,7 +2035,15 @@ export const KRYNN_DEMIGODS_FALLBACK: FallbackEntity[] = [
       "95% MR"
     ],
     personality: "A god wearing a fool's costume. He forgets things. He misplaces spells. And his eyes miss absolutely nothing.",
-    category: "demigods"
+    category: "demigods",
+    STR: "16",
+    INT: "25",
+    WIS: "25",
+    DEX: "14",
+    CON: "20",
+    CHA: "22",
+    level: "Apparent 10th MU (actually unlimited)",
+    MR: 95
   },
   {
     id: "lord_soth",
@@ -1361,7 +2060,15 @@ export const KRYNN_DEMIGODS_FALLBACK: FallbackEntity[] = [
       "85% MR"
     ],
     personality: "He could have stopped a war. He chose not to. This is the architecture of his damnation.",
-    category: "demigods"
+    category: "demigods",
+    STR: "22",
+    INT: "18",
+    WIS: "17",
+    DEX: "16",
+    CON: "25",
+    CHA: "16",
+    level: "Death Knight (former 15th paladin)",
+    MR: 85
   },
   {
     id: "huma_dragonbane",
@@ -1378,7 +2085,15 @@ export const KRYNN_DEMIGODS_FALLBACK: FallbackEntity[] = [
       "Inspiration: Solamnic Knights within 60ft fight at +3 all rolls"
     ],
     personality: "He rode a silver dragon into a battle he knew he would not survive and ended a war.",
-    category: "demigods"
+    category: "demigods",
+    STR: "20",
+    INT: "16",
+    WIS: "18",
+    DEX: "18",
+    CON: "19",
+    CHA: "20",
+    level: "Paladin of Paladine (beyond mortal level)",
+    MR: 40
   },
   {
     id: "cyan_bloodbane",
@@ -1395,7 +2110,15 @@ export const KRYNN_DEMIGODS_FALLBACK: FallbackEntity[] = [
       "55% MR"
     ],
     personality: "The most intelligent dragon on Krynn. He destroyed a king with dreams rather than fire.",
-    category: "demigods"
+    category: "demigods",
+    STR: "24",
+    INT: "22",
+    WIS: "18",
+    DEX: "16",
+    CON: "22",
+    CHA: "8",
+    level: "Ancient Green Dragon",
+    MR: 55
   },
   {
     id: "fistandantilus",
@@ -1412,7 +2135,15 @@ export const KRYNN_DEMIGODS_FALLBACK: FallbackEntity[] = [
       "80% MR"
     ],
     personality: "He has been alive long enough that he has stopped thinking of other people as people.",
-    category: "demigods"
+    category: "demigods",
+    STR: "10",
+    INT: "24",
+    WIS: "20",
+    DEX: "18",
+    CON: "18",
+    CHA: "14",
+    level: "30th magic-user (immortal)",
+    MR: 80
   },
   {
     id: "raistlin_majere_demigod",
@@ -1429,7 +2160,15 @@ export const KRYNN_DEMIGODS_FALLBACK: FallbackEntity[] = [
       "Sees through all illusions and divine masks"
     ],
     personality: "He became what he always said he would. Somewhere inside all that power is still a boy who was told he was not enough.",
-    category: "demigods"
+    category: "demigods",
+    STR: "12",
+    INT: "22",
+    WIS: "19",
+    DEX: "18",
+    CON: "16",
+    CHA: "16",
+    level: "30th magic-user (post-Fistandantilus merger)",
+    MR: 75
   }
 ]
 

@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { readFileSync } from 'fs'
-import { join } from 'path'
+import masterDatabase from '../../../../master_database.json'
+
+// Static JSON import guarantees ability score data is always bundled (reliable on Vercel)
+const MASTER_DB = masterDatabase as any
 
 // GET /api/game-entities - Game-specific entity queries
 // Supports: heroes (for party selection), antagonist (greater gods), npcs (all except selected)
 
-// Fallback: load from master_database.json if DB is unavailable
+// Fallback: load from statically imported master_database.json (Vercel-safe)
 function getFallbackEntities(type: string, limit: number, excludeIds: string[]) {
   try {
-    const jsonPath = join(process.cwd(), 'master_database.json')
-    const raw = readFileSync(jsonPath, 'utf-8')
-    const data = JSON.parse(raw)
+    const data = MASTER_DB
 
     let entities: any[] = []
     const categories = {
