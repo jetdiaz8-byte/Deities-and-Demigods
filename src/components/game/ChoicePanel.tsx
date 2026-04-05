@@ -4,7 +4,7 @@ import React, { useState, useCallback, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Sword, Users, Sparkles, SkipForward, Shield, Wand2, Footprints, MessageSquare, Heart, Target, Lock, Zap } from 'lucide-react'
+import { Sword, Users, Sparkles, SkipForward, Shield, Wand2, Footprints, MessageSquare, Heart, Target, Lock, Zap, PenLine } from 'lucide-react'
 import type { GameState, GameOption } from '@/lib/gameTypes'
 import { InteractiveDiceRoller } from './InteractiveDiceRoller'
 import { motion } from 'framer-motion'
@@ -120,6 +120,8 @@ export function ChoicePanel({
 }: ChoicePanelProps) {
   const [confirmClicked, setConfirmClicked] = useState(false)
   const [diceRollResult, setDiceRollResult] = useState<number | null>(null)
+  const [freeText, setFreeText] = useState('')
+  const [showFreeText, setShowFreeText] = useState(false)
 
   // All hooks must be called before any conditional return
   const handleDiceRoll = useCallback((result: number) => {
@@ -148,9 +150,9 @@ export function ChoicePanel({
     return () => document.removeEventListener('touchstart', handleTouch)
   }, [])
 
-  // Reset dice roll when selection changes (use setTimeout to avoid sync setState in effect)
+  // Reset dice roll and free text when selection changes
   useEffect(() => {
-    const id = setTimeout(() => setDiceRollResult(null), 0)
+    const id = setTimeout(() => { setDiceRollResult(null); setFreeText(''); setShowFreeText(false) }, 0)
     return () => clearTimeout(id)
   }, [gameState.pendingHumanChoice])
 
@@ -158,11 +160,14 @@ export function ChoicePanel({
 
   const pcOptions = gameState.humanOptions.slice(0, 3)
   const compOptions = gameState.companionOptions
-  const extraOptions = gameState.humanOptions.slice(3) // skip, potion, archrival
+  const extraOptions = gameState.humanOptions.slice(3)
+  // Filter out the skip/observe option — replaced by free text input
+  const nonSkipExtra = extraOptions.filter(opt => opt.ability !== 'skip')
+  const hasSkipOption = extraOptions.some(opt => opt.ability === 'skip')
 
   const pc = gameState.pcs.find(p => p.id === gameState.humanPCId)
   const companion = gameState.companionId ? gameState.pcs.find(p => p.id === gameState.companionId) : null
-  const pcSelected = gameState.pendingHumanChoice !== null
+  const pcSelected = gameState.pendingHumanChoice !== null || showFreeText
   const compSelected = compOptions.length === 0 || gameState.pendingCompanionChoice !== null
   const canConfirm = pcSelected && compSelected
 
@@ -414,71 +419,109 @@ export function ChoicePanel({
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════════
-            EXTRA OPTIONS: Skip Turn, Potion, Archrival Summon
+            FREE-TEXT INPUT — Write your own action (replaces Skip/Observe)
             ═══════════════════════════════════════════════════════════════════════ */}
-        {extraOptions.length > 0 && (
-          <div>
-            <div className="text-[#5a4d30] text-xs uppercase tracking-wider mt-2 mb-2 font-title flex items-center gap-2">
-              <SkipForward className="w-4 h-4" />
-              <span>Other Actions</span>
-              <span className="flex-1 h-px bg-[#2a2518]" />
+        <div>
+          <div className="text-[#5a4d30] text-xs uppercase tracking-wider mt-2 mb-2 font-title flex items-center gap-2">
+            <PenLine className="w-4 h-4" />
+            <span>Or describe what you want to do</span>
+            <span className="flex-1 h-px bg-[#2a2518]" />
+            {showFreeText && <span className="text-emerald-400 text-[10px]">✓ Active</span>}
+          </div>
+
+          <div
+            onClick={() => {
+              setShowFreeText(true)
+              // Clear any preset selection when switching to free text
+              if (gameState.pendingHumanChoice !== null) {
+                selectOption(-1)
+              }
+            }}
+            className={`flex flex-col gap-2 p-3 rounded cursor-pointer transition-all border ${
+              showFreeText
+                ? 'border-2 border-[#d4af37] bg-gradient-to-r from-[rgba(90,60,10,.4)] to-[rgba(60,40,10,.3)] shadow-[inset_0_0_12px_rgba(212,175,55,.15)]'
+                : 'border border-[#3a3020] bg-[#0d0a08] hover:border-[#5a4d30]'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <PenLine className={`w-4 h-4 ${showFreeText ? 'text-[#d4af37]' : 'text-[#5a4d30]'}`} />
+              <span className={`font-title text-sm ${showFreeText ? 'text-[#d4af37]' : 'text-[#7a6a50]'}`}>
+                {showFreeText ? 'Writing your action...' : '✍️ Write a custom action'}
+              </span>
             </div>
-
-            {extraOptions.map((opt, idx) => {
-              const actualIdx = idx + 3
-              const isRival = opt.source === 'archrival_summon'
-              const isSkip = opt.ability === 'skip'
-              const isFateInvoke = opt.ability === 'invoke_aspect' || opt.ability.startsWith('invoke_aspect:')
-              return (
-                <div
-                  key={actualIdx}
-                  onClick={() => {
-                    selectOption(actualIdx)
-                    // For skip: also auto-set companion to skip if needed
-                    if (isSkip && compOptions.length > 0 && gameState.pendingCompanionChoice === null) {
-                      // Skip auto-confirms by setting a sentinel
-                    }
-                  }}
-                  className={`flex gap-3 p-2 sm:p-3 rounded cursor-pointer transition-all mb-2 min-h-[44px] ${gameState.pendingHumanChoice === actualIdx
-                      ? isRival
-                        ? 'border-2 border-[#c05050] bg-gradient-to-r from-[rgba(80,20,20,.3)] to-[rgba(50,15,15,.2)]'
-                        : 'border-2 border-[#5a4d30] bg-gradient-to-r from-[rgba(50,40,20,.3)] to-[rgba(30,25,15,.2)]'
-                      : isRival
-                        ? 'border border-[#3a2020] bg-[#0d0808] hover:border-[#c05050]'
-                        : 'border border-dashed border-[#3a3020] bg-[#0d0a08] hover:border-[#5a4d30]'
-                    }`}
-                >
-                  <div className={`font-bold font-title text-lg w-8 text-center ${isRival ? 'text-[#c05050]' : isFateInvoke ? 'text-[#a060d0]' : 'text-[#5a4d30]'}`}>
-                    {isRival ? '⚡' : isFateInvoke ? '✦' : isSkip ? '⏭' : opt.num}
-                  </div>
-                  <div className="flex-1">
-                    <div className={`font-narrative ${isRival ? 'text-[#d09090]' : isSkip ? 'text-[#7a6a50]' : 'text-[#b08050]'}`}>{opt.action}</div>
-                  </div>
-                  {isRival && <Sparkles className="w-5 h-5 text-[#c05050]" />}
-                  {isSkip && <SkipForward className="w-5 h-5 text-[#5a4d30]" />}
-                  {isFateInvoke && <Sparkles className="w-5 h-5 text-[#a060d0]" />}
-                </div>
-              )
-            })}
-
-            {/* ═══════════════════════════════════════════════════════════════════════
-                CUSTOM ACTION INPUT — Fate Point info
-                ═══════════════════════════════════════════════════════════════════════ */}
-            {gameState.fatePoints > 0 && (
-              <div className="mt-2 p-2 rounded border border-dashed border-[#6040a0] bg-[rgba(60,20,100,.08)]">
-                <div className="text-[10px] text-purple-400/60 font-title uppercase tracking-wider mb-1">
-                  ✦ Free Action — Spend 1 Fate Point
-                </div>
-                <div className="text-[9px] text-purple-400/40 italic mb-1.5">
-                  Your aspects: {gameState.aspects.map(a => `"${a.name}"`).join(', ') || 'None yet'}
-                </div>
-                <div className="text-[9px] text-purple-300/50">
-                  Select an aspect above to spend a Fate Point for +2 to your next roll.
+            {showFreeText && (
+              <div className="mt-1" onClick={e => e.stopPropagation()}>
+                <textarea
+                  value={freeText}
+                  onChange={e => setFreeText(e.target.value)}
+                  placeholder={`E.g., "I kneel beside the fallen statue and examine the inscription while ${companion?.name?.split(' ')[0] || 'my companion'} keeps watch"`}
+                  className="w-full bg-[#0a0806] border border-[#3a3020] rounded p-2 text-sm text-[#f0e0c0] font-narrative placeholder:text-[#4a3a20] focus:outline-none focus:border-[#d4af37] resize-none min-h-[60px] max-h-[120px]"
+                  rows={2}
+                  autoFocus
+                />
+                <div className="text-[9px] text-[#5a4d30] mt-1 italic">
+                  Describe anything — the DM will interpret your intent and resolve it mechanically.
                 </div>
               </div>
             )}
           </div>
-        )}
+
+          {/* ═══════════════════════════════════════════════════════════════════════
+              EXTRA OPTIONS: Potion, Archrival Summon, Fate Point Invoke (skip removed)
+              ═══════════════════════════════════════════════════════════════════════ */}
+          {nonSkipExtra.length > 0 && (
+            <div className="mt-2 space-y-2">
+              {nonSkipExtra.map((opt) => {
+                // Find the actual index in the full humanOptions array
+                const actualIdx = gameState.humanOptions.findIndex(o => o === opt)
+                const isRival = opt.source === 'archrival_summon'
+                const isFateInvoke = opt.ability === 'invoke_aspect' || opt.ability.startsWith('invoke_aspect:')
+                return (
+                  <div
+                    key={actualIdx}
+                    onClick={() => {
+                      selectOption(actualIdx)
+                      setShowFreeText(false)
+                      setFreeText('')
+                    }}
+                    className={`flex gap-3 p-2 sm:p-3 rounded cursor-pointer transition-all mb-2 min-h-[44px] ${gameState.pendingHumanChoice === actualIdx
+                        ? isRival
+                          ? 'border-2 border-[#c05050] bg-gradient-to-r from-[rgba(80,20,20,.3)] to-[rgba(50,15,15,.2)]'
+                          : 'border-2 border-[#5a4d30] bg-gradient-to-r from-[rgba(50,40,20,.3)] to-[rgba(30,25,15,.2)]'
+                        : isRival
+                          ? 'border border-[#3a2020] bg-[#0d0808] hover:border-[#c05050]'
+                          : 'border border-dashed border-[#3a3020] bg-[#0d0a08] hover:border-[#5a4d30]'
+                      }`}
+                  >
+                    <div className={`font-bold font-title text-lg w-8 text-center ${isRival ? 'text-[#c05050]' : isFateInvoke ? 'text-[#a060d0]' : 'text-[#5a4d30]'}`}>
+                      {isRival ? '⚡' : isFateInvoke ? '✦' : opt.num}
+                    </div>
+                    <div className="flex-1">
+                      <div className={`font-narrative ${isRival ? 'text-[#d09090]' : 'text-[#b08050]'}`}>{opt.action}</div>
+                    </div>
+                    {isRival && <Sparkles className="w-5 h-5 text-[#c05050]" />}
+                    {isFateInvoke && <Sparkles className="w-5 h-5 text-[#a060d0]" />}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Fate Point info panel */}
+          {gameState.fatePoints > 0 && !showFreeText && (
+            <div className="mt-2 p-2 rounded border border-dashed border-[#6040a0] bg-[rgba(60,20,100,.08)]">
+              <div className="text-[10px] text-purple-400/60 font-title uppercase tracking-wider mb-1">
+                ✦ Free Action — Spend 1 Fate Point
+              </div>
+              <div className="text-[9px] text-purple-400/40 italic mb-1.5">
+                Your aspects: {gameState.aspects.map(a => `"${a.name}"`).join(', ') || 'None yet'}
+              </div>
+              <div className="text-[9px] text-purple-300/50">
+                Select an aspect above to spend a Fate Point for +2 to your next roll.
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* ═══════════════════════════════════════════════════════════════════════
             DICE ROLLER — Shows when a combat ability is selected
@@ -519,6 +562,10 @@ export function ChoicePanel({
           <Button
             onClick={() => {
               if (canConfirm) {
+                // If free text is active, store it in customActionPending before confirming
+                if (showFreeText && freeText.trim()) {
+                  gameState.customActionPending = freeText.trim()
+                }
                 setConfirmClicked(true)
                 setTimeout(() => setConfirmClicked(false), 300)
                 confirmChoice()
@@ -535,10 +582,12 @@ export function ChoicePanel({
           </Button>
           <span className="text-sm text-[#a08050] italic font-narrative break-words">
             {!pcSelected
-              ? 'Select your action above'
+              ? 'Select an action above or write your own'
               : !compSelected
                 ? `Also choose ${companion?.name?.split(' ')[0] || 'companion'}'s action`
-                : `Option ${gameState.pendingHumanChoice! + 1}${compOptions.length > 0 ? ` + ${String.fromCharCode(65 + gameState.pendingCompanionChoice!)}` : ''} — Ready!`
+                : showFreeText && freeText.trim()
+                  ? `Custom action${compOptions.length > 0 ? ` + ${String.fromCharCode(65 + gameState.pendingCompanionChoice!)}` : ''} — Ready!`
+                  : `Option ${gameState.pendingHumanChoice! + 1}${compOptions.length > 0 ? ` + ${String.fromCharCode(65 + gameState.pendingCompanionChoice!)}` : ''} — Ready!`
             }
           </span>
         </div>

@@ -320,6 +320,7 @@ export default function DMHandbookPage() {
               <CardHeader><CardTitle className="text-white flex items-center gap-2"><Database className="w-5 h-5 text-red-400" />State Updates: The Only Way the Game Changes</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-gray-300"><strong className="text-red-300">Every game state change flows through the AI&apos;s JSON state_updates array.</strong> The engine never modifies HP, conditions, or death flags on its own (except for DOT damage processing and success rate recalculation). All mutations originate from the DM&apos;s response.</p>
+                <p className="text-gray-300 text-sm mt-2"><strong className="text-amber-300">Hybrid Input System:</strong> Players can either select preset quick actions (stamina costs enforced by engine) or write free-text custom actions. Custom actions are tagged as <code className="text-amber-300 bg-amber-900/20 px-1 rounded">custom_action</code> in the prompt — the DM must interpret intent, determine the appropriate skill check, apply stamina (1 observation, 2 combat, 3 magical), and mechanically resolve them like any other choice.</p>
                 <div className="space-y-3">
                   {[
                     { step: 'HP Delta', desc: 'hp_delta is coerced with Number() and clamped to [0, maxHp]. Antagonist uses "ANTAGONIST" as pc_id and routes to antagonistHp.', icon: Heart },
@@ -389,11 +390,12 @@ export default function DMHandbookPage() {
                   <div className="p-4 rounded-lg bg-slate-700/50">
                     <h4 className="font-bold text-white mb-2">Prose Requirements</h4>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
-                      <li><strong className="text-amber-300">300+ words minimum</strong> for dm_narration</li>
-                      <li>2-4 rich paragraphs per turn</li>
-                      <li>Opening scenes get 8,000 tokens (longer)</li>
-                      <li>Regular turns get 6,000 tokens</li>
+                      <li><strong className="text-amber-300">2-3 paragraphs (150-300 words)</strong> for regular turns</li>
+                      <li>Opening scenes get 4-6 paragraphs (600-1000 words)</li>
+                      <li>Opening scenes get 8,000 tokens; regular turns get 6,000</li>
+                      <li>Paragraph 1: action/outcome, Paragraph 2: world reaction/atmosphere, Paragraph 3: tension/foreshadowing</li>
                       <li>Sensory details: sound, smell, texture, light</li>
+                      <li>Include dialogue between party members</li>
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
@@ -457,7 +459,7 @@ export default function DMHandbookPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-cyan-900/20 border border-cyan-700/50">
                     <h4 className="font-bold text-cyan-400 mb-2">How Skills Reach the AI Prompt</h4>
-                    <p className="text-xs text-gray-300">Skill proficiencies are included in the <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skills</code> and <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skillProficiencies</code> fields of the game state sent to the Gemini API every turn. The system prompt instructs the AI to use these when generating the 3-5 action choices. Skills are also displayed on the player&apos;s character card as badges for quick reference.</p>
+                    <p className="text-xs text-gray-300">Skill proficiencies are included in the <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skills</code> and <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skillProficiencies</code> fields of the game state sent to the Gemini API every turn. The system prompt instructs the AI to use these when generating the 3 quick action choices. Skills are also displayed on the player&apos;s character card as badges for quick reference. For custom (free-text) actions, the DM infers the appropriate skill based on the player&apos;s description.</p>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
                     <h4 className="font-bold text-white mb-2">Scope &amp; Exclusions</h4>

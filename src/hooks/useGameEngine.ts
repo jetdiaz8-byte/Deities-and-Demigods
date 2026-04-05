@@ -797,13 +797,13 @@ CRITICAL RULES:
 2. NPC actions governed strictly by alignment+personality.
 3. NARRATION STYLE — NEIL GAIMAN:
    - OPENING SCENE (Turn 0): Write 4-6 paragraphs of RICH, ATMOSPHERIC prose (600-1000 words)
-   - REGULAR TURNS (Turn 1+): Write exactly 1 CONCISE paragraph (80-150 words). Quality over quantity.
+   - REGULAR TURNS (Turn 1+): Write 2-3 paragraphs (150-300 words). Be vivid, be specific.
    - Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
    - Use specific sensory language: the taste of copper, the weight of shadows
-   - For regular turns, ONE vivid paragraph that captures atmosphere, action, and consequence
-   - End each regular turn narration with tension or a pivotal moment
-   - DO NOT pad with extra paragraphs. Brevity is sacred for regular turns.
-   - Include key dialogue, environmental details, and mechanical outcomes
+   - For regular turns: paragraph 1 = action/outcome, paragraph 2 = world reaction/atmosphere, paragraph 3 = tension/foreshadowing (optional)
+   - Include dialogue between party members — let them react, argue, joke, worry
+   - Include environmental details: smells, sounds, textures of the world
+   - End each turn with tension or a pivotal moment
    - Reference past events when relevant
 4. Permadeath. No stat/alignment changes mid-game.
 5. PCs=Heroes/Demigods (including Krynn). NPCs=Lesser/Greater Gods (including Krynn gods).
@@ -1396,16 +1396,8 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       })
     }
 
-    // Skip turn / Observe
-    extraOptions.push({ 
-      num: 6, 
-      action: inCombat 
-        ? '⏭️ Hold Action — Wait for the right moment to strike' 
-        : '⏭️ Observe — Watch and listen from where you are', 
-      ability: 'skip', 
-      align_note: 'passive / delay action',
-      source: 'pc'
-    })
+    // Note: Skip/Observe option removed — replaced by free-text input in ChoicePanel
+    // The free-text textarea lets players write anything they want to do
 
     // Parley / Disengage option (combat only) — lets player exit combat without killing
     if (inCombat) {
@@ -2929,17 +2921,37 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
   }
 
   const confirmChoice = async () => {
-    // Require PC choice; companion choice only required if companion exists
-    if (gameState.pendingHumanChoice === null || !gameState.waitingForHuman || gameState.isProcessing) return
+    // Require PC choice OR free-text action; companion choice only required if companion exists
+    const hasFreeText = !!gameState.customActionPending?.trim()
+    const hasPresetChoice = gameState.pendingHumanChoice !== null
+    if (!hasPresetChoice && !hasFreeText) return
+    if (!gameState.waitingForHuman || gameState.isProcessing) return
     const needsCompanionChoice = gameState.companionOptions.length > 0 && gameState.pendingCompanionChoice === null && gameState.pendingCompanionChoice !== undefined
     if (needsCompanionChoice) return
 
-    const gs = { ...gameState, waitingForHuman: false, isProcessing: true, lastOutcomeTier: null }
+    const gs = { ...gameState, waitingForHuman: false, isProcessing: true, lastOutcomeTier: null, customActionPending: null }
 
     // Resolve choices first (needed for cooldown tracking)
     const humanPC = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)
-    const choiceIdx = Math.min(gs.pendingHumanChoice ?? 0, gs.humanOptions.length - 1)
-    const chosen = gs.humanOptions[choiceIdx]
+
+    // ── FREE-TEXT ACTION — Player wrote their own action ──────────────────
+    let isFreeTextAction = false
+    let chosen: GameOption | undefined
+    if (hasPresetChoice) {
+      const choiceIdx = Math.min(gs.pendingHumanChoice ?? 0, gs.humanOptions.length - 1)
+      chosen = gs.humanOptions[choiceIdx]
+    }
+    if (hasFreeText && !hasPresetChoice) {
+      isFreeTextAction = true
+      // Create a synthetic GameOption for the free-text action
+      chosen = {
+        num: 0,
+        action: gameState.customActionPending!.trim(),
+        ability: 'custom_action',
+        align_note: 'player-written action',
+        source: 'pc'
+      }
+    }
     if (!chosen) return
 
     // Resolve companion choice
@@ -2966,13 +2978,18 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     }
 
     // ── STAMINA COST — Deduct stamina for combat actions ─────────────────
-    if (chosen?.ability === 'melee_attack') {
-      gs.stamina = Math.max(0, gs.stamina - 2)
-    } else if (chosen?.ability === 'defend') {
-      gs.stamina = Math.max(0, gs.stamina - 1)
-    } else if (chosen?.ability !== 'skip' && !chosen?.ability.startsWith('invoke_aspect:') && chosen?.source !== 'archrival_summon' && chosen?.ability !== 'disengage_combat') {
-      // Special abilities cost 3 stamina
-      gs.stamina = Math.max(0, gs.stamina - 3)
+    // Note: custom_action (free-text) stamina is NOT deducted here —
+    // the DM handles it via the system prompt instruction (1-3 depending on action type).
+    // This avoids double-deducting if the DM also includes stamina in state_updates.
+    if (!isFreeTextAction) {
+      if (chosen?.ability === 'melee_attack') {
+        gs.stamina = Math.max(0, gs.stamina - 2)
+      } else if (chosen?.ability === 'defend') {
+        gs.stamina = Math.max(0, gs.stamina - 1)
+      } else if (chosen?.ability !== 'skip' && !chosen?.ability.startsWith('invoke_aspect:') && chosen?.source !== 'archrival_summon' && chosen?.ability !== 'disengage_combat') {
+        // Special abilities cost 3 stamina
+        gs.stamina = Math.max(0, gs.stamina - 3)
+      }
     }
 
     // ── FATE POINT — Spend FP when invoking aspect ──────────────────────────
@@ -3028,10 +3045,13 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       skillCheckLine = `\n\n⚠️ LOCAL SKILL CHECK: ${humanPC.name} rolled d20(${check.roll}) + ${check.modifier} ${skillLabel} = ${check.total} vs DC 13 → ${check.success ? '✅ SUCCESS' : '❌ FAILURE'}. USE THIS RESULT. Do NOT re-roll. Narrate the outcome accordingly.`
     }
 
+    const freeTextBlock = isFreeTextAction ? `
+⚠️ CUSTOM PLAYER ACTION: The player wrote their own action instead of selecting a preset option.\nInterpret their intent generously — this is their creative choice. Determine the appropriate skill check, ability roll, or reaction. Apply standard mechanics (d20 vs DC, damage, etc.) based on what makes narrative sense. Do NOT just narrate — MECHANICALLY RESOLVE their action like any other choice.\nStamina cost: 1 for observation/movement, 2 for combat, 3 for magical/complex actions.` : ''
     const userMsg = `TURN ${gs.turn} RESOLUTION.
 
 Human player chose for ${toAscii(humanPC?.name || 'PC')}: "${toAscii(chosen?.action || 'acts')}"[${toAscii(chosen?.ability || '')}].${companionActionLine}
 ${chosen?.ability === 'disengage_combat' ? `\n⚠️ PARRY/DISENGAGE: The player is attempting to end combat through negotiation or retreat. Roll a Persuasion check. On success: narrate the enemies backing down, fleeing, or agreeing to talk. Include state_updates with {pc_id:"ENEMY", dead: true} for each enemy to remove them from active combat. On failure: enemies remain hostile but the player takes no damage this turn.` : ''}
+${freeTextBlock}
 
 RESOLVE THIS ACTION:
 1. Execute ${toAscii(humanPC?.name || 'PC')}'s choice with full mechanical detail (d20 vs AC, damage, saves). ROLL DICE.${compChosen ? `\n2. Execute ${toAscii(companion?.name || 'Companion')}'s action with full mechanical detail too (d20 vs AC, damage, saves). ROLL DICE for both characters.` : ''}
@@ -3041,7 +3061,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
 
     // Add user choice to conversation history
     const convEntries = [
-      { role: 'user' as const, content: `${humanPC?.name}: ${chosen?.action || 'acts'}` }
+      { role: 'user' as const, content: `${humanPC?.name}: ${isFreeTextAction ? `[Custom Action] ${chosen?.action || 'acts'}` : chosen?.action || 'acts'}` }
     ]
     if (compChosen && companion) {
       convEntries.push({ role: 'user' as const, content: `${companion.name}: ${compChosen.action}` })
