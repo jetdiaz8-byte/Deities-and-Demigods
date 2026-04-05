@@ -11,10 +11,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   // External packages — don't bundle into serverless functions
   serverExternalPackages: ['z-ai-web-dev-sdk', 'sharp'],
-  // Experimental: improve tree-shaking for serverless
-  experimental: {
-    serverComponentsExternalPackages: ['z-ai-web-dev-sdk', 'sharp'],
-  },
 };
 
 export default nextConfig;

@@ -4,7 +4,6 @@ ddg_fulltext.json
 ddg_database.json
 ddg_entities.json
 ddg_search*.json
-master_database.json
 db/
 *.db
 download/
