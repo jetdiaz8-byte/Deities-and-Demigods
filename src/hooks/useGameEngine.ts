@@ -2888,7 +2888,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const needsCompanionChoice = gameState.companionOptions.length > 0 && gameState.pendingCompanionChoice === null && gameState.pendingCompanionChoice !== undefined
     if (needsCompanionChoice) return
 
-    const gs = { ...gameState, waitingForHuman: false, isProcessing: true }
+    const gs = { ...gameState, waitingForHuman: false, isProcessing: true, lastOutcomeTier: null }
 
     // Resolve choices first (needed for cooldown tracking)
     const humanPC = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)
