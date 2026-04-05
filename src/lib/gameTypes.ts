@@ -153,6 +153,7 @@ export interface DMResponse {
   quest_updates?: Quest[]
   outcome_tier?: 'critical_success' | 'full_success' | 'partial_success' | 'miss' | null
   paragon_delta?: number
+  renegade_delta?: number
   new_aspect?: string | null
 }
 

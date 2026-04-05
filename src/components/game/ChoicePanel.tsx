@@ -243,8 +243,35 @@ export function ChoicePanel({
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════════
-            STAMINA BAR
+            MORALITY METER — Paragon (blue) ↔ Renegade (red)
             ═══════════════════════════════════════════════════════════════════════ */}
+        {(gameState.paragonPoints > 0 || gameState.renegadePoints > 0) && (
+          <div className="flex items-center gap-2 mb-2 px-2 py-1.5 rounded bg-[rgba(60,60,80,.1)] border border-[rgba(100,100,140,.2)]">
+            <span className="text-[10px] text-blue-400 font-title font-bold shrink-0">P:{gameState.paragonPoints}</span>
+            <div className="flex-1 h-2 bg-[#1a1a1a] rounded-full overflow-hidden border border-[#2a2a30] relative">
+              {/* Center mark */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-px h-full bg-[#4a4a50]" />
+              </div>
+              {/* Paragon fill (left side) */}
+              {gameState.moralityQuotient > 0 && (
+                <div className="absolute left-0 top-0 h-full bg-gradient-to-l from-blue-500/60 to-blue-400/30 rounded-l-full transition-all duration-500"
+                  style={{ width: `${(gameState.moralityQuotient / 100) * 50}%` }} />
+              )}
+              {/* Renegade fill (right side) */}
+              {gameState.moralityQuotient < 0 && (
+                <div className="absolute right-0 top-0 h-full bg-gradient-to-r from-red-500/60 to-red-400/30 rounded-r-full transition-all duration-500"
+                  style={{ width: `${(Math.abs(gameState.moralityQuotient) / 100) * 50}%` }} />
+              )}
+            </div>
+            <span className="text-[10px] text-red-400 font-title font-bold shrink-0">R:{gameState.renegadePoints}</span>
+            {gameState.moralityQuotient !== 0 && (
+              <span className={`text-[9px] ml-1 shrink-0 ${gameState.moralityQuotient > 0 ? 'text-blue-400/60' : 'text-red-400/60'}`}>
+                {gameState.moralityQuotient > 0 ? '↑' : '↓'}{Math.abs(gameState.moralityQuotient)}
+              </span>
+            )}
+          </div>
+        )}
         {gameState.stamina < gameState.maxStamina && (
           <div className="flex items-center gap-2 mb-2 px-2">
             <Zap className="w-3 h-3 text-[#80a060]" />

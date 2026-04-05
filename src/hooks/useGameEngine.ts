@@ -1969,12 +1969,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     // MASS EFFECT PARAGON/RENEGADE — Process morality from DM response
     // ═══════════════════════════════════════════════════════════════════════════
     let paragonDelta = (res.paragon_delta ?? 0) as number
-    let renegadeDelta = 0
-    // Check for renegade_delta if it exists in the response
-    const rawRes = res as unknown as Record<string, unknown>
-    if (rawRes.renegade_delta && typeof rawRes.renegade_delta === 'number') {
-      renegadeDelta = rawRes.renegade_delta
-    }
+    let renegadeDelta = (res.renegade_delta ?? 0) as number
 
     if (paragonDelta > 0 || renegadeDelta > 0) {
       const newParagon = newGS.paragonPoints + paragonDelta
@@ -2326,7 +2321,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         <span style="color:#60a0e0;font-family:Cinzel,serif;font-size:.8rem;letter-spacing:.08em">+${res.paragon_delta} Paragon</span>
       </div>`
     }
-    const renegadeDeltaVal = (res as unknown as Record<string, unknown>).renegade_delta
+    const renegadeDeltaVal = res.renegade_delta
     if (renegadeDeltaVal && typeof renegadeDeltaVal === 'number' && renegadeDeltaVal > 0) {
       html += `<div style="text-align:center;padding:.3rem .8rem;margin:.3rem 0;border:1px solid rgba(220,60,60,.3);background:rgba(220,60,60,.08);border-radius:4px">
         <span style="color:#e06060;font-family:Cinzel,serif;font-size:.8rem;letter-spacing:.08em">+${renegadeDeltaVal} Renegade</span>
