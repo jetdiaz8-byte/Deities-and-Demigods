@@ -641,7 +641,7 @@ export function useGameEngine() {
       // Act Transition System
       act1TurnLimit,
       act2TurnLimit,
-      act2StartTurn: 0,
+      act2StartTurn: -1,
       // Success Rate
       currentSuccessRate: initialSuccess.total,
       partyBonus: initialSuccess.breakdown.party,
@@ -1797,6 +1797,9 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     const MIN_ACT1_TURNS = 8   // Minimum 8 turns of exploration before Act II
     const MIN_ACT2_TURNS = 15  // Minimum 15 turns before Act III boss fight
     
+    // Guard: snapshot original act to prevent multi-act skip in a single call
+    const originalAct = newGS.act
+
     // ACT I -> ACT II: RNG turn limit only (pcAgreements is legacy; companions start agreed)
     if (newGS.act === ACTS.ONE) {
       const turnLimitReached = newGS.turn >= newGS.act1TurnLimit
@@ -1805,42 +1808,56 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
         newGS.act = ACTS.TWO
         soundEvents.emit({ type: 'act_transition', act: 'act2' })
         newGS.act2StartTurn = newGS.turn
-        // Log the act transition
+        // Log the act transition + inject visual banner for renderResult
         newGS.log = [...newGS.log, {
           msg: `Act I ends after ${newGS.turn} turns. The shadow grows impatient. Act II begins.`,
           type: 'discovery',
+          turn: newGS.turn
+        }, {
+          msg: `__ACT_TRANSITION__:${JSON.stringify({ from: 'act1', to: 'act2', html: `<div style="text-align:center;padding:1.4rem;margin:1rem 0;border:2px solid #d4af37;background:linear-gradient(135deg,rgba(60,40,0,.35),rgba(20,10,0,.5));border-radius:5px;box-shadow:0 0 30px rgba(212,175,55,.25)"><div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:#d4af37;letter-spacing:.2em">\u2694 ACT II BEGINS \u2694</div><div style="font-size:.9rem;color:#c0a060;margin-top:.7rem;line-height:1.75;font-style:italic">The investigation deepens. Gods walk among mortals. The shard's whispers grow urgent \u2014 the shadow that watches from beyond the veil stirs with impatience. Every clue uncovered draws the party closer to a truth that was ancient when the world was young.</div><div style="font-size:.75rem;color:#808060;margin-top:.6rem;letter-spacing:.1em">Turn ${newGS.turn} \u2014 The calm before the storm</div></div>` })}`,
+          type: 'act_transition',
           turn: newGS.turn
         }]
       }
     } else if (newGS.act === ACTS.TWO && newGS.act2StartTurn > 0) {
       // ACT II -> ACT III: After RNG turn duration with minimum turns for story development
       // Guard: act2StartTurn must be positive (set when Act I → II fires; default -1 prevents instant Act III)
-      const act2Duration = newGS.turn - newGS.act2StartTurn
-      const act2Complete = act2Duration >= newGS.act2TurnLimit
-      const storyReady = newGS.antagonistCluesRevealed.length >= 3 // At least 3 clues found
-      const minAct2Met = act2Duration >= MIN_ACT2_TURNS
-      
-      if ((act2Complete || storyReady) && minAct2Met) {
-        newGS.act = ACTS.THREE
-        soundEvents.emit({ type: 'act_transition', act: 'act3' })
+      // Extra guard: only fire if we didn't JUST transition from Act I this tick
+      if (originalAct === ACTS.ONE) {
+        // Skip — we just transitioned from Act I, Act II just started
+      } else {
+        const act2Duration = newGS.turn - newGS.act2StartTurn
+        const act2Complete = act2Duration >= newGS.act2TurnLimit
+        const storyReady = newGS.antagonistCluesRevealed.length >= 3 // At least 3 clues found
+        const minAct2Met = act2Duration >= MIN_ACT2_TURNS
         
-        // If antagonist was banished, they return with a vengeance in Act III
-        if (newGS.antagonistBanished) {
-          // Restore antagonist to full HP — they've been nursing their wounds in exile
-          newGS.antagonistHp = newGS.antagonistMaxHp
+        if ((act2Complete || storyReady) && minAct2Met) {
+          newGS.act = ACTS.THREE
+          soundEvents.emit({ type: 'act_transition', act: 'act3' })
+          
+          // If antagonist was banished, they return with a vengeance in Act III
+          if (newGS.antagonistBanished) {
+            // Restore antagonist to full HP — they've been nursing their wounds in exile
+            newGS.antagonistHp = newGS.antagonistMaxHp
+            newGS.log = [...newGS.log, {
+              msg: `The banished antagonist returns from exile at full power! The shard trembles. ${newGS.antagonistRival?.name || 'An ancient force'} can be summoned!`,
+              type: 'banishment',
+              turn: newGS.turn
+            }]
+          }
+          
+          const antName = getAntagonist(newGS.antagonistId)?.name || 'The Ancient One'
+          // Log the act transition + inject visual banner for renderResult
           newGS.log = [...newGS.log, {
-            msg: `The banished antagonist returns from exile at full power! The shard trembles. ${newGS.antagonistRival?.name || 'An ancient force'} can be summoned!`,
-            type: 'banishment',
+            msg: `Act II ends after ${act2Duration} turns. The final confrontation awaits.`,
+            type: 'discovery',
+            turn: newGS.turn
+          }, {
+            msg: `__ACT_TRANSITION__:${JSON.stringify({ from: 'act2', to: 'act3', html: `<div style="text-align:center;padding:1.4rem;margin:1rem 0;border:2px solid #cc2020;background:linear-gradient(135deg,rgba(80,0,0,.4),rgba(20,0,0,.6));border-radius:5px;box-shadow:0 0 30px rgba(200,20,20,.3)"><div style="font-family:'Cinzel Decorative',serif;font-size:1.2rem;color:#ff3030;letter-spacing:.2em">\u2620 FINAL ACT \u2014 THE CONFRONTATION \u2620</div><div style="font-size:.9rem;color:#e06060;margin-top:.7rem;line-height:1.75;font-style:italic">The shadow reveals itself at last. ${antName} \u2014 ancient, patient, terrible \u2014 emerges from the veil between worlds. The shard screams with recognition. Every choice, every sacrifice, every clue has led to this moment. There is no turning back.</div><div style="font-size:.75rem;color:#906060;margin-top:.6rem;letter-spacing:.1em">Turn ${newGS.turn} \u2014 Destiny awaits</div></div>` })}`,
+            type: 'act_transition',
             turn: newGS.turn
           }]
         }
-        
-        // Log the act transition
-        newGS.log = [...newGS.log, {
-          msg: `Act II ends after ${act2Duration} turns. The final confrontation awaits.`,
-          type: 'discovery',
-          turn: newGS.turn
-        }]
       }
     }
 
@@ -2258,6 +2275,15 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       try {
         const summonData = JSON.parse(summonLog.msg.replace('__RIVAL_SUMMON__:', ''))
         html += summonData.html
+      } catch { /* ignore parse errors */ }
+    }
+
+    // Check for act transition banners from applyMechanics
+    const actTransitionLog = gs.log.find(l => l.type === 'act_transition' && l.turn === gs.turn)
+    if (actTransitionLog && actTransitionLog.msg.startsWith('__ACT_TRANSITION__:')) {
+      try {
+        const actData = JSON.parse(actTransitionLog.msg.replace('__ACT_TRANSITION__:', ''))
+        html += actData.html
       } catch { /* ignore parse errors */ }
     }
 
