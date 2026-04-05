@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // "standalone" output creates a monolithic bundle (~324mb) that exceeds
+  // "standalone" output creates a monolithic bundle that exceeds
   // Vercel's 300mb serverless function limit. Only use standalone for
   // self-hosted deployments (Docker/bare-metal), not Vercel.
   output: process.env.DEPLOY_TARGET === "standalone" ? "standalone" : undefined,
@@ -9,7 +9,12 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   reactStrictMode: false,
-  serverExternalPackages: ['z-ai-web-dev-sdk'],
+  // External packages — don't bundle into serverless functions
+  serverExternalPackages: ['z-ai-web-dev-sdk', 'sharp'],
+  // Experimental: improve tree-shaking for serverless
+  experimental: {
+    serverComponentsExternalPackages: ['z-ai-web-dev-sdk', 'sharp'],
+  },
 };
 
 export default nextConfig;
