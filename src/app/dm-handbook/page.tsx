@@ -152,15 +152,16 @@ export default function DMHandbookPage() {
             <TabsTrigger value="state-updates" className="data-[state=active]:bg-red-700 text-xs">4. State Protocol</TabsTrigger>
             <TabsTrigger value="success-rate" className="data-[state=active]:bg-red-700 text-xs">5. Success Rate</TabsTrigger>
             <TabsTrigger value="narrative" className="data-[state=active]:bg-red-700 text-xs">6. Narrative</TabsTrigger>
-            <TabsTrigger value="fallbacks" className="data-[state=active]:bg-red-700 text-xs">7. Fallbacks</TabsTrigger>
-            <TabsTrigger value="faith-engine" className="data-[state=active]:bg-amber-700 text-xs">8. Test of Faith</TabsTrigger>
-            <TabsTrigger value="difficulty" className="data-[state=active]:bg-red-700 text-xs">9. Difficulty</TabsTrigger>
-            <TabsTrigger value="hp-validation" className="data-[state=active]:bg-red-700 text-xs">10. HP Validation</TabsTrigger>
-            <TabsTrigger value="items-dm" className="data-[state=active]:bg-red-700 text-xs">11. Items</TabsTrigger>
-            <TabsTrigger value="quests-dm" className="data-[state=active]:bg-red-700 text-xs">12. Quests</TabsTrigger>
-            <TabsTrigger value="saves-dm" className="data-[state=active]:bg-red-700 text-xs">13. Saves</TabsTrigger>
-            <TabsTrigger value="achievements-dm" className="data-[state=active]:bg-red-700 text-xs">14. Achievements</TabsTrigger>
-            <TabsTrigger value="audio-engine" className="data-[state=active]:bg-red-700 text-xs">15. Audio Engine</TabsTrigger>
+            <TabsTrigger value="skill-system" className="data-[state=active]:bg-cyan-700 text-xs">7. Skill System</TabsTrigger>
+            <TabsTrigger value="fallbacks" className="data-[state=active]:bg-red-700 text-xs">8. Fallbacks</TabsTrigger>
+            <TabsTrigger value="faith-engine" className="data-[state=active]:bg-amber-700 text-xs">9. Test of Faith</TabsTrigger>
+            <TabsTrigger value="difficulty" className="data-[state=active]:bg-red-700 text-xs">10. Difficulty</TabsTrigger>
+            <TabsTrigger value="hp-validation" className="data-[state=active]:bg-red-700 text-xs">11. HP Validation</TabsTrigger>
+            <TabsTrigger value="items-dm" className="data-[state=active]:bg-red-700 text-xs">12. Items</TabsTrigger>
+            <TabsTrigger value="quests-dm" className="data-[state=active]:bg-red-700 text-xs">13. Quests</TabsTrigger>
+            <TabsTrigger value="saves-dm" className="data-[state=active]:bg-red-700 text-xs">14. Saves</TabsTrigger>
+            <TabsTrigger value="achievements-dm" className="data-[state=active]:bg-red-700 text-xs">15. Achievements</TabsTrigger>
+            <TabsTrigger value="audio-engine" className="data-[state=active]:bg-red-700 text-xs">16. Audio Engine</TabsTrigger>
           </TabsList>
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
@@ -412,7 +413,68 @@ export default function DMHandbookPage() {
           </TabsContent>
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
-          {/* 7. FALLBACK SYSTEM */}
+          {/* 7. D&D 5E SKILL SYSTEM */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          <TabsContent value="skill-system" className="space-y-6">
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Target className="w-5 h-5 text-cyan-400" />D&amp;D 5e Skill System &mdash; DM Reference</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300">The skill system is a <strong className="text-cyan-300">narrative enrichment layer</strong>, not a mechanical resolver. It does not alter the success rate formula or replace d20 rolls. Instead, it tells the AI DM what kinds of actions each character is good at, so the generated choices reflect each PC&apos;s identity. Without it, every hero gets the same generic options. With it, a fighter-strong PC gets &quot;Intimidate the sentry&quot; while a thief-dextrous PC gets &quot;Pick the lock.&quot;</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-2">Class Inference Pipeline</h4>
+                    <p className="text-xs text-gray-400 mb-3">When a hero or demigod is loaded as a PC, the engine infers their AD&amp;D 1e classes from three sources, ranked by priority:</p>
+                    <div className="space-y-2">
+                      {[
+                        { step: '1', src: 'Krynn level field', desc: 'Parses strings like "10th ranger/8th fighter" into structured class levels', color: 'text-amber-400' },
+                        { step: '2', src: 'Ability keywords', desc: 'Scans abilities[] for class terms: "fighter", "cleric", "magic-user", "thief", "ranger", "paladin", "druid", "illusionist"', color: 'text-blue-400' },
+                        { step: '3', src: 'Ability scores', desc: 'STR 16+ → Fighter, WIS 16+ → Cleric, INT 16+ → Magic User, DEX 16+ → Thief (fallback)', color: 'text-green-400' },
+                      ].map(s => (
+                        <div key={s.step} className="flex items-start gap-2 p-2 rounded bg-slate-800/50">
+                          <span className={`font-bold ${s.color} w-4 shrink-0`}>{s.step}</span>
+                          <div><div className="text-xs font-bold text-white">{s.src}</div><div className="text-[11px] text-gray-400">{s.desc}</div></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-2">Proficiency Assignment Rules</h4>
+                    <p className="text-xs text-gray-400 mb-3">The engine takes the PC&apos;s top 3 classes by level and grants 3 skills per class. Additionally:</p>
+                    <ul className="text-xs text-gray-300 space-y-1.5 list-disc list-inside">
+                      <li><strong className="text-white">Fighter:</strong> Athletics, Intimidation</li>
+                      <li><strong className="text-white">Cleric:</strong> Religion, Medicine, Insight</li>
+                      <li><strong className="text-white">Magic User:</strong> Arcana, History, Investigation</li>
+                      <li><strong className="text-white">Thief:</strong> Stealth, Sleight of Hand, Acrobatics</li>
+                      <li><strong className="text-white">CHA 15+:</strong> Deception, Persuasion, Performance</li>
+                      <li><strong className="text-white">WIS 15+:</strong> Perception, Survival, Animal Handling</li>
+                      <li><strong className="text-white">DEX 15+:</strong> Acrobatics, Stealth</li>
+                    </ul>
+                    <div className="mt-2 p-2 rounded bg-amber-900/20 text-[11px] text-amber-300">Max from classes: 9 proficiencies. High-stat bonuses are additive (no cap). Duplicate skills are not double-counted.</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-cyan-900/20 border border-cyan-700/50">
+                    <h4 className="font-bold text-cyan-400 mb-2">How Skills Reach the AI Prompt</h4>
+                    <p className="text-xs text-gray-300">Skill proficiencies are included in the <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skills</code> and <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skillProficiencies</code> fields of the game state sent to the Gemini API every turn. The system prompt instructs the AI to use these when generating the 3-5 action choices. Skills are also displayed on the player&apos;s character card as badges for quick reference.</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-2">Scope &amp; Exclusions</h4>
+                    <ul className="text-xs text-gray-300 space-y-1.5 list-disc list-inside">
+                      <li><strong className="text-cyan-300">Heroes &amp; Demigods:</strong> Full skill system applies</li>
+                      <li><strong className="text-gray-400">Greater/Lesser Gods:</strong> No skills &mdash; use named divine abilities</li>
+                      <li><strong className="text-gray-400">Monsters:</strong> No skills &mdash; use attack forms and special abilities</li>
+                      <li><strong className="text-gray-400">Companions:</strong> Skills inferred same as PCs but not displayed</li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* 8. FALLBACK SYSTEM */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="fallbacks" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">

@@ -41,6 +41,21 @@ const INJURY_CATEGORIES = [
   { type: 'Cursed', icon: Ghost, color: 'text-amber-400', border: 'border-amber-700/50', count: 2, injuries: INJURY_TABLE.filter(i => i.type === 'magic' && (i.id === 'cursed_wound' || i.id === 'divine_mark')) },
 ]
 
+const SKILL_GROUPS = [
+  { ability: 'Strength', skills: ['Athletics'] },
+  { ability: 'Dexterity', skills: ['Acrobatics', 'Sleight of Hand', 'Stealth'] },
+  { ability: 'Intelligence', skills: ['Arcana', 'History', 'Investigation', 'Nature', 'Religion'] },
+  { ability: 'Wisdom', skills: ['Animal Handling', 'Insight', 'Medicine', 'Perception', 'Survival'] },
+  { ability: 'Charisma', skills: ['Deception', 'Performance', 'Persuasion', 'Intimidation'] },
+]
+
+const CLASS_SKILL_MAP = [
+  { cls: 'Fighter', skills: ['Athletics', 'Intimidation'], color: 'text-red-400' },
+  { cls: 'Cleric', skills: ['Religion', 'Medicine', 'Insight'], color: 'text-amber-400' },
+  { cls: 'Magic User', skills: ['Arcana', 'History', 'Investigation'], color: 'text-blue-400' },
+  { cls: 'Thief', skills: ['Stealth', 'Sleight of Hand', 'Acrobatics'], color: 'text-green-400' },
+]
+
 const ABILITY_BONUS_TABLE = [
   { range: '3', bonus: '-3', desc: 'Non-functional' },
   { range: '4-5', bonus: '-2', desc: 'Severely impaired' },
@@ -295,6 +310,52 @@ export default function RulebookPage() {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Dumbbell className="w-5 h-5 text-cyan-400" />D&amp;D 5e Skill Proficiencies</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300 text-sm">On top of the AD&amp;D 1e core stats, heroes and demigods also carry <strong className="text-cyan-300">D&amp;D 5e skill proficiencies</strong>. These do not replace the core stats &mdash; they are a narrative layer that helps the AI DM generate relevant, character-appropriate action choices. A fighter sees &quot;Intimidate the guard&quot;; a thief sees &quot;Sneak past the patrol.&quot; Gods and monsters do not use this system; they rely on their named divine abilities instead.</p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-3">All 18 Skills (by Ability)</h4>
+                    <div className="space-y-2">
+                      {SKILL_GROUPS.map(g => (
+                        <div key={g.ability} className="flex items-start gap-2">
+                          <span className="text-xs font-bold text-amber-400 w-24 shrink-0">{g.ability}</span>
+                          <div className="flex flex-wrap gap-1">
+                            {g.skills.map(s => (
+                              <Badge key={s} className="bg-cyan-900/50 text-cyan-300 text-[10px]">{s}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-3">How Proficiencies Are Assigned</h4>
+                    <p className="text-xs text-gray-400 mb-3">Each PC&apos;s top 3 inferred classes grant 3 skills each. Additionally, any ability score of 15+ grants its associated skills. Maximum 9 proficiencies from class + extras from high stats.</p>
+                    <div className="space-y-2">
+                      {CLASS_SKILL_MAP.map(c => (
+                        <div key={c.cls} className="flex items-start gap-2">
+                          <span className={`text-xs font-bold w-24 shrink-0 ${c.color}`}>{c.cls}</span>
+                          <div className="flex flex-wrap gap-1">
+                            {c.skills.map(s => (
+                              <Badge key={s} className="bg-slate-600 text-gray-200 text-[10px]">{s} +2</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-3 p-2 rounded bg-slate-600/30 text-[11px] text-gray-400">
+                      <strong className="text-gray-300">High Stat Bonus (15+):</strong> CHA 15+ &rarr; Deception, Persuasion, Performance &bull; WIS 15+ &rarr; Perception, Survival, Animal Handling &bull; DEX 15+ &rarr; Acrobatics, Stealth
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded bg-cyan-900/20 border border-cyan-700/50 text-sm text-gray-400"><strong className="text-cyan-300">Where to see it:</strong> Your character card in-game shows your skill proficiencies as small badges. The Codex also displays skills on hero and demigod entries. Proficiencies are inferred automatically from your class levels and ability scores &mdash; no manual selection needed.</div>
               </CardContent>
             </Card>
           </TabsContent>

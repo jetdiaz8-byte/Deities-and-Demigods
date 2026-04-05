@@ -23,7 +23,7 @@ import {
   Search, X, Crown, Sword, Shield, Skull, Sparkles, Heart, 
   ChevronLeft, ChevronRight, Star, Zap, BookOpen, Users, Flame,
   Brain, Dumbbell, Footprints, ShieldCheck, Smile, Gem,
-  ScrollText, Droplet, Ghost, Swords, Package, Trophy, Volume2
+  ScrollText, Droplet, Ghost, Swords, Package, Trophy, Volume2, Target
 } from 'lucide-react'
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -96,6 +96,84 @@ const pantheonColor = (pantheon: string): string => {
     'Krynn': 'bg-amber-800/50 text-amber-200', 'Melnibonéan': 'bg-purple-900/50 text-purple-200',
   }
   return colors[pantheon] || 'bg-gray-800/50 text-gray-200'
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// D&D 5e SKILL INFERENCE (Codex read-only display)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const CLASS_SKILLS: Record<string, string[]> = {
+  fighter: ['Athletics', 'Intimidation'],
+  cleric: ['Religion', 'Medicine', 'Insight'],
+  'magic-user': ['Arcana', 'History', 'Investigation'],
+  'magic user': ['Arcana', 'History', 'Investigation'],
+  thief: ['Stealth', 'Sleight of Hand', 'Acrobatics'],
+  ranger: ['Perception', 'Survival', 'Stealth'],
+  paladin: ['Athletics', 'Religion', 'Intimidation'],
+  druid: ['Nature', 'Medicine', 'Animal Handling'],
+  illusionist: ['Arcana', 'Investigation', 'Deception'],
+}
+
+const parseAbilityScore = (val: string | undefined): number => {
+  if (!val) return 0
+  const m = val.match(/^(\d+)/)
+  return m ? parseInt(m[1]) : 0
+}
+
+const inferSkills = (character: Character): string[] => {
+  if (!['hero', 'demigod'].includes(character.type || '')) return []
+  const profs = new Set<string>()
+  const add = (s: string) => profs.add(s)
+
+  // Source 1: Krynn level field (e.g. "10th ranger/8th fighter")
+  if (character.level) {
+    const classEntries: { cls: string; lv: number }[] = []
+    const parts = character.level.split('/')
+    for (const part of parts) {
+      const m = part.match(/(\d+)\w*\s+(.+)/i)
+      if (m) classEntries.push({ cls: m[2].trim().toLowerCase(), lv: parseInt(m[1]) })
+    }
+    // Assign skills from top 3 classes
+    classEntries.sort((a, b) => b.lv - a.lv).slice(0, 3).forEach(entry => {
+      const skills = CLASS_SKILLS[entry.cls]
+      if (skills) skills.forEach(add)
+    })
+  }
+
+  // Source 2: Ability keywords in abilities[]
+  const abilityText = character.abilities.join(' ').toLowerCase()
+  const classKeywords: [string, number][] = [
+    ['fighter', parseAbilityScore(character.str)],
+    ['cleric', parseAbilityScore(character.wis)],
+    ['magic-user', parseAbilityScore(character.int)],
+    ['magic user', parseAbilityScore(character.int)],
+    ['thief', parseAbilityScore(character.dex)],
+    ['ranger', parseAbilityScore(character.dex) + parseAbilityScore(character.wis)],
+    ['paladin', parseAbilityScore(character.str) + parseAbilityScore(character.cha)],
+    ['druid', parseAbilityScore(character.wis)],
+    ['illusionist', parseAbilityScore(character.int)],
+  ]
+  for (const [keyword, score] of classKeywords) {
+    if (abilityText.includes(keyword) && profs.size < 9) {
+      const skills = CLASS_SKILLS[keyword]
+      if (skills) skills.forEach(add)
+    }
+  }
+
+  // Source 3: High ability score fallback (only if no skills found yet)
+  if (profs.size === 0) {
+    if (parseAbilityScore(character.str) >= 16) CLASS_SKILLS['fighter']?.forEach(add)
+    if (parseAbilityScore(character.wis) >= 16) CLASS_SKILLS['cleric']?.forEach(add)
+    if (parseAbilityScore(character.int) >= 16) CLASS_SKILLS['magic-user']?.forEach(add)
+    if (parseAbilityScore(character.dex) >= 16) CLASS_SKILLS['thief']?.forEach(add)
+  }
+
+  // High stat bonuses (always applied)
+  if (parseAbilityScore(character.cha) >= 15) ['Deception', 'Persuasion', 'Performance'].forEach(add)
+  if (parseAbilityScore(character.wis) >= 15) ['Perception', 'Survival', 'Animal Handling'].forEach(add)
+  if (parseAbilityScore(character.dex) >= 15) ['Acrobatics', 'Stealth'].forEach(add)
+
+  return Array.from(profs)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -244,6 +322,23 @@ function CharacterDetail({ character, onClose, onNext, onPrev, hasNext, hasPrev 
                   </div>
                 </>
               )}
+              {(() => {
+                const skills = inferSkills(character)
+                if (skills.length === 0) return null
+                return (
+                  <>
+                    <Separator className="bg-slate-700" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2"><Target className="w-4 h-4 text-cyan-400" />D&amp;D 5e Skill Proficiencies</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {skills.map(skill => (
+                          <Badge key={skill} className="bg-cyan-900/50 text-cyan-300 text-[11px] px-2 py-0.5">{skill} +2</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )
+              })()}
               {(character.domain || character.symbol) && (
                 <>
                   <Separator className="bg-slate-700" />
