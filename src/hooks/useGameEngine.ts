@@ -745,9 +745,17 @@ export function useGameEngine() {
     const shard = gs.shardEntry
     const phase = gs.antagonistPhase
 
+    const skillLabel = (pc: Entity): string => {
+      const profs = gs.skillProficiencies
+      if (!profs || profs.length === 0) return ''
+      return ' | Skills:' + profs.map(s => {
+        const mod = getSkillModifier(pc, s as keyof PlayerSkills, gs.skills)
+        return `${s.replace(/_/g, ' ')}(${mod >= 0 ? '+' : ''}${mod})`
+      }).join(',')
+    }
     const partyState = living.map(pc => {
       const injs = (gs.injuries[pc.id] || []).map(i => `${i.icon}${i.name}(${i.turnsLeft}t)`).join(' ')
-      return `ID:"${pc.id}" | ${pc.name}[${pc.align.slice(0, 2)}|HP:${pc.hp}/${pc.maxHp}|AC:${pc.AC}${injs ? ' |' + injs : ''}] ${toAscii(pc.personality || '').slice(0, 40)}`
+      return `ID:"${pc.id}" | ${pc.name}[${pc.align.slice(0, 2)}|HP:${pc.hp}/${pc.maxHp}|AC:${pc.AC}${injs ? ' |' + injs : ''}${skillLabel(pc)}] ${toAscii(pc.personality || '').slice(0, 40)}`
     }).join('\n')
 
     const actCtx = gs.act === ACTS.ONE
@@ -890,7 +898,12 @@ THE MAIN PC — CHOSEN BY THE SHARD
 ═══════════════════════════════════════════════════════════════════════════
 ${mainPC ? `${mainPC.name} [${mainPC.pantheon}] [${mainPC.align}] carries the prophecy directly through the shard.
 The shard chose them. They cannot escape this destiny.
-Personality: ${toAscii(mainPC.personality || '').slice(0, 60)}` : 'No main PC yet'}
+Personality: ${toAscii(mainPC.personality || '').slice(0, 60)}
+Ability Scores: STR ${mainPC.str || '?'} | DEX ${mainPC.dex || '?'} | CON ${mainPC.con || '?'} | INT ${mainPC.int || '?'} | WIS ${mainPC.wis || '?'} | CHA ${mainPC.cha || '?'}
+Skill Proficiencies: ${gs.skillProficiencies.length > 0 ? gs.skillProficiencies.map(s => {
+  const mod = getSkillModifier(mainPC, s as keyof PlayerSkills, gs.skills)
+  return `${s.replace(/_/g, ' ')} ${mod >= 0 ? '+' : ''}${mod}`
+}).join(' · ') : 'None (non-hero entity)'}` : 'No main PC yet'}
 
 ${living.length > 1 ? `═══════════════════════════════════════════════════════════════════════════
 THE COMPANION — Bound by Fate to the Main PC
@@ -1213,6 +1226,13 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     const ab = pc.abilities.map(toAscii)
     const evil = pc.align.toLowerCase().includes('evil')
     
+    // Skill modifier helper — shows "+N SkillName" for proficient skills
+    const skillMod = (skillName: string): string => {
+      if (!gameState.skillProficiencies.includes(skillName)) return ''
+      const mod = getSkillModifier(pc, skillName as keyof PlayerSkills, gameState.skills)
+      return `${mod >= 0 ? '+' : ''}${mod} ${skillName.replace(/_/g, ' ')}`
+    }
+    
     // Get companion if available
     const companion = gameState.companionId ? gameState.pcs.find(p => p.id === gameState.companionId) : null
     const companionEvil = companion?.align.toLowerCase().includes('evil') || false
@@ -1294,7 +1314,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
             ? `🎭 Intimidate ${npcName} — Demand information through fear`
             : `🤝 Diplomacy — Attempt to persuade or negotiate with ${npcName}`,
           ability: evil ? 'intimidation' : 'persuasion',
-          align_note: evil ? 'CHA check (intimidation)' : 'CHA check (persuasion)',
+          align_note: evil ? `CHA check (intimidation${skillMod('intimidation') ? ' · ' + skillMod('intimidation') : ''})` : `CHA check (persuasion${skillMod('persuasion') ? ' · ' + skillMod('persuasion') : ''})`,
           source: 'pc'
         },
         { 
@@ -1303,7 +1323,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
             ? `✨ ${ab[0].split('(')[0].trim()} — Ready your power, just in case`
             : '👁️ Observe — Study the situation carefully before acting',
           ability: ab.length > 0 ? ab[0] : 'investigation',
-          align_note: ab.length > 0 ? 'special ability (ready)' : 'perception check',
+          align_note: ab.length > 0 ? 'special ability (ready)' : `perception check${skillMod('perception') ? ' · ' + skillMod('perception') : ''}`,
           source: 'pc'
         }
       )
@@ -1315,7 +1335,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
           num: 1, 
           action: '🔍 Investigate — Search the area for clues, hidden paths, or items of interest',
           ability: 'investigation',
-          align_note: 'perception check',
+          align_note: `investigation check${skillMod('investigation') ? ' · ' + skillMod('investigation') : ''}`,
           source: 'pc'
         },
         { 
