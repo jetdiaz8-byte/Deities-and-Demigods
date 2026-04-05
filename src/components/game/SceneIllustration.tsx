@@ -106,11 +106,18 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
       body: JSON.stringify({ prompt, size: '1344x768' }),
     })
       .then(res => {
+        // If image gen is disabled (503 with disabled flag), bail immediately
+        if (res.status === 503) {
+          apiFailedRef.current = true
+          setLoading(false)
+          setError(true)
+          return null
+        }
         if (!res.ok) throw new Error('Generation failed')
         return res.json()
       })
       .then(data => {
-        if (cancelled) return
+        if (cancelled || !data) return
         const url = `data:image/png;base64,${data.base64}`
         cacheRef.current.set(turn, url)
         setImageUrl(url)
