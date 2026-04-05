@@ -12,9 +12,11 @@ import {
   Crown, Sparkles, Sword, Skull, Flame, Shield, AlertTriangle,
   ScrollText, Package, Heart, Brain, Droplet, Star, Users,
   Dice5, Ghost, Link2, Timer, Target, Swords, Dumbbell,
-  ShieldCheck, Eye, Info, ArrowRight
+  ShieldCheck, Eye, Info, ArrowRight, Trophy, Volume2, Scale
 } from 'lucide-react'
 import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES } from '@/lib/gameConstants'
+import { ACHIEVEMENT_DEFS, TIER_CONFIG, CATEGORY_CONFIG } from '@/lib/achievements'
+import type { AchievementTier, AchievementCategory } from '@/lib/achievements'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPLETE GAME DATA (accurate to source code)
@@ -105,6 +107,9 @@ export default function RulebookPage() {
             <TabsTrigger value="companions" className="data-[state=active]:bg-emerald-600 text-xs">11. Companions</TabsTrigger>
             <TabsTrigger value="antagonists" className="data-[state=active]:bg-emerald-600 text-xs">12. Antagonists</TabsTrigger>
             <TabsTrigger value="saving" className="data-[state=active]:bg-emerald-600 text-xs">13. Saving</TabsTrigger>
+            <TabsTrigger value="achievements" className="data-[state=active]:bg-amber-600 text-xs">14. Achievements</TabsTrigger>
+            <TabsTrigger value="audio" className="data-[state=active]:bg-emerald-600 text-xs">15. Audio & Voice</TabsTrigger>
+            <TabsTrigger value="difficulty" className="data-[state=active]:bg-emerald-600 text-xs">16. Difficulty</TabsTrigger>
           </TabsList>
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
@@ -137,10 +142,9 @@ export default function RulebookPage() {
                 <ol className="text-gray-300 space-y-2 list-decimal list-inside">
                   <li>Open the Mythworld Engine app in your browser</li>
                   <li>Enter your Gemini API key in the &quot;Gemini Key&quot; field</li>
-                  <li>Click <strong>&quot;Start New Campaign&quot;</strong></li>
+                  <li>Click <strong className="text-emerald-400">⚔ &quot;Begin Your Legend&quot; ⚔</strong></li>
                   <li>A pool of heroes and demigods is randomly selected for you</li>
-                  <li>Click on characters to add them to your party (2-4 recommended)</li>
-                  <li>Click <strong>&quot;Confirm Party&quot;</strong> when ready</li>
+                  <li>Select <strong>1 main PC</strong> as your hero — the DM auto-selects <strong>1 companion</strong> for you</li>
                   <li>A mysterious Shard is assigned, and the game begins!</li>
                 </ol>
                 <div className="mt-4 p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Note:</strong> Your API key is stored locally in your browser and is never sent anywhere except directly to Google.</div>
@@ -716,6 +720,191 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* 14. ACHIEVEMENTS */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          <TabsContent value="achievements" className="space-y-6">
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Trophy className="w-5 h-5 text-amber-400" />Achievement System &mdash; {ACHIEVEMENT_DEFS.length} Achievements</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300 text-sm">Achievements are unlocked automatically as you play. Some are visible from the start; others are <strong className="text-purple-400">hidden</strong> until you discover them. The tracker checks your game state after every turn and fires a notification when a new achievement unlocks.</p>
+
+                {/* Tiers */}
+                <h4 className="font-bold text-white text-sm">4 Tiers</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {(Object.entries(TIER_CONFIG) as [AchievementTier, typeof TIER_CONFIG[AchievementTier]][]).map(([tier, cfg]) => {
+                    const count = ACHIEVEMENT_DEFS.filter(a => a.tier === tier).length
+                    return (
+                      <div key={tier} className="p-3 rounded-lg border text-center" style={{ borderColor: cfg.border, backgroundColor: cfg.bg }}>
+                        <div className="text-lg font-bold" style={{ color: cfg.color }}>{count}</div>
+                        <div className="text-xs" style={{ color: cfg.color }}>{cfg.label}</div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Categories */}
+                <h4 className="font-bold text-white text-sm">7 Categories</h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {(Object.entries(CATEGORY_CONFIG) as [AchievementCategory, typeof CATEGORY_CONFIG[AchievementCategory]][]).map(([cat, cfg]) => {
+                    const count = ACHIEVEMENT_DEFS.filter(a => a.category === cat).length
+                    const visibleCount = ACHIEVEMENT_DEFS.filter(a => a.category === cat && !a.hidden).length
+                    return (
+                      <div key={cat} className="p-3 rounded-lg bg-slate-700/50 text-center">
+                        <div className="text-lg">{cfg.icon}</div>
+                        <div className="text-sm font-bold text-white">{cfg.label}</div>
+                        <div className="text-xs text-gray-400">{count} total &middot; {visibleCount} visible</div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* How they're earned */}
+                <h4 className="font-bold text-white text-sm">How Achievements Are Earned</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h5 className="font-bold text-amber-400 mb-2">Campaign Milestones</h5>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                      <li>Completing each act (Act I, II, III)</li>
+                      <li>Victory or defeat endings</li>
+                      <li>Speedrunning (under 40 turns) or marathons (150+ turns)</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h5 className="font-bold text-red-400 mb-2">Combat</h5>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                      <li>First blood, critical strikes</li>
+                      <li>Boss phase transitions (Phase 2, Phase 3)</li>
+                      <li>Banishment and archrival summons</li>
+                      <li>Damage milestones (500 / 1500)</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h5 className="font-bold text-cyan-400 mb-2">Exploration & Social</h5>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                      <li>Encountering gods across pantheons (5 / 15 / 30)</li>
+                      <li>Multi-pantheon encounters (5+ pantheons)</li>
+                      <li>Quest acceptance and completion</li>
+                      <li>Clue gathering and gold accumulation</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h5 className="font-bold text-purple-400 mb-2">Survival & Shard</h5>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                      <li>Surviving 50 / 100 / 150 turns</li>
+                      <li>Zero-death runs, full HP entering Act III</li>
+                      <li>First shard invocation, greater god summons</li>
+                      <li>Test of Faith outcomes (miracle, Murphy, trust fate)</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Hidden Achievements:</strong> {ACHIEVEMENT_DEFS.filter(a => a.hidden).length} of {ACHIEVEMENT_DEFS.length} achievements are hidden until unlocked. They reward unexpected feats &mdash; try everything!</div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* 15. AUDIO & VOICE */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          <TabsContent value="audio" className="space-y-6">
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Volume2 className="w-5 h-5 text-emerald-400" />Audio &amp; Voice Systems</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300 text-sm">Mythworld features a layered audio system that combines procedural ambient soundscapes, contextual sound effects, and AI-powered text-to-speech narration to create an immersive experience.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-emerald-400 mb-2">Procedural Ambient Audio</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                      <li><strong>8 audio themes</strong> that match scene types</li>
+                      <li>Themes include: forest, dungeon, combat, temple, tavern, coastal, mountain, and void</li>
+                      <li>Soundscapes are generated procedurally using Web Audio API</li>
+                      <li>Fades smoothly between themes as the scene changes</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-amber-400 mb-2">Sound Effects (SFX)</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                      <li>Dice rolls &mdash; tactile rumble on every action</li>
+                      <li>Combat hits &mdash; impacts, clashes, and spell sounds</li>
+                      <li>Injury events &mdash; wince-inducing feedback</li>
+                      <li>Achievement unlocks &mdash; triumphant chime</li>
+                      <li>Shard invocation &mdash; ethereal resonance</li>
+                      <li>Test of Faith &mdash; dramatic tension build</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-cyan-400 mb-2">TTS Narration (Edge TTS)</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                      <li>AI narration spoken aloud via Microsoft Edge TTS</li>
+                      <li>Narrator voice selected to match the game&apos;s tone</li>
+                      <li>Toggle on/off from the game settings</li>
+                      <li>Reads the DM&apos;s narrative prose each turn</li>
+                    </ul>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-purple-400 mb-2">Auto Scene Detection</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                      <li>The engine detects scene type from the AI&apos;s response</li>
+                      <li>Keywords in the narrative trigger theme changes</li>
+                      <li>Combat scenes auto-switch to battle audio</li>
+                      <li>Exploration scenes adapt to terrain descriptions</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Tip:</strong> All audio is browser-native (Web Audio API). No external services or downloads required beyond the TTS endpoint. Audio can be fully muted from the in-game settings panel.</div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* 16. DIFFICULTY & BALANCE */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          <TabsContent value="difficulty" className="space-y-6">
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Scale className="w-5 h-5 text-emerald-400" />Difficulty &amp; Balance</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300 text-sm">There is no difficulty selector in Mythworld. Instead, <strong className="text-white">difficulty emerges dynamically</strong> from the success rate formula. As your story progresses and circumstances shift, the odds rise and fall naturally.</p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-lg bg-green-900/20 border border-green-700">
+                    <h4 className="font-bold text-green-400 mb-2">Act I: ~50-65%</h4>
+                    <p className="text-xs text-gray-400">Full party alive, few injuries, early story bonuses. The world is forgiving &mdash; but the clock is ticking.</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-yellow-900/20 border border-yellow-700">
+                    <h4 className="font-bold text-yellow-400 mb-2">Act II: ~40-60%</h4>
+                    <p className="text-xs text-gray-400">Injuries accumulate. The Greater God penalty (-5%) kicks in. Prophecy state and ally count become critical swings.</p>
+                  </div>
+                  <div className="p-4 rounded-lg bg-red-900/20 border border-red-700">
+                    <h4 className="font-bold text-red-400 mb-2">Act III: ~30-55%</h4>
+                    <p className="text-xs text-gray-400">Injuries stack up to -15%. Boss phases impose additional pressure. Every factor matters. Victory is earned, not given.</p>
+                  </div>
+                </div>
+
+                <h4 className="font-bold text-white text-sm">Key Pressure Points</h4>
+                <div className="space-y-2">
+                  {[
+                    { factor: '13 dynamic factors', desc: 'The success rate recalculates every turn based on 13 shifting variables', color: 'text-emerald-400' },
+                    { factor: 'Greater God penalty: -5%', desc: 'Facing a Greater God antagonist imposes a flat -5% to your success rate', color: 'text-red-400' },
+                    { factor: 'Injury stacking: up to -15%', desc: 'Each injury applies a modifier. Multiple injuries compound, capping at -15%', color: 'text-amber-400' },
+                    { factor: 'Broken prophecy: -5%', desc: 'If your prophecy shatters, you lose the bonus and suffer a penalty instead', color: 'text-purple-400' },
+                    { factor: 'Hostile companion: -5%', desc: 'If companion affinity drops to hostile, it further erodes your odds', color: 'text-rose-400' },
+                    { factor: 'Floor: 5% / Ceiling: 95%', desc: 'No matter how dire or how blessed, there is always a chance', color: 'text-cyan-400' },
+                  ].map(f => (
+                    <div key={f.factor} className="flex items-center justify-between p-3 rounded-lg bg-slate-700/30">
+                      <span className={`text-sm font-bold ${f.color}`}>{f.factor}</span>
+                      <span className="text-xs text-gray-400 text-right max-w-xs">{f.desc}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Design Philosophy:</strong> Difficulty is not a knob you set &mdash; it is a story you live. Manage your injuries, nurture your companion bond, fulfill your prophecy, and summon allies wisely. The formula rewards preparation and punishes neglect.</div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useMemo } from 'react'
 import Image from 'next/image'
-import { getAbilityBonus } from '@/lib/gameHelpers'
+import { getAbilityBonus, assignSkillProficiencies } from '@/lib/gameHelpers'
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -11,7 +11,7 @@ import { Separator } from '@/components/ui/separator'
 import { 
   Crown, Sword, Shield, Skull, Sparkles, Heart, 
   Star, Zap, BookOpen, ChevronLeft, ChevronRight, X,
-  Dumbbell
+  Dumbbell, Target
 } from 'lucide-react'
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -144,6 +144,12 @@ export function PortraitModal({
   const [imageError, setImageError] = useState(false)
   const [viewMode, setViewMode] = useState<'portrait' | 'card'>('card')
   const prevCharIdRef = useRef<string | undefined>(undefined)
+
+  const proficiencies = useMemo(() => {
+    if (!character || !['hero', 'demigod'].includes(character.type || '')) return []
+    const result = assignSkillProficiencies(character as any)
+    return result.proficiencies
+  }, [character])
 
   // Reset imageError when character changes - using ref to avoid effect setState issue
   if (character?.id !== prevCharIdRef.current) {
@@ -380,6 +386,26 @@ export function PortraitModal({
                   </>
                 )}
                 
+                {/* Skill Proficiencies — heroes & demigods only */}
+                {['hero', 'demigod'].includes(character.type || '') && proficiencies.length > 0 && (
+                  <>
+                    <Separator className="bg-slate-700" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                        <Target className="w-4 h-4 text-cyan-400" />
+                        Skill Proficiencies
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {proficiencies.map(skill => (
+                          <Badge key={skill} className="bg-cyan-900/50 text-cyan-300 text-xs px-2 py-1">
+                            {skill.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} <span className="text-cyan-200 font-bold">+2</span>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 {/* Domain and Symbol */}
                 {(character.domain || character.symbol) && (
                   <>

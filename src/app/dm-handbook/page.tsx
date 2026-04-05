@@ -13,9 +13,11 @@ import {
   AlertTriangle, Zap, Clock, RefreshCcw, Shield, Heart,
   Skull, Gem, Swords, Layers, Activity, FileWarning, Save,
   Wifi, WifiOff, Cpu, MessageSquare, Timer, Sparkles, Target,
-  Ghost, Flame, ArrowDownUp, Users, Eye, Briefcase, Scroll
+  Ghost, Flame, ArrowDownUp, Users, Eye, Briefcase, Scroll,
+  Volume2, Music
 } from 'lucide-react'
 import { INJURY_TABLE, ITEM_TEMPLATES } from '@/lib/gameConstants'
+import { ACHIEVEMENT_DEFS, TIER_CONFIG, CATEGORY_CONFIG } from '@/lib/achievements'
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DM RESPONSE TYPE REFERENCE (mirrors gameTypes.ts DMResponse)
@@ -157,6 +159,8 @@ export default function DMHandbookPage() {
             <TabsTrigger value="items-dm" className="data-[state=active]:bg-red-700 text-xs">11. Items</TabsTrigger>
             <TabsTrigger value="quests-dm" className="data-[state=active]:bg-red-700 text-xs">12. Quests</TabsTrigger>
             <TabsTrigger value="saves-dm" className="data-[state=active]:bg-red-700 text-xs">13. Saves</TabsTrigger>
+            <TabsTrigger value="achievements-dm" className="data-[state=active]:bg-red-700 text-xs">14. Achievements</TabsTrigger>
+            <TabsTrigger value="audio-engine" className="data-[state=active]:bg-red-700 text-xs">15. Audio Engine</TabsTrigger>
           </TabsList>
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
@@ -194,7 +198,7 @@ export default function DMHandbookPage() {
                   <div className="space-y-2 text-sm">
                     {[
                       { label: 'Opening Scene Tokens', value: '8,000 max' },
-                      { label: 'Regular Turn Tokens', value: '4,000 max' },
+                      { label: 'Regular Turn Tokens', value: '6,000 max' },
                       { label: 'Temperature', value: '0.9 (creative)' },
                       { label: 'Retry Strategy', value: '3 attempts, exponential backoff' },
                       { label: 'Base Delay', value: '6,000ms' },
@@ -387,7 +391,7 @@ export default function DMHandbookPage() {
                       <li><strong className="text-amber-300">300+ words minimum</strong> for dm_narration</li>
                       <li>2-4 rich paragraphs per turn</li>
                       <li>Opening scenes get 8,000 tokens (longer)</li>
-                      <li>Regular turns get 4,000 tokens</li>
+                      <li>Regular turns get 6,000 tokens</li>
                       <li>Sensory details: sound, smell, texture, light</li>
                     </ul>
                   </div>
@@ -678,6 +682,181 @@ const merged = { ...getDefaultGameState(), ...saved }
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* 14. ACHIEVEMENT SYSTEM */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          <TabsContent value="achievements-dm" className="space-y-6">
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Sparkles className="w-5 h-5 text-yellow-400" />Achievement System</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300 text-sm">The achievement system runs <code className="text-yellow-300 bg-yellow-900/20 px-1 rounded">checkAchievements()</code> after every turn, comparing the current game state against the previous turn to detect milestones. Unlocks are persisted in save data via <code className="text-yellow-300 bg-yellow-900/20 px-1 rounded">serializeTracker()</code>.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-2">4 Tiers</h4>
+                    <div className="space-y-2">
+                      {Object.entries(TIER_CONFIG).map(([tier, cfg]) => (
+                        <div key={tier} className="flex items-center gap-2 text-sm">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cfg.color, boxShadow: `0 0 6px ${cfg.glow}` }} />
+                          <span className="font-bold" style={{ color: cfg.color }}>{cfg.label}</span>
+                          <span className="text-gray-400">&mdash; {ACHIEVEMENT_DEFS.filter(a => a.tier === tier).length} achievements ({ACHIEVEMENT_DEFS.filter(a => a.tier === tier && a.hidden).length} hidden)</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-2">7 Categories</h4>
+                    <div className="space-y-1">
+                      {Object.entries(CATEGORY_CONFIG).map(([cat, cfg]) => (
+                        <div key={cat} className="flex items-center gap-2 text-sm text-gray-300">
+                          <span>{cfg.icon}</span>
+                          <span className="font-bold text-white">{cfg.label}</span>
+                          <span className="text-gray-500 ml-auto">{ACHIEVEMENT_DEFS.filter(a => a.category === cat).length}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400">
+                  <strong className="text-white">Success Rate Integration:</strong> Achievements feed into the <code className="text-red-300 bg-red-900/20 px-1 rounded">storyAchievements</code> factor: <code className="text-amber-300">min((completedQuests + floor(clues/2)) × 2, 12)</code>. Completed quests and uncovered antagonist clues both contribute +2 each (capped at +12%). This means thorough exploration and quest completion directly improve the party&apos;s odds of victory.
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Scroll className="w-5 h-5 text-red-400" />Full Achievement Registry ({ACHIEVEMENT_DEFS.length} total)</CardTitle></CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="sticky top-0 bg-slate-800">
+                      <tr className="border-b border-slate-600">
+                        <th className="text-left py-2 text-gray-400">ID</th>
+                        <th className="text-left py-2 text-gray-400">Name</th>
+                        <th className="text-left py-2 text-gray-400">Category</th>
+                        <th className="text-left py-2 text-gray-400">Tier</th>
+                        <th className="text-left py-2 text-gray-400">Description</th>
+                        <th className="text-left py-2 text-gray-400">Hidden</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-gray-300">
+                      {ACHIEVEMENT_DEFS.map(a => {
+                        const tierCfg = TIER_CONFIG[a.tier]
+                        const catCfg = CATEGORY_CONFIG[a.category]
+                        return (
+                          <tr key={a.id} className="border-b border-slate-700/50">
+                            <td className="py-1.5 font-mono text-xs text-gray-500">{a.id}</td>
+                            <td className="py-1.5 text-white text-xs">{a.icon} {a.name}</td>
+                            <td className="py-1.5 text-xs">{catCfg.icon} {catCfg.label}</td>
+                            <td className="py-1.5 text-xs" style={{ color: tierCfg.color }}>{tierCfg.label}</td>
+                            <td className="py-1.5 text-xs text-gray-400 max-w-xs">{a.description}</td>
+                            <td className="py-1.5 text-xs">{a.hidden ? <Badge className="bg-slate-700 text-gray-500 text-xs">Hidden</Badge> : <Badge className="bg-green-900/30 text-green-400 text-xs">Visible</Badge>}</td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          {/* 15. AUDIO ENGINE */}
+          {/* ═══════════════════════════════════════════════════════════════════ */}
+          <TabsContent value="audio-engine" className="space-y-6">
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Music className="w-5 h-5 text-purple-400" />Procedural Audio Engine</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300 text-sm">The audio engine (<code className="text-purple-300 bg-purple-900/20 px-1 rounded">useGameAudio()</code>) generates all sound procedurally using the Web Audio API &mdash; no audio files are loaded. Every sound is synthesized in real-time from oscillators, noise generators, and filters.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-2">8 Ambient Themes</h4>
+                    <p className="text-xs text-gray-400 mb-2">Each theme is a layered drone built from base frequency, harmonics, LFO modulation, and filtered noise:</p>
+                    <div className="space-y-2">
+                      {[
+                        { name: 'Intro', freq: '36.71 Hz (D1)', desc: 'Ancient temple stillness — deep Om drone + breath', color: 'text-purple-400' },
+                        { name: 'Act I', freq: '32.70 Hz (C1)', desc: 'Forgotten wilderness — tense low rumble + wind howl', color: 'text-green-400' },
+                        { name: 'Act II', freq: '41.20 Hz (E1)', desc: 'Ancient war-temple — dark choir + metallic resonance', color: 'text-amber-400' },
+                        { name: 'Act III', freq: '27.50 Hz (A0)', desc: 'Abyssal boss domain — crushing dissonance + thunder', color: 'text-red-400' },
+                        { name: 'Tavern', freq: '73.42 Hz (D2)', desc: 'Warm hearth tones — gentle warmth pulse + distant chatter', color: 'text-orange-400' },
+                        { name: 'Forest', freq: '55 Hz (A1)', desc: 'Deep earth rumble — wind through canopy + bird songs', color: 'text-emerald-400' },
+                        { name: 'Battle', freq: '41.20 Hz (E1)', desc: 'Aggressive root — grinding bass, war drums, clashing steel', color: 'text-rose-400' },
+                        { name: 'Temple', freq: '65.41 Hz (C2)', desc: 'Sacred tone — pure drone, perfect fifth, cathedral reverb', color: 'text-cyan-400' },
+                        { name: 'Ocean', freq: '36.71 Hz (D1)', desc: 'Deep wave — tidal drone, wave crest, sea foam shimmer', color: 'text-blue-400' },
+                      ].map(t => (
+                        <div key={t.name} className="flex items-start gap-2 text-xs">
+                          <Volume2 className={`w-3 h-3 mt-0.5 ${t.color} shrink-0`} />
+                          <div><span className={`font-bold ${t.color}`}>{t.name}</span> <span className="text-gray-500 font-mono">({t.freq})</span><br /><span className="text-gray-400">{t.desc}</span></div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-2">SFX Event System</h4>
+                    <p className="text-xs text-gray-400 mb-2">The <code className="text-purple-300 bg-purple-900/20 px-1 rounded">soundEvents</code> publish/subscribe bus dispatches procedural sound effects:</p>
+                    <div className="space-y-2">
+                      {[
+                        { event: 'dice_roll', desc: '6-10 rapid noise bursts + success/fail resolution tone', detail: 'Success: rising A5-E6 arpeggio. Fail: descending sine sweep 300→60 Hz' },
+                        { event: 'combat_hit', desc: 'Noise burst + sub-bass impact + resonant metal', detail: 'Critical: louder impact (0.35 gain) + higher-pitched ring (2400 Hz)' },
+                        { event: 'combat_miss', desc: 'Whoosh — filtered white noise burst (4 kHz, 200ms)', detail: 'Uses lowpass filter to simulate air displacement' },
+                        { event: 'injury', desc: 'Harsh noise burst (2 kHz) + descending bass drone', detail: 'Slow 300ms decay with low-frequency rumble' },
+                        { event: 'shard_pulse', desc: 'Descending sine sweep 1200→800 Hz through reverb', detail: '2-second convolver reverb for supernatural echo' },
+                        { event: 'act_transition', desc: 'Arpeggiated chord unique to each act', detail: 'Intro: 3 notes, Act I: 4, Act II: 5, Act III: 6 (sawtooth)' },
+                        { event: 'boss_phase', desc: 'Two distinct chords for Phase 2 vs Phase 3', detail: 'Rapid 80ms intervals with sawtooth oscillators' },
+                        { event: 'victory', desc: '6 ascending major triads spanning C4-G#5', detail: 'Each chord: 250ms duration with 500ms total spacing' },
+                        { event: 'death', desc: 'Descending sine 300→80 Hz over 1 second', detail: 'Slow exponential decay to silence' },
+                      ].map(s => (
+                        <div key={s.event} className="p-2 rounded bg-slate-800/50 text-xs">
+                          <div className="flex items-center gap-2"><code className="text-purple-300 font-mono">{s.event}</code></div>
+                          <div className="text-gray-300 mt-0.5">{s.desc}</div>
+                          <div className="text-gray-500 mt-0.5">{s.detail}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Eye className="w-5 h-5 text-cyan-400" />Scene Theme Auto-Detection</CardTitle></CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300 text-sm">The <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">useSceneMusic()</code> hook automatically selects ambient themes based on the current game state. It checks the <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">storySummary</code> for location keywords and active NPC conditions for battle detection.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-2">Detection Priority</h4>
+                    <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
+                      <li><strong className="text-red-300">Hostile NPCs:</strong> Any NPC with &quot;hostile&quot; or &quot;enemy&quot; condition &rarr; battle theme</li>
+                      <li><strong className="text-orange-300">Tavern:</strong> Keywords: tavern, inn, bar, pub, alehouse</li>
+                      <li><strong className="text-emerald-300">Forest:</strong> Keywords: forest, woods, grove, jungle, wilderness</li>
+                      <li><strong className="text-cyan-300">Temple:</strong> Keywords: temple, shrine, sanctum, altar, cathedral, chapel</li>
+                      <li><strong className="text-blue-300">Ocean:</strong> Keywords: ocean, sea, ship, harbor, coast, shore, port</li>
+                      <li><strong className="text-gray-400">Act Fallback:</strong> Act I &rarr; forest, Act II &rarr; battle, Act III &rarr; battle</li>
+                    </ol>
+                  </div>
+                  <div className="p-4 rounded-lg bg-slate-700/50">
+                    <h4 className="font-bold text-white mb-2">Act Progression</h4>
+                    <p className="text-xs text-gray-400 mb-2">Ambient themes evolve with the story:</p>
+                    <div className="space-y-2">
+                      {[
+                        { act: 'Intro', mood: 'Meditative, sacred', detail: 'Very slow breathing LFO (0.08 Hz), warm soft filter (350 Hz)', color: 'text-purple-400' },
+                        { act: 'Act I', mood: 'Ominous, uncertain', detail: 'Slow undulation (0.12 Hz), dark muted filter (280 Hz, Q 1.8)', color: 'text-green-400' },
+                        { act: 'Act II', mood: 'Dark choir, tension', detail: 'Choir vibrato (0.25 Hz), mid-range filter (520 Hz) + 6s reverb', color: 'text-amber-400' },
+                        { act: 'Act III', mood: 'Abyssal, crushing', detail: 'Heavy pulsing (0.4 Hz), metallic filter (450 Hz, Q 3.5) + LFO→filter', color: 'text-red-400' },
+                      ].map(a => (
+                        <div key={a.act} className="text-xs">
+                          <span className={`font-bold ${a.color}`}>{a.act}</span> <span className="text-gray-500">({a.mood})</span>
+                          <div className="text-gray-400 font-mono mt-0.5">{a.detail}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400 mt-4">
+                  <strong className="text-white">Seamless Transitions:</strong> When the theme changes (e.g., entering a tavern or act transition), the current ambient fades out over 1.5 seconds via <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">transitionAmbient()</code>, then the new theme fades in over 3 seconds. Act III gets special treatment: the LFO also modulates the filter cutoff frequency for an ominous pulsing sweep effect.
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
         </Tabs>
       </main>
     </div>

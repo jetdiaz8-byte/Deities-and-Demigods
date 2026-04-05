@@ -17,11 +17,13 @@ import {
   getPortraitPath, getAllPantheons, Character, getCharacterCounts
 } from '@/lib/characterData'
 import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES } from '@/lib/gameConstants'
+import { PROPHECIES } from '@/lib/prophecyData'
+import { ACHIEVEMENT_DEFS, TIER_CONFIG, CATEGORY_CONFIG } from '@/lib/achievements'
 import { 
   Search, X, Crown, Sword, Shield, Skull, Sparkles, Heart, 
   ChevronLeft, ChevronRight, Star, Zap, BookOpen, Users, Flame,
   Brain, Dumbbell, Footprints, ShieldCheck, Smile, Gem,
-  ScrollText, Droplet, Ghost, Swords, Package
+  ScrollText, Droplet, Ghost, Swords, Package, Trophy, Volume2
 } from 'lucide-react'
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -289,16 +291,15 @@ function CharacterDetail({ character, onClose, onNext, onPrev, hasNext, hasPrev 
 
 const SHARD_PANTHEON_COUNTS = SHARD_NAMES.reduce((acc, s) => { acc[s.pantheon] = (acc[s.pantheon] || 0) + 1; return acc }, {} as Record<string, number>)
 
-const PROPHECY_DATA = [
-  { name: 'The Last Sunrise', bonus: '+3 success rate when fulfilled', desc: 'The sun shall set for the final time\u2014but your party may light a new dawn or let the darkness claim the world.' },
-  { name: 'The Blood Covenant', bonus: '+5 success rate vs Greater Gods', desc: 'A bond forged in blood between mortal and divine. One of you must die for the other to live.' },
-  { name: 'The Shattered Mirror', bonus: '+4 on deception actions', desc: 'Every truth has a reflection. In the broken mirror, the reflection tells a different story.' },
-  { name: "The Titan's Dream", bonus: '+6 success rate in Act III', desc: 'The Titans dreamed the world into being. They are dreaming still. If they wake, the dream ends.' },
-  { name: "The Wanderer's Path", bonus: '+2 per act completed', desc: 'Not all who wander are lost. Some are searching for something that does not wish to be found.' },
-  { name: 'The Unwritten', bonus: 'Rolls a fresh prophecy on transfer', desc: 'No oracle has seen this fate. No scribe has recorded it. It is the blank page at the end of every book.' },
-  { name: 'The Forgotten Name', bonus: '+5 on banishment actions', desc: 'There was once a god whose name was erased from every tablet, every tongue, every memory. This prophecy remembers.' },
-  { name: 'The Final Harvest', bonus: '+4 success rate, +10% loot', desc: 'What is sown must be reaped. What was taken must be returned. The harvest comes for all, even gods.' },
-]
+const ACHIEVEMENT_TIER_COUNTS = Object.keys(TIER_CONFIG).reduce((acc, tier) => {
+  acc[tier] = ACHIEVEMENT_DEFS.filter(a => a.tier === tier).length
+  return acc
+}, {} as Record<string, number>)
+
+const ACHIEVEMENT_CATEGORY_COUNTS = Object.keys(CATEGORY_CONFIG).reduce((acc, cat) => {
+  acc[cat] = ACHIEVEMENT_DEFS.filter(a => a.category === cat).length
+  return acc
+}, {} as Record<string, number>)
 
 const INJURY_CATEGORIES = [
   { type: 'Physical', icon: Swords, color: 'text-red-400', border: 'border-red-700/50', count: 8, dot: 1, examples: 'Deep Cut, Bruised Ribs, Internal Bleeding, Severed Tendon' },
@@ -477,7 +478,7 @@ export default function CodexPage() {
             {/* ═══ PROPHECIES ═══ */}
             <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader>
-                <h2 className="text-white text-xl flex items-center gap-2"><ScrollText className="w-5 h-5 text-purple-400" />The Eight Prophecies</h2>
+                <h2 className="text-white text-xl flex items-center gap-2"><ScrollText className="w-5 h-5 text-purple-400" />The {PROPHECIES.length} Prophecies</h2>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-gray-300 text-sm">Each PC carries a prophecy bound to the Shard. Prophecies progress through five states: <span className="text-gray-100">dormant</span> &rarr; <span className="text-amber-300">awakening</span> &rarr; <span className="text-yellow-300">manifesting</span> &rarr; <span className="text-green-300">fulfilled</span> or <span className="text-red-300">broken</span>. When a PC dies, the prophecy passes to a successor, accumulating the grief of all previous holders.</p>
@@ -496,13 +497,13 @@ export default function CodexPage() {
                   ))}
                 </div>
                 <div className="space-y-2">
-                  {PROPHECY_DATA.map(p => (
-                    <div key={p.name} className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/50">
+                  {PROPHECIES.map(p => (
+                    <div key={p.id} className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/50">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-bold text-white text-sm">{p.name}</span>
-                        <Badge className="bg-purple-900/50 text-purple-300 text-xs">{p.bonus}</Badge>
+                        <Badge className="bg-purple-900/50 text-purple-300 text-xs capitalize">{p.theme}</Badge>
                       </div>
-                      <p className="text-xs text-gray-400 italic">{p.desc}</p>
+                      <p className="text-xs text-gray-400 italic">{p.riddle}</p>
                     </div>
                   ))}
                 </div>
@@ -619,6 +620,95 @@ export default function CodexPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* ═══ ACHIEVEMENTS ═══ */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <h2 className="text-white text-xl flex items-center gap-2"><Trophy className="w-5 h-5 text-yellow-400" />Achievements &mdash; {ACHIEVEMENT_DEFS.length} Total</h2>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300 text-sm">Achievements track your party&apos;s heroic milestones across every campaign. They span {Object.keys(TIER_CONFIG).length} tiers and {Object.keys(CATEGORY_CONFIG).length} categories. Some achievements are <span className="text-amber-300">visible from the start</span>; others are <span className="text-purple-300">hidden</span> until unlocked &mdash; rewarding exploration and bold choices.</p>
+
+                {/* Tier Breakdown */}
+                <h3 className="text-white font-bold text-sm mb-3">Tier Breakdown</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                  {Object.entries(TIER_CONFIG).map(([tier, config]) => (
+                    <div key={tier} className="p-3 rounded-lg border" style={{ borderColor: config.border, backgroundColor: config.bg }}>
+                      <div className="text-2xl font-bold mb-1" style={{ color: config.color }}>{ACHIEVEMENT_TIER_COUNTS[tier]}</div>
+                      <div className="text-xs font-semibold" style={{ color: config.color }}>{config.label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Category Breakdown */}
+                <h3 className="text-white font-bold text-sm mb-3">Categories</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                  {Object.entries(CATEGORY_CONFIG).map(([cat, config]) => (
+                    <div key={cat} className="text-center p-3 rounded-lg bg-slate-700/50">
+                      <div className="text-lg mb-1">{config.icon}</div>
+                      <div className="text-lg font-bold text-white">{ACHIEVEMENT_CATEGORY_COUNTS[cat]}</div>
+                      <div className="text-xs text-gray-400">{config.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* ═══ AUDIO & NARRATION ═══ */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardHeader>
+                <h2 className="text-white text-xl flex items-center gap-2"><Volume2 className="w-5 h-5 text-cyan-400" />Audio &amp; Narration</h2>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-gray-300 text-sm">The campaign is brought to life through layered procedural audio and AI-powered narration. Every scene shift, every dice roll, every whispered oracle riddle carries its own sonic signature.</p>
+
+                {/* Scene Themes */}
+                <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2"><Volume2 className="w-4 h-4 text-cyan-400" />Procedural Dark Fantasy Audio</h3>
+                <p className="text-gray-400 text-xs mb-3">8 scene themes dynamically shift based on narrative context:</p>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                  {[
+                    { scene: 'Intro', desc: 'Ominous awakening', color: 'text-slate-300' },
+                    { scene: 'Act I', desc: 'Growing tension', color: 'text-blue-300' },
+                    { scene: 'Act II', desc: 'Dark escalation', color: 'text-purple-300' },
+                    { scene: 'Act III', desc: 'Climactic fury', color: 'text-red-300' },
+                    { scene: 'Tavern', desc: 'Warm & weary', color: 'text-amber-300' },
+                    { scene: 'Forest', desc: 'Ancient & eerie', color: 'text-green-300' },
+                    { scene: 'Battle', desc: 'Brutal & urgent', color: 'text-orange-300' },
+                    { scene: 'Temple', desc: 'Sacred dread', color: 'text-yellow-300' },
+                  ].map(s => (
+                    <div key={s.scene} className="text-center p-2 rounded bg-slate-700/50">
+                      <div className={`text-sm font-bold ${s.color}`}>{s.scene}</div>
+                      <div className="text-xs text-gray-500">{s.desc}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* SFX */}
+                <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2"><Volume2 className="w-4 h-4 text-cyan-400" />Sound Effects (SFX)</h3>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {[
+                    'Dice Rolls', 'Combat Hits', 'Injuries', 'Level Ups',
+                    'Shard Pulses', 'Act Transitions', 'Boss Phases',
+                    'Victory', 'Death'
+                  ].map(sfx => (
+                    <Badge key={sfx} variant="secondary" className="bg-slate-700 text-gray-300 text-xs">{sfx}</Badge>
+                  ))}
+                </div>
+
+                {/* TTS */}
+                <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2"><Volume2 className="w-4 h-4 text-cyan-400" />Text-to-Speech Narration</h3>
+                <div className="space-y-3">
+                  <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/50">
+                    <div className="text-sm text-white font-semibold mb-1">Edge TTS Engine</div>
+                    <p className="text-xs text-gray-400">Narration is powered by Microsoft Edge TTS with multiple voice options, delivering atmospheric storytelling that adapts to the tone of each scene.</p>
+                  </div>
+                  <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/50">
+                    <div className="text-sm text-white font-semibold mb-1">Auto Scene Detection</div>
+                    <p className="text-xs text-gray-400">The system automatically detects scene transitions based on narrative keywords &mdash; shifting from tavern warmth to forest unease to battle fury without manual input.</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>

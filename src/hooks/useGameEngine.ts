@@ -9,7 +9,7 @@ import type {
 import { ACTS, SKILL_ABILITY_MAP } from '@/lib/gameTypes'
 import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES } from '@/lib/gameConstants'
 import { createInitialState } from '@/lib/gameState'
-import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, fullStaminaRestore, assignSkillProficiencies } from '@/lib/gameHelpers'
+import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, fullStaminaRestore, assignSkillProficiencies, inferClassesFromCharacter } from '@/lib/gameHelpers'
 import { getRandomHeroes } from '@/lib/fallbackEntities'
 import { KRYNN_HEROES, KRYNN_DEMIGODS } from '@/lib/krynnCharacters'
 import { PROPHECIES, rollProphecies, getProphecyById, Prophecy } from '@/lib/prophecyData'
@@ -543,6 +543,13 @@ export function useGameEngine() {
 
     const mainPC = availableHeroes.find(h => h.id === selectedParty[0])
     if (!mainPC) return
+
+    // Infer class levels from character data (before skill assignment & aspect generation)
+    const inferred = inferClassesFromCharacter(mainPC)
+    mainPC.fighterLevel = mainPC.fighterLevel || inferred.fighterLevel || undefined
+    mainPC.clericLevel = mainPC.clericLevel || inferred.clericLevel || undefined
+    mainPC.magicUserLevel = mainPC.magicUserLevel || inferred.magicUserLevel || undefined
+    mainPC.thiefLevel = mainPC.thiefLevel || inferred.thiefLevel || undefined
 
     const shard = SHARD_NAMES[Math.floor(Math.random() * SHARD_NAMES.length)]
 

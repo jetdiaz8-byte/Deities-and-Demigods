@@ -549,3 +549,157 @@ export const assignSkillProficiencies = (pc: Entity): { skills: PlayerSkills; pr
 
   return { skills, proficiencies }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CLASS INFERENCE SYSTEM
+// Parses Krynn level fields, non-Krynn ability strings, and falls back
+// to ability scores to determine fighter/cleric/magic-user/thief levels.
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Class name alias mapping — maps raw text to one of four canonical classes
+const CLASS_ALIASES: Record<string, string> = {
+  'mu': 'magic-user',
+  'magic-user': 'magic-user',
+  'magic user': 'magic-user',
+  'magicuser': 'magic-user',
+  'ranger': 'fighter',
+  'paladin': 'fighter',
+  'druid': 'cleric',
+  'assassin': 'thief',
+  'fighter': 'fighter',
+  'cleric': 'cleric',
+  'thief': 'thief',
+}
+
+/** Map a raw class name to one of the four canonical AD&D classes */
+const mapClassName = (raw: string): string | null => {
+  const key = raw.toLowerCase().trim()
+  return CLASS_ALIASES[key] || null
+}
+
+/**
+ * Parse a string containing ordinal + class pattern(s).
+ * Handles: "10th ranger/8th fighter", "18th magic-user", "30th MU",
+ *          "25th thief skills", "20th fighter/cleric", "15th druid spells"
+ */
+const parseClassLevelString = (text: string): Array<{ cls: string; level: number }> => {
+  const results: Array<{ cls: string; level: number }> = []
+
+  // Split by "/" for multi-class entries like "20th fighter/cleric"
+  const parts = text.split('/')
+
+  for (const part of parts) {
+    const trimmed = part.trim()
+    // Match ordinal number followed by a class word: "10th ranger", "18th magic-user"
+    const match = trimmed.match(/(\d+)(?:st|nd|rd|th)\s+([a-zA-Z][\w-]*)/i)
+    if (match) {
+      const level = parseInt(match[1], 10)
+      const rawClass = match[2]
+      const canonical = mapClassName(rawClass)
+      if (canonical && !isNaN(level) && level > 0) {
+        results.push({ cls: canonical, level })
+      }
+    }
+  }
+
+  return results
+}
+
+/** Loose input type to accept Character, Entity, or raw data objects */
+type ClassInferenceInput = {
+  abilities?: string[]
+  level?: string
+  str?: string | number
+  int?: string | number
+  wis?: string | number
+  dex?: string | number
+  con?: string | number
+  cha?: string | number
+  pantheon?: string
+}
+
+/**
+ * Infer AD&D class levels from a character's raw data.
+ *
+ * Strategy (tried in order, stops as soon as classes are found):
+ * 1. Parse Krynn `level` field (free-text like "10th ranger/8th fighter")
+ * 2. Parse non-Krynn `abilities` strings for ordinal+class patterns
+ * 3. Fallback: map ability scores ≥ 16 to default mid-level (10)
+ *
+ * Returns an object with all four canonical class levels (0 = none).
+ */
+export const inferClassesFromCharacter = (
+  char: ClassInferenceInput
+): { fighterLevel: number; clericLevel: number; magicUserLevel: number; thiefLevel: number } => {
+  let fighterLevel = 0
+  let clericLevel = 0
+  let magicUserLevel = 0
+  let thiefLevel = 0
+  let found = false
+
+  /** Apply a parsed canonical class + level (keeps highest if duplicates) */
+  const apply = (cls: string, level: number) => {
+    if (cls === 'fighter') fighterLevel = Math.max(fighterLevel, level)
+    else if (cls === 'cleric') clericLevel = Math.max(clericLevel, level)
+    else if (cls === 'magic-user') magicUserLevel = Math.max(magicUserLevel, level)
+    else if (cls === 'thief') thiefLevel = Math.max(thiefLevel, level)
+  }
+
+  // ── Step 1: Parse Krynn `level` field ──
+  if (char.level) {
+    const parsed = parseClassLevelString(char.level)
+    for (const p of parsed) {
+      apply(p.cls, p.level)
+      found = true
+    }
+  }
+
+  // ── Step 2: Parse non-Krynn `abilities` strings ──
+  if (char.abilities && Array.isArray(char.abilities)) {
+    for (const ability of char.abilities) {
+      if (typeof ability !== 'string') continue
+      const parsed = parseClassLevelString(ability)
+      for (const p of parsed) {
+        apply(p.cls, p.level)
+        found = true
+      }
+    }
+  }
+
+  // ── Step 3: Fallback from ability scores ──
+  if (!found) {
+    const score = (val?: string | number): number => {
+      if (val === undefined || val === null) return 10
+      if (typeof val === 'number') return val
+      return parseInt(val) || 10
+    }
+    if (score(char.str) >= 16) fighterLevel = 10
+    if (score(char.int) >= 16) magicUserLevel = 10
+    if (score(char.dex) >= 16) thiefLevel = 10
+    if (score(char.wis) >= 16) clericLevel = 10
+  }
+
+  return { fighterLevel, clericLevel, magicUserLevel, thiefLevel }
+}
+
+/**
+ * Get a human-readable class label from an Entity's class levels.
+ * Returns something like "Fighter 25 / Thief 25 / Magic User 18".
+ * Shows up to 3 classes, sorted by level descending.
+ */
+export const getClassLabel = (
+  entity: { fighterLevel?: number; clericLevel?: number; magicUserLevel?: number; thiefLevel?: number }
+): string => {
+  const entries: Array<{ label: string; level: number }> = []
+
+  if ((entity.fighterLevel || 0) > 0) entries.push({ label: 'Fighter', level: entity.fighterLevel! })
+  if ((entity.clericLevel || 0) > 0) entries.push({ label: 'Cleric', level: entity.clericLevel! })
+  if ((entity.magicUserLevel || 0) > 0) entries.push({ label: 'Magic User', level: entity.magicUserLevel! })
+  if ((entity.thiefLevel || 0) > 0) entries.push({ label: 'Thief', level: entity.thiefLevel! })
+
+  // Sort by level descending, then alphabetically as tiebreaker
+  entries.sort((a, b) => b.level - a.level || a.label.localeCompare(b.label))
+
+  // Return top 3
+  return entries.slice(0, 3).map(e => `${e.label} ${e.level}`).join(' / ')
+}

@@ -1,16 +1,17 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { assignSkillProficiencies } from '@/lib/gameHelpers'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { 
   Crown, Sword, Shield, Skull, Sparkles, Heart, 
   Star, Zap, BookOpen, ChevronDown, ChevronUp,
-  Dumbbell, X
+  Dumbbell, X, Target
 } from 'lucide-react'
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -47,6 +48,7 @@ interface ActiveCharacter {
   conditions?: string[]
   dead?: boolean
   portrait?: string
+  skills?: string[]
 }
 
 interface ActiveCharacterCardProps {
@@ -126,6 +128,12 @@ const abilityScoreColor = (score: string | undefined): string => {
 export function ActiveCharacterCard({ character, portraitPath, compact = false, onClose }: ActiveCharacterCardProps) {
   const [expanded, setExpanded] = useState(!compact)
   const [imageError, setImageError] = useState(false)
+
+  const proficiencies = useMemo(() => {
+    if (!['hero', 'demigod'].includes(character.type || '')) return []
+    const result = assignSkillProficiencies(character as any)
+    return result.proficiencies
+  }, [character])
 
   const hpPercent = Math.max(0, Math.min(100, (character.hp / character.maxHp) * 100))
   const isWounded = hpPercent < 100
@@ -244,6 +252,23 @@ export function ActiveCharacterCard({ character, portraitPath, compact = false, 
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* Skills — heroes & demigods only */}
+            {['hero', 'demigod'].includes(character.type || '') && proficiencies.length > 0 && (
+              <div className="text-xs">
+                <div className="flex items-center gap-1 text-gray-400 mb-1">
+                  <Target className="w-3 h-3" />
+                  <span>Skills</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {proficiencies.map(skill => (
+                    <Badge key={skill} className="bg-cyan-900/50 text-cyan-300 text-[10px] px-1.5 py-0">
+                      {skill.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())} +2
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
 

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, Users, Package, ScrollText, Save, Upload } from 'lucide-react'
+import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { version } from '../../../package.json'
 
@@ -43,10 +43,16 @@ export function IntroScreen({
   const subtitleText = 'Mythworld Engine · AI-Powered D&D'
 
   const features = [
-    { icon: <Users className="w-5 h-5" />, label: 'Party Selection', desc: 'Choose your heroes' },
-    { icon: <Package className="w-5 h-5" />, label: 'Inventory System', desc: 'Artifacts & potions' },
-    { icon: <ScrollText className="w-5 h-5" />, label: 'Quest Tracking', desc: 'Main & side quests' },
-    { icon: <Save className="w-5 h-5" />, label: 'Save/Load', desc: 'Multiple slots' },
+    { icon: <Users className="w-5 h-5" />, label: 'Choose Your Hero', desc: 'Select from 155+ characters' },
+    { icon: <Package className="w-5 h-5" />, label: 'Inventory', desc: '35+ artifacts & potions' },
+    { icon: <ScrollText className="w-5 h-5" />, label: 'Quests', desc: 'Main, side & hidden quests' },
+    { icon: <Save className="w-5 h-5" />, label: 'Save/Load', desc: '5 save slots' },
+    { icon: <Flame className="w-5 h-5" />, label: 'Shards', desc: '30 shards, 11+ pantheons' },
+    { icon: <Award className="w-5 h-5" />, label: 'Achievements', desc: '57 across 7 tiers' },
+    { icon: <Heart className="w-5 h-5" />, label: 'Injuries', desc: '25 wound types' },
+    { icon: <Sparkles className="w-5 h-5" />, label: 'Prophecies', desc: '9 Gaiman-style fates' },
+    { icon: <Skull className="w-5 h-5" />, label: 'Boss Fights', desc: '3-phase god battles' },
+    { icon: <Volume2 className="w-5 h-5" />, label: 'Voice Narration', desc: 'AI-powered TTS' },
   ]
 
   return (
@@ -293,7 +299,7 @@ export function IntroScreen({
                 </span>
                 <br />
                 <span className="text-[#c9a84c] not-italic" style={{ fontFamily: 'Cinzel, serif', fontSize: '.8rem', letterSpacing: '.1em' }}>
-                  Enter your keys. Let the story begin.
+                  Enter your key. Let the story begin.
                 </span>
               </motion.p>
 
@@ -325,17 +331,29 @@ export function IntroScreen({
                 Key auto-saves to browser memory · Direct browser calls to Gemini
               </motion.p>
 
-              {/* Help Link */}
+              {/* Help Links */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.5, duration: 0.4 }}
                 className="text-center mt-4"
               >
-                <a href="/rulebook" className="text-[#40a070] text-sm hover:text-[#60e0a0] transition-colors inline-flex items-center gap-1" style={{ fontFamily: 'Cinzel, serif' }}>
-                  <BookOpen className="w-4 h-4" />
-                  How to Play (Player&apos;s Guide)
-                </a>
+                <div className="flex items-center justify-center gap-4 text-[#5a4d30]">
+                  <a href="/rulebook" className="text-[#40a070] text-xs hover:text-[#60e0a0] transition-colors inline-flex items-center gap-1" style={{ fontFamily: 'Cinzel, serif' }}>
+                    <BookOpen className="w-3.5 h-3.5" />
+                    Player&apos;s Guide
+                  </a>
+                  <span className="text-[#3a3020]">·</span>
+                  <a href="/dm-handbook" className="text-[#40a070] text-xs hover:text-[#60e0a0] transition-colors inline-flex items-center gap-1" style={{ fontFamily: 'Cinzel, serif' }}>
+                    <ScrollText className="w-3.5 h-3.5" />
+                    DM Handbook
+                  </a>
+                  <span className="text-[#3a3020]">·</span>
+                  <a href="/codex" className="text-[#40a070] text-xs hover:text-[#60e0a0] transition-colors inline-flex items-center gap-1" style={{ fontFamily: 'Cinzel, serif' }}>
+                    <BookOpen className="w-3.5 h-3.5" />
+                    Codex
+                  </a>
+                </div>
               </motion.div>
 
               {/* ═══ DRAMATIC BEGIN BUTTON ═══ */}
@@ -380,7 +398,7 @@ export function IntroScreen({
                   hidden: {},
                   visible: { transition: { staggerChildren: 0.1 } },
                 }}
-                className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3"
+                className="mt-8 grid grid-cols-2 md:grid-cols-5 gap-3"
               >
                 {features.map((feature, i) => (
                   <motion.div
