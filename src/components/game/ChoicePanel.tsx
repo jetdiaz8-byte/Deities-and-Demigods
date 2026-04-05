@@ -107,7 +107,7 @@ export interface ChoicePanelProps {
   gameState: GameState
   selectOption: (index: number) => void
   selectCompanionOption: (index: number) => void
-  confirmChoice: () => void
+  confirmChoice: (customText?: string) => void
   setShardDialogOpen: (open: boolean) => void
 }
 
@@ -562,13 +562,11 @@ export function ChoicePanel({
           <Button
             onClick={() => {
               if (canConfirm) {
-                // If free text is active, store it in customActionPending before confirming
-                if (showFreeText && freeText.trim()) {
-                  gameState.customActionPending = freeText.trim()
-                }
+                // Pass free text as parameter instead of mutating gameState prop
+                const customText = showFreeText && freeText.trim() ? freeText.trim() : undefined
                 setConfirmClicked(true)
                 setTimeout(() => setConfirmClicked(false), 300)
-                confirmChoice()
+                confirmChoice(customText)
               }
             }}
             disabled={!canConfirm}

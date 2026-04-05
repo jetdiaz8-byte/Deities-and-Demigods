@@ -2960,7 +2960,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     if (!gameState.waitingForHuman || gameState.isProcessing) return
     setGameState(prev => ({
       ...prev,
-      pendingHumanChoice: idx
+      pendingHumanChoice: idx === -1 ? null : idx
     }))
   }
 
@@ -2974,9 +2974,10 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     }))
   }
 
-  const confirmChoice = async () => {
+  const confirmChoice = async (customText?: string) => {
     // Require PC choice OR free-text action; companion choice only required if companion exists
-    const hasFreeText = !!gameState.customActionPending?.trim()
+    const freeTextValue = customText?.trim() || gameState.customActionPending?.trim() || ''
+    const hasFreeText = !!freeTextValue
     const hasPresetChoice = gameState.pendingHumanChoice !== null
     if (!hasPresetChoice && !hasFreeText) return
     if (!gameState.waitingForHuman || gameState.isProcessing) return
@@ -3000,7 +3001,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       // Create a synthetic GameOption for the free-text action
       chosen = {
         num: 0,
-        action: gameState.customActionPending!.trim(),
+        action: freeTextValue,
         ability: 'custom_action',
         align_note: 'player-written action',
         source: 'pc'
