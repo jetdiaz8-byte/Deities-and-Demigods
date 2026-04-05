@@ -277,7 +277,7 @@ export function ChoicePanel({
           <span className="text-[10px] text-[#80a060] font-title">STAMINA</span>
           <div className="flex-1 h-2 bg-[#1a1a10] rounded-full overflow-hidden border border-[#2a3020]">
             <div className={`h-full rounded-full transition-all duration-300 ${gameState.stamina <= gameState.maxStamina * 0.3 ? 'bg-gradient-to-r from-[#804020] to-[#a05030]' : 'bg-gradient-to-r from-[#406030] to-[#60a040]'}`}
-              style={{ width: `${(gameState.stamina / gameState.maxStamina) * 100}%` }} />
+              style={{ width: `${(gameState.stamina / (gameState.maxStamina || 1)) * 100}%` }} />
           </div>
           <span className="text-[10px] text-[#608040]">{gameState.stamina}/{gameState.maxStamina}</span>
         </div>

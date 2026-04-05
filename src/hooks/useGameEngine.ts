@@ -9,7 +9,7 @@ import type {
 import { ACTS, SKILL_ABILITY_MAP } from '@/lib/gameTypes'
 import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES } from '@/lib/gameConstants'
 import { createInitialState } from '@/lib/gameState'
-import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, fullStaminaRestore, assignSkillProficiencies, inferClassesFromCharacter } from '@/lib/gameHelpers'
+import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, fullStaminaRestore, assignSkillProficiencies, inferClassesFromCharacter, clearEntityCache } from '@/lib/gameHelpers'
 import { getRandomHeroes } from '@/lib/fallbackEntities'
 import { KRYNN_HEROES, KRYNN_DEMIGODS } from '@/lib/krynnCharacters'
 import { PROPHECIES, rollProphecies, getProphecyById, Prophecy } from '@/lib/prophecyData'
@@ -241,7 +241,14 @@ export function useGameEngine() {
             const unlockedIds = Object.values(restored.records)
               .filter(r => r.unlocked)
               .map(r => r.id)
-            setAchievementUnlocks(prev => [...prev, ...unlockedIds.map(id => ({ id, turn: restored.records[id]?.unlockedAt || 0 }))])
+            // Deduplicate: only add achievements not already in state
+            setAchievementUnlocks(prev => {
+              const existingIds = new Set(prev.map(a => a.id))
+              const fresh = unlockedIds
+                .filter(id => !existingIds.has(id))
+                .map(id => ({ id, turn: restored.records[id]?.unlockedAt || 0 }))
+              return [...prev, ...fresh]
+            })
           }
         }
         toast({ title: 'Game Loaded', description: 'Campaign restored successfully' })
@@ -530,6 +537,7 @@ export function useGameEngine() {
       toast({ title: 'API Key Required', description: 'Enter your Gemini API key to begin', variant: 'destructive' })
       return
     }
+    clearEntityCache()
     await fetchAvailableHeroes()
     setGamePhase('party_select')
   }
@@ -541,7 +549,8 @@ export function useGameEngine() {
       return
     }
 
-    const mainPC = availableHeroes.find(h => h.id === selectedParty[0])
+    // Deep copy to avoid mutating availableHeroes state directly
+    const mainPC: Entity = { ...availableHeroes.find(h => h.id === selectedParty[0])! }
     if (!mainPC) return
 
     // Infer class levels from character data (before skill assignment & aspect generation)
@@ -571,21 +580,21 @@ export function useGameEngine() {
     // ═══════════════════════════════════════════════════════════════════════════
     const remaining = availableHeroes.filter(e => e.id !== mainPC.id)
 
-    // Shuffle all remaining for true RNG
-    const shuffled = remaining.sort(() => Math.random() - 0.5)
+    // Shuffle all remaining for true RNG (spread to avoid mutating availableHeroes)
+    const shuffled = [...remaining].sort(() => Math.random() - 0.5)
 
     // DM selects 1 companion (hero or demigod, 70-100% story presence)
     const companionPool = shuffled.filter(e => e.type === 'hero' || e.type === 'demigod')
     const companion = companionPool.length > 0 ? companionPool[Math.floor(Math.random() * companionPool.length)] : null
 
     // DM selects 3 hero NPCs for random encounters
-    const heroNPCs = shuffled
+    const heroNPCs = [...shuffled]
       .filter(e => e.type === 'hero' && (!companion || e.id !== companion.id))
       .sort(() => Math.random() - 0.5)
       .slice(0, 3)
 
     // DM selects 3 demigod NPCs for random encounters
-    const demigodNPCs = shuffled
+    const demigodNPCs = [...shuffled]
       .filter(e => e.type === 'demigod' && (!companion || e.id !== companion.id))
       .sort(() => Math.random() - 0.5)
       .slice(0, 3)
@@ -1073,49 +1082,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     return getTemplateFallback(gs, 'Payload structure unrecoverable')
   }
 
-  const generateSmartFallback = (reason: string, gs: GameState): DMResponse => {
-    const pc = gs.pcs.find(p => !p.dead)
-    const ant = getAntagonist(gs.antagonistId)
-    const shard = gs.shardEntry
-
-    // Gaiman-style fallback narration - rich and atmospheric
-    let narr = `The moment stretches like taffy, thin and sweet and precarious. `
-    
-    if (shard) {
-      narr += `The ${shard.name} ${shard.name.includes('Shard') ? 'whispers' : 'pulses'} in that way ancient things do when they have seen empires rise and crumble, when they have watched gods grow old and forget their own names. It is patient, the way only truly old things can be patient. `
-    }
-    
-    if (gs.act === ACTS.THREE && ant) {
-      narr += `\n\n${ant.name} waits. Not with patience—something older than patience, something that has forgotten the need for patience. Their shadow falls long across the world, and in that shadow, small things stop moving. The air tastes of copper and ending.`
-    } else {
-      narr += `\n\nThere is something out there in the darkness, something that does not have a name yet, or perhaps has too many names. It watches. It hungers. It does not know the meaning of mercy, having long ago eaten the last person who tried to teach it.`
-    }
-    
-    if (pc) {
-      narr += `\n\n${pc.name} feels the weight of the moment, the peculiar heaviness that comes when the world holds its breath. Something must be done. The story demands it.`
-    }
-    
-    narr += `\n\n*(The threads of fate tangle. ${reason}. The narrative awaits your hand to unravel it.)*`
-
-    return {
-      story_summary: gs.storySummary || 'The heroes stand at the precipice of something vast and terrible, something that was old when the world was young.',
-      dm_narration: narr,
-      human_pc_id: pc?.id || undefined,
-      human_pc_reason: 'The story stalls. Your action will force the narrative forward, for better or worse.',
-      npc_encounters: [],
-      dice_rolls: [],
-      damage_dealt: [],
-      injury_events: [],
-      state_updates: [],
-      new_active_npcs: [],
-      shard_event: { invoked: false },
-      next_pc_id: undefined,
-      pc_agreement: {},
-      boss_phase_trigger: false,
-      consequences: 'The threads of fate tremble, awaiting the weaver\'s hand.',
-      tension_note: 'The pause stretches. Something must break.'
-    }
-  }
+  // ── TEMPLATE FALLBACK ──────────────────────────────────────────────────
   
   // ═══════════════════════════════════════════════════════════════════════════
   // TEMPLATE FALLBACKS - High-quality pre-written narratives (SAVES 100% API CALLS)
@@ -1497,7 +1464,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     }
     if (res.damage_dealt?.length) {
       for (const d of res.damage_dealt) {
-        const isCritical = d.damage && d.damage.includes('critical')
+        const isCritical = d.type && d.type.includes('critical')
         setTimeout(() => soundEvents.emit({ type: 'combat_hit', critical: isCritical }), 300)
         // Screen effect for PC taking damage
         if (d.amount > 0 && d.to) {
@@ -2251,7 +2218,6 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       gs.isProcessing = false
 
       if (humanPC && !humanPC.dead) {
-        const sceneCtx = `Act ${gs.act}, Turn ${gs.turn}. SUMMARY: ${gs.storySummary}\nRECENT: ` + gs.log.slice(0, 3).map(l => l.msg).join(' | ')
         setStatusMessage(`Generating options for ${humanPC.name}...`)
 
         const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(humanPC)
@@ -2441,11 +2407,11 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       return `<p class="${pClass}" style="text-indent:1.5em;margin-bottom:.85em">${withDialogue}</p>`
     })
 
-    // Codex inline links for known entities
+    // Codex inline links for known entities (use passed gs, not closure-captured gameState)
     let codexLinked = [...styledParagraphs]
     const allNames = [
-      ...gameState.activeNPCs.map(n => n.name),
-      ...gameState.pcs.map(p => p.name),
+      ...gs.activeNPCs.map(n => n.name),
+      ...gs.pcs.map(p => p.name),
     ]
     const codexTerms = [...allNames]
     codexTerms.sort((a, b) => b.length - a.length)
@@ -2874,7 +2840,6 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     // Resume normal game flow — generate next options
     const nextPC = newGS.pcs.find(p => p.id === newGS.humanPCId && !p.dead) || living[0]
     if (nextPC) {
-      const sceneCtx = `Act ${newGS.act}, Turn ${newGS.turn}. SUMMARY: ${newGS.storySummary}\nRECENT: ` + newGS.log.slice(0, 3).map(l => l.msg).join(' | ')
       const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(nextPC)
       newGS.humanOptions = [...pcOptions, ...extraOptions]
       newGS.companionOptions = compOptions
@@ -3049,6 +3014,11 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
         })
         if (newInjuries[pcId].length === 0) delete newInjuries[pcId]
       })
+      // Purge injury entries for dead PCs (orphaned from previous turns)
+      for (const pcId of Object.keys(newInjuries)) {
+        const pc = gs.pcs.find(p => p.id === pcId)
+        if (pc?.dead) delete newInjuries[pcId]
+      }
       // Apply DOT damage immutably — never mutate React state directly
       if (Object.keys(dotDamage).length > 0) {
         gs.pcs = gs.pcs.map(p => {
@@ -3559,7 +3529,6 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     buildDMSystem,
     callGeminiDM,
     parseDMResponse,
-    generateSmartFallback,
     getTemplateFallback,
     buildDefaultOptions,
     applyMechanics,

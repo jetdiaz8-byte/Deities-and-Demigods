@@ -7,8 +7,13 @@ import { NPC_NAMES, ALL_GREATER_GODS } from '@/lib/gameConstants'
 import { getAntagonistById } from '@/lib/antagonistPool'
 
 
-// Entity cache for lookupEntity
+// Entity cache for lookupEntity (cleared on new campaign via clearEntityCache)
 const _entityCache: { [key: string]: Entity } = {}
+
+/** Clear entity cache — call when starting a new campaign to avoid stale data */
+export const clearEntityCache = () => {
+  for (const key of Object.keys(_entityCache)) delete _entityCache[key]
+}
 // ═══════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════
