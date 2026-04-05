@@ -2921,6 +2921,25 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       ? `\n\nThe player ALSO chose for ${toAscii(companion.name)}: "${toAscii(compChosen.action)}"[${toAscii(compChosen.ability || '')}].\nResolve ${toAscii(companion.name.split(' ')[0])}'s action WITH MECHANICAL DETAIL too — roll d20, apply damage, etc. Both characters act this turn.`
       : ''
 
+    // ── D&D 5e SKILL CHECK — Roll for skill-based actions ──────────────
+    // Map ability names to D&D 5e skill keys, run performSkillCheck, inject result into DM prompt
+    const ABILITY_TO_SKILL: Record<string, keyof PlayerSkills> = {
+      'persuasion': 'persuasion', 'intimidation': 'intimidation', 'deception': 'deception',
+      'investigation': 'investigation', 'perception': 'perception', 'insight': 'insight',
+      'stealth': 'stealth', 'acrobatics': 'acrobatics', 'sleight_of_hand': 'sleight_of_hand',
+      'athletics': 'athletics', 'arcana': 'arcana', 'religion': 'religion',
+      'medicine': 'medicine', 'survival': 'survival', 'animal_handling': 'animal_handling',
+      'history': 'history', 'nature': 'nature', 'performance': 'performance',
+      'conversation': 'persuasion', 'exploration': 'survival', 'divine_sense': 'perception',
+    }
+    let skillCheckLine = ''
+    const skillKey = ABILITY_TO_SKILL[chosen?.ability || '']
+    if (skillKey && humanPC && gs.skillProficiencies.includes(skillKey)) {
+      const check = performSkillCheck(humanPC, skillKey, 13, gs.skills)
+      const skillLabel = skillKey.replace(/_/g, ' ')
+      skillCheckLine = `\n\n⚠️ LOCAL SKILL CHECK: ${humanPC.name} rolled d20(${check.roll}) + ${check.modifier} ${skillLabel} = ${check.total} vs DC 13 → ${check.success ? '✅ SUCCESS' : '❌ FAILURE'}. USE THIS RESULT. Do NOT re-roll. Narrate the outcome accordingly.`
+    }
+
     const userMsg = `TURN ${gs.turn} RESOLUTION.
 
 Human player chose for ${toAscii(humanPC?.name || 'PC')}: "${toAscii(chosen?.action || 'acts')}"[${toAscii(chosen?.ability || '')}].${companionActionLine}
@@ -2929,7 +2948,7 @@ RESOLVE THIS ACTION:
 1. Execute ${toAscii(humanPC?.name || 'PC')}'s choice with full mechanical detail (d20 vs AC, damage, saves). ROLL DICE.${compChosen ? `\n2. Execute ${toAscii(companion?.name || 'Companion')}'s action with full mechanical detail too (d20 vs AC, damage, saves). ROLL DICE for both characters.` : ''}
 ${gs.act === ACTS.THREE ? `${compChosen ? '3' : '2'}. ${ant?.name} retaliates with Phase ${gs.antagonistPhase} ability.` : `${compChosen ? '3' : '2'}. Any active NPCs act per their alignment. The antagonist shadow grows.`}
 ${isRivalSummon ? `${compChosen ? '4' : '3'}. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, ${gs.antagonistRival?.title} has been SUMMONED by the shard to fight alongside the party!\n   - ${gs.antagonistRival?.name} is the mythological archrival of ${ant?.name}.\n   - They deal devastating damage to ${ant?.name} (narrate the legendary confrontation).\n   - The rival's ${gs.antagonistRival?.ability} turns the tide of battle.\n   - This is a CINEMATIC MOMENT — write it with maximum drama and Gaiman-style prose.\n   - Apply state_updates: ~35% of antagonist max HP as damage from the rival's assault.\n   - The rival does NOT join the party permanently — they deliver their blow and fade back into myth.` : `${compChosen ? '4' : '3'}. Apply dice rolls/damage for ALL actions. Signal injuries (injury_events).`}
-${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH characters' actions, then JSON payload. BOTH ${toAscii(humanPC?.name || 'PC')} and ${toAscii(companion?.name || 'Companion')} act this turn — describe their coordinated effort.` : 'Full narrative prose, then JSON payload.'}`
+${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH characters' actions, then JSON payload. BOTH ${toAscii(humanPC?.name || 'PC')} and ${toAscii(companion?.name || 'Companion')} act this turn — describe their coordinated effort.` : 'Full narrative prose, then JSON payload.'}${skillCheckLine}`
 
     // Add user choice to conversation history
     const convEntries = [
