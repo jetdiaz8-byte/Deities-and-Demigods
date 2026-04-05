@@ -1449,6 +1449,99 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     return { pcOptions, compOptions, extraOptions }
   }
 
+  // ── PROPHECY TRANSFER HELPER ──────────────────────────────────────────
+  // Shared by both state_updates death path and enemy auto-attack death path
+  // When a PC dies, their prophecy transfers to the next living PC (companion first, then RNG pool)
+
+  /** Check if a PC has Death Ward — if so, consume it and prevent death */
+  function tryConsumeDeathWard(newGS: GameState, pcId: string, turn: number): { gs: GameState; warded: boolean } {
+    const pcIdx = newGS.pcs.findIndex(p => p.id === pcId)
+    if (pcIdx < 0) return { gs: newGS, warded: false }
+    const pc = newGS.pcs[pcIdx]
+    if (!pc.conditions.includes('Death Ward')) return { gs: newGS, warded: false }
+
+    // Consume the ward — restore to 1 HP, remove condition, log it
+    const wardedPc = { ...pc, hp: 1, dead: false, conditions: pc.conditions.filter(c => c !== 'Death Ward') }
+    const wardMsg = `✨ Death Ward shatters around ${pc.name}! The veil of protection burns away, leaving them alive at 1 HP — but the ward is spent.`
+    return {
+      gs: {
+        ...newGS,
+        pcs: [...newGS.pcs.slice(0, pcIdx), wardedPc, ...newGS.pcs.slice(pcIdx + 1)],
+        log: [...newGS.log, { msg: wardMsg, type: 'discovery', turn }],
+      },
+      warded: true,
+    }
+  }
+  function transferProphecyOnDeath(newGS: GameState, deadPcId: string, turn: number): GameState {
+    const deadPc = newGS.pcs.find(p => p.id === deadPcId)
+    if (!deadPc) return newGS
+
+    const deadPcProphecy = newGS.prophecies.find(p => p.pc_id === deadPcId)
+    if (!deadPcProphecy) return newGS
+
+    const prophecyIdx = newGS.prophecies.findIndex(p => p.pc_id === deadPcId)
+    const oldProphecy = newGS.prophecies[prophecyIdx]
+
+    // Determine successor: companion first, then RNG pool
+    const successor = newGS.pcs.find(p => !p.dead && p.id !== deadPcId)
+      || [...newGS.rngHeroPool, ...newGS.rngDemigodPool]
+          .filter(e => !newGS.pcs.find(p => p.id === e.id) && !e.dead)[0]
+
+    if (!successor) return newGS
+
+    // If successor is not yet in the party, add them
+    if (!newGS.pcs.find(p => p.id === successor.id)) {
+      newGS = {
+        ...newGS,
+        pcs: [...newGS.pcs, { ...successor, hp: successor.maxHp, conditions: [], dead: false }],
+        pcAgreements: { ...newGS.pcAgreements, [successor.id]: null },
+      }
+      // Track which RNG pool they came from
+      const heroIdx = newGS.rngHeroPool.findIndex(h => h.id === successor.id)
+      const demigodIdx = newGS.rngDemigodPool.findIndex(d => d.id === successor.id)
+      if (heroIdx >= 0) newGS = { ...newGS, introducedHeroes: [...newGS.introducedHeroes, successor.id] }
+      if (demigodIdx >= 0) newGS = { ...newGS, introducedDemigods: [...newGS.introducedDemigods, successor.id] }
+    }
+
+    // Update companion tracking — successor becomes the new companion
+    newGS = {
+      ...newGS,
+      companionId: successor.id,
+      companionAffinity: 30,
+      companionMood: 'concerned' as const,
+    }
+
+    // Transfer prophecy
+    const prophecies = [...newGS.prophecies]
+    if (oldProphecy.prophecyId === 8) {
+      const newProphecy = rollProphecies(1)[0]
+      prophecies[prophecyIdx] = {
+        prophecyId: newProphecy.id,
+        riddle: newProphecy.riddle,
+        pc_id: successor.id,
+        previous_holders: [...oldProphecy.previous_holders, deadPcId],
+        state: 'dormant'
+      }
+    } else {
+      prophecies[prophecyIdx] = {
+        ...oldProphecy,
+        pc_id: successor.id,
+        previous_holders: [...oldProphecy.previous_holders, deadPcId],
+        state: 'awakening'
+      }
+    }
+    newGS = { ...newGS, prophecies }
+
+    // Log the mantle passing — Gaiman-style
+    const isFirstTransfer = oldProphecy.previous_holders.length === 0
+    const transferMsg = isFirstTransfer
+      ? `${successor.name} takes up the shard. The weight of ${deadPc.name}'s prophecy settles onto new shoulders — heavier now, stained with loss. The shard burns cold, then warm. It has chosen again.`
+      : `${successor.name} reaches for the shard. It pulses with the accumulated grief of ${oldProphecy.previous_holders.length + 1} fallen bearers. The prophecy reshapes itself for this new voice. The cycle continues.`
+    newGS = { ...newGS, log: [...newGS.log, { msg: transferMsg, type: 'discovery', turn }] }
+
+    return newGS
+  }
+
   // ── APPLY MECHANICS ────────────────────────────────────────────────────
   const applyMechanics = async (res: DMResponse, gs: GameState): Promise<GameState> => {
     let newGS = { ...gs }
@@ -1534,71 +1627,19 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
             pc.conditions = pc.conditions.filter(c => c !== u.remove_condition)
           }
           if (u.dead || pc.hp <= 0) {
-            pc.dead = true
-            pc.hp = 0
-            soundEvents.emit({ type: 'death' })
-            triggerScreenEffect('screen-effect-shake')
+            // Check Death Ward before marking dead
+            const wardResult = tryConsumeDeathWard(newGS, pc.id, gs.turn)
+            if (wardResult.warded) {
+              newGS = wardResult.gs
+              // Skip death — the ward absorbed it
+            } else {
+              pc.dead = true
+              pc.hp = 0
+              soundEvents.emit({ type: 'death' })
+              triggerScreenEffect('screen-effect-shake')
 
-            // ═══ PROPHECY TRANSFER ON DEATH — Story-Driven Chain ═══
-            // Main PC falls → Companion becomes Chosen One
-            // If companion also falls → RNG pool NPC (the "chosen, not yet") steps up
-            const deadPcId = pc.id
-            const deadPcProphecy = newGS.prophecies.find(p => p.pc_id === deadPcId)
-
-            if (deadPcProphecy) {
-              const prophecyIdx = newGS.prophecies.findIndex(p => p.pc_id === deadPcId)
-              const oldProphecy = newGS.prophecies[prophecyIdx]
-
-              // Determine successor: companion first, then RNG pool
-              const successor = newGS.pcs.find(p => !p.dead && p.id !== deadPcId)
-                || [...newGS.rngHeroPool, ...newGS.rngDemigodPool]
-                    .filter(e => !newGS.pcs.find(p => p.id === e.id) && !e.dead)[0]
-
-              if (successor) {
-                // If successor is not yet in the party, add them
-                if (!newGS.pcs.find(p => p.id === successor.id)) {
-                  newGS.pcs = [...newGS.pcs, { ...successor, hp: successor.maxHp, conditions: [], dead: false }]
-                  newGS.pcAgreements = { ...newGS.pcAgreements, [successor.id]: null }
-
-                  // Track which RNG pool they came from
-                  const heroIdx = newGS.rngHeroPool.findIndex(h => h.id === successor.id)
-                  const demigodIdx = newGS.rngDemigodPool.findIndex(d => d.id === successor.id)
-                  if (heroIdx >= 0) newGS.introducedHeroes = [...newGS.introducedHeroes, successor.id]
-                  if (demigodIdx >= 0) newGS.introducedDemigods = [...newGS.introducedDemigods, successor.id]
-                }
-
-                // Update companion tracking — successor becomes the new companion
-                newGS.companionId = successor.id
-                newGS.companionAffinity = 30 // Fresh bond, lower than original
-                newGS.companionMood = 'concerned' // They just watched someone die
-
-                // Transfer prophecy
-                if (oldProphecy.prophecyId === 8) {
-                  // "The Unwritten" — roll a fresh prophecy for the new bearer
-                  const newProphecy = rollProphecies(1)[0]
-                  newGS.prophecies[prophecyIdx] = {
-                    prophecyId: newProphecy.id,
-                    riddle: newProphecy.riddle,
-                    pc_id: successor.id,
-                    previous_holders: [...oldProphecy.previous_holders, deadPcId],
-                    state: 'dormant'
-                  }
-                } else {
-                  newGS.prophecies[prophecyIdx] = {
-                    ...oldProphecy,
-                    pc_id: successor.id,
-                    previous_holders: [...oldProphecy.previous_holders, deadPcId],
-                    state: 'awakening'
-                  }
-                }
-
-                // Log the mantle passing — Gaiman-style
-                const isFirstTransfer = oldProphecy.previous_holders.length === 0
-                const transferMsg = isFirstTransfer
-                  ? `${successor.name} takes up the shard. The weight of ${pc.name}'s prophecy settles onto new shoulders — heavier now, stained with loss. The shard burns cold, then warm. It has chosen again.`
-                  : `${successor.name} reaches for the shard. It pulses with the accumulated grief of ${oldProphecy.previous_holders.length + 1} fallen bearers. The prophecy reshapes itself for this new voice. The cycle continues.`
-                newGS.log = [...newGS.log, { msg: transferMsg, type: 'discovery', turn: gs.turn }]
-              }
+              // ═══ PROPHECY TRANSFER ON DEATH — Story-Driven Chain ═══
+              newGS = transferProphecyOnDeath(newGS, pc.id, gs.turn)
             }
           }
           newGS.pcs = [...newGS.pcs.slice(0, pcIdx), pc, ...newGS.pcs.slice(pcIdx + 1)]
@@ -1682,7 +1723,19 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
           if (targetIdx >= 0 && dmg > 0) {
             const updatedPc = { ...newGS.pcs[targetIdx] }
             updatedPc.hp = Math.max(0, updatedPc.hp - dmg)
-            if (updatedPc.hp <= 0) { updatedPc.dead = true; updatedPc.hp = 0; soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake') }
+            if (updatedPc.hp <= 0) {
+              // Check Death Ward before marking dead
+              const wardResult = tryConsumeDeathWard({ ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] }, updatedPc.id, newGS.turn)
+              if (wardResult.warded) {
+                newGS = wardResult.gs
+                // Skip death — the ward absorbed it. Update fellText.
+                // (The log message is already inside tryConsumeDeathWard)
+              } else {
+                updatedPc.dead = true; updatedPc.hp = 0; soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
+                // Prophecy transfer — same chain as state_updates death path
+                newGS = transferProphecyOnDeath({ ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] }, updatedPc.id, newGS.turn)
+              }
+            }
             newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
             soundEvents.emit({ type: 'combat_hit', critical: isCrit })
             triggerScreenEffect('screen-effect-red')
