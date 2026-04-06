@@ -64,6 +64,8 @@ export function useGameEngine() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [statusMessage, setStatusMessage] = useState('Awaiting the gods...')
   const [lastDMNarrative, setLastDMNarrative] = useState('')
+  // Synchronous ref for pre-JSON prose — avoids stale React state in renderResult
+  const preJsonNarrativeRef = useRef('')
   // Portrait Modal State
   const [portraitModalOpen, setPortraitModalOpen] = useState(false)
   const [selectedPortrait, setSelectedPortrait] = useState<CharacterPortrait | null>(null)
@@ -78,6 +80,8 @@ export function useGameEngine() {
   const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
   // Store the exact displayed narrative text for TTS
   const [displayedNarrative, setDisplayedNarrative] = useState('')
+  // Synchronous ref — TTS can read this immediately after renderResult sets it
+  const renderedNarrationRef = useRef('')
   
   // Combat Flash Type — exported for page.tsx overlay
   const [combatFlashType, setCombatFlashType] = useState<'damage' | 'heal' | 'crit' | ''>('')
@@ -1057,6 +1061,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     }
 
     narrative = narrative.replace(/```(json)?\s*$/i, '').trim()
+    // Store pre-JSON prose synchronously in ref AND async in state
+    // The ref is used by renderResult for same-turn comparison (avoids stale state)
+    preJsonNarrativeRef.current = narrative
     if (narrative.length > 30) setLastDMNarrative(narrative)
 
     if (!jsonStr) {
@@ -2312,10 +2319,12 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       await renderResult(res, isFirst, gs)
 
       // Auto-speak in auto mode — fire and forget, don't block gameplay
-      if (narratorMode === 'auto' && res.dm_narration && !document.hidden) {
+      // Use renderedNarrationRef (sync) to match exactly what's displayed on screen
+      if (narratorMode === 'auto' && !document.hidden) {
         setTimeout(() => {
           if (!abortSpeakRef.current) {
-            speakText(res.dm_narration)
+            const ttsText = renderedNarrationRef.current || res.dm_narration || ''
+            if (ttsText) speakText(ttsText)
           }
         }, 300)
       }
@@ -2423,10 +2432,11 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     }
 
     // Narrative
-    // The pre-JSON prose (lastDMNarrative) is usually the FULL narration (600-1000 words for opening).
+    // The pre-JSON prose (stored in ref, synchronous) is usually the FULL narration.
     // The JSON dm_narration field is often a shorter summary. Prefer the longer version.
+    // Using ref instead of lastDMNarrative state to avoid stale React state across turns.
     const jsonNarr = res.dm_narration || ''
-    const preJsonNarr = lastDMNarrative || ''
+    const preJsonNarr = preJsonNarrativeRef.current || ''
     let narr = (preJsonNarr.length > jsonNarr.length * 1.5 && preJsonNarr.length > 100)
       ? preJsonNarr
       : (jsonNarr || preJsonNarr || 'The DM gathers thoughts...')
@@ -2439,6 +2449,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     // Store the exact displayed narrative for TTS - MUST match what's rendered
     const displayedText = paragraphs.slice(0, 12).join(' ')
     setDisplayedNarrative(displayedText)
+    renderedNarrationRef.current = displayedText
 
     // ═══════════════════════════════════════════════════════════════════════════
     // OUTCOME TIER BANNER — PbtA visual feedback
@@ -3290,10 +3301,12 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       await renderResult(res, false, newGS)
 
       // Auto-speak in auto mode — fire and forget, don't block gameplay
-      if (narratorMode === 'auto' && res.dm_narration && !document.hidden) {
+      // Use renderedNarrationRef (sync) to match exactly what's displayed on screen
+      if (narratorMode === 'auto' && !document.hidden) {
         setTimeout(() => {
           if (!abortSpeakRef.current) {
-            speakText(res.dm_narration)
+            const ttsText = renderedNarrationRef.current || res.dm_narration || ''
+            if (ttsText) speakText(ttsText)
           }
         }, 300)
       }
