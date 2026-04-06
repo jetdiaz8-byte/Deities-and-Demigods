@@ -487,6 +487,7 @@ export default function MythworldEngine() {
             saveSlots={saveSlots}
             tokenUsage={tokenUsage}
             onOpenQuestJournal={() => setShowQuestJournal(true)}
+            conversationHistory={conversationHistory}
           />
         </div>
 

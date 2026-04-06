@@ -29,6 +29,7 @@ export interface GameSidebarProps {
   saveSlots: SaveSlot[]
   tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
   onOpenQuestJournal?: () => void
+  conversationHistory?: { role: string; content: string }[]
 }
 
 export function GameSidebar({
@@ -46,6 +47,7 @@ export function GameSidebar({
   saveSlots,
   tokenUsage,
   onOpenQuestJournal,
+  conversationHistory,
 }: GameSidebarProps) {
   return (
     <>
@@ -92,6 +94,7 @@ export function GameSidebar({
           setSelectedPortrait={setSelectedPortrait}
           setPortraitModalOpen={setPortraitModalOpen}
           tokenUsage={tokenUsage}
+          conversationHistory={conversationHistory}
         />
         </div>
       </div>
@@ -156,6 +159,7 @@ export function GameSidebar({
             setSelectedPortrait={setSelectedPortrait}
             setPortraitModalOpen={setPortraitModalOpen}
             tokenUsage={tokenUsage}
+            conversationHistory={conversationHistory}
           />
         </SheetContent>
       </Sheet>
@@ -167,7 +171,7 @@ export function GameSidebar({
 // DESKTOP TABS — Full detail view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage }: {
+function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory }: {
   gameState: GameState
   activeTab: string
   setActiveTab: (tab: string) => void
@@ -178,6 +182,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
   setSelectedPortrait: (portrait: CharacterPortrait | null) => void
   setPortraitModalOpen: (open: boolean) => void
   tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
+  conversationHistory?: { role: string; content: string }[]
 }) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
@@ -441,6 +446,25 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
             </div>
           </div>
         </div>
+
+        {/* DM Conversation History */}
+        {conversationHistory && conversationHistory.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-[#3a3020]">
+            <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">DM Memory Log</h4>
+            <div className="space-y-1.5">
+              {conversationHistory.map((entry, idx) => (
+                <div key={idx} className="p-1.5 bg-[#1a1510] rounded text-xs">
+                  <div className="text-[9px] uppercase tracking-wider mb-0.5" style={{ color: entry.role === 'user' ? '#c0a060' : '#6090c0' }}>
+                    {entry.role === 'user' ? '🗡️ Player Action' : '📜 DM Response'}
+                  </div>
+                  <div className="text-[#a09080] leading-relaxed" style={{ maxHeight: '60px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {entry.content.length > 120 ? entry.content.slice(0, 120) + '...' : entry.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </TabsContent>
 
       <TabsContent value="rules" className="flex-1 overflow-y-auto p-3 m-0 text-sm text-[#9a8860] leading-relaxed min-h-0">
@@ -467,7 +491,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
 // MOBILE TABS — Compact view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage }: {
+function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory }: {
   gameState: GameState
   activeTab: string
   setActiveTab: (tab: string) => void
@@ -476,6 +500,7 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
   setSelectedPortrait: (portrait: CharacterPortrait | null) => void
   setPortraitModalOpen: (open: boolean) => void
   tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
+  conversationHistory?: { role: string; content: string }[]
 }) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
@@ -751,6 +776,24 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
             </div>
           </div>
         </div>
+        {/* DM Conversation History — Mobile */}
+        {conversationHistory && conversationHistory.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-[#3a3020]">
+            <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">DM Memory</h4>
+            <div className="space-y-1">
+              {conversationHistory.map((entry, idx) => (
+                <div key={idx} className="p-1.5 bg-[#1a1510] rounded">
+                  <div className="text-[8px] uppercase tracking-wider" style={{ color: entry.role === 'user' ? '#c0a060' : '#6090c0' }}>
+                    {entry.role === 'user' ? '🗡️ Player' : '📜 DM'}
+                  </div>
+                  <div className="text-[10px] text-[#a09080]" style={{ maxHeight: '40px', overflow: 'hidden' }}>
+                    {entry.content.length > 80 ? entry.content.slice(0, 80) + '...' : entry.content}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </TabsContent>
     </Tabs>
   )

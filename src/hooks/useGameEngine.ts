@@ -2583,7 +2583,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       setConversationHistory(prev => [
         ...prev,
         { role: 'assistant' as const, content: res.dm_narration.slice(0, 500) }
-      ].slice(-15)) // Keep last 15 exchanges
+      ].slice(-5)) // Keep last 5 exchanges (journey_so_far handles older context)
     }
 
     // Combat keyword detection for narration styling
@@ -3274,7 +3274,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     setConversationHistory(prev => [
       ...prev,
       ...convEntries
-    ].slice(-15))
+    ].slice(-5)) // Keep last 5 exchanges (journey_so_far handles older context)
 
     try {
       // Tick injuries — collect all DOT damage first, then apply immutably
