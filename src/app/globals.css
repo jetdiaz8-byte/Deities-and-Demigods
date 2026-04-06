@@ -738,6 +738,38 @@ button, a, [role="button"], .fantasy-tooltip, select {
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Expandable prose — paragraphs 2+ hidden by default */
+.prose-collapsible {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease, opacity 0.4s ease;
+  opacity: 0;
+}
+.prose-collapsible.expanded {
+  max-height: 5000px;
+  opacity: 1;
+}
+
+.prose-expand-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 0 4px;
+  background: none;
+  border: none;
+  border-top: 1px dashed rgba(212, 175, 55, 0.2);
+  color: #8a7a50;
+  font-family: 'Cinzel', serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.2s ease;
+  text-align: center;
+}
+.prose-expand-btn:hover {
+  color: #d4af37;
+}
+
 /* 12. HP Bar Smooth Transitions */
 .hp-bar-smooth {
   transition: width 800ms ease-out, background-color 500ms ease;

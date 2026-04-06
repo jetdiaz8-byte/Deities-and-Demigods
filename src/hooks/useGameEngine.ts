@@ -2558,7 +2558,10 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         <span class="knot-symbol">❖</span>
       </div>
       <div style="font-size:1.25rem;line-height:2;color:#e8d9b0">
-        ${codexLinked.join('')}
+        ${codexLinked.length > 1
+          ? `${codexLinked[0]}<div class="prose-collapsible">${codexLinked.slice(1).join('')}</div><button class="prose-expand-btn" onclick="this.previousElementSibling.classList.toggle('expanded');this.textContent=this.previousElementSibling.classList.contains('expanded')?'▾ Show less':'▾ Continue reading'">▾ Continue reading</button>`
+          : codexLinked.join('')
+        }
       </div>
     </div>`
 
