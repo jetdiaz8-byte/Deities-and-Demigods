@@ -58,6 +58,7 @@ export default function MythworldEngine() {
     isSpeaking,
     narratorMode, setNarratorMode,
     tokenUsage,
+    conversationHistory,
     narrRef,
     // ── FUNCTIONS ──────────────────────────────────────────────────────────
     startNewCampaign,
