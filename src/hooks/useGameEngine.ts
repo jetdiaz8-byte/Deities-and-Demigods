@@ -948,7 +948,7 @@ PARTY (ALL HUMAN-CONTROLLED):
 ${partyState}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (the prose you wrote - 1 paragraph for regular turns, full prose for opening)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your full narrative prose above — 600-1000 words for opening scenes, 150-300 words for regular turns. Do NOT summarize or abbreviate. Include every paragraph.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -980,7 +980,10 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [{ role: 'user', parts: [{ text: toAscii(userMsg) }] }],
-            generationConfig: { temperature: 0.9, maxOutputTokens: maxTokens }
+            generationConfig: { temperature: 0.9, maxOutputTokens: maxTokens },
+            // Disable thinking mode — it silently consumes token budget, reducing visible prose
+            // @ts-expect-error Gemini 2.5 thinking config
+            thinkingConfig: { thinkingBudget: 0 }
           })
         })
 
@@ -1005,7 +1008,14 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           throw new Error(data.error.message)
         }
 
-        const parts = (data.candidates || [])[0]?.content?.parts || []
+        // Detect truncation — if Gemini hit MAX_TOKENS, the narration is incomplete
+        const candidate = (data.candidates || [])[0]
+        const finishReason = candidate?.finishReason
+        if (finishReason === 'MAX_TOKENS') {
+          console.warn(`⚠️ Gemini response TRUNCATED (finishReason: MAX_TOKENS). Narration may be incomplete.`)
+        }
+
+        const parts = candidate?.content?.parts || []
         let raw = ''
         for (const part of parts) {
           if (part.text && part.text.trim().length > 10) raw += part.text
@@ -2416,9 +2426,16 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     }
 
     // Narrative
-    // Priority: Use dm_narration from response (includes fallback templates) 
-    // Only use lastDMNarrative if dm_narration is empty (for backwards compatibility)
-    let narr = res.dm_narration || lastDMNarrative || 'The DM gathers thoughts...'
+    // The pre-JSON prose (lastDMNarrative) is usually the FULL narration (600-1000 words for opening).
+    // The JSON dm_narration field is often a shorter summary. Prefer the longer version.
+    const jsonNarr = res.dm_narration || ''
+    const preJsonNarr = lastDMNarrative || ''
+    let narr = (preJsonNarr.length > jsonNarr.length * 1.5 && preJsonNarr.length > 100)
+      ? preJsonNarr
+      : (jsonNarr || preJsonNarr || 'The DM gathers thoughts...')
+    if (preJsonNarr.length > 0 && jsonNarr.length > 0) {
+      console.log(`📝 Narration — pre-JSON prose: ${preJsonNarr.length} chars, JSON dm_narration: ${jsonNarr.length} chars, using: ${narr === preJsonNarr ? 'pre-JSON' : 'JSON'}`)
+    }
     narr = toAscii(narr)
     const paragraphs = narr.split(/\n\n+/).map(p => p.replace(/\n/g, ' ').trim()).filter(p => p.length > 5)
     
