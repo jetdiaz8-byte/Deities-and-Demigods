@@ -961,10 +961,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     const MAX_RETRIES = 3
     const BASE_DELAY = 6000
     
-    // OPTIMIZATION: Balanced maxOutputTokens for rich Gaiman prose
-    // Opening scene needs more tokens for atmospheric worldbuilding + companion origin
-    // Regular turns need enough for 2-4 rich paragraphs (300+ words)
-    const maxTokens = isFirstTurn ? 8000 : 6000
+    // maxOutputTokens — must cover prose + full JSON payload (800+ token schema)
+    // Gemini 2.5 Flash supports up to 65536 output tokens
+    const maxTokens = isFirstTurn ? 16000 : 10000
     
     // Track input tokens
     const systemPrompt = buildDMSystem(gs)
@@ -1081,7 +1080,34 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         return getTemplateFallback(gs, 'Missing dm_narration field')
       }
       return parsed
-    } catch { }
+    } catch {
+      // JSON parse failed — attempt truncation repair
+      // When Gemini hits MAX_TOKENS, the JSON is cut off mid-stream.
+      // Try closing unclosed braces/brackets to salvage the payload.
+      const openBraces = (s.match(/\{/g) || []).length
+      const closeBraces = (s.match(/\}/g) || []).length
+      const openBrackets = (s.match(/\[/g) || []).length
+      const closeBrackets = (s.match(/\]/g) || []).length
+      const missingBraces = openBraces - closeBraces
+      const missingBrackets = openBrackets - closeBrackets
+
+      if (missingBraces > 0 || missingBrackets > 0) {
+        // Remove trailing partial key/value (e.g., `"clue_revealed":"short desc`)
+        let repaired = s.replace(/,\s*"[^"]*":\s*"[^"]*$/, '').replace(/,\s*"[^"]*":\s*\d*\.?\d*$/, '')
+        // Remove trailing comma before we close
+        repaired = repaired.replace(/,\s*$/, '')
+        // Close open structures
+        repaired += ']'.repeat(Math.max(0, missingBrackets))
+        repaired += '}'.repeat(Math.max(0, missingBraces))
+        try {
+          const parsed = JSON.parse(repaired)
+          if (parsed && typeof parsed === 'object' && parsed.dm_narration) {
+            console.warn(`⚠️ JSON truncation repaired — added ${missingBraces} braces, ${missingBrackets} brackets`)
+            return parsed
+          }
+        } catch { /* repair failed, continue to fallback */ }
+      }
+    }
 
     const firstBrace = s.indexOf('{')
     const lastBrace = s.lastIndexOf('}')
