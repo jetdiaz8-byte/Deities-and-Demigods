@@ -84,6 +84,8 @@ export function useGameEngine() {
   const renderedNarrationRef = useRef('')
   // Store player's chosen actions for display in turn history
   const lastPlayerChoiceRef = useRef<{ pcName: string; pcAction: string; pcAbility: string; compName?: string; compAction?: string; isFreeText: boolean } | null>(null)
+  // Timestamp when options became available — used for confirm button cooldown
+  const [lastTurnReadyTime, setLastTurnReadyTime] = useState<number>(0)
   
   // Combat Flash Type — exported for page.tsx overlay
   const [combatFlashType, setCombatFlashType] = useState<'damage' | 'heal' | 'crit' | ''>('')
@@ -2408,6 +2410,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
 
         setGameState({ ...gs })
         setStatusMessage(`YOUR TURN — ${humanPC.name}${compOptions.length > 0 ? ` + ${gs.companionId ? gs.pcs.find(p => p.id === gs.companionId)?.name?.split(' ')[0] : 'Companion'}` : ''}`)
+      setLastTurnReadyTime(Date.now())
       } else {
         setGameState({ ...gs })
         setStatusMessage(`T${gs.turn} complete — ${living.length} standing`)
@@ -3792,6 +3795,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     sidebarOpen, setSidebarOpen,
     statusMessage, setStatusMessage,
     lastDMNarrative, setLastDMNarrative,
+    lastTurnReadyTime, setLastTurnReadyTime,
     portraitModalOpen, setPortraitModalOpen,
     selectedPortrait, setSelectedPortrait,
     conversationHistory, setConversationHistory,

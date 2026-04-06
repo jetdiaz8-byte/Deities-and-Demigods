@@ -462,6 +462,7 @@ export default function MythworldEngine() {
               selectCompanionOption={selectCompanionOption}
               confirmChoice={confirmChoice}
               setShardDialogOpen={setShardDialogOpen}
+              lastTurnReadyTime={lastTurnReadyTime}
             />
 
             {/* Scroll anchor — auto-scroll targets this */}

@@ -109,6 +109,7 @@ export interface ChoicePanelProps {
   selectCompanionOption: (index: number) => void
   confirmChoice: (customText?: string) => void
   setShardDialogOpen: (open: boolean) => void
+  lastTurnReadyTime: number
 }
 
 export function ChoicePanel({
@@ -117,11 +118,30 @@ export function ChoicePanel({
   selectCompanionOption,
   confirmChoice,
   setShardDialogOpen,
+  lastTurnReadyTime,
 }: ChoicePanelProps) {
   const [confirmClicked, setConfirmClicked] = useState(false)
   const [diceRollResult, setDiceRollResult] = useState<number | null>(null)
   const [freeText, setFreeText] = useState('')
   const [showFreeText, setShowFreeText] = useState(false)
+
+  // ── CONFIRM COOLDOWN — Prevent 429 rate limit ────────────────────────
+  const COOLDOWN_MS = 5000 // 5 seconds between turns
+  const [cooldownRemaining, setCooldownRemaining] = useState(0)
+  useEffect(() => {
+    if (!lastTurnReadyTime || !gameState.waitingForHuman) {
+      setCooldownRemaining(0)
+      return
+    }
+    const tick = () => {
+      const elapsed = Date.now() - lastTurnReadyTime
+      const remaining = Math.max(0, Math.ceil((COOLDOWN_MS - elapsed) / 1000))
+      setCooldownRemaining(remaining)
+    }
+    tick()
+    const interval = setInterval(tick, 250)
+    return () => clearInterval(interval)
+  }, [lastTurnReadyTime, gameState.waitingForHuman])
 
   // All hooks must be called before any conditional return
   const handleDiceRoll = useCallback((result: number) => {
@@ -561,7 +581,7 @@ export function ChoicePanel({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 pt-3 border-t border-[#3a3020]">
           <Button
             onClick={() => {
-              if (canConfirm) {
+              if (canConfirm && cooldownRemaining <= 0) {
                 // Pass free text as parameter instead of mutating gameState prop
                 const customText = showFreeText && freeText.trim() ? freeText.trim() : undefined
                 setConfirmClicked(true)
@@ -569,23 +589,27 @@ export function ChoicePanel({
                 confirmChoice(customText)
               }
             }}
-            disabled={!canConfirm}
+            disabled={!canConfirm || cooldownRemaining > 0}
             className={`font-title tracking-wider px-6 text-lg py-5 transition-all w-full sm:w-auto min-h-[44px] ${
-              canConfirm
+              canConfirm && cooldownRemaining <= 0
                 ? `confirm-ready ${confirmClicked ? 'confirm-click' : ''} bg-gradient-to-b from-[#5a3a10] to-[#3a2510] hover:from-[#7a5020] hover:to-[#5a3a15] text-[#f0d878] border-2 border-[#8a6020] shadow-[0_0_10px_rgba(200,160,60,.2)]`
                 : 'bg-gradient-to-b from-[#2a2015] to-[#1a1510] text-[#5a4d30] border-2 border-[#3a3020] cursor-not-allowed'
             }`}
           >
-            ⚔ Confirm Choice ⚔
+            {cooldownRemaining > 0
+              ? `⏳ Cooldown ${cooldownRemaining}s`
+              : '⚔ Confirm Choice ⚔'}
           </Button>
           <span className="text-sm text-[#a08050] italic font-narrative break-words">
-            {!pcSelected
-              ? 'Select an action above or write your own'
-              : !compSelected
-                ? `Also choose ${companion?.name?.split(' ')[0] || 'companion'}'s action`
-                : showFreeText && freeText.trim()
-                  ? `Custom action${compOptions.length > 0 ? ` + ${String.fromCharCode(65 + gameState.pendingCompanionChoice!)}` : ''} — Ready!`
-                  : `Option ${gameState.pendingHumanChoice! + 1}${compOptions.length > 0 ? ` + ${String.fromCharCode(65 + gameState.pendingCompanionChoice!)}` : ''} — Ready!`
+            {cooldownRemaining > 0
+              ? 'Waiting for API cooldown...'
+              : !pcSelected
+                ? 'Select an action above or write your own'
+                : !compSelected
+                  ? `Also choose ${companion?.name?.split(' ')[0] || 'companion'}'s action`
+                  : showFreeText && freeText.trim()
+                    ? `Custom action${compOptions.length > 0 ? ` + ${String.fromCharCode(65 + gameState.pendingCompanionChoice!)}` : ''} — Ready!`
+                    : `Option ${gameState.pendingHumanChoice! + 1}${compOptions.length > 0 ? ` + ${String.fromCharCode(65 + gameState.pendingCompanionChoice!)}` : ''} — Ready!`
             }
           </span>
         </div>
