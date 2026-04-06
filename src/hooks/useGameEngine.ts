@@ -3121,7 +3121,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       pcAbility: chosen?.ability || '',
       compName: compChosen ? companion?.name : undefined,
       compAction: compChosen?.action,
-      isFreeText
+      isFreeText: isFreeTextAction
     }
 
     // ── ABILITY COOLDOWN: Track used PC ability ──────────────────────────
