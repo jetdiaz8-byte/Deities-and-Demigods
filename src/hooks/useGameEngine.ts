@@ -1716,8 +1716,8 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
         if (pcIdx >= 0) {
           const pc = { ...newGS.pcs[pcIdx] }
           if (u.hp_delta) pc.hp = Math.max(0, Math.min(pc.maxHp, pc.hp + Number(u.hp_delta)))
-          if (u.new_condition && !pc.conditions.includes(u.new_condition)) {
-            pc.conditions = [...pc.conditions, u.new_condition]
+          if (u.new_condition && !pc.conditions.includes(String(u.new_condition))) {
+            pc.conditions = [...pc.conditions, String(u.new_condition)]
           }
           if (u.remove_condition) {
             pc.conditions = pc.conditions.filter(c => c !== u.remove_condition)
@@ -2701,7 +2701,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
           ${pc.dead ? '✝ SLAIN' : `${pc.hp}/${pc.maxHp} HP`}
         </div>
         ${injuries.length ? `<div style="font-size:.9rem;color:#e08040;margin-top:3px">${injuries.map(i => i.icon).join('')}</div>` : ''}
-        ${pc.conditions.length ? `<div style="font-size:.9rem;color:#5a4d30;font-style:italic;margin-top:3px">${pc.conditions.slice(0, 2).join(', ')}</div>` : ''}
+        ${pc.conditions.length ? `<div style="font-size:.9rem;color:#5a4d30;font-style:italic;margin-top:3px">${pc.conditions.slice(0, 2).map(c => typeof c === 'string' ? c : '').filter(Boolean).join(', ')}</div>` : ''}
       </div>`
     })
 
