@@ -980,10 +980,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [{ role: 'user', parts: [{ text: toAscii(userMsg) }] }],
-            generationConfig: { temperature: 0.9, maxOutputTokens: maxTokens },
-            // Disable thinking mode — it silently consumes token budget, reducing visible prose
-            // @ts-expect-error Gemini 2.5 thinking config
-            thinkingConfig: { thinkingBudget: 0 }
+            generationConfig: { temperature: 0.9, maxOutputTokens: maxTokens }
           })
         })
 
