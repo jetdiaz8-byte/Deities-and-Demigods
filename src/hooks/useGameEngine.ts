@@ -962,10 +962,10 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   // ── API CALLS ──────────────────────────────────────────────────────────
   const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`
-    const MAX_RETRIES = 4
+    const MAX_RETRIES = 6
     const BASE_DELAY = 6000
-    // Gemini 429 rate limits typically need 30-60s to reset
-    const RATE_LIMIT_DELAY = 30000
+    // Gemini 429 rate limits need 60s+ to reset per-minute window
+    const RATE_LIMIT_DELAY = 60000
     
     // maxOutputTokens — must cover prose + full JSON payload (800+ token schema)
     // Gemini 2.5 Flash supports up to 65536 output tokens
@@ -999,8 +999,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
             console.warn('📝 Using template fallback')
             return getTemplateFallback(gs, 'quota_exceeded')
           }
-          // 429 needs longer wait — Gemini rate limits reset in ~30-60s
-          const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 10000) // 30s, 40s, 50s
+          // 429 needs longer wait — Gemini rate limits reset in ~60s per-minute window
+          const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000) // 60s, 75s, 90s, 105s, 120s
           const waitSec = Math.round(rateLimitWait / 1000)
           setStatusMessage(`⏳ Rate limited — waiting ${waitSec}s for API cooldown (attempt ${attempt + 2}/${MAX_RETRIES})...`)
           console.warn(`⏳ Rate limited, waiting ${waitSec}s before retry...`)
