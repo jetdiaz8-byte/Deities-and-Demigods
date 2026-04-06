@@ -51,6 +51,7 @@ export default function MythworldEngine() {
     sidebarOpen, setSidebarOpen,
     statusMessage,
     lastDMNarrative,
+    lastTurnReadyTime,
     portraitModalOpen, setPortraitModalOpen,
     selectedPortrait, setSelectedPortrait,
     ttsVoice, setTtsVoice,
