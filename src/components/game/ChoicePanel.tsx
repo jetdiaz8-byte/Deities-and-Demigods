@@ -126,7 +126,7 @@ export function ChoicePanel({
   const [showFreeText, setShowFreeText] = useState(false)
 
   // ── CONFIRM COOLDOWN — Prevent 429 rate limit ────────────────────────
-  const COOLDOWN_MS = 5000 // 5 seconds between turns
+  const COOLDOWN_MS = 10000 // 10 seconds between turns — prevents Gemini 429 rate limit
   const [cooldownRemaining, setCooldownRemaining] = useState(0)
   useEffect(() => {
     if (!lastTurnReadyTime || !gameState.waitingForHuman) {
