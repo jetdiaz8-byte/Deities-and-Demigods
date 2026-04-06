@@ -82,6 +82,8 @@ export function useGameEngine() {
   const [displayedNarrative, setDisplayedNarrative] = useState('')
   // Synchronous ref — TTS can read this immediately after renderResult sets it
   const renderedNarrationRef = useRef('')
+  // Store player's chosen actions for display in turn history
+  const lastPlayerChoiceRef = useRef<{ pcName: string; pcAction: string; pcAbility: string; compName?: string; compAction?: string; isFreeText: boolean } | null>(null)
   
   // Combat Flash Type — exported for page.tsx overlay
   const [combatFlashType, setCombatFlashType] = useState<'damage' | 'heal' | 'crit' | ''>('')
@@ -963,7 +965,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     
     // maxOutputTokens — must cover prose + full JSON payload (800+ token schema)
     // Gemini 2.5 Flash supports up to 65536 output tokens
-    const maxTokens = isFirstTurn ? 16000 : 10000
+    const maxTokens = isFirstTurn ? 20000 : 12000
     
     // Track input tokens
     const systemPrompt = buildDMSystem(gs)
@@ -1083,29 +1085,57 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     } catch {
       // JSON parse failed — attempt truncation repair
       // When Gemini hits MAX_TOKENS, the JSON is cut off mid-stream.
-      // Try closing unclosed braces/brackets to salvage the payload.
-      const openBraces = (s.match(/\{/g) || []).length
-      const closeBraces = (s.match(/\}/g) || []).length
-      const openBrackets = (s.match(/\[/g) || []).length
-      const closeBrackets = (s.match(/\]/g) || []).length
+      // Strategy: trim to last complete value, then close unclosed structures.
+      let repaired = s
+      // Step 1: If we're mid-string (odd number of unescaped quotes), truncate to last complete string
+      const quoteCount = (repaired.match(/"/g) || []).length
+      if (quoteCount % 2 !== 0) {
+        // Odd quotes = we're inside a string. Find the last opening quote and cut there.
+        const lastQuote = repaired.lastIndexOf('"')
+        // Walk backwards to find the key that started this string
+        const beforeQuote = repaired.substring(0, lastQuote)
+        const lastColon = beforeQuote.lastIndexOf(':')
+        if (lastColon > -1) {
+          // Check if this colon is inside a string or a key
+          const beforeColon = beforeQuote.substring(0, lastColon)
+          const colonQuoteCount = (beforeColon.match(/"/g) || []).length
+          if (colonQuoteCount % 2 === 0) {
+            // Colon is outside strings — this is a key:value pair being truncated
+            const lastKeyStart = beforeColon.lastIndexOf(',')
+            if (lastKeyStart > -1) {
+              repaired = beforeColon.substring(0, lastKeyStart)
+            } else {
+              repaired = beforeColon
+            }
+          } else {
+            repaired = beforeQuote
+          }
+        } else {
+          repaired = beforeQuote
+        }
+      }
+      // Step 2: Remove trailing comma
+      repaired = repaired.replace(/,\s*$/, '')
+      // Step 3: Count and close unclosed braces/brackets
+      const openBraces = (repaired.match(/\{/g) || []).length
+      const closeBraces = (repaired.match(/\}/g) || []).length
+      const openBrackets = (repaired.match(/\[/g) || []).length
+      const closeBrackets = (repaired.match(/\]/g) || []).length
       const missingBraces = openBraces - closeBraces
       const missingBrackets = openBrackets - closeBrackets
-
       if (missingBraces > 0 || missingBrackets > 0) {
-        // Remove trailing partial key/value (e.g., `"clue_revealed":"short desc`)
-        let repaired = s.replace(/,\s*"[^"]*":\s*"[^"]*$/, '').replace(/,\s*"[^"]*":\s*\d*\.?\d*$/, '')
-        // Remove trailing comma before we close
-        repaired = repaired.replace(/,\s*$/, '')
-        // Close open structures
         repaired += ']'.repeat(Math.max(0, missingBrackets))
         repaired += '}'.repeat(Math.max(0, missingBraces))
+      }
+      // Step 4: Try parsing the repaired string
+      if (missingBraces > 0 || missingBrackets > 0 || quoteCount % 2 !== 0) {
         try {
           const parsed = JSON.parse(repaired)
           if (parsed && typeof parsed === 'object' && parsed.dm_narration) {
-            console.warn(`⚠️ JSON truncation repaired — added ${missingBraces} braces, ${missingBrackets} brackets`)
+            console.warn(`⚠️ JSON truncation repaired — trimmed mid-string, added ${missingBraces} braces, ${missingBrackets} brackets`)
             return parsed
           }
-        } catch { /* repair failed, continue to fallback */ }
+        } catch { /* repair failed, try brace extraction */ }
       }
     }
 
@@ -2399,6 +2429,22 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       </div>`
     }
 
+    // ── PLAYER CHOICE DISPLAY — Show what the player chose this turn ──
+    const pChoice = lastPlayerChoiceRef.current
+    if (pChoice && !isFirst) {
+      const pcLabel = pChoice.isFreeText
+        ? `<span style="color:#c0a060">✍️ ${toAscii(pChoice.pcName)} chose (custom):</span> <span style="color:#e8d9b0;font-style:italic">"${toAscii(pChoice.pcAction)}"</span>`
+        : `<span style="color:#c0a060">${toAscii(pChoice.pcName)} chose:</span> <span style="color:#e8d9b0">${toAscii(pChoice.pcAction)}</span>`
+      let choiceHtml = `<div style="padding:.6rem 1rem;margin-bottom:.6rem;border:1px solid rgba(122,95,32,.3);background:rgba(122,95,32,.06);border-radius:4px;font-size:.9rem;line-height:1.6">
+        <div style="display:flex;align-items:baseline;gap:.4rem">${pcLabel}</div>`
+      if (pChoice.compName && pChoice.compAction) {
+        choiceHtml += `<div style="display:flex;align-items:baseline;gap:.4rem;margin-top:.2rem"><span style="color:#c0a060">${toAscii(pChoice.compName)} chose:</span> <span style="color:#e8d9b0">${toAscii(pChoice.compAction)}</span></div>`
+      }
+      choiceHtml += `</div>`
+      html += choiceHtml
+      lastPlayerChoiceRef.current = null // consume — don't show again
+    }
+
     // Check for banishment narration from applyMechanics
     const banishLog = gs.log.find(l => l.type === 'banishment_narration' && l.turn === gs.turn)
     if (banishLog && banishLog.msg.startsWith('__BANISHMENT_NARRATION__:')) {
@@ -3067,6 +3113,16 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const companion = gs.companionId ? gs.pcs.find(p => p.id === gs.companionId) : null
     const compChoiceIdx = gs.pendingCompanionChoice != null ? Math.min(gs.pendingCompanionChoice, gs.companionOptions.length - 1) : null
     const compChosen = compChoiceIdx != null ? gs.companionOptions[compChoiceIdx] : null
+
+    // ── STORE PLAYER CHOICES for turn history display ──────────────────
+    lastPlayerChoiceRef.current = {
+      pcName: humanPC?.name || 'PC',
+      pcAction: chosen?.action || 'acts',
+      pcAbility: chosen?.ability || '',
+      compName: compChosen ? companion?.name : undefined,
+      compAction: compChosen?.action,
+      isFreeText
+    }
 
     // ── ABILITY COOLDOWN: Track used PC ability ──────────────────────────
     const humanPCForCD = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)
