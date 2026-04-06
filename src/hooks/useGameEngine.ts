@@ -756,7 +756,7 @@ export function useGameEngine() {
   }
 
   // ── BUILD DM SYSTEM PROMPT ─────────────────────────────────────────────
-  const buildDMSystem = (gs: GameState, includeHistory: boolean = true): string => {
+  const buildDMSystem = (gs: GameState, includeHistory: boolean = true, isFirstTurn: boolean = false): string => {
     const ant = getAntagonist(gs.antagonistId)
     const living = gs.pcs.filter(p => !p.dead)
     const shard = gs.shardEntry
@@ -806,6 +806,7 @@ CRITICAL RULES:
 3. NARRATION STYLE — NEIL GAIMAN:
    - OPENING SCENE (Turn 0): Write 4-6 paragraphs of RICH, ATMOSPHERIC prose (600-1000 words)
    - REGULAR TURNS (Turn 1+): Write 2-3 paragraphs (150-300 words). Be vivid, be specific.
+   - CRITICAL: NEVER repeat or rephrase narration from previous turns. Every turn must contain ENTIRELY NEW prose that advances the story.
    - Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
    - Use specific sensory language: the taste of copper, the weight of shadows
    - For regular turns: paragraph 1 = action/outcome, paragraph 2 = world reaction/atmosphere, paragraph 3 = tension/foreshadowing (optional)
@@ -817,7 +818,7 @@ CRITICAL RULES:
 5. PCs=Heroes/Demigods (including Krynn). NPCs=Lesser/Greater Gods (including Krynn gods).
 6. Gods avoid direct combat. WIS>15=cannot be deceived. Ancient enmities override all.
 7. In Act I and II, DO NOT include the Antagonist in the "npc_encounters" array.
-7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
+${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
     - If there are active ENEMY NPCs, they MUST attack the party every 2-3 turns
     - Include enemy attacks in "damage_dealt" and "state_updates" with appropriate HP damage
     - Use "dice_rolls" for enemy attack rolls against PC AC
@@ -825,6 +826,7 @@ CRITICAL RULES:
     - PCs and companions take real damage. Injuries happen. This is D&D, not a theme park.
     - If an enemy has not attacked in the last 2 turns, they MUST attack this turn
     - Vary which PC is targeted — enemies are tactical
+` : ''}
 8. Occasionally drop items into "item_drops" array for the party inventory.
 9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. Provide 3-4 action OPTIONS for the current PC, then WAIT for the human player to choose. NEVER auto-resolve PC actions.
 10. **PERSISTENT MEMORY** - Remember ALL previous events, decisions, and their consequences. Reference past events when narrating.
@@ -864,7 +866,7 @@ CRITICAL RULES:
     - The antagonist may be a Greater God OR a Super Monster (Jormungandr, Fenris, Malystryx, etc.)
     - The shard may sense the antagonist—it may grow cold near them, or burn
     - Some antagonists are neither good nor evil—they are forces of nature
-14. **RNG PARTY SYSTEM** - During Act II, you may introduce additional allies:
+${!isFirstTurn ? `14. **RNG PARTY SYSTEM** - During Act II, you may introduce additional allies:
     - There are ${gs.rngHeroPool.length} HEROES and ${gs.rngDemigodPool.length} DEMIGODS available to join the story
     - Introduce them naturally through encounters, quests, or shared enemies
     - Available Heroes: ${gs.rngHeroPool.filter(h => !gs.introducedHeroes.includes(h.id)).map(h => h.name).join(', ') || 'None remaining'}
@@ -888,6 +890,7 @@ CRITICAL RULES:
     - Include whichever is relevant in the JSON response. Can be 0 for neutral actions.
     - These accumulate over the campaign and affect ending.
     - Current paragon: ${gs.paragonPoints} | Current renegade: ${gs.renegadePoints} | Morality: ${gs.moralityQuotient >= 0 ? '+' : ''}${gs.moralityQuotient}
+` : ''}
 18. **ASPECT TRACKING** (Fate Core):
     - When the player spends a Fate Point to invoke an aspect, they get +2 to a roll or reroll, AND the narrative must reflect the aspect.
     - Earn Fate Points: when aspects COMPLICATE the story (trouble aspect triggers), award +1 FP via paragon_delta or narration.
@@ -895,12 +898,13 @@ CRITICAL RULES:
     - If the narrative would logically award or change an aspect, include "new_aspect": A new aspect name the player earns.
     - Current Fate Points: ${gs.fatePoints}/5
     - Active Aspects: ${gs.aspects.map(a => `${a.name} (${a.type})`).join(', ') || 'None yet'}
-19. **STAMINA SYSTEM** (Dark Souls):
+${!isFirstTurn ? `19. **STAMINA SYSTEM** (Dark Souls):
     - The PC has stamina that limits actions in combat. Current: ${gs.stamina}/${gs.maxStamina} (regen ${gs.staminaRegenRate}/turn)
     - Attack costs 2 stamina, Defend costs 1, Special abilities cost 3
     - If stamina is insufficient, the action fails or is weakened
     - Stamina regenerates each turn by ${gs.staminaRegenRate}
-${journeySection}${historySection}
+` : ''}
+${isFirstTurn ? '' : `${journeySection}${historySection}
 ═══════════════════════════════════════════════════════════════════════════
 THE SHARD — ${shard?.name} [${shard?.pantheon || 'Unknown'} Pantheon]
 ═══════════════════════════════════════════════════════════════════════════
@@ -954,6 +958,7 @@ ANTAGONIST: ${gs.act === ACTS.THREE ? `${ant?.name} | ${ant?.align} | HP:${gs.an
 ${gs.antagonistBanished ? `⚠️ BANISHMENT EVENT: ${ant?.name || 'The Antagonist'} was BANISHED to another plane on Turn ${gs.antagonistBanishTurn}. They will return in Act III.\n- During Acts I-II: The antagonist is ABSENT. Narrate the world without their direct threat, but hint at their return.\n- A forbidden name is known: ${gs.antagonistRival?.name || 'Unknown'} (${gs.antagonistRival?.title || ''}) — ${gs.antagonistRival?.ability || ''}.\n- This ${gs.antagonistRival?.name || 'force'} is the antagonist's mythological ARCHRIVAL and can be SUMMONED in Act III to aid the party.\n- When Act III begins, the antagonist returns from exile at full power, enraged.\n- Build tension around the banishment: the world feels wrong, the shard pulses with the rival's name.` : ''}
 PARTY (ALL HUMAN-CONTROLLED):
 ${partyState}
+`}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
 {"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your full narrative prose above — 600-1000 words for opening scenes, 150-300 words for regular turns. Do NOT summarize or abbreviate. Include every paragraph.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
@@ -972,7 +977,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     const maxTokens = isFirstTurn ? 20000 : 12000
     
     // Track input tokens
-    const systemPrompt = buildDMSystem(gs)
+    const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
     const totalInput = systemPrompt + userMsg
 
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
@@ -1621,6 +1626,17 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
     if (res.story_summary) newGS.storySummary = res.story_summary
     if (res.journey_so_far) newGS.journeySoFar = res.journey_so_far
 
+    // ── CHRONICLE LOG — Add a regular entry for every turn ──────────────
+    if (gs.turn === 0) {
+      newGS.log = [...newGS.log, { msg: 'The Shard Awakens — the campaign begins.', type: 'discovery' as const, turn: 0 }]
+    } else {
+      const narrSnippet = (res.dm_narration || '').slice(0, 120)
+      const logMsg = narrSnippet.length > 20
+        ? `Turn ${gs.turn}: ${narrSnippet}${narrSnippet.length >= 120 ? '…' : ''}`
+        : `Turn ${gs.turn}: The adventure continues.`
+      newGS.log = [...newGS.log, { msg: logMsg, type: 'narration' as const, turn: gs.turn }]
+    }
+
     // ── SOUND EVENTS ──────────────────────────────────────────────────
     if (res.dice_rolls?.length) {
       for (const d of res.dice_rolls) {
@@ -1715,7 +1731,10 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
         const pcIdx = newGS.pcs.findIndex(p => p.id === u.pc_id)
         if (pcIdx >= 0) {
           const pc = { ...newGS.pcs[pcIdx] }
-          if (u.hp_delta) pc.hp = Math.max(0, Math.min(pc.maxHp, pc.hp + Number(u.hp_delta)))
+          if (u.hp_delta) pc.hp = Math.max(0, Math.min(Number(pc.maxHp) || pc.maxHp, (Number(pc.hp) || 0) + Number(u.hp_delta)))
+          // Safety: ensure hp is always a number, never an object
+          pc.hp = Number(pc.hp) || 0
+          pc.maxHp = Number(pc.maxHp) || 1
           if (u.new_condition && !pc.conditions.includes(String(u.new_condition))) {
             pc.conditions = [...pc.conditions, String(u.new_condition)]
           }
@@ -2357,6 +2376,7 @@ Act: ${gs.act}
 ${gs.pendingShardSummon ? `${shard?.name} INVOKED — process summoning of "${gs.pendingShardSummon}" with d20 roll (DC10).\n` : ''}${pcIntroStr}${gs.act === ACTS.TWO ? 'Introduce 1-2 gods from the DDG roster this turn. Mix pantheons.\n' : ''}${gs.act === ACTS.THREE ? `BOSS FIGHT: ${ant?.name} Phase ${gs.antagonistPhase}. HP ${gs.antagonistHp}/${gs.antagonistMaxHp}.\n` : ''}${pacingGuide}
 NARRATIVE STYLE — NEIL GAIMAN (1-2 RICH PARAGRAPHS):
 Write 1-2 paragraphs of rich, atmospheric prose. Quality over quantity.
+- DO NOT repeat or rephrase prose from previous turns. Each turn must advance the story with NEW narration.
 - Layer sensory details: the quality of light, texture of surfaces, sounds on the edge of hearing
 - Describe atmosphere and mood with specificity
 - Include internal character reactions
@@ -2527,6 +2547,9 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       console.log(`📝 Narration — pre-JSON prose: ${preJsonNarr.length} chars, JSON dm_narration: ${jsonNarr.length} chars, using: ${narr === preJsonNarr ? 'pre-JSON' : 'JSON'}`)
     }
     narr = toAscii(narr)
+    // P8 FIX: Strip raw HTML artifacts that Gemini may leak into prose (e.g., <div class="dialogue-text">)
+    // This runs BEFORE our own dialogue-styling regex, so ALL tags here are Gemini artifacts
+    narr = narr.replace(/<[^>]+>/g, '')
     const paragraphs = narr.split(/\n\n+/).map(p => p.replace(/\n/g, ' ').trim()).filter(p => p.length > 5)
     
     // Store the exact displayed narrative for TTS - MUST match what's rendered
@@ -2583,7 +2606,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       setConversationHistory(prev => [
         ...prev,
         { role: 'assistant' as const, content: res.dm_narration.slice(0, 200) }
-      ].slice(-3)) // Keep last 3 exchanges (journey_so_far handles older context)
+      ].slice(-10)) // Keep last 10 entries for DM Memory Log display
     }
 
     // Combat keyword detection for narration styling
@@ -3134,6 +3157,15 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       compAction: compChosen?.action,
       isFreeText: isFreeTextAction
     }
+
+    // ── ADD USER CHOICE to conversation history for DM Memory Log ───────
+    const userChoiceText = compChosen
+      ? `${humanPC?.name || 'PC'}: ${chosen?.action} | ${companion?.name}: ${compChosen.action}`
+      : `${humanPC?.name || 'PC'}: ${chosen?.action}`
+    setConversationHistory(prev => [
+      ...prev,
+      { role: 'user' as const, content: userChoiceText.slice(0, 200) }
+    ].slice(-10)) // Keep last 10 entries
 
     // ── ABILITY COOLDOWN: Track used PC ability ──────────────────────────
     const humanPCForCD = gs.pcs.find(p => p.id === gs.humanPCId) || gs.pcs.find(p => !p.dead)

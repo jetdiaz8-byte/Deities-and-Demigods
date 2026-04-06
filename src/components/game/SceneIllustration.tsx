@@ -61,6 +61,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
   const cacheRef = useRef<Map<number, string>>(new Map())
   const prevActRef = useRef<string | null>(null)
   const apiFailedRef = useRef(false) // Stop retrying after first API failure per session
+  const fetchInProgressRef = useRef(false) // Prevent concurrent fetches
 
   const isKey = useMemo(() => {
     if (turn === 0 || !narration) return false
@@ -81,6 +82,8 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
     if (!isKey) return
     // Don't retry if the API has already failed this session
     if (apiFailedRef.current) return
+    // Prevent concurrent fetches (e.g. React Strict Mode double-fire)
+    if (fetchInProgressRef.current) return
 
     // Check cache
     const cached = cacheRef.current.get(turn)
@@ -96,6 +99,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
     const prompt = `Dark fantasy RPG scene illustration: ${sceneName}. Neil Gaiman style, atmospheric, cinematic lighting, oil painting quality, moody, mythical, detailed, 16:9 aspect ratio. No text or letters. Fantasy art style reminiscent of Frank Frazetta and Yoshitaka Amano.`
 
     let cancelled = false
+    fetchInProgressRef.current = true
     setLoading(true)
     setError(false)
     setVisible(false)
@@ -107,13 +111,12 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
     })
       .then(res => {
         // If image gen is disabled (503 with disabled flag), bail immediately
-        if (res.status === 503) {
+        if (res.status === 503 || !res.ok) {
           apiFailedRef.current = true
           setLoading(false)
           setError(true)
           return null
         }
-        if (!res.ok) throw new Error('Generation failed')
         return res.json()
       })
       .then(data => {
@@ -131,8 +134,11 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
         setLoading(false)
         setError(true)
       })
+      .finally(() => {
+        if (!cancelled) fetchInProgressRef.current = false
+      })
 
-    return () => { cancelled = true }
+    return () => { cancelled = true; fetchInProgressRef.current = false }
   }, [isKey, turn, sceneName])
 
   // Don't render anything if not a key moment

@@ -523,7 +523,7 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
                 <CardDescription className="text-xs text-[#a08060]">{pc.epithet || pc.pantheon}</CardDescription>
               </CardHeader>
               <CardContent className="p-3 text-sm space-y-2">
-                <div className="flex justify-between"><span className="text-[#8a7040]">HP</span><span className={`font-bold ${hpCls(pc.hp, pc.maxHp)}`}>{Math.max(0, pc.hp)}/{pc.maxHp}</span></div>
+                <div className="flex justify-between"><span className="text-[#8a7040]">HP</span><span className={`font-bold ${hpCls(Number(pc.hp), Number(pc.maxHp))}`}>{Math.max(0, Number(pc.hp) || 0)}/{Number(pc.maxHp) || '?'}</span></div>
                 <div className="flex justify-between"><span className="text-[#8a7040]">AC</span><span className="text-[#f0e0c0] font-bold">{pc.AC}</span></div>
                 <div className="flex justify-between"><span className="text-[#8a7040]">Align</span><span className="text-sm" style={{ color: aCol(pc.align) }}>{pc.align}</span></div>
                 <div className="flex justify-between">
@@ -583,7 +583,7 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
                 <CardContent className="p-3 text-sm space-y-1">
                   <div className="flex justify-between">
                     <span className="text-[#8a7040] font-narrative">HP</span>
-                    <span className={`font-bold ${hpCls(npc.hp, npc.maxHp)}`}>{Math.max(0, npc.hp)}/{npc.maxHp}</span>
+                    <span className={`font-bold ${hpCls(Number(npc.hp), Number(npc.maxHp))}`}>{Math.max(0, Number(npc.hp) || 0)}/{Number(npc.maxHp) || '?'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[#8a7040] font-narrative">AC</span>
@@ -815,6 +815,7 @@ function getLogDotColor(type: string): string {
     case 'injury': return '#f97316'
     case 'level_up': return '#d4af37'
     case 'quest': return '#22c55e'
+    case 'narration': return '#c9a84c'
     default: return '#8b6914'
   }
 }
@@ -827,6 +828,7 @@ function getLogGlowColor(type: string): string {
     case 'injury': return 'rgba(249,115,22,0.5)'
     case 'level_up': return 'rgba(212,175,55,0.5)'
     case 'quest': return 'rgba(34,197,94,0.5)'
+    case 'narration': return 'rgba(201,168,76,0.4)'
     default: return 'rgba(139,105,20,0.4)'
   }
 }
@@ -855,7 +857,7 @@ function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
       
       {/* Always visible stats */}
       <CardContent className="p-3 text-sm space-y-1">
-        <div className="flex justify-between"><span className="text-[#8a7040] font-narrative">HP</span><span className={`font-bold ${hpCls(pc.hp, pc.maxHp)}`}>{Math.max(0, pc.hp)}/{pc.maxHp}</span></div>
+        <div className="flex justify-between"><span className="text-[#8a7040] font-narrative">HP</span><span className={`font-bold ${hpCls(Number(pc.hp), Number(pc.maxHp))}`}>{Math.max(0, Number(pc.hp) || 0)}/{Number(pc.maxHp) || '?'}</span></div>
         <div className="flex justify-between"><span className="text-[#8a7040] font-narrative">AC</span><span className="text-[#f0e0c0] font-bold">{pc.AC}</span></div>
         <div className="flex justify-between"><span className="text-[#8a7040] font-narrative">MR</span><span className="text-[#f0e0c0]">{pc.MR}{typeof pc.MR === 'number' ? '%' : ''}</span></div>
         <div className="flex justify-between"><span className="text-[#8a7040] font-narrative">Align</span><span className="font-title text-sm" style={{ color: aCol(pc.align) }}>{pc.align}</span></div>
