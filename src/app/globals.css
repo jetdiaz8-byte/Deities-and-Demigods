@@ -813,29 +813,7 @@ button, a, [role="button"], .fantasy-tooltip, select {
   pointer-events: none;
 }
 
-/* 15. Dialogue Text Styling */
-.dialogue-text {
-  font-family: var(--font-uncial), cursive;
-  color: #f0d8a0 !important;
-  font-style: italic;
-  display: inline;
-}
-
-.dialogue-text::before {
-  content: '❝';
-  color: #8b6914;
-  margin-right: 2px;
-  font-style: normal;
-  opacity: 0.7;
-}
-
-.dialogue-text::after {
-  content: '❞';
-  color: #8b6914;
-  margin-left: 2px;
-  font-style: normal;
-  opacity: 0.7;
-}
+/* 15. Dialogue Text Styling — moved to MOOD-BASED section below with dark sepia colors */
 
 /* 32. Dialogue Bubbles */
 .dialogue-bubble {
@@ -881,6 +859,122 @@ button, a, [role="button"], .fantasy-tooltip, select {
   color: #8b2635;
   font-size: 0.8em;
   opacity: 0.7;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MOOD-BASED NARRATION COLORS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Default — Dark sepia ink on parchment */
+.parchment-bg-dm.mood-default {
+  border-color: #5a4a30;
+}
+.parchment-bg-dm.mood-default .dm-narration-body {
+  color: #2c1810;
+}
+
+/* Combat — Burnt umber tint, blood-red border */
+.parchment-bg-dm.mood-combat {
+  border-color: #6b2020;
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.35),
+    inset 0 0 30px rgba(120,20,20,0.12),
+    0 6px 30px rgba(0,0,0,0.6),
+    0 0 8px rgba(120,20,20,0.2);
+}
+.parchment-bg-dm.mood-combat .dm-narration-body {
+  color: #2d1b0e;
+}
+.parchment-bg-dm.mood-combat .dm-narration-header {
+  color: #8b2020 !important;
+}
+
+/* Shard / Prophecy / Dreams — Deep violet tint */
+.parchment-bg-dm.mood-shard {
+  border-color: #4a3060;
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.35),
+    inset 0 0 30px rgba(80,40,120,0.12),
+    0 6px 30px rgba(0,0,0,0.6),
+    0 0 8px rgba(80,40,120,0.2);
+}
+.parchment-bg-dm.mood-shard .dm-narration-body {
+  color: #1a1030;
+}
+.parchment-bg-dm.mood-shard .dm-narration-header {
+  color: #7b68ee !important;
+}
+
+/* Divine / God encounter — Bright gold accent */
+.parchment-bg-dm.mood-divine {
+  border-color: #8b7520;
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.35),
+    inset 0 0 30px rgba(180,150,40,0.1),
+    0 6px 30px rgba(0,0,0,0.6),
+    0 0 8px rgba(180,150,40,0.2);
+}
+.parchment-bg-dm.mood-divine .dm-narration-body {
+  color: #2c2008;
+}
+.parchment-bg-dm.mood-divine .dm-narration-header {
+  color: #c9a227 !important;
+}
+
+/* Dread / Dark / Horror — Near-black ink, cold blue-black */
+.parchment-bg-dm.mood-dread {
+  border-color: #1a2030;
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.45),
+    inset 0 0 30px rgba(10,15,30,0.15),
+    0 6px 30px rgba(0,0,0,0.6),
+    0 0 8px rgba(10,15,30,0.2);
+}
+.parchment-bg-dm.mood-dread .dm-narration-body {
+  color: #12141e;
+}
+.parchment-bg-dm.mood-dread .dm-narration-header {
+  color: #4a5568 !important;
+}
+
+/* Nature / Forest — Deep forest green tint */
+.parchment-bg-dm.mood-nature {
+  border-color: #2a4a2a;
+  box-shadow:
+    inset 0 0 60px rgba(0,0,0,0.35),
+    inset 0 0 30px rgba(20,60,20,0.1),
+    0 6px 30px rgba(0,0,0,0.6),
+    0 0 8px rgba(20,60,20,0.15);
+}
+.parchment-bg-dm.mood-nature .dm-narration-body {
+  color: #1a2a1a;
+}
+.parchment-bg-dm.mood-nature .dm-narration-header {
+  color: #4a7a4a !important;
+}
+
+/* Dialogue styling update — warm amber on dark sepia, works on all moods */
+.dialogue-text {
+  font-family: var(--font-uncial), cursive;
+  color: #8b5e20 !important;
+  font-style: italic;
+  display: inline;
+}
+
+.dialogue-text::before {
+  content: '❝';
+  color: #6b4a15;
+  margin-right: 2px;
+  font-style: normal;
+  opacity: 0.8;
+}
+
+.dialogue-text::after {
+  content: '❞';
+  color: #6b4a15;
+  margin-left: 2px;
+  font-style: normal;
+  opacity: 0.8;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

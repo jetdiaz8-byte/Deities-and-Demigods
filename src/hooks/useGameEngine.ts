@@ -2641,6 +2641,23 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const combatKeywords = ['strikes', 'slashes', 'casts', 'attacks', 'hits', 'misses', 'damages', 'deals', 'critical']
     const isCombatParagraph = (p: string) => combatKeywords.some(kw => p.toLowerCase().includes(kw))
 
+    // ── MOOD DETECTION — determines parchment border color & narration tint ──
+    const narrText = narr.toLowerCase()
+    const hasCombat = (gs.activeNPCs || []).some(n => n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS') ||
+      combatKeywords.some(kw => narrText.includes(kw))
+    const hasShard = /shard|prophecy|whisper|dream|vision|pulse|glow|fate|riddle/.test(narrText)
+    const hasDivine = /divine|god|deity|celestial|holy|blessing|altar|temple|prayer|sacred|immortal/.test(narrText) ||
+      (res.npc_encounters || []).some(n => /greater.god|lesser.god|demigod/i.test(n.encounter_type || '') || /god|deity/i.test(n.behavior || ''))
+    const hasDread = /darkness|shadow|cold|silence|empty|void|decay|rot|death|corpse|tomb|grave|horror|fear|dread|chill/.test(narrText) ||
+      gs.act === 'act3'
+    const hasNature = /forest|tree|river|mountain|meadow|garden|grove|vine|leaf|bird|wind|rain|sunlight|bloom/.test(narrText)
+    let narrationMood = 'default'
+    if (hasCombat) narrationMood = 'combat'
+    else if (hasShard) narrationMood = 'shard'
+    else if (hasDivine) narrationMood = 'divine'
+    else if (hasDread) narrationMood = 'dread'
+    else if (hasNature) narrationMood = 'nature'
+
     // Style dialogue: wrap "quoted text" in spans with speaker attribution bubbles
     const commonWords = ['The', 'They', 'He', 'She', 'It', 'We', 'You', 'This', 'That', 'There', 'Here', 'What', 'How', 'Why', 'When']
     const styledParagraphs = paragraphs.slice(0, 12).map((p, i) => {
@@ -2681,7 +2698,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       )
     }
 
-    html += `<div class="parchment-bg-dm narration-fade-in" style="padding:20px;margin-bottom:12px">
+    html += `<div class="parchment-bg-dm mood-${narrationMood} narration-fade-in" style="padding:20px;margin-bottom:12px">
       <div class="dm-narration-header">
         <span class="header-rune-left">ᚠ ᚢ ᚦ</span>
         <span>✦ DM Narration</span>
@@ -2691,7 +2708,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       <div class="celtic-divider">
         <span class="knot-symbol">❖</span>
       </div>
-      <div style="font-size:1.25rem;line-height:2;color:#e8d9b0">
+      <div class="dm-narration-body" style="font-size:1.25rem;line-height:2;color:#2c1810">
         ${codexLinked.length > 1
           ? `${codexLinked[0]}<div class="prose-collapsible">${codexLinked.slice(1).join('')}</div><button class="prose-expand-btn" onclick="this.previousElementSibling.classList.toggle('expanded');this.textContent=this.previousElementSibling.classList.contains('expanded')?'▾ Show less':'▾ Continue reading'">▾ Continue reading</button>`
           : codexLinked.join('')

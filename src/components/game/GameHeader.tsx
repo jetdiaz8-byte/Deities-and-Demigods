@@ -362,6 +362,10 @@ export function GameHeader({
               <SelectItem value="ryan" className="text-xs text-[#c9a84c]">👑 Ryan (British)</SelectItem>
               <SelectItem value="aria" className="text-xs text-[#c9a84c]">✨ Aria</SelectItem>
               <SelectItem value="jenny" className="text-xs text-[#c9a84c]">🌟 Jenny</SelectItem>
+              <SelectItem value="connor" className="text-xs text-[#c9a84c]">🍀 Connor (Irish)</SelectItem>
+              <SelectItem value="thomas" className="text-xs text-[#c9a84c]">📖 Thomas (Storyteller)</SelectItem>
+              <SelectItem value="davis" className="text-xs text-[#c9a84c]">🏛️ Davis (Sage)</SelectItem>
+              <SelectItem value="jason" className="text-xs text-[#c9a84c]">🌑 Jason (Mysterious)</SelectItem>
             </SelectContent>
           </Select>
         </div>

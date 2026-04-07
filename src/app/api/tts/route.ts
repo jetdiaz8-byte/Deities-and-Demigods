@@ -7,7 +7,7 @@ import path from 'path';
 // High-quality Microsoft Neural Voices - FREE and unlimited!
 // Works on Vercel serverless without Python!
 
-// Best voices for DM narration
+// Best voices for DM narration — curated for fantasy atmosphere
 const DM_VOICES = {
   'guy': { name: 'en-US-GuyNeural', description: 'Deep male voice - passionate, perfect for DM' },
   'christopher': { name: 'en-US-ChristopherNeural', description: 'Male voice - reliable, authoritative' },
@@ -15,6 +15,10 @@ const DM_VOICES = {
   'ryan': { name: 'en-GB-RyanNeural', description: 'British male - friendly, noble' },
   'aria': { name: 'en-US-AriaNeural', description: 'Female voice - positive, confident' },
   'jenny': { name: 'en-US-JennyNeural', description: 'Female voice - friendly, warm' },
+  'connor': { name: 'en-IE-ConnorNeural', description: 'Irish male - melodic, warm, bardic' },
+  'thomas': { name: 'en-GB-ThomasNeural', description: 'British male - elder storyteller, wise' },
+  'davis': { name: 'en-US-DavisNeural', description: 'Older male - distinguished, professorial' },
+  'jason': { name: 'en-US-JasonNeural', description: 'Male voice - calm, measured, mysterious' },
 };
 
 export async function POST(req: NextRequest) {
