@@ -71,13 +71,54 @@ export function useGameEngine() {
   const [selectedPortrait, setSelectedPortrait] = useState<CharacterPortrait | null>(null)
   // Conversation History for persistent DM memory
   const [conversationHistory, setConversationHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
-  // TTS State - Mellow DM Storyteller Voice
+  // ── TTS STATE ────────────────────────────────────────────────────────
+  // Dual-engine TTS: browser (primary, zero server) + Edge TTS (neural fallback)
   const [ttsEnabled, setTtsEnabled] = useState(false)
-  const [ttsVoice, setTtsVoice] = useState('guy') // Edge TTS - GuyNeural for DM narration
-  const [ttsSpeed, setTtsSpeed] = useState(0.9) // Slightly slower for dramatic storytelling
+  const [ttsVoice, setTtsVoice] = useState('guy') // Edge TTS neural voice key
+  const [ttsEngine, setTtsEngine] = useState<'browser' | 'neural'>('browser') // Primary engine
+  const [ttsSpeed, setTtsSpeed] = useState(0.9)
   const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
+  // Available browser voices — populated on mount
+  const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [browserVoiceName, setBrowserVoiceName] = useState<string>('')
+
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  // Browser voice ref for cancel support
+  const browserUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+
+  // ── BROWSER VOICE DETECTION ──────────────────────────────────────────
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'))
+      setBrowserVoices(voices)
+      if (voices.length > 0) {
+        const preferred = [
+          'Google UK English Male', 'Microsoft George Online', 'Microsoft Mark Online',
+          'Daniel', 'Alex', 'Google US English', 'Microsoft David Desktop',
+        ]
+        let pick: SpeechSynthesisVoice | undefined = undefined
+        for (const pref of ['Google UK English Male', 'Microsoft George Online', 'Microsoft Mark Online', 'Daniel', 'Alex', 'Google US English', 'Microsoft David Desktop']) {
+          pick = voices.find(v => v.name === pref)
+          if (pick) break
+        }
+        if (!pick) pick = voices.find(v => v.name.toLowerCase().includes('male'))
+        if (!pick) pick = voices.find(v => !v.name.toLowerCase().includes('female'))
+        if (!pick) pick = voices[0]
+        if (pick) setBrowserVoiceName(pick.name)
+      }
+    }
+    loadVoices()
+    window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
+    const saved = localStorage.getItem('ddg_browser_voice')
+    if (saved) setBrowserVoiceName(saved)
+    const savedEngine = localStorage.getItem('ddg_tts_engine') as 'browser' | 'neural' | null
+    if (savedEngine) setTtsEngine(savedEngine)
+    return () => { window.speechSynthesis.removeEventListener('voiceschanged', loadVoices) }
+  }, [])
+
   // Store the exact displayed narrative text for TTS
   const [displayedNarrative, setDisplayedNarrative] = useState('')
   // Synchronous ref — TTS can read this immediately after renderResult sets it
@@ -138,7 +179,6 @@ export function useGameEngine() {
   }
 
   const narrRef = useRef<HTMLDivElement>(null)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
@@ -207,7 +247,7 @@ export function useGameEngine() {
       timestamp: Date.now(),
       gameState,
       conversationHistory: conversationHistory.slice(-20),
-      ttsSettings: { enabled: ttsEnabled, voice: ttsVoice, speed: ttsSpeed },
+      ttsSettings: { enabled: ttsEnabled, voice: ttsVoice, speed: ttsSpeed, engine: ttsEngine, browserVoice: browserVoiceName },
       achievementTracker: serializeTracker(achievementTrackerRef.current),
     }
     try {
@@ -239,6 +279,8 @@ export function useGameEngine() {
           setTtsEnabled(parsed.ttsSettings.enabled)
           setTtsVoice(parsed.ttsSettings.voice)
           setTtsSpeed(parsed.ttsSettings.speed)
+          if (parsed.ttsSettings.engine) setTtsEngine(parsed.ttsSettings.engine)
+          if (parsed.ttsSettings.browserVoice) setBrowserVoiceName(parsed.ttsSettings.browserVoice)
         }
         // Restore achievement tracker
         if (parsed.achievementTracker) {
@@ -293,86 +335,152 @@ export function useGameEngine() {
 
   const abortSpeakRef = useRef(false)
 
-  // Edge TTS - Microsoft Neural Voices (FREE, unlimited)
-  // Reads the EXACT displayed narrative text for perfect sync
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DUAL-ENGINE TTS SYSTEM
+  // Primary: Browser Web Speech API (zero server, instant, no cost)
+  // Fallback: Edge TTS Neural Voices (server-side, higher quality)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── BROWSER TTS (Primary) ────────────────────────────────────────────
+  const speakWithBrowser = (text: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      if (typeof window === 'undefined' || !window.speechSynthesis) {
+        reject(new Error('Browser speech not supported'))
+        return
+      }
+
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel()
+
+      const utterance = new SpeechSynthesisUtterance(text)
+      browserUtteranceRef.current = utterance
+
+      // Find the selected voice
+      const voice = browserVoices.find(v => v.name === browserVoiceName)
+      if (voice) utterance.voice = voice
+
+      // DM narration settings: slower rate, slightly lower pitch
+      utterance.rate = Math.max(0.5, Math.min(2, ttsSpeed))
+      utterance.pitch = 0.9  // Slightly deeper for DM gravitas
+      utterance.volume = 0.9
+
+      utterance.onend = () => {
+        browserUtteranceRef.current = null
+        if (abortSpeakRef.current) return
+        resolve()
+      }
+      utterance.onerror = (e) => {
+        browserUtteranceRef.current = null
+        if (abortSpeakRef.current || e.error === 'canceled') {
+          resolve() // Cancel is not an error
+          return
+        }
+        reject(new Error(`Browser speech error: ${e.error}`))
+      }
+
+      window.speechSynthesis.speak(utterance)
+    })
+  }
+
+  // ── EDGE TTS (Neural Fallback) ───────────────────────────────────────
+  const speakWithEdgeTTS = async (text: string, voice?: string): Promise<void> => {
+    const chunks = splitTextIntoChunks(text, 2000)
+    const selectedVoice = voice || ttsVoice
+
+    for (let i = 0; i < chunks.length; i++) {
+      if (abortSpeakRef.current) break
+      const chunk = chunks[i]
+      if (!chunk.trim()) continue
+
+      setStatusMessage(`Neural voice... (${i + 1}/${chunks.length})`)
+
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: chunk, voice: selectedVoice, rate: '-15%' })
+      })
+
+      if (abortSpeakRef.current) break
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'TTS generation failed')
+      }
+
+      const audioBlob = await response.blob()
+      const audioUrl = URL.createObjectURL(audioBlob)
+
+      await new Promise<void>((resolve, reject) => {
+        if (abortSpeakRef.current) {
+          URL.revokeObjectURL(audioUrl)
+          resolve()
+          return
+        }
+        const audio = new Audio(audioUrl)
+        audioRef.current = audio
+
+        audio.onended = () => { URL.revokeObjectURL(audioUrl); resolve() }
+        audio.onerror = () => { URL.revokeObjectURL(audioUrl); reject(new Error('Audio playback failed')) }
+        audio.play().catch(reject)
+      })
+    }
+  }
+
+  // ── MAIN SPEAK ROUTER ───────────────────────────────────────────────
   const speakText = async (text: string, voice?: string) => {
     if (!text) return
 
-    // If already speaking, stop first
-    if (isSpeaking && audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current = null
+    // Stop any current speech
+    if (isSpeaking) {
+      stopSpeaking()
+      await sleep(100) // Brief pause for clean transition
     }
 
     setIsSpeaking(true)
     abortSpeakRef.current = false
-    setStatusMessage('Generating voice...')
+    setStatusMessage(ttsEngine === 'browser' ? 'Speaking...' : 'Generating neural voice...')
 
     try {
-      const chunks = splitTextIntoChunks(text, 2000)
-      const selectedVoice = voice || ttsVoice
-
-      for (let i = 0; i < chunks.length; i++) {
-        if (abortSpeakRef.current) break
-        const chunk = chunks[i]
-        if (!chunk.trim()) continue
-
-        setStatusMessage(`Speaking... (${i + 1}/${chunks.length})`)
-
-        const response = await fetch('/api/tts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            text: chunk,
-            voice: selectedVoice,
-            rate: '-15%'
-          })
-        })
-
-        if (abortSpeakRef.current) break
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          throw new Error(errorData.error || 'TTS generation failed')
-        }
-
-        const audioBlob = await response.blob()
-        const audioUrl = URL.createObjectURL(audioBlob)
-
-        await new Promise<void>((resolve, reject) => {
-          if (abortSpeakRef.current) {
-            URL.revokeObjectURL(audioUrl)
-            resolve()
-            return
-          }
-          const audio = new Audio(audioUrl)
-          audioRef.current = audio
-
-          audio.onended = () => {
-            URL.revokeObjectURL(audioUrl)
-            resolve()
-          }
-          audio.onerror = () => {
-            URL.revokeObjectURL(audioUrl)
-            reject(new Error('Audio playback failed'))
-          }
-
-          audio.play().catch(reject)
-        })
+      if (ttsEngine === 'browser') {
+        // Primary: Browser Speech API (instant, no server)
+        await speakWithBrowser(text)
+      } else {
+        // Fallback: Edge TTS Neural Voices
+        await speakWithEdgeTTS(text, voice)
       }
-
       setStatusMessage('Ready')
     } catch (error) {
       console.error('TTS Error:', error)
-      toast({ title: 'Voice Error', description: error instanceof Error ? error.message : 'Failed to generate speech', variant: 'destructive' })
-      setStatusMessage('Voice error')
+
+      // If browser TTS fails, try Edge TTS as auto-fallback
+      if (ttsEngine === 'browser') {
+        console.warn('🔄 Browser TTS failed, falling back to Neural voice...')
+        try {
+          await speakWithEdgeTTS(text, voice)
+          setStatusMessage('Ready')
+        } catch (fallbackError) {
+          console.error('TTS Fallback also failed:', fallbackError)
+          toast({ title: 'Voice Error', description: fallbackError instanceof Error ? fallbackError.message : 'Speech failed', variant: 'destructive' })
+          setStatusMessage('Voice error')
+        }
+      } else {
+        toast({ title: 'Voice Error', description: error instanceof Error ? error.message : 'Failed to generate speech', variant: 'destructive' })
+        setStatusMessage('Voice error')
+      }
     } finally {
       setIsSpeaking(false)
       audioRef.current = null
+      browserUtteranceRef.current = null
     }
   }
 
   const stopSpeaking = () => {
     abortSpeakRef.current = true
+    // Cancel browser speech
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
+    browserUtteranceRef.current = null
+    // Stop Edge TTS audio
     if (audioRef.current) {
       // Smart fade over 300ms
       try {
@@ -3930,6 +4038,8 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     conversationHistory, setConversationHistory,
     ttsEnabled, setTtsEnabled,
     ttsVoice, setTtsVoice,
+    ttsEngine, setTtsEngine,
+    browserVoices, browserVoiceName, setBrowserVoiceName,
     ttsSpeed, setTtsSpeed,
     narratorMode, setNarratorMode,
     isSpeaking, setIsSpeaking,

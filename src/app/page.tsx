@@ -55,6 +55,8 @@ export default function MythworldEngine() {
     portraitModalOpen, setPortraitModalOpen,
     selectedPortrait, setSelectedPortrait,
     ttsVoice, setTtsVoice,
+    ttsEngine, setTtsEngine,
+    browserVoices, browserVoiceName, setBrowserVoiceName,
     isSpeaking,
     narratorMode, setNarratorMode,
     tokenUsage,
@@ -312,6 +314,11 @@ export default function MythworldEngine() {
           isSpeaking={isSpeaking}
           ttsVoice={ttsVoice}
           setTtsVoice={setTtsVoice}
+          ttsEngine={ttsEngine}
+          setTtsEngine={setTtsEngine}
+          browserVoices={browserVoices}
+          browserVoiceName={browserVoiceName}
+          setBrowserVoiceName={setBrowserVoiceName}
           speakNarrative={speakNarrative}
           stopSpeaking={stopSpeaking}
           lastDMNarrative={lastDMNarrative}
