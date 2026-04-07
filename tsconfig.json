@@ -37,6 +37,18 @@
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "examples",
+    "scripts",
+    "PartySelectionScreen.tsx",
+    "krynnCharacters.ts",
+    "page.tsx",
+    "useGameEngine.ts",
+    "GameHeader.tsx",
+    "PartySelectionScreen.tsx",
+    "audit.mjs",
+    "entities-route.ts",
+    "game-entities-route.ts",
+    "ge-latest.ts"
   ]
 }

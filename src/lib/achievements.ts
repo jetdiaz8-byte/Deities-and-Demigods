@@ -710,14 +710,14 @@ export function checkAchievements(
   // Prophecy states
   for (const p of gs.prophecies) {
     if (p.state === 'fulfilled') {
-      const key = `${p.name || p.id}_fulfilled`
+      const key = `${p.name}_${p.prophecyId}_fulfilled`
       if (!tracker.counters.prophecyStates.has(key)) {
         tracker.counters.prophecyStates.add(key)
         tryUnlock('prophecy_fulfilled')
       }
     }
     if (p.state === 'broken') {
-      const key = `${p.name || p.id}_broken`
+      const key = `${p.name}_${p.prophecyId}_broken`
       if (!tracker.counters.prophecyStates.has(key)) {
         tracker.counters.prophecyStates.add(key)
         tryUnlock('prophecy_broken')

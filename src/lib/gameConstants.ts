@@ -4,6 +4,9 @@
 
 import type { Injury, Item, AntagonistClue } from '@/lib/gameTypes'
 
+// Gemini AI Model — change this to switch models without code search
+export const GEMINI_MODEL = 'gemini-2.5-flash'
+
 // ═══════════════════════════════════════════════════════════════════════════
 // SHARD TYPES - Artifacts from all DDG 1980 pantheons
 // ═══════════════════════════════════════════════════════════════════════════

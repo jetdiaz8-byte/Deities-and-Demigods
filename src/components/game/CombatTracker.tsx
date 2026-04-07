@@ -55,7 +55,7 @@ export function CombatTracker({ gameState }: CombatTrackerProps) {
         {/* Enemy entries */}
         {enemies.map(npc => {
           const hpPct = Math.max(0, npc.hp || 0) / (npc.maxHp || 1)
-          const isBoss = (npc as Record<string, unknown>).encounter_type === 'BOSS'
+          const isBoss = (npc as unknown as Record<string, unknown>).encounter_type === 'BOSS'
           const isAntagonist = gameState.antagonistId === npc.id
           return (
             <div key={npc.id} className={`flex items-center gap-2 p-2 rounded-lg ${isAntagonist ? 'border border-red-800/40 bg-[rgba(100,0,0,.1)]' : 'bg-[rgba(0,0,0,.2)]'}`}>

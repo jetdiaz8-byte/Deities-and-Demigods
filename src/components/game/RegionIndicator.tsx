@@ -9,8 +9,8 @@ interface RegionIndicatorProps {
 
 export function RegionIndicator({ gameState }: RegionIndicatorProps) {
   // Try to infer region from location or scene data
-  const location = (gameState as Record<string, unknown>).location as string || ''
-  const scene = (gameState as Record<string, unknown>).currentScene as string || ''
+  const location = (gameState as unknown as Record<string, unknown>).location as string || ''
+  const scene = (gameState as unknown as Record<string, unknown>).currentScene as string || ''
   const locText = location || scene || 'Unknown Realm'
   
   const lowerLoc = locText.toLowerCase()

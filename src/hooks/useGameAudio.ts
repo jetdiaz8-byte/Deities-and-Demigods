@@ -209,9 +209,23 @@ export function useGameAudio() {
   }, [s.sfxEnabled, getCtx, mkNoise])
 
   const playLevelUp = useCallback(() => {
-    if (!s.sfxEnabled) return; const ctx = getCtx(); if (!ctx) return; const vol = volR.current * sfxVolR.current; const now = ctx.currentTime
-    [440,554,659,880].forEach((f,i) => { const o=ctx.createOscillator(); o.frequency.setValueAtTime(f,now+i*.12)
-      const g=ctx.createGain(); g.gain.setValueAtTime(.001,now+i*.12); g.gain.linearRampToValueAtTime(.18*vol,now+i*.12+.03); g.gain.exponentialRampToValueAtTime(.001,now+i*.12+.4); o.connect(g).connect(ctx.destination); o.start(now+i*.12); o.stop(now+i*.12+.4) })
+    if (!s.sfxEnabled) return
+    const ctx = getCtx()
+    if (!ctx) return
+    const vol = volR.current * sfxVolR.current
+    const now = ctx.currentTime
+    const freqs = [440, 554, 659, 880]
+    freqs.forEach((f, i) => {
+      const o = ctx.createOscillator()
+      o.frequency.setValueAtTime(f, now + i * .12)
+      const g = ctx.createGain()
+      g.gain.setValueAtTime(.001, now + i * .12)
+      g.gain.linearRampToValueAtTime(.18 * vol, now + i * .12 + .03)
+      g.gain.exponentialRampToValueAtTime(.001, now + i * .12 + .4)
+      o.connect(g).connect(ctx.destination)
+      o.start(now + i * .12)
+      o.stop(now + i * .12 + .4)
+    })
   }, [s.sfxEnabled, getCtx])
 
   const playShardPulse = useCallback(() => {

@@ -7,7 +7,7 @@ import type {
   GreaterGodData, ShardType, InjuryTemplate, PlayerSkills, Aspect
 } from '@/lib/gameTypes'
 import { ACTS, SKILL_ABILITY_MAP } from '@/lib/gameTypes'
-import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES } from '@/lib/gameConstants'
+import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES, GEMINI_MODEL } from '@/lib/gameConstants'
 import { createInitialState } from '@/lib/gameState'
 import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, fullStaminaRestore, assignSkillProficiencies, inferClassesFromCharacter, clearEntityCache } from '@/lib/gameHelpers'
 import { getRandomHeroes } from '@/lib/fallbackEntities'
@@ -38,7 +38,7 @@ export function useGameEngine() {
     const main = document.querySelector('[data-screen-root]') || document.body
     main.classList.remove(effectClass)
     // Force reflow
-    void main.offsetWidth
+    void (main as HTMLElement).offsetWidth
     main.classList.add(effectClass)
     setTimeout(() => main.classList.remove(effectClass), 1500)
   }
@@ -577,6 +577,7 @@ export function useGameEngine() {
     const rolledProphecies = rollProphecies(1)
     const prophecyStates: ProphecyState[] = [{
       prophecyId: rolledProphecies[0].id,
+      name: rolledProphecies[0].name,
       riddle: rolledProphecies[0].riddle,
       pc_id: mainPC.id,
       previous_holders: [],
@@ -966,7 +967,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ── API CALLS ──────────────────────────────────────────────────────────
   const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`
     const MAX_RETRIES = 6
     const BASE_DELAY = 6000
     // Gemini 429 rate limits need 60s+ to reset per-minute window
@@ -1594,6 +1595,7 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
       const newProphecy = rollProphecies(1)[0]
       prophecies[prophecyIdx] = {
         prophecyId: newProphecy.id,
+        name: newProphecy.name,
         riddle: newProphecy.riddle,
         pc_id: successor.id,
         previous_holders: [...oldProphecy.previous_holders, deadPcId],
@@ -1643,9 +1645,13 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
         setTimeout(() => soundEvents.emit({ type: 'dice_roll', success: !!d.success }), Math.random() * 200)
       }
     }
+    // Track PCs that already had HP processed in damage_dealt loop
+    // to prevent double deduction when state_updates also has hp_delta for the same PC
+    const hpProcessedPcs = new Set<string>()
+
     if (res.damage_dealt?.length) {
       for (const d of res.damage_dealt) {
-        const isCritical = d.type && d.type.includes('critical')
+        const isCritical = !!(d.type && d.type.includes('critical'))
         setTimeout(() => soundEvents.emit({ type: 'combat_hit', critical: isCritical }), 300)
         // Screen effect for PC taking damage
         if (d.amount > 0 && d.to) {
@@ -1658,6 +1664,8 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
             if (targetIdx >= 0) {
               const updatedPc = { ...newGS.pcs[targetIdx] }
               updatedPc.hp = Math.max(0, updatedPc.hp - d.amount)
+              // Mark this PC as HP-processed so state_updates won't double-deduct
+              hpProcessedPcs.add(updatedPc.id)
               if (updatedPc.hp <= 0) {
                 // Check Death Ward before marking dead
                 const wardResult = tryConsumeDeathWard(
@@ -1730,6 +1738,18 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
 
         const pcIdx = newGS.pcs.findIndex(p => p.id === u.pc_id)
         if (pcIdx >= 0) {
+          // Skip HP delta for PCs already processed in damage_dealt loop
+          if (u.hp_delta && hpProcessedPcs.has(u.pc_id)) {
+            const pc = { ...newGS.pcs[pcIdx] }
+            if (u.new_condition && !pc.conditions.includes(String(u.new_condition))) {
+              pc.conditions = [...pc.conditions, String(u.new_condition)]
+            }
+            if (u.remove_condition) {
+              pc.conditions = pc.conditions.filter(c => c !== u.remove_condition)
+            }
+            newGS.pcs = [...newGS.pcs.slice(0, pcIdx), pc, ...newGS.pcs.slice(pcIdx + 1)]
+            continue
+          }
           const pc = { ...newGS.pcs[pcIdx] }
           if (u.hp_delta) pc.hp = Math.max(0, Math.min(Number(pc.maxHp) || pc.maxHp, (Number(pc.hp) || 0) + Number(u.hp_delta)))
           // Safety: ensure hp is always a number, never an object
@@ -2426,7 +2446,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         gs.companionOptions = compOptions
         gs.waitingForHuman = true
         gs.pendingHumanChoice = null
-        gs.pendingCompanionChoice = compOptions.length > 0 ? null : undefined
+        gs.pendingCompanionChoice = null
 
         setGameState({ ...gs })
         setStatusMessage(`YOUR TURN — ${humanPC.name}${compOptions.length > 0 ? ` + ${gs.companionId ? gs.pcs.find(p => p.id === gs.companionId)?.name?.split(' ')[0] : 'Companion'}` : ''}`)
@@ -2857,7 +2877,8 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
   }
 
   const appendNarrative = (html: string) => {
-    setNarrativeContent(prev => [...prev, { html }])
+    // Trim to last 100 entries to prevent unbounded memory growth
+    setNarrativeContent(prev => [...prev, { html }].slice(-100))
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -3078,7 +3099,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       newGS.companionOptions = compOptions
       newGS.waitingForHuman = true
       newGS.pendingHumanChoice = null
-      newGS.pendingCompanionChoice = compOptions.length > 0 ? null : undefined
+      newGS.pendingCompanionChoice = null
       newGS.isProcessing = false
       setGameState({ ...newGS })
       setStatusMessage(`YOUR TURN — ${nextPC.name}${compOptions.length > 0 ? ` + ${newGS.companionId ? newGS.pcs.find(p => p.id === newGS.companionId)?.name?.split(' ')[0] : 'Companion'}` : ''}`)
@@ -3342,10 +3363,10 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
           if (pc.dead && pc.hp <= 0) {
             const wardResult = tryConsumeDeathWard(gs, pc.id, gs.turn)
             if (wardResult.warded) {
-              gs = wardResult.gs
+              gs = wardResult.gs as typeof gs
             } else {
               soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
-              gs = transferProphecyOnDeath(gs, pc.id, gs.turn)
+              gs = transferProphecyOnDeath(gs, pc.id, gs.turn) as typeof gs
             }
           }
         }
@@ -3480,7 +3501,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
         newGS.companionOptions = compOptions
         newGS.waitingForHuman = true
         newGS.pendingHumanChoice = null
-        newGS.pendingCompanionChoice = compOptions.length > 0 ? null : undefined
+        newGS.pendingCompanionChoice = null
         newGS.isProcessing = false
 
         setGameState({ ...newGS })

@@ -6,6 +6,7 @@
 // Prophecy State - tracks each PC's prophecy
 export interface ProphecyState {
   prophecyId: number           // 1-9
+  name: string                 // Display name for achievement tracking
   riddle: string               // Gaiman-style cryptic text shown to player
   pc_id: string                // Current holder
   previous_holders: string[]   // Transfer history
@@ -53,6 +54,7 @@ export interface Injury {
   modifier: { [key: string]: number | string }
   turnsLeft: number
   icon: string
+  category?: string
   type?: 'physical' | 'magic' | 'poison' | 'psionic'
   cure?: string
 }
@@ -93,6 +95,8 @@ export interface Entity {
   attacks?: number
   damage?: string
   move?: string
+  // Encounter system — set by Gemini DM response
+  encounter_type?: 'ENEMY' | 'ALLY' | 'BOSS' | 'RIVAL' | 'BYSTANDER' | 'NUISANCE' | string
 }
 
 export interface ShardEvent {
@@ -311,6 +315,7 @@ export interface GameState {
     bossPhase?: number                 // For boss_phase
     roll?: number                      // Result after player rolls
     outcome?: 'miracle' | 'murphy' | 'fate_holds'
+    choice?: string                    // Player's choice (e.g., 'trust_fate')
   } | null
   testOfFaithMiraclesUsed: string[]    // PC IDs that have used their miracle
   lastTestOfFaithTurn: number          // Cooldown tracking

@@ -517,7 +517,7 @@ export function GameHeader({
             style={{ background: 'linear-gradient(145deg, #1a1010 0%, #120808 100%)', borderTop: `3px solid ${revealed ? '#8b0000' : '#3a2020'}` }}
           >
             {/* Portrait thumbnail — shadow silhouette until Act III */}
-            <div className={`portrait-frame ${revealed && antagonist ? getPantheonFrame(antagonist.pantheon || antagonist.category || '') : 'portrait-frame-default'}`}>
+            <div className={`portrait-frame ${revealed && antagonist ? getPantheonFrame(antagonist.pantheon || (antagonist as any).category || '') : 'portrait-frame-default'}`}>
             <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] mb-1" style={{ aspectRatio: '3/4' }}>
               {revealed && antagonist ? (
                 <Image
