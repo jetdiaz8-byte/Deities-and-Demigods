@@ -975,8 +975,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     
     // maxOutputTokens — opening needs more for rich prose; regular turns need less
     // Gemini 2.5 Flash supports up to 65536 output tokens
-    // Regular turns: 1 paragraph (~100 words = ~150 tokens) + JSON (~800 tokens) = ~1000 needed
-    const maxTokens = isFirstTurn ? 20000 : 4096
+    // Regular turns: 1 paragraph (~100 words = ~150 tokens) + JSON (~1200 tokens) = ~1500 needed
+    // Use 6144 for regular turns to avoid truncation when Gemini gets verbose
+    const maxTokens = isFirstTurn ? 20000 : 6144
     
     // Track input tokens
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
@@ -1011,6 +1012,21 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           const waitSec = Math.round(rateLimitWait / 1000)
           setStatusMessage(`⏳ Rate limited — waiting ${waitSec}s for API cooldown (attempt ${attempt + 2}/${MAX_RETRIES})...`)
           console.warn(`⏳ Rate limited, waiting ${waitSec}s before retry...`)
+          await sleep(rateLimitWait)
+          continue
+        }
+
+        // 503 = service overloaded — use same long backoff as 429
+        if (r.status === 503) {
+          console.warn('⚠️ Gemini service unavailable (503)')
+          if (attempt === MAX_RETRIES - 1) {
+            console.warn('📝 Using template fallback')
+            return getTemplateFallback(gs, 'service_unavailable')
+          }
+          const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000)
+          const waitSec = Math.round(rateLimitWait / 1000)
+          setStatusMessage(`⏳ Gemini overloaded — waiting ${waitSec}s (attempt ${attempt + 2}/${MAX_RETRIES})...`)
+          console.warn(`⏳ 503 service unavailable, waiting ${waitSec}s before retry...`)
           await sleep(rateLimitWait)
           continue
         }
@@ -1085,7 +1101,22 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     if (narrative.length > 30) setLastDMNarrative(narrative)
 
     if (!jsonStr) {
-      console.warn('⚠️ No JSON in Gemini response, using template fallback')
+      console.warn('⚠️ No JSON in Gemini response, using narrative-preservation fallback')
+      // If we have pre-JSON prose, use it instead of losing everything to template
+      if (preJsonNarrativeRef.current && preJsonNarrativeRef.current.length > 30) {
+        return {
+          dm_narration: preJsonNarrativeRef.current.slice(0, 2000),
+          story_summary: gs.storySummary || 'The adventure continues...',
+          journey_so_far: gs.journeySoFar || '',
+          npc_encounters: [],
+          dice_rolls: [],
+          damage_dealt: [],
+          injury_events: [],
+          state_updates: [],
+          item_drops: [],
+          quest_updates: [],
+        }
+      }
       return getTemplateFallback(gs, 'JSON payload missing')
     }
 
@@ -1166,6 +1197,26 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     }
 
     console.warn('⚠️ JSON parse failed, using template fallback')
+    // CRITICAL FIX: When truncation breaks JSON, we already have valid pre-JSON narrative.
+    // Don't use template fallback (which loses game state) — instead build a safe response
+    // that preserves the narrative text and returns current game state unchanged.
+    const savedNarrative = preJsonNarrativeRef.current
+    if (savedNarrative && savedNarrative.length > 30) {
+      console.warn('📝 Using narrative-preservation fallback (JSON lost, prose intact)')
+      // Return a safe DMResponse that keeps game state stable while showing the prose
+      return {
+        dm_narration: savedNarrative.slice(0, 2000),
+        story_summary: gs.storySummary || 'The adventure continues...',
+        journey_so_far: gs.journeySoFar || '',
+        npc_encounters: [],
+        dice_rolls: [],
+        damage_dealt: [],
+        injury_events: [],
+        state_updates: [],
+        item_drops: [],
+        quest_updates: [],
+      }
+    }
     return getTemplateFallback(gs, 'Payload structure unrecoverable')
   }
 

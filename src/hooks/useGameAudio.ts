@@ -377,29 +377,34 @@ export function useSceneMusic(gameState: {
   turn: number
 } | null) {
   const manualOverride = useRef<SceneTheme | null>(null)
-  const [detectedTheme, setDetectedTheme] = useState<SceneTheme>('forest')
+  const [manualOverrideState, setManualOverrideState] = useState<SceneTheme | null>(null)
   const audio = useGameAudio()
 
   const autoTheme = useMemo(() => {
     if (!gameState) return 'forest'
     return detectSceneTheme(gameState)
-  }, [gameState?.act, gameState?.storySummary, gameState?.activeNPCs, gameState?.turn])
+  }, [gameState])
 
+  // Auto-switch detected theme when it changes (only if no manual override)
+  const [detectedTheme, setDetectedTheme] = useState<SceneTheme>(() =>
+    gameState ? detectSceneTheme(gameState) : 'forest'
+  )
+  // Derive theme: manual override takes priority, else auto-detect
+  const effectiveTheme = manualOverride.current || detectedTheme
+  // Sync to state when autoTheme changes and no manual override
   useEffect(() => {
-    if (manualOverride.current) return // respect manual selection
-    setDetectedTheme(autoTheme)
-  }, [autoTheme])
-
-  // Auto-switch ambient when theme changes
-  useEffect(() => {
-    if (!audio.ambientEnabled || manualOverride.current) return
-    if (autoTheme !== detectedTheme) {
+    if (!manualOverride.current) {
       setDetectedTheme(autoTheme)
     }
-  }, [autoTheme, audio.ambientEnabled])
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sync derived theme
+  }, [autoTheme])
+
+  const [isAutoModeState, setIsAutoModeState] = useState(true)
 
   const setManualOverride = useCallback((theme: SceneTheme | null) => {
     manualOverride.current = theme
+    setManualOverrideState(theme)
+    setIsAutoModeState(theme === null)
     if (theme) {
       setDetectedTheme(theme)
       audio.transitionAmbient(theme as ActName)
@@ -410,6 +415,6 @@ export function useSceneMusic(gameState: {
     detectedTheme,
     autoTheme,
     setManualOverride,
-    isAutoMode: manualOverride.current === null,
+    isAutoMode: isAutoModeState,
   }
 }

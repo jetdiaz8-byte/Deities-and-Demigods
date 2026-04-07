@@ -106,6 +106,15 @@ export function GameHeader({
   const [antagonistRevealPlayed, setAntagonistRevealPlayed] = useState(false)
   const [sceneNotification, setSceneNotification] = useState<string | null>(null)
 
+  const themes = [
+    { id: 'tavern', label: '🍺 Tavern', color: '#c9a84c' },
+    { id: 'dungeon', label: '🏚️ Dungeon', color: '#8b6914' },
+    { id: 'forest', label: '🌲 Forest', color: '#4a9060' },
+    { id: 'battle', label: '⚔️ Battle', color: '#c04040' },
+    { id: 'temple', label: '⛪ Temple', color: '#a080d0' },
+    { id: 'ocean', label: '🌊 Ocean', color: '#4090c0' },
+  ]
+
   // Show notification when auto-detected theme changes
   const prevAutoThemeRef = React.useRef(detectedSceneTheme)
   React.useEffect(() => {
@@ -116,15 +125,7 @@ export function GameHeader({
       return () => clearTimeout(timer)
     }
     prevAutoThemeRef.current = detectedSceneTheme
-  }, [detectedSceneTheme, isAutoSceneMode])
-  const themes = [
-    { id: 'tavern', label: '🍺 Tavern', color: '#c9a84c' },
-    { id: 'dungeon', label: '🏚️ Dungeon', color: '#8b6914' },
-    { id: 'forest', label: '🌲 Forest', color: '#4a9060' },
-    { id: 'battle', label: '⚔️ Battle', color: '#c04040' },
-    { id: 'temple', label: '⛪ Temple', color: '#a080d0' },
-    { id: 'ocean', label: '🌊 Ocean', color: '#4090c0' },
-  ]
+  }, [detectedSceneTheme, isAutoSceneMode, themes])
   const currentTheme = themes.find(t => t.id === ambientTheme) || themes[1]
   const revealed = gameState.act === ACTS.THREE
   React.useEffect(() => {

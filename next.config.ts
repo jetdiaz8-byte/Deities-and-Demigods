@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
   },
   reactStrictMode: false,
   // External packages — don't bundle into serverless functions
-  serverExternalPackages: ['z-ai-web-dev-sdk', 'sharp'],
+  serverExternalPackages: ['z-ai-web-dev-sdk', 'sharp', 'ws'],
 };
 
 export default nextConfig;

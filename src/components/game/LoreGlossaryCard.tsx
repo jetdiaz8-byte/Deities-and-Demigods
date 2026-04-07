@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef, createContext, useContext } from 'react'
+import React, { useState, useEffect, useCallback, useMemo, createContext, useContext } from 'react'
 import Image from 'next/image'
 import type { LoreEntry } from '@/lib/gameTypes'
 import type { Entity } from '@/lib/gameTypes'
@@ -56,15 +56,10 @@ interface LoreGlossaryProviderProps {
 }
 
 export function LoreGlossaryProvider({ pcs, activeNPCs, npcHistory, children }: LoreGlossaryProviderProps) {
-  const [glossary] = useState(() => buildGlossary(pcs, activeNPCs, npcHistory))
   const [cardProps, setCardProps] = useState<{ entry: LoreEntry; x: number; y: number } | null>(null)
 
-  // Rebuild glossary when entities change
-  const glossaryRef = useRef(glossary)
-  useEffect(() => {
-    const updated = buildGlossary(pcs, activeNPCs, npcHistory)
-    glossaryRef.current = updated
-  }, [pcs, activeNPCs, npcHistory])
+  // Derive glossary directly from props — rebuilds on every entity change
+  const glossary = useMemo(() => buildGlossary(pcs, activeNPCs, npcHistory), [pcs, activeNPCs, npcHistory])
 
   // Global click listener for codex-inline-link elements
   useEffect(() => {
@@ -75,7 +70,7 @@ export function LoreGlossaryProvider({ pcs, activeNPCs, npcHistory, children }: 
         e.stopPropagation()
         const name = target.textContent?.trim()
         if (name) {
-          const entry = glossaryRef.current.get(name.toLowerCase())
+          const entry = glossary.get(name.toLowerCase())
           if (entry) {
             const rect = target.getBoundingClientRect()
             setCardProps({ entry, x: rect.left, y: rect.bottom + 4 })
@@ -85,7 +80,7 @@ export function LoreGlossaryProvider({ pcs, activeNPCs, npcHistory, children }: 
     }
     document.addEventListener('click', handleClick, true)
     return () => document.removeEventListener('click', handleClick, true)
-  }, [])
+  }, [glossary])
 
   // Dismiss on outside click
   useEffect(() => {
@@ -112,7 +107,7 @@ export function LoreGlossaryProvider({ pcs, activeNPCs, npcHistory, children }: 
   }, [])
 
   return (
-    <LoreGlossaryContext.Provider value={{ glossary: glossaryRef.current, showCard, hideCard }}>
+    <LoreGlossaryContext.Provider value={{ glossary, showCard, hideCard }}>
       {children}
       <LoreGlossaryCard cardProps={cardProps} onClose={() => setCardProps(null)} />
     </LoreGlossaryContext.Provider>

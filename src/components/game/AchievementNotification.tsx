@@ -16,25 +16,25 @@ interface AchievementNotificationProps {
 }
 
 export function AchievementNotification({ achievementId, turnNumber, onDismiss }: AchievementNotificationProps) {
-  const [visible, setVisible] = useState(false)
+  // Component is keyed by achievementId — remounts on each new achievement.
+  // This avoids setState-in-effect: state is derived from props + timers.
+  const [visible, setVisible] = useState(true)
   const [dismissed, setDismissed] = useState(false)
 
   const def = achievementId ? getAchievementDef(achievementId) : null
 
+  // Auto-dismiss timer — only setState inside timeout (async callback, not sync)
   useEffect(() => {
-    if (!def) { setVisible(false); return }
-    setDismissed(false)
-    setVisible(true)
-    // Auto-dismiss after 4 seconds with fade-out
+    if (!achievementId) return
     const timer = setTimeout(() => {
       setVisible(false)
       setTimeout(() => {
         setDismissed(true)
         onDismiss()
-      }, 500) // wait for slide-out animation
+      }, 500)
     }, 4000)
     return () => clearTimeout(timer)
-  }, [achievementId, def, onDismiss])
+  }, [achievementId, onDismiss])
 
   if (!def || dismissed) return null
 
@@ -146,28 +146,33 @@ export function AchievementNotificationQueue({
   currentTurn: number
   onProcessed: (id: string) => void
 }) {
-  const [currentIdx, setCurrentIdx] = useState(0)
+  const [processedCount, setProcessedCount] = useState(0)
+  const [prevQueueLength, setPrevQueueLength] = useState(unlockQueue.length)
+  const [queueKey, setQueueKey] = useState(0)
+  if (unlockQueue.length !== prevQueueLength) {
+    if (processedCount >= unlockQueue.length) {
+      setProcessedCount(0)
+    }
+    setPrevQueueLength(unlockQueue.length)
+    setQueueKey(prev => prev + 1)
+  }
 
-  const current = unlockQueue[currentIdx]
+  const displayItem = unlockQueue[processedCount] || null
 
   const handleDismiss = useCallback(() => {
-    if (current) {
-      onProcessed(current.id)
-      setCurrentIdx(prev => prev + 1)
+    if (displayItem) {
+      onProcessed(displayItem.id)
+      setProcessedCount(prev => prev + 1)
     }
-  }, [current, onProcessed])
+  }, [displayItem, onProcessed])
 
-  // Reset index when queue changes
-  useEffect(() => {
-    setCurrentIdx(0)
-  }, [unlockQueue.length])
-
-  if (!current) return null
+  if (!displayItem) return null
 
   return (
     <AchievementNotification
-      achievementId={current.id}
-      turnNumber={current.turn}
+      key={`${queueKey}-${displayItem.id}`}
+      achievementId={displayItem.id}
+      turnNumber={displayItem.turn}
       onDismiss={handleDismiss}
     />
   )

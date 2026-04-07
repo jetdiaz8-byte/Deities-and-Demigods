@@ -14,28 +14,6 @@ interface SceneIllustrationProps {
   }
 }
 
-// Detect if this is a key moment for illustration
-function isKeyMoment(
-  turn: number,
-  act: string,
-  prevActRef: React.MutableRefObject<string | null>,
-  gameState: SceneIllustrationProps['gameState']
-): boolean {
-  // Every 5th turn
-  if (turn > 0 && turn % 5 === 0) return true
-
-  // Act transition
-  if (prevActRef.current && prevActRef.current !== act) return true
-
-  // Boss encounter
-  const hasBoss = gameState.activeNPCs.some(
-    npc => npc.conditions.some(c => c.toLowerCase().includes('boss'))
-  )
-  if (hasBoss && turn > 0) return true
-
-  return false
-}
-
 function detectSceneName(narration: string, act: string): string {
   const lower = narration.toLowerCase()
   if (lower.includes('tavern') || lower.includes('inn')) return 'The Tavern'
@@ -59,14 +37,23 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
   const [error, setError] = useState(false)
   const [visible, setVisible] = useState(false)
   const cacheRef = useRef<Map<number, string>>(new Map())
-  const prevActRef = useRef<string | null>(null)
+  const [prevAct, setPrevAct] = useState<string | null>(null)
   const apiFailedRef = useRef(false) // Stop retrying after first API failure per session
   const fetchInProgressRef = useRef(false) // Prevent concurrent fetches
 
   const isKey = useMemo(() => {
     if (turn === 0 || !narration) return false
-    return isKeyMoment(turn, act, prevActRef, gameState)
-  }, [turn, act, narration, gameState])
+    // Every 5th turn
+    if (turn > 0 && turn % 5 === 0) return true
+    // Act transition
+    if (prevAct && prevAct !== act) return true
+    // Boss encounter
+    const hasBoss = gameState.activeNPCs.some(
+      npc => npc.conditions.some(c => c.toLowerCase().includes('boss'))
+    )
+    if (hasBoss && turn > 0) return true
+    return false
+  }, [turn, act, narration, gameState, prevAct])
 
   const sceneName = useMemo(() => {
     return detectSceneName(narration, act)
@@ -74,7 +61,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
 
   // Track act changes
   useEffect(() => {
-    prevActRef.current = act
+    setPrevAct(act)
   }, [act])
 
   // Generate image for key moments

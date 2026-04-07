@@ -3,6 +3,10 @@ import { EdgeTTS } from 'node-edge-tts';
 import fs from 'fs';
 import path from 'path';
 
+// Increase Vercel serverless function timeout to 30s (Pro plan)
+// Hobby plan max is 10s — TTS may fail on free tier
+export const maxDuration = 30;
+
 // Edge TTS API - Using node-edge-tts package
 // High-quality Microsoft Neural Voices - FREE and unlimited!
 // Works on Vercel serverless without Python!
@@ -22,6 +26,7 @@ const DM_VOICES = {
 };
 
 export async function POST(req: NextRequest) {
+  let debugInfo = { textLen: 0, voiceKey: 'unknown', env: 'unknown', isVercel: false };
   try {
     const body = await req.json();
     
@@ -49,11 +54,12 @@ export async function POST(req: NextRequest) {
     // Get the voice name
     const voiceConfig = DM_VOICES[voiceKey as keyof typeof DM_VOICES] || DM_VOICES.guy;
     const voiceName = voiceConfig.name;
+    debugInfo = { textLen: truncatedText.length, voiceKey, env: process.env.NODE_ENV || 'unknown', isVercel: !!process.env.VERCEL };
 
     console.log('[Edge TTS] Using voice:', voiceName, 'rate:', rate);
 
     // Create temp file path (unique via random suffix to avoid collisions)
-    const tempDir = '/tmp';
+    const tempDir = process.env.VERCEL ? '/tmp' : '/tmp';
     const audioFile = path.join(tempDir, `tts_${Date.now()}_${Math.random().toString(36).slice(2,8)}.mp3`);
 
     // Create EdgeTTS instance with configuration
@@ -64,11 +70,16 @@ export async function POST(req: NextRequest) {
       pitch: 'default',
       rate: rate,
       volume: 'default',
-      timeout: 60000
+      timeout: 25000  // Must be less than maxDuration (30s) with margin
     });
     
     // Generate speech and save to file
-    await tts.ttsPromise(truncatedText, audioFile);
+    try {
+      await tts.ttsPromise(truncatedText, audioFile);
+    } catch (ttsErr) {
+      console.error('[Edge TTS] ttsPromise failed:', ttsErr);
+      throw new Error(`Edge TTS WebSocket failed: ${ttsErr instanceof Error ? ttsErr.message : String(ttsErr)}`);
+    }
     
     // Check if file was created
     if (!fs.existsSync(audioFile)) {
@@ -98,6 +109,8 @@ export async function POST(req: NextRequest) {
     });
   } catch (error) {
     console.error('[Edge TTS] Error:', error);
+    // Log extra context for Vercel debugging
+    console.error('[Edge TTS] Debug info:', { ...debugInfo, errorStack: error instanceof Error ? error.stack : undefined });
     
     const errorMessage = error instanceof Error ? error.message : 'TTS generation failed';
     
