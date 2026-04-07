@@ -806,14 +806,14 @@ CRITICAL RULES:
 2. NPC actions governed strictly by alignment+personality.
 3. NARRATION STYLE — NEIL GAIMAN:
    - OPENING SCENE (Turn 0): Write 4-6 paragraphs of RICH, ATMOSPHERIC prose (600-1000 words)
-   - REGULAR TURNS (Turn 1+): Write 2-3 paragraphs (150-300 words). Be vivid, be specific.
+   - REGULAR TURNS (Turn 1+): Write exactly ONE paragraph (60-120 words). No exceptions.
    - CRITICAL: NEVER repeat or rephrase narration from previous turns. Every turn must contain ENTIRELY NEW prose that advances the story.
    - Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
    - Use specific sensory language: the taste of copper, the weight of shadows
-   - For regular turns: paragraph 1 = action/outcome, paragraph 2 = world reaction/atmosphere, paragraph 3 = tension/foreshadowing (optional)
-   - Include dialogue between party members — let them react, argue, joke, worry
-   - Include environmental details: smells, sounds, textures of the world
-   - End each turn with tension or a pivotal moment
+   - ONE paragraph must contain: what happened, character reaction, and a hook/tension
+   - Include dialogue naturally within the paragraph — keep it to 1-2 lines max
+   - For REST/SLEEP/CAMP actions: write 2-3 sentences max. Brief, reflective, atmospheric.
+   - For COMBAT actions: can stretch to 2 short paragraphs (max 150 words) for dramatic impact.
    - Reference past events when relevant
 4. Permadeath. No stat/alignment changes mid-game.
 5. PCs=Heroes/Demigods (including Krynn). NPCs=Lesser/Greater Gods (including Krynn gods).
@@ -962,7 +962,7 @@ ${partyState}
 `}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your full narrative prose above — 600-1000 words for opening scenes, 150-300 words for regular turns. Do NOT summarize or abbreviate. Include every paragraph.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — 600-1000 words for opening scenes, 60-120 words for regular turns, ONE paragraph only. REST/SLEEP actions: 2-3 sentences max. COMBAT actions: up to 150 words. Do NOT exceed these limits.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -973,9 +973,10 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     // Gemini 429 rate limits need 60s+ to reset per-minute window
     const RATE_LIMIT_DELAY = 60000
     
-    // maxOutputTokens — must cover prose + full JSON payload (800+ token schema)
+    // maxOutputTokens — opening needs more for rich prose; regular turns need less
     // Gemini 2.5 Flash supports up to 65536 output tokens
-    const maxTokens = isFirstTurn ? 20000 : 12000
+    // Regular turns: 1 paragraph (~100 words = ~150 tokens) + JSON (~800 tokens) = ~1000 needed
+    const maxTokens = isFirstTurn ? 20000 : 4096
     
     // Track input tokens
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
@@ -2390,18 +2391,25 @@ Write the full narrative prose first (800-1200 words minimum for this opening). 
         : gs.act === ACTS.ONE
           ? `\n**LATE ACT I PACING** (Turn ${gs.turn}): Danger is now possible. You may introduce a minor threat (guardian creature, territorial spirit, rival adventurer) but NOT the antagonist. Combat should feel earned and meaningful.\n`
           : ''
+      // Detect the last player action from conversation history
+      const lastUserAction = conversationHistory.filter(h => h.role === 'user').slice(-1)[0]?.content || ''
+      const isRestAction = /rest|sleep|camp|meditat|wait|recover/i.test(lastUserAction)
+      const isCombatTurn = (gs.activeNPCs || []).some(n => n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS')
+
       userMsg = `TURN ${gs.turn}.
+PLAYER ACTION THIS TURN: ${lastUserAction || 'Continue the story.'}
+${isRestAction ? 'ACTION TYPE: REST/SLEEP — Narrate briefly (2-3 sentences max). The party rests. Brief atmosphere, a dream or reflection, then move on. DO NOT write a long passage.' : isCombatTurn ? 'ACTION TYPE: COMBAT — You may write up to 2 short paragraphs (max 150 words) for dramatic impact.' : 'ACTION TYPE: EXPLORATION — Write exactly ONE paragraph (60-120 words).'}
+
 Recent: ${recentLog}
 Act: ${gs.act}
 ${gs.pendingShardSummon ? `${shard?.name} INVOKED — process summoning of "${gs.pendingShardSummon}" with d20 roll (DC10).\n` : ''}${pcIntroStr}${gs.act === ACTS.TWO ? 'Introduce 1-2 gods from the DDG roster this turn. Mix pantheons.\n' : ''}${gs.act === ACTS.THREE ? `BOSS FIGHT: ${ant?.name} Phase ${gs.antagonistPhase}. HP ${gs.antagonistHp}/${gs.antagonistMaxHp}.\n` : ''}${pacingGuide}
-NARRATIVE STYLE — NEIL GAIMAN (1-2 RICH PARAGRAPHS):
-Write 1-2 paragraphs of rich, atmospheric prose. Quality over quantity.
+NARRATIVE STYLE — NEIL GAIMAN:
+Write ONE paragraph of rich, atmospheric prose. Quality over quantity. Maximum 120 words.
 - DO NOT repeat or rephrase prose from previous turns. Each turn must advance the story with NEW narration.
-- Layer sensory details: the quality of light, texture of surfaces, sounds on the edge of hearing
-- Describe atmosphere and mood with specificity
-- Include internal character reactions
-- Use metaphor and mythic resonance
-Make the world feel ancient and dangerous. End with a moment of tension or decision.
+- ONE paragraph must cover: what happened, character reaction, and a hook or tension
+- Dialogue: 1-2 lines max, woven naturally into the paragraph
+- Layer sensory details sparingly: one strong image, not a catalog
+Make the world feel ancient and dangerous. End with a hook.
 
 Continue building the narrative, execute mechanics, and output JSON at the end.`
     }
