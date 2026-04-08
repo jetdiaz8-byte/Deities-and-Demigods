@@ -164,12 +164,12 @@ export function IntroScreen({
           display: flex; align-items: center; overflow: hidden; pointer-events: none;
         }
         .mq-h--top {
-          top: 0; height: 120px;
-          background: linear-gradient(to bottom, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 40%, transparent 100%);
+          top: 0; height: 146px;
+          background: linear-gradient(to bottom, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 50%, transparent 100%);
         }
         .mq-h--bot {
-          bottom: 0; height: 120px;
-          background: linear-gradient(to top, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 40%, transparent 100%);
+          bottom: 0; height: 146px;
+          background: linear-gradient(to top, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 50%, transparent 100%);
         }
         .mq-h--bot .mq-h__track { animation-direction: reverse; }
         .mq-h__track {
@@ -177,9 +177,9 @@ export function IntroScreen({
           padding: 14px 0; animation: marquee-h 200s linear infinite; width: max-content;
         }
         .mq-h__item {
-          width: 80px; height: 100px; border-radius: 8px; object-fit: cover;
-          border: 1.5px solid rgba(212,175,55,0.35); opacity: 0.6; flex-shrink: 0;
-          background: #110d07; box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+          width: 72px; height: 126px; border-radius: 6px; object-fit: contain;
+          border: 1.5px solid rgba(212,175,55,0.35); opacity: 0.65; flex-shrink: 0;
+          background: #0d0906; box-shadow: 0 3px 12px rgba(0,0,0,0.5);
         }
 
         /* === VERTICAL MARQUEE (left/right) === */
@@ -197,11 +197,11 @@ export function IntroScreen({
           overflow: hidden; pointer-events: none;
         }
         .mq-v--left {
-          left: 0; width: 100px;
+          left: 0; width: 84px;
           background: linear-gradient(to right, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 40%, transparent 100%);
         }
         .mq-v--right {
-          right: 0; width: 100px;
+          right: 0; width: 84px;
           background: linear-gradient(to left, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 40%, transparent 100%);
         }
         .mq-v--left .mq-v__track { animation: marquee-v-down 250s linear infinite; }
@@ -211,9 +211,9 @@ export function IntroScreen({
           padding: 14px 0; width: max-content;
         }
         .mq-v__item {
-          width: 80px; height: 100px; border-radius: 8px; object-fit: cover;
-          border: 1.5px solid rgba(212,175,55,0.35); opacity: 0.55; flex-shrink: 0;
-          background: #110d07; box-shadow: 0 3px 12px rgba(0,0,0,0.5);
+          width: 72px; height: 126px; border-radius: 6px; object-fit: contain;
+          border: 1.5px solid rgba(212,175,55,0.35); opacity: 0.6; flex-shrink: 0;
+          background: #0d0906; box-shadow: 0 3px 12px rgba(0,0,0,0.5);
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -284,7 +284,7 @@ export function IntroScreen({
       ))}
 
       {/* MAIN CONTENT - centered, z-10, with side padding for vertical marquees */}
-      <div className="relative z-10 w-full max-w-2xl mx-auto" style={{ padding: '0 60px' }}>
+      <div className="relative z-10 w-full max-w-2xl mx-auto" style={{ padding: '0 50px' }}>
         {/* Title */}
         <div className="text-center mb-4">
           <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
