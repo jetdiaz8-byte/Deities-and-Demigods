@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { version } from '../../../package.json'
+import Image from 'next/image'
 
 export interface IntroScreenProps {
   geminiKey: string
@@ -53,6 +54,14 @@ export function IntroScreen({
     { icon: <Sparkles className="w-5 h-5" />, label: 'Prophecies', desc: '9 Gaiman-style fates' },
     { icon: <Skull className="w-5 h-5" />, label: 'Boss Fights', desc: '3-phase god battles' },
     { icon: <Volume2 className="w-5 h-5" />, label: 'Voice Narration', desc: 'AI-powered TTS' },
+  ]
+
+  // Gallery images for the intro screen
+  const galleryImages = [
+    { src: '/images/intro/dragon.png', alt: 'Ancient Dragon', label: 'Dragons' },
+    { src: '/images/intro/hero.png', alt: 'Epic Hero', label: 'Heroes' },
+    { src: '/images/intro/god.png', alt: 'Cosmic Deity', label: 'Gods' },
+    { src: '/images/intro/monster.png', alt: 'Eldritch Horror', label: 'Monsters' },
   ]
 
   return (
@@ -194,9 +203,9 @@ export function IntroScreen({
       ))}
 
       {/* ═══ MAIN CONTENT (z-10, above particles) ═══ */}
-      <div className="relative z-10 w-full max-w-2xl">
+      <div className="relative z-10 w-full max-w-3xl">
         {/* Title Section */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -269,18 +278,72 @@ export function IntroScreen({
           </motion.p>
         </div>
 
+        {/* ═══ IMAGE GALLERY — Dragons, Heroes, Gods, Monsters ═══ */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.15 } },
+          }}
+          className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6"
+        >
+          {galleryImages.map((img, i) => (
+            <motion.div
+              key={img.label}
+              variants={{
+                hidden: { opacity: 0, y: 20, scale: 0.95 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                  transition: {
+                    delay: 1.4 + i * 0.15,
+                    duration: 0.6,
+                    ease: 'easeOut',
+                  },
+                },
+              }}
+              className="relative group overflow-hidden rounded-sm border border-[#2e2008]/60"
+            >
+              <div className="aspect-[16/9] relative">
+                <Image
+                  src={img.src}
+                  alt={img.alt}
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110"
+                  sizes="(max-width: 640px) 50vw, 25vw"
+                />
+                {/* Dark gradient overlay for label readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                {/* Hover glow effect */}
+                <div className="absolute inset-0 bg-[#d4af37]/0 group-hover:bg-[#d4af37]/10 transition-colors duration-500" />
+              </div>
+              {/* Label */}
+              <div className="absolute bottom-0 inset-x-0 px-2 py-1.5">
+                <span
+                  className="text-[10px] sm:text-xs tracking-[.2em] uppercase text-[#f0c860]/80"
+                  style={{ fontFamily: 'Cinzel, serif' }}
+                >
+                  {img.label}
+                </span>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+
         {/* Main Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.0, duration: 0.5 }}
+          transition={{ delay: 2.2, duration: 0.5 }}
         >
           <Card className="w-full bg-[#110d07]/90 backdrop-blur-sm border-[#2e2008]">
             <CardContent className="p-6">
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.2, duration: 0.5 }}
+                transition={{ delay: 2.4, duration: 0.5 }}
                 className="text-[#9a8860] text-center mb-6 italic leading-relaxed"
                 style={{ fontFamily: '"IM Fell English", serif' }}
               >
@@ -306,7 +369,7 @@ export function IntroScreen({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.4, duration: 0.4 }}
+                transition={{ delay: 2.6, duration: 0.4 }}
                 className="space-y-4"
               >
                 <div className="flex gap-3 items-center">
@@ -325,7 +388,7 @@ export function IntroScreen({
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.5, duration: 0.4 }}
+                transition={{ delay: 2.7, duration: 0.4 }}
                 className="text-[#5a4d30] text-xs text-center mt-4 italic"
               >
                 Key auto-saves to browser memory · Direct browser calls to Gemini
@@ -335,7 +398,7 @@ export function IntroScreen({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 1.5, duration: 0.4 }}
+                transition={{ delay: 2.7, duration: 0.4 }}
                 className="text-center mt-4"
               >
                 <div className="flex items-center justify-center gap-4 text-[#5a4d30]">
@@ -360,7 +423,7 @@ export function IntroScreen({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.8, duration: 0.5 }}
+                transition={{ delay: 3.0, duration: 0.5 }}
                 className="flex gap-3 mt-6 justify-center flex-wrap"
               >
                 <Button
@@ -376,7 +439,7 @@ export function IntroScreen({
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 2.1, duration: 0.4 }}
+                    transition={{ delay: 3.3, duration: 0.4 }}
                   >
                     <Button
                       onClick={() => setShowLoadDialog(true)}
@@ -409,7 +472,7 @@ export function IntroScreen({
                         opacity: 1,
                         y: 0,
                         transition: {
-                          delay: 2.0 + i * 0.1,
+                          delay: 3.2 + i * 0.1,
                           duration: 0.4,
                           ease: 'easeOut',
                         },
