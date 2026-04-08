@@ -226,7 +226,7 @@ export function SidebarDiceArea({ diceRolls }: SidebarDiceAreaProps) {
           className="p-3 rounded-lg border border-[#2e2008] bg-gradient-to-b from-[#18120a] to-[#110d07]"
         >
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-sm">\uD83C\uDFB2</span>
+            <span className="text-sm">{'🎲'}</span>
             <span className="text-[10px] text-[#7a5f20] uppercase tracking-wider font-title">Dice Tray</span>
           </div>
           <div className="flex items-center justify-center gap-2 py-2">
@@ -258,7 +258,7 @@ export function SidebarDiceArea({ diceRolls }: SidebarDiceAreaProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-3 py-2 border-b border-[#2e2008] bg-[#1a1510]/50">
           <div className="flex items-center gap-2">
-            <span className="text-sm">\uD83C\uDFB2</span>
+            <span className="text-sm">{'🎲'}</span>
             <span className="text-[10px] text-[#7a5f20] uppercase tracking-wider font-title">Dice Tray</span>
           </div>
           <span className="text-[9px] text-[#5a4d30]">
@@ -329,13 +329,13 @@ export function SidebarDiceArea({ diceRolls }: SidebarDiceAreaProps) {
                     {!isAnimating && (
                       <div className="mt-0.5">
                         {isCritical ? (
-                          <span className="text-[10px] text-amber-400 font-title">\uD83C\uDFAF NATURAL {sides}!</span>
+                          <span className="text-[10px] text-amber-400 font-title">{'🎯'} NATURAL {sides}!</span>
                         ) : isFumble ? (
-                          <span className="text-[10px] text-red-400 font-title">\uD83D\uDC80 CRITICAL FAIL!</span>
+                          <span className="text-[10px] text-red-400 font-title">{'💀'} CRITICAL FAIL!</span>
                         ) : roll.success ? (
-                          <span className="text-[10px] text-emerald-400">\u2726 Hit</span>
+                          <span className="text-[10px] text-emerald-400">{'✦'} Hit</span>
                         ) : (
-                          <span className="text-[10px] text-rose-400">\u2717 Miss</span>
+                          <span className="text-[10px] text-rose-400">{'✗'} Miss</span>
                         )}
                       </div>
                     )}
