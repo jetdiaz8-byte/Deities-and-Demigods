@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2, Monitor, Cloud, RefreshCw } from 'lucide-react'
+import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2, Monitor, Cloud, RefreshCw, Cpu, Zap } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { version } from '../../../package.json'
 
@@ -14,6 +14,8 @@ export interface IntroScreenProps {
   setGeminiKey: (key: string) => void
   aiProvider: 'gemini' | 'lmstudio'
   setAiProvider: (provider: 'gemini' | 'lmstudio') => void
+  engineMode: 'gemini' | 'lmstudio' | 'dual'
+  setEngineMode: (mode: 'gemini' | 'lmstudio' | 'dual') => void
   lmStudioUrl: string
   setLmStudioUrl: (url: string) => void
   lmStudioModel: string
@@ -26,6 +28,7 @@ export interface IntroScreenProps {
 export function IntroScreen({
   geminiKey, setGeminiKey,
   aiProvider, setAiProvider,
+  engineMode, setEngineMode,
   lmStudioUrl, setLmStudioUrl,
   lmStudioModel, setLmStudioModel,
   startNewCampaign,
@@ -71,13 +74,13 @@ export function IntroScreen({
     setLmChecking(false)
   }
 
-  // Auto-check LM Studio connection when provider is set to lmstudio
+  // Auto-check LM Studio connection when engine mode uses LM Studio
   useEffect(() => {
-    if (aiProvider === 'lmstudio') {
+    if (engineMode === 'lmstudio' || engineMode === 'dual') {
       checkLmConnection()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [aiProvider, lmStudioUrl])
+  }, [engineMode, lmStudioUrl])
 
   const titleText = 'DEITIES & DEMIGODS'
   const titleLetters = titleText.split('')
@@ -385,16 +388,16 @@ export function IntroScreen({
                 <span className="text-[#5a4d30] text-[10px] ml-2">v{version}</span>
               </div>
 
-              {/* AI Provider Selector */}
+              {/* AI Engine Mode Selector */}
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 transition={{ delay: 1.5, duration: 0.4 }} className="space-y-3">
 
-                {/* Provider toggle buttons */}
-                <div className="flex gap-2 justify-center">
+                {/* Engine mode toggle — 3 options */}
+                <div className="flex gap-1.5 justify-center">
                   <button
-                    onClick={() => setAiProvider('gemini')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] uppercase tracking-wider transition-all ${
-                      aiProvider === 'gemini'
+                    onClick={() => { setEngineMode('gemini'); setAiProvider('gemini'); }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] uppercase tracking-wider transition-all ${
+                      engineMode === 'gemini'
                         ? 'bg-[rgba(212,175,55,.15)] text-[#d4af37] border border-[#d4af37]'
                         : 'text-[#5a4d30] border border-[#2e2008] hover:text-[#8a7a50]'
                     }`}
@@ -402,18 +405,30 @@ export function IntroScreen({
                     <Cloud className="w-3 h-3" /> Gemini
                   </button>
                   <button
-                    onClick={() => setAiProvider('lmstudio')}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] uppercase tracking-wider transition-all ${
-                      aiProvider === 'lmstudio'
+                    onClick={() => { setEngineMode('dual'); setAiProvider('lmstudio'); }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] uppercase tracking-wider transition-all ${
+                      engineMode === 'dual'
+                        ? 'bg-[rgba(100,180,255,.12)] text-[#60a0f0] border border-[#60a0f0]'
+                        : 'text-[#5a4d30] border border-[#2e2008] hover:text-[#8a7a50]'
+                    }`}
+                    style={{ fontFamily: 'Cinzel, serif' }}>
+                    <Zap className="w-3 h-3" /> Dual
+                  </button>
+                  <button
+                    onClick={() => { setEngineMode('lmstudio'); setAiProvider('lmstudio'); }}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] uppercase tracking-wider transition-all ${
+                      engineMode === 'lmstudio'
                         ? 'bg-[rgba(212,175,55,.15)] text-[#d4af37] border border-[#d4af37]'
                         : 'text-[#5a4d30] border border-[#2e2008] hover:text-[#8a7a50]'
                     }`}
                     style={{ fontFamily: 'Cinzel, serif' }}>
-                    <Monitor className="w-3 h-3" /> LM Studio
+                    <Monitor className="w-3 h-3" /> Local
                   </button>
                 </div>
 
-                {aiProvider === 'gemini' ? (
+
+
+                {engineMode === 'gemini' ? (
                   <div className="flex gap-2 items-center">
                     <span className="text-[#9a8860] text-[10px] uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Cinzel, serif' }}>Gemini Key</span>
                     <Input type="password" placeholder="AIza..." value={geminiKey}
@@ -472,9 +487,11 @@ export function IntroScreen({
               </motion.div>
 
               <p className="text-[#5a4d30] text-[10px] text-center mt-1 italic">
-                {aiProvider === 'gemini'
+                {engineMode === 'gemini'
                   ? 'Key auto-saves to browser \u00b7 Direct calls to Gemini'
-                  : 'Local LLM \u00b7 No API key needed \u00b7 Runs on your machine'}
+                  : engineMode === 'dual'
+                    ? 'Dual Engine \u00b7 Mechanics locally + narration via cloud'
+                    : 'Local LLM \u00b7 No API key needed \u00b7 Runs on your machine'}
               </p>
 
               {/* Links */}
@@ -494,7 +511,7 @@ export function IntroScreen({
 
               {/* Begin button */}
               <div className="flex gap-2 mt-4 justify-center flex-wrap">
-                <Button onClick={startNewCampaign} disabled={aiProvider === 'gemini' ? !geminiKey : !lmConnected}
+                <Button onClick={startNewCampaign} disabled={engineMode === 'gemini' ? !geminiKey : !lmConnected}
                   className="btn-begin-legend bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860] border border-[#7a5f20] px-6 sm:px-10 py-2.5 sm:py-3 text-sm transition-all disabled:opacity-40 disabled:animate-none"
                   style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.17em' }}>
                   {'\u2694'} Begin Your Legend {'\u2694'}

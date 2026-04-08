@@ -35,6 +35,7 @@ export default function MythworldEngine() {
     gameState, setGameState,
     geminiKey, setGeminiKey,
     aiProvider, setAiProvider,
+    engineMode, setEngineMode,
     lmStudioUrl, setLmStudioUrl,
     lmStudioModel, setLmStudioModel,
     gamePhase, setGamePhase,
@@ -223,6 +224,8 @@ export default function MythworldEngine() {
         setGeminiKey={setGeminiKey}
         aiProvider={aiProvider}
         setAiProvider={setAiProvider}
+        engineMode={engineMode}
+        setEngineMode={setEngineMode}
         lmStudioUrl={lmStudioUrl}
         setLmStudioUrl={setLmStudioUrl}
         lmStudioModel={lmStudioModel}
@@ -539,10 +542,10 @@ export default function MythworldEngine() {
 
           <span className="flex-1 text-xs text-[#5a4d30] italic truncate min-w-0">{statusMessage}</span>
 
-          {/* API Status — shows active provider */}
+          {/* API Status — shows active engine mode */}
           <div className="flex items-center gap-1">
-            <div className={`w-2 h-2 rounded-full ${aiProvider === 'gemini' ? 'bg-[#40c080]' : 'bg-[#60a0f0]'}`} />
-            <span className="text-[10px] text-[#5a4d30]">{aiProvider === 'gemini' ? 'Gem2.5' : 'LM Studio'}</span>
+            <div className={`w-2 h-2 rounded-full ${engineMode === 'dual' ? 'bg-[#a070f0]' : engineMode === 'gemini' ? 'bg-[#40c080]' : 'bg-[#60a0f0]'}`} />
+            <span className="text-[10px] text-[#5a4d30]">{engineMode === 'dual' ? 'Dual' : engineMode === 'gemini' ? 'Gem2.5' : 'Local'}</span>
           </div>
           <span className="text-[8px] text-[#3a3020] hidden md:inline">v{version}</span>
 

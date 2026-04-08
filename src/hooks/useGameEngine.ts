@@ -46,9 +46,13 @@ export function useGameEngine() {
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
   // ── AI PROVIDER STATE ─────────────────────────────────────────────────
-  // 'gemini' = Google Gemini (cloud), 'lmstudio' = LM Studio (local)
+  // aiProvider: which AI provider(s) to use
+  // engineMode: 'gemini' = Gemini only, 'lmstudio' = LM Studio only, 'dual' = LM Studio (mechanics) + Gemini (narration)
   const [aiProvider, setAiProvider] = useState<'gemini' | 'lmstudio'>(() => {
     return (safeLocalStorageGetItem('mythworld_provider') as 'gemini' | 'lmstudio') || 'gemini'
+  })
+  const [engineMode, setEngineMode] = useState<'gemini' | 'lmstudio' | 'dual'>(() => {
+    return (safeLocalStorageGetItem('mythworld_engine_mode') as 'gemini' | 'lmstudio' | 'dual') || 'gemini'
   })
   const [lmStudioUrl, setLmStudioUrl] = useState(() => {
     return safeLocalStorageGetItem('mythworld_lmstudio_url') || 'http://localhost:1234'
@@ -210,6 +214,9 @@ export function useGameEngine() {
   useEffect(() => {
     try { localStorage.setItem('mythworld_provider', aiProvider) } catch {}
   }, [aiProvider])
+  useEffect(() => {
+    try { localStorage.setItem('mythworld_engine_mode', engineMode) } catch {}
+  }, [engineMode])
   useEffect(() => {
     try { localStorage.setItem('mythworld_lmstudio_url', lmStudioUrl) } catch {}
   }, [lmStudioUrl])
@@ -1110,23 +1117,335 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 {"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — 600-1000 words for opening scenes, 60-120 words for regular turns, ONE paragraph only. REST/SLEEP actions: 2-3 sentences max. COMBAT actions: up to 150 words. Do NOT exceed these limits.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
   }
 
-  // ── API CALLS ──────────────────────────────────────────────────────────
-  // Routes to Gemini (cloud) or LM Studio (local) based on aiProvider
-  const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    const isLocal = aiProvider === 'lmstudio'
-    const endpoint = isLocal ? '/api/lmstudio' : '/api/gemini'
-    const MAX_RETRIES = isLocal ? 3 : 6  // Local models don't need as many retries
+  // ═══════════════════════════════════════════════════════════════════════════
+  // DUAL-ENGINE DM SYSTEM (v2.11.0)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Three modes:
+  //   'gemini'    — Gemini handles everything (narration + mechanics)
+  //   'lmstudio'  — LM Studio handles everything (narration + mechanics)
+  //   'dual'      — LM Studio handles mechanics (JSON), Gemini handles narration (prose)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // ── MECHANICS PROMPT (for LM Studio in dual mode) ─────────────────────
+  // Compact prompt focusing ONLY on game rules, dice, and state updates.
+  // No prose required — just JSON output.
+  const buildMechanicsPrompt = (gs: GameState): string => {
+    const ant = getAntagonist(gs.antagonistId)
+    const living = gs.pcs.filter(p => !p.dead)
+    const mainPC = living[0]
+    const actCtx = gs.act === ACTS.ONE
+      ? 'ACT I: Exploration phase. Introduce world, no combat yet.'
+      : gs.act === ACTS.TWO
+        ? 'ACT II: Rising tension. Mix exploration, social, escalating combat.'
+        : `ACT III BOSS: ${ant?.name} Phase ${gs.antagonistPhase}/3. HP:${gs.antagonistHp}/${gs.antagonistMaxHp}.`
+
+    return `You are a D&D game mechanics engine (Fate Core + AD&D). Process the player's action and output ONLY a JSON object.
+
+RULES:
+- Roll dice for skill checks and combat. Use d20 for attacks/skills, appropriate dice for damage.
+- Apply Fate Core aspects: +2 when invoked, compels earn Fate Points.
+- Track HP, stress, stamina, conditions, items.
+- NPCs act according to alignment+personality.
+- Combat: enemies attack every 2-3 turns. Vary targets.
+- Outcome tiers: critical_success (nat 20), full_success (10+), partial_success (7-9), miss (6 or less).
+- Include consequences, tension notes, paragon/renegade deltas.
+- Act I turns 1-7: NO enemies. Exploration only.
+
+CURRENT STATE:
+Turn: ${gs.turn} | ${actCtx}
+Main PC: ${mainPC?.name} [${mainPC?.align}] HP:${mainPC?.hp}/${mainPC?.maxHp}
+Fate Points: ${gs.fatePoints}/5 | Aspects: ${gs.aspects.map(a => a.name).join(', ') || 'None'}
+Stamina: ${gs.stamina}/${gs.maxStamina}
+Shard Charges: ${gs.shardCharges}/2 | Antagonist: ${gs.act === ACTS.THREE ? `${ant?.name} HP:${gs.antagonistHp}/${gs.antagonistMaxHp}` : 'Hidden'}
+Success Rate: ${gs.currentSuccessRate}%
+Prophecy: ${gs.prophecies[0]?.riddle.slice(0, 80) || 'None'} [${gs.prophecies[0]?.state || 'dormant'}]
+${gs.journeySoFar ? `Journey: ${gs.journeySoFar}\n` : ''}Party: ${living.map(p => `${p.name}[HP:${p.hp}/${p.maxHp},AC:${p.AC}]`).join(', ')}
+Active NPCs: ${gs.activeNPCs.map(n => `${n.name}[${n.encounter_type || '?'}]`).join(', ') || 'None'}
+Inventory: ${gs.inventory.map(i => i.name).join(', ') || 'Empty'}
+Quests: ${gs.quests.filter(q => q.status === 'active').map(q => q.title).join(', ') || 'None'}
+
+OUTPUT — ONLY valid JSON, no prose:
+{"mechanical_summary":"1-2 sentence dry description of what mechanically happened","dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"outcome_tier":"critical_success|full_success|partial_success|miss","consequences":"string","tension_note":"string","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string or null","human_pc_id":"string|null","human_pc_reason":"string","next_pc_id":"string|null","boss_phase_trigger":false}`
+  }
+
+  // ── NARRATION PROMPT (for Gemini in dual mode) ───────────────────────
+  // Receives the mechanical result and writes beautiful Neil Gaiman-style prose.
+  const buildNarrationPrompt = (gs: GameState, mechanicalResult: string): string => {
+    const ant = getAntagonist(gs.antagonistId)
+    const living = gs.pcs.filter(p => !p.dead)
+    const mainPC = living[0]
+    const shard = gs.shardEntry
+
+    return `You are the DM narrator of a mythic AD&D campaign (TSR Deities & Demigods 1980).
+
+YOUR ONLY JOB: Write beautiful narration based on the mechanical game result. You do NOT handle game rules — those are already processed.
+
+NARRATION STYLE — NEIL GAIMAN:
+- Write exactly ONE paragraph (60-120 words). No exceptions.
+- CRITICAL: NEVER repeat narration from previous turns. Every turn must contain ENTIRELY NEW prose.
+- Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
+- Use specific sensory language: the taste of copper, the weight of shadows
+- ONE paragraph must contain: what happened, character reaction, and a hook/tension
+- Include dialogue naturally — 1-2 lines max
+- For REST/SLEEP: 2-3 sentences max. For COMBAT: up to 150 words.
+- Reference past events, the shard, the prophecy when relevant
+
+THE SHARD — ${shard?.name} [${shard?.pantheon || 'Unknown'} Pantheon]
+${toAscii(shard?.origin || '')}
+
+MAIN PC: ${mainPC?.name} [${mainPC?.pantheon}] [${mainPC?.align}]
+Personality: ${toAscii(mainPC?.personality || '').slice(0, 60)}
+${living.length > 1 ? `COMPANION: ${living[1]?.name} [${living[1]?.pantheon}] [${living[1]?.align}]
+Personality: ${toAscii(living[1]?.personality || '').slice(0, 60)}` : ''}
+
+PROPHECY: ${gs.prophecies[0]?.riddle.slice(0, 150) || 'None'} [${gs.prophecies[0]?.state || 'dormant'}]
+${gs.journeySoFar ? `JOURNEY SO FAR: ${gs.journeySoFar}\n` : ''}${gs.act === ACTS.THREE ? `ANTAGONIST: ${ant?.name} | HP:${gs.antagonistHp}/${gs.antagonistMaxHp}\n` : ''}CURRENT TURN: ${gs.turn} | Act: ${gs.act === ACTS.ONE ? 'I' : gs.act === ACTS.TWO ? 'II' : 'III'}
+Active Aspects: ${gs.aspects.map(a => `${a.name} (${a.type})`).join(', ') || 'None'}
+Fate Points: ${gs.fatePoints}/5
+
+MECHANICAL RESULT (what happened this turn):
+${mechanicalResult}
+
+Based on the mechanical result above, write the narration paragraph. Then provide 3-4 action OPTIONS for the player.
+
+OUTPUT FORMAT:
+[Your narration paragraph here]
+
+Then append this JSON:
+{"dm_narration":"your exact narration text","human_pc_id":"id of who acts next","human_pc_reason":"why","options":[{"text":"action description","ability":"ability name"},{"text":"action description","ability":"ability name"},{"text":"action description","ability name"}]}`
+  }
+
+  // ── DUAL-ENGINE CALL ─────────────────────────────────────────────────
+  // Step 1: LM Studio processes mechanics (JSON only)
+  // Step 2: Gemini writes narration based on mechanical result
+  const callDualEngine = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
+    setStatusMessage('⚙️ Processing mechanics (LM Studio)...')
+
+    // ── STEP 1: MECHANICS via LM Studio ──
+    const mechanicsPrompt = buildMechanicsPrompt(gs)
+    let mechanicalJson = ''
+    let mechanicalData: Record<string, unknown> | null = null
+
+    try {
+      const mechResponse = await fetch('/api/lmstudio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemPrompt: mechanicsPrompt,
+          userMessage: toAscii(userMsg),
+          temperature: 0.3, // Lower temp for consistent mechanics
+          maxOutputTokens: 3072,
+          lmStudioUrl,
+          model: lmStudioModel,
+        }),
+      })
+
+      if (!mechResponse.ok) {
+ const err = await mechResponse.json().catch(() => ({}))
+ throw new Error(typeof err.error === 'string' ? err.error : 'LM Studio mechanics failed')
+      }
+
+      const mechData = await mechResponse.json()
+      const parts = mechData?.data?.candidates?.[0]?.content?.parts || []
+      for (const part of parts) {
+        if (part.text) mechanicalJson += part.text
+      }
+
+      // Extract JSON from mechanical response
+      let jsonStr = mechanicalJson
+      const jsonStart = mechanicalJson.indexOf('{')
+      const jsonEnd = mechanicalJson.lastIndexOf('}')
+      if (jsonStart >= 0 && jsonEnd > jsonStart) {
+        jsonStr = mechanicalJson.substring(jsonStart, jsonEnd + 1)
+      }
+      mechanicalData = JSON.parse(jsonStr)
+      if (!mechanicalData) mechanicalData = {}
+      console.log('✅ Dual Engine — Mechanics processed:', mechanicalData.mechanical_summary)
+    } catch (e) {
+      console.error('❌ Dual Engine — Mechanics failed, falling back to Gemini-only:', e)
+      // If LM Studio fails, fall back to Gemini-only mode for this turn
+      setStatusMessage('⚠️ LM Studio failed, using Gemini for full response...')
+      return callSingleEngine(userMsg, gs, isFirstTurn)
+    }
+
+    // ── STEP 2: NARRATION via Gemini ──
+    setStatusMessage('✍️ Writing narration (Gemini 2.5)...')
+
+    const mechanicalSummary = typeof mechanicalData!.mechanical_summary === 'string'
+      ? mechanicalData!.mechanical_summary
+      : JSON.stringify(mechanicalData)
+
+    const narrationPrompt = buildNarrationPrompt(gs, mechanicalSummary)
+
+    const MAX_RETRIES = 6
     const BASE_DELAY = 6000
-    // Gemini 429 rate limits need 60s+ to reset per-minute window
     const RATE_LIMIT_DELAY = 60000
-    
-    // maxOutputTokens — opening needs more for rich prose; regular turns need less
-    // LM Studio / local models may have lower context limits
+    const maxTokens = isFirstTurn ? 16000 : 6144
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        const waitSec = Math.round((BASE_DELAY * Math.pow(2, attempt - 1)) / 1000)
+        setStatusMessage(`Retrying narration in ${waitSec}s...`)
+        await sleep(BASE_DELAY * Math.pow(2, attempt - 1))
+      }
+
+      try {
+        const r = await fetch('/api/gemini', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: GEMINI_MODEL,
+            systemPrompt: narrationPrompt,
+            userMessage: `Turn ${gs.turn}: ${userMsg}`,
+            temperature: 0.9,
+            maxOutputTokens: maxTokens,
+          }),
+        })
+
+        if (!r.ok) {
+          const errData = await r.json().catch(() => ({}))
+          if (r.status === 429 || r.status === 503) {
+            if (attempt === MAX_RETRIES - 1) {
+              // Gemini failed — return mechanical result with basic narration
+              return buildFallbackFromMechanics(mechanicalData!, gs)
+            }
+            const waitSec = Math.round((RATE_LIMIT_DELAY + attempt * 15000) / 1000)
+            setStatusMessage(`⏳ Narration rate limited, waiting ${waitSec}s...`)
+            await sleep(RATE_LIMIT_DELAY + attempt * 15000)
+            continue
+          }
+          throw new Error(typeof errData.error === 'string' ? errData.error : `Gemini error ${r.status}`)
+        }
+
+        const respData = await r.json()
+        if (respData.error) throw new Error(typeof respData.error === 'string' ? respData.error : 'Gemini API error')
+
+        const data = respData.data
+        const parts = data?.candidates?.[0]?.content?.parts || []
+        let raw = ''
+        for (const part of parts) {
+          if (part.text && part.text.trim().length > 10) raw += part.text
+        }
+
+        // Parse narration + merge with mechanical data
+        return mergeDualResponse(raw, mechanicalData!, gs)
+
+      } catch (e) {
+        console.error(`❌ Dual Engine — Narration attempt ${attempt + 1} failed:`, e)
+        if (attempt === MAX_RETRIES - 1) {
+          // Both engines failed for narration — return mechanical result with basic narration
+          return buildFallbackFromMechanics(mechanicalData!, gs)
+        }
+      }
+    }
+
+    return buildFallbackFromMechanics(mechanicalData!, gs)
+  }
+
+  // ── MERGE DUAL RESPONSE ───────────────────────────────────────────────
+  // Combines Gemini's narration with LM Studio's mechanical JSON
+  const mergeDualResponse = (raw: string, mechanics: Record<string, unknown>, gs: GameState): DMResponse => {
+    let narration = ''
+    let optionsFromNarration: Array<{ text: string; ability: string }> = []
+
+    // Extract narration and options from Gemini's response
+    let splitPos = raw.indexOf('```json')
+    if (splitPos === -1) {
+      let keyIdx = raw.indexOf('"dm_narration"')
+      if (keyIdx === -1) keyIdx = raw.indexOf('"options"')
+      if (keyIdx > -1) splitPos = raw.lastIndexOf('{', keyIdx)
+    }
+
+    if (splitPos > -1) {
+      narration = raw.slice(0, splitPos).trim()
+      const jsonStr = raw.slice(splitPos).trim().replace(/```(json)?\s*$/gi, '').replace(/```.*/g, '').trim()
+      try {
+        const narrJson = JSON.parse(jsonStr)
+        if (narrJson.dm_narration) narration = narrJson.dm_narration
+        if (Array.isArray(narrJson.options)) optionsFromNarration = narrJson.options
+      } catch { /* options parse failed, use narration text only */ }
+    } else {
+      narration = raw.trim()
+    }
+
+    narration = narration.replace(/```(json)?\s*$/i, '').trim()
+    preJsonNarrativeRef.current = narration
+    if (narration.length > 30) setLastDMNarrative(narration)
+
+    // Build merged response: mechanics JSON + Gemini narration
+    const merged: DMResponse = {
+      dm_narration: narration.length > 30 ? narration : (mechanics.mechanical_summary as string || 'The adventure continues...'),
+      story_summary: gs.storySummary || 'The adventure continues...',
+      journey_so_far: gs.journeySoFar || '',
+      dice_rolls: (mechanics.dice_rolls as DMResponse['dice_rolls']) || [],
+      damage_dealt: (mechanics.damage_dealt as DMResponse['damage_dealt']) || [],
+      injury_events: (mechanics.injury_events as DMResponse['injury_events']) || [],
+      state_updates: (mechanics.state_updates as DMResponse['state_updates']) || [],
+      npc_encounters: (mechanics.npc_encounters as DMResponse['npc_encounters']) || [],
+      item_drops: (mechanics.item_drops as DMResponse['item_drops']) || [],
+      quest_updates: (mechanics.quest_updates as DMResponse['quest_updates']) || [],
+      shard_event: (mechanics.shard_event as DMResponse['shard_event']) || { invoked: false, invoker_pc_id: undefined, intended_god: undefined, roll: 0, success: false, summoned_id: undefined, summoned_name: undefined, is_greater: false },
+      outcome_tier: (mechanics.outcome_tier as DMResponse['outcome_tier']) || null,
+      consequences: (mechanics.consequences as string) || '',
+      tension_note: (mechanics.tension_note as string) || '',
+      paragon_delta: (mechanics.paragon_delta as number) || 0,
+      renegade_delta: (mechanics.renegade_delta as number) || 0,
+      new_aspect: (mechanics.new_aspect as string | null) ?? undefined,
+      clue_revealed: (mechanics.clue_revealed as string | undefined | null) ?? undefined,
+      human_pc_id: (mechanics.human_pc_id as string | undefined) ?? undefined,
+      human_pc_reason: (mechanics.human_pc_reason as string) || '',
+      next_pc_id: (mechanics.next_pc_id as string | undefined) ?? undefined,
+      boss_phase_trigger: (mechanics.boss_phase_trigger as boolean) || false,
+    }
+
+    // If Gemini provided player options, store them for the choice panel
+    if (optionsFromNarration.length > 0) {
+      (merged as unknown as Record<string, unknown>)._dualEngineOptions = optionsFromNarration
+    }
+
+    console.log('✅ Dual Engine — Merged response ready')
+    return merged
+  }
+
+  // ── FALLBACK FROM MECHANICS ──────────────────────────────────────────
+  // When Gemini narration fails, build a basic response from mechanical data
+  const buildFallbackFromMechanics = (mechanics: Record<string, unknown>, gs: GameState): DMResponse => {
+    const summary = (mechanics.mechanical_summary as string) || 'Something happened.'
+    return {
+      dm_narration: summary,
+      story_summary: gs.storySummary || 'The adventure continues...',
+      journey_so_far: gs.journeySoFar || '',
+      dice_rolls: (mechanics.dice_rolls as DMResponse['dice_rolls']) || [],
+      damage_dealt: (mechanics.damage_dealt as DMResponse['damage_dealt']) || [],
+      injury_events: (mechanics.injury_events as DMResponse['injury_events']) || [],
+      state_updates: (mechanics.state_updates as DMResponse['state_updates']) || [],
+      npc_encounters: (mechanics.npc_encounters as DMResponse['npc_encounters']) || [],
+      item_drops: (mechanics.item_drops as DMResponse['item_drops']) || [],
+      quest_updates: (mechanics.quest_updates as DMResponse['quest_updates']) || [],
+      shard_event: (mechanics.shard_event as DMResponse['shard_event']) || { invoked: false, invoker_pc_id: undefined, intended_god: undefined, roll: 0, success: false, summoned_id: undefined, summoned_name: undefined, is_greater: false },
+      outcome_tier: (mechanics.outcome_tier as DMResponse['outcome_tier']) || null,
+      consequences: (mechanics.consequences as string) || '',
+      tension_note: (mechanics.tension_note as string) || '',
+      paragon_delta: (mechanics.paragon_delta as number) || 0,
+      renegade_delta: (mechanics.renegade_delta as number) || 0,
+      new_aspect: (mechanics.new_aspect as string | null) ?? undefined,
+      human_pc_id: (mechanics.human_pc_id as string | undefined) ?? undefined,
+      human_pc_reason: (mechanics.human_pc_reason as string) || '',
+      next_pc_id: (mechanics.next_pc_id as string | undefined) ?? undefined,
+      boss_phase_trigger: (mechanics.boss_phase_trigger as boolean) || false,
+    }
+  }
+
+  // ── SINGLE ENGINE CALL (original behavior) ──────────────────────────
+  const callSingleEngine = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
+    const isLocal = engineMode === 'lmstudio'
+    const endpoint = isLocal ? '/api/lmstudio' : '/api/gemini'
+    const MAX_RETRIES = isLocal ? 3 : 6
+    const BASE_DELAY = 6000
+    const RATE_LIMIT_DELAY = 60000
     const maxTokens = isLocal
-      ? (isFirstTurn ? 8192 : 4096)  // Conservative for local 4B model
-      : (isFirstTurn ? 20000 : 6144) // Full for Gemini
-    
-    // Track input tokens
+      ? (isFirstTurn ? 8192 : 4096)
+      : (isFirstTurn ? 20000 : 6144)
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
     const totalInput = systemPrompt + userMsg
 
@@ -1152,6 +1471,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         } else {
           requestBody.model = GEMINI_MODEL
         }
+        // Track which engine mode is active for logging
+        console.log(`[callSingleEngine] mode=${engineMode} endpoint=${endpoint}`)
 
         const r = await fetch(endpoint, {
           method: 'POST',
@@ -1252,6 +1573,18 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       }
     }
     return getNarrationPreservationFallback(gs, 'unrecoverable_failure')
+  }
+
+  // ── MAIN DM ENTRY POINT ───────────────────────────────────────────────
+  // Routes to dual-engine or single-engine based on engineMode
+  const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
+    if (engineMode === 'dual') {
+      console.log(`[DM] Dual Engine mode — LM Studio (mechanics) + Gemini (narration)`)
+      return callDualEngine(userMsg, gs, isFirstTurn)
+    }
+    // Single engine (gemini or lmstudio)
+    console.log(`[DM] ${engineMode === 'lmstudio' ? 'LM Studio' : 'Gemini'} only mode`)
+    return callSingleEngine(userMsg, gs, isFirstTurn)
   }
 
   const parseDMResponse = (raw: string, gs: GameState): DMResponse => {
@@ -4094,6 +4427,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     gameState, setGameState,
     geminiKey, setGeminiKey,
     aiProvider, setAiProvider,
+    engineMode, setEngineMode,
     lmStudioUrl, setLmStudioUrl,
     lmStudioModel, setLmStudioModel,
     gamePhase, setGamePhase,
