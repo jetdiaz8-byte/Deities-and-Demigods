@@ -40,10 +40,10 @@ export function IntroScreen({
   const titleText = 'DEITIES & DEMIGODS'
   const titleLetters = titleText.split('')
 
-  const subtitleText = 'Mythworld Engine · AI-Powered D&D'
+  const subtitleText = 'Mythworld Engine \u00B7 AI-Powered D&D'
 
   const features = [
-    { icon: <Users className="w-5 h-5" />, label: 'Choose Your Hero', desc: 'Select from 155+ characters' },
+    { icon: <Users className="w-5 h-5" />, label: 'Choose Your Hero', desc: 'Select from 286+ characters' },
     { icon: <Package className="w-5 h-5" />, label: 'Inventory', desc: '35+ artifacts & potions' },
     { icon: <ScrollText className="w-5 h-5" />, label: 'Quests', desc: 'Main, side & hidden quests' },
     { icon: <Save className="w-5 h-5" />, label: 'Save/Load', desc: '5 save slots' },
@@ -55,43 +55,41 @@ export function IntroScreen({
     { icon: <Volume2 className="w-5 h-5" />, label: 'Voice Narration', desc: 'AI-powered TTS' },
   ]
 
-  // Build marquee portrait paths — pick a curated cross-section of gods, heroes, monsters
+  // Build marquee portrait paths \u2014 ALL 286 portraits across every category
   const marqueePortraits = useMemo(() => {
-    const picks = [
-      // Greater gods
-      'greater-gods/zeus', 'greater-gods/odin', 'greater-gods/thor', 'greater-gods/athena',
-      'greater-gods/loki', 'greater-gods/ra', 'greater-gods/set', 'greater-gods/poseidon',
-      'greater-gods/ares', 'greater-gods/hermes', 'greater-gods/aphrodite', 'greater-gods/hades',
-      'greater-gods/freya', 'greater-gods/anubis', 'greater-gods/osiris', 'greater-gods/isis',
-      'greater-gods/cthulhu', 'greater-gods/paladine', 'greater-gods/takhisis',
-      'greater-gods/shiva', 'greater-gods/amaterasu', 'greater-gods/quetzalcoatl',
-      // Heroes
-      'heroes/arthur', 'heroes/galahad', 'heroes/lancelot', 'heroes/merlin',
-      'heroes/heracles_hero', 'heroes/cuchulainn', 'heroes/perseus', 'heroes/odysseus',
-      'heroes/elric', 'heroes/fafhrd', 'heroes/gray_mouser', 'heroes/raistlin_majere_hero',
-      'heroes/sturm_brightblade', 'heroes/tanist_half_elven', 'heroes/goldmoon',
-      'heroes/tasslehoff_burrfoot', 'heroes/kitiara_uth_matar', 'heroes/caramon_majere',
-      // Monsters
-      'monsters/fenris', 'monsters/cerberus', 'monsters/apep', 'monsters/shoggoth',
-      'monsters/mi_go', 'monsters/jormungandr', 'monsters/byakhee', 'monsters/deep_ones',
-      'monsters/thunder_bird', 'monsters/blodug_hofi', 'monsters/draconians',
-      'monsters/spawn_cthulhu', 'monsters/primordial_one', 'monsters/nightgaunt',
-    ]
-    // Shuffle using a seeded approach (stable per session)
-    const shuffled = [...picks]
+    const idsByCategory: Record<string, string[]> = {
+      'greater-gods': ['aegir','ahto','amaterasu','anubis','aphrodite','apollo','ares','arioch','athena','balder','bast','bragi','branchala','brigit','chemosh','corellon','coyote','cthulhu','dagda','death_nehwon','diancecht','dionysus','elric','fenris','fistandantilus','fizban','freya','gilean','goibhnie','gruumsh','habbakuk','hades','hel','hephaestus','hera','hermes','huan_ti','huitzilopochtli','indra','isis','izanagi','jormungandr','khellendros','kos','lakshmi','loki','lord_soth','lu_yueh','lugh','lunitari','ma_yuan','malystryx','marduk','mielikki','mishakal','moradin','morrigan','nergal','nike','nin_hursag','nnuuurrrrc','nuitari','nyarlathotep','odin','osiris','paladine','pan','poseidon','ptah','quetzalcoatl','ra','ramman','reorx','rudra','sargonnas','sekolah','set','shiva','shoggoth','shub_niggurath','silvanus','sirrion','solinari','surtur','susanowo','takhisis','tezcatlipoca','thor','thoth','thrym','tlaloc','tobadzistsini','tou_mu','tyr','ukko','untamo','vishnu','votishal','zeboim','zeus'],
+      'heroes': ['arthur','bellerophon','caramon_majere','cthulhu','cuchulainn','derek_crownguard','elric','fafhrd','flint_fireforge','galahad','gareth','gawaine','gilgamesh','gilthanas','goldmoon','gray_mouser','heracles','heracles_hero','hiawatha','hunapu','hunapu_xbalanque','ilmarinen','jason','kitiara_uth_matar','kullervo','lamorak','lancelot','laurana','lemminkainen','merlin','moonglum','morgan_le_fay','movarl','odysseus','palomides','pellinore','perseus','qagwaaz','raiko','raistlin_majere_hero','riverwind','stoneribs','sturm_brightblade','tanis_half_elven','tasslehoff_burrfoot','theseus','tika_waylan','tristram','vainamoinen','yamamoto_date','yoshmye'],
+      'demigods': ['aarth','anubis','apshai','bast','beryllinthranox','chao_kung_ming','chih_chiang','chih_chiang_fyu_ya','cyan_bloodbane','derek_crownguard','fei_lien','fileet','fistandantilus','fizban','gods_of_lankhmar','haaashastaak','hachiman','huma_dragonbane','issek','issek_of_jug','ithaqua','kali','karttikeya','kiputytto','lakshmi','laogzed','lord_soth','loviatar','meerclar','nnuuurrrrc','no_cha','oh_kuni_nushi','raistlin_majere_demigod','ratri','spider_god','surma','susanowo','tvashtri','vaprak','votishal','wen_chung','yama'],
+      'krynn': ['beryllinthranox','branchala','caramon_majere','chemosh','cyan_bloodbane','derek_crownguard','draconians','fistandantilus','fizban','flint_fireforge','gilean','gilthanas','goldmoon','habbakuk','hiddukel','huma_dragonbane','khellendros','kitiara_uth_matar','laurana','lord_soth','lunitari','malystryx','mishakal','nuitari','paladine','raistlin_majere_demigod','raistlin_majere_hero','reorx','riverwind','sargonnas','shadow_wights','sirrion','solinari','sturm_brightblade','takhisis','tanis_half_elven','tasslehoff_burrfoot','tika_waylan','zeboim'],
+      'lesser-gods': ['aegir','artemis','bragi','brigit','coyote','demeter','diancecht','dionysus','druaga','girru','goibhnie','hephaestus','hiddukel','huan_ti','huitzilopochtli','ilmatar','ishtar','kali','lolth','lu_yueh','marduk_lesser','mielikki','morrigan','nergal','nike','nyarlathotep','pan','rat_god','raven','sekolah','shub_niggurath','surtur','thrym','tobadzistsini','tou_mu','untamo'],
+      'monsters': ['apep','blodug_hofi','byakhee','cerberus','dark_young','deep_ones','draconians','fenris','ghast','gug','jormungandr','mi_go','nightgaunt','primordial_one','shadow_wights','shoggoth','spawn_cthulhu','thunder_bird'],
+    }
+    const allPaths: string[] = []
+    for (const [cat, ids] of Object.entries(idsByCategory)) {
+      for (const id of ids) {
+        allPaths.push(`/portraits/${cat}/${id}.png`)
+      }
+    }
+    // Deterministic shuffle (stable per session)
+    const shuffled = [...allPaths]
     for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = (i * 7 + 13) % (i + 1) // deterministic "random" shuffle
+      const j = (i * 7 + 13) % (i + 1)
       ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
     }
-    return shuffled.map(p => `/portraits/${p}.png`)
+    return shuffled
   }, [])
+
+  // Split into two strips: top gets even indices, bottom gets odd (different portraits per edge)
+  const topStrip = useMemo(() => marqueePortraits.filter((_, i) => i % 2 === 0), [marqueePortraits])
+  const bottomStrip = useMemo(() => marqueePortraits.filter((_, i) => i % 2 === 1), [marqueePortraits])
 
   return (
     <div className="min-h-screen bg-[#060403] flex flex-col items-center justify-center p-4 overflow-hidden relative">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap');
 
-        /* ── Ember Particle Animation ── */
+        /* \u2500\u2500 Ember Particle Animation \u2500\u2500 */
         @keyframes intro-ember-rise {
           0% {
             transform: translateY(100vh) translateX(0);
@@ -118,7 +116,7 @@ export function IntroScreen({
           animation: intro-ember-rise var(--ember-duration, 8s) var(--ember-delay, 0s) infinite ease-out;
         }
 
-        /* ── Parallax Background Layers ── */
+        /* \u2500\u2500 Parallax Background Layers \u2500\u2500 */
         @keyframes parallax-fog-drift {
           0%, 100% { transform: translateY(0) translateX(0); }
           50% { transform: translateY(-8px) translateX(12px); }
@@ -165,7 +163,7 @@ export function IntroScreen({
           animation: parallax-fog-drift 30s ease-in-out infinite reverse;
         }
 
-        /* ── Button Shimmer ── */
+        /* \u2500\u2500 Button Shimmer \u2500\u2500 */
         @keyframes btn-shimmer {
           0% { background-position: -200% center; }
           100% { background-position: 200% center; }
@@ -190,7 +188,7 @@ export function IntroScreen({
           animation: btn-shimmer 4s linear infinite, btn-glow-pulse 2.5s ease-in-out infinite;
         }
 
-        /* ── Cinematic Background Crossfade ── */
+        /* \u2500\u2500 Cinematic Background Crossfade \u2500\u2500 */
         @keyframes intro-bg-fade {
           0%, 20% { opacity: 1; }
           25%, 95% { opacity: 0; }
@@ -221,7 +219,7 @@ export function IntroScreen({
             linear-gradient(to bottom, rgba(6,4,3,0.5) 0%, rgba(6,4,3,0.3) 40%, rgba(6,4,3,0.6) 100%);
         }
 
-        /* ── Portrait Marquee ── */
+        /* \u2500\u2500 Portrait Marquee \u2014 Full Edge Carousel with Rectangle Cards \u2500\u2500 */
         @keyframes marquee-scroll {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
@@ -232,7 +230,6 @@ export function IntroScreen({
           left: 0;
           right: 0;
           z-index: 2;
-          height: 72px;
           display: flex;
           align-items: center;
           overflow: hidden;
@@ -241,12 +238,14 @@ export function IntroScreen({
 
         .intro-marquee--top {
           top: 0;
-          background: linear-gradient(to bottom, rgba(6,4,3,0.85) 0%, rgba(6,4,3,0.4) 70%, transparent 100%);
+          height: 100px;
+          background: linear-gradient(to bottom, rgba(6,4,3,0.92) 0%, rgba(6,4,3,0.6) 50%, transparent 100%);
         }
 
         .intro-marquee--bottom {
           bottom: 0;
-          background: linear-gradient(to top, rgba(6,4,3,0.85) 0%, rgba(6,4,3,0.4) 70%, transparent 100%);
+          height: 100px;
+          background: linear-gradient(to top, rgba(6,4,3,0.92) 0%, rgba(6,4,3,0.6) 50%, transparent 100%);
         }
 
         .intro-marquee--bottom .intro-marquee__track {
@@ -256,22 +255,27 @@ export function IntroScreen({
         .intro-marquee__track {
           display: flex;
           align-items: center;
-          gap: 12px;
-          animation: marquee-scroll 60s linear infinite;
+          gap: 8px;
+          padding: 10px 0;
+          animation: marquee-scroll 200s linear infinite;
           width: max-content;
         }
 
+        /* Rectangle card shape matching PC selection screen */
         .intro-marquee__item {
-          width: 48px;
-          height: 48px;
-          border-radius: 50%;
+          width: 56px;
+          height: 74px;
+          border-radius: 6px;
           object-fit: cover;
-          border: 1px solid rgba(212,175,55,0.25);
-          opacity: 0.6;
+          border: 1px solid rgba(212,175,55,0.3);
+          opacity: 0.5;
           flex-shrink: 0;
+          transition: opacity 0.3s, border-color 0.3s, transform 0.3s;
+          background: #110d07;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
 
-        /* ── Reduced Motion ── */
+        /* \u2500\u2500 Reduced Motion \u2500\u2500 */
         @media (prefers-reduced-motion: reduce) {
           .intro-ember,
           .parallax-layer-fog,
@@ -287,7 +291,7 @@ export function IntroScreen({
         }
       `}</style>
 
-      {/* ═══ CINEMATIC FULL-BLEED BACKGROUNDS ═══ */}
+      {/* \u2550\u2550\u2550 CINEMATIC FULL-BLEED BACKGROUNDS \u2550\u2550\u2550 */}
       <div
         className="intro-bg-slide"
         style={{ backgroundImage: 'url(/images/intro/dragon.png)' }}
@@ -307,43 +311,42 @@ export function IntroScreen({
       {/* Dark vignette overlay for text readability */}
       <div className="intro-bg-overlay" />
 
-      {/* ═══ PORTRAIT MARQUEE — TOP (scrolls left) ═══ */}
+      {/* \u2550\u2550\u2550 PORTRAIT MARQUEE \u2014 TOP STRIP (scrolls left, ~143 unique rectangle cards) \u2550\u2550\u2550 */}
       <div className="intro-marquee intro-marquee--top" aria-hidden="true">
         <div className="intro-marquee__track">
-          {/* Duplicate the list for seamless loop */}
-          {[...marqueePortraits, ...marqueePortraits].map((src, i) => (
+          {[...topStrip, ...topStrip].map((src, i) => (
             <img
               key={`top-${i}`}
               src={src}
               alt=""
               className="intro-marquee__item"
-              loading="eager"
+              loading="lazy"
             />
           ))}
         </div>
       </div>
 
-      {/* ═══ PORTRAIT MARQUEE — BOTTOM (scrolls right) ═══ */}
+      {/* \u2550\u2550\u2550 PORTRAIT MARQUEE \u2014 BOTTOM STRIP (scrolls right, ~143 unique rectangle cards) \u2550\u2550\u2550 */}
       <div className="intro-marquee intro-marquee--bottom" aria-hidden="true">
         <div className="intro-marquee__track">
-          {[...marqueePortraits, ...marqueePortraits].map((src, i) => (
+          {[...bottomStrip, ...bottomStrip].map((src, i) => (
             <img
               key={`bot-${i}`}
               src={src}
               alt=""
               className="intro-marquee__item"
-              loading="eager"
+              loading="lazy"
             />
           ))}
         </div>
       </div>
 
-      {/* ═══ PARALLAX BACKGROUND LAYERS ═══ */}
+      {/* \u2550\u2550\u2550 PARALLAX BACKGROUND LAYERS \u2550\u2550\u2550 */}
       <div className="parallax-layer-deep" />
       <div className="parallax-layer-fog" />
       <div className="parallax-layer-runes" />
 
-      {/* ═══ FLOATING EMBER PARTICLES ═══ */}
+      {/* \u2550\u2550\u2550 FLOATING EMBER PARTICLES \u2550\u2550\u2550 */}
       {particles.map(p => (
         <div
           key={p.id}
@@ -360,7 +363,7 @@ export function IntroScreen({
         />
       ))}
 
-      {/* ═══ MAIN CONTENT (z-10, above particles) ═══ */}
+      {/* \u2550\u2550\u2550 MAIN CONTENT (z-10, above particles) \u2550\u2550\u2550 */}
       <div className="relative z-10 w-full max-w-3xl">
         {/* Title Section */}
         <div className="text-center mb-6">
@@ -377,7 +380,7 @@ export function IntroScreen({
                 animation: 'pulse-glow 3s infinite',
               }}
             >
-              ✦
+              \u2726
             </span>
           </motion.div>
 
@@ -458,7 +461,7 @@ export function IntroScreen({
                 The gods do not play fair. The stories do not end cleanly. And sometimes, the prophecy chooses the wrong hero on purpose.
                 <br /><br />
                 <span className="text-[#7a5f20] not-italic text-sm" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.15em' }}>
-                  ✦ Created by the imagination of JeTZone2k26 ✦
+                  \u2726 Created by the imagination of JeTZone2k26 \u2726
                 </span>
                 <br />
                 <span className="text-[#5a4d30] not-italic text-xs" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.1em' }}>
@@ -480,7 +483,7 @@ export function IntroScreen({
                   <span className="text-[#9a8860] text-xs uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Cinzel, serif' }}>Gemini 2.5 Key</span>
                   <Input
                     type="password"
-                    placeholder="AIza... — aistudio.google.com"
+                    placeholder="AIza... \u2014 aistudio.google.com"
                     value={geminiKey}
                     onChange={e => setGeminiKey(e.target.value)}
                     className="flex-1 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30]"
@@ -495,7 +498,7 @@ export function IntroScreen({
                 transition={{ delay: 1.7, duration: 0.4 }}
                 className="text-[#5a4d30] text-xs text-center mt-4 italic"
               >
-                Key auto-saves to browser memory · Direct browser calls to Gemini
+                Key auto-saves to browser memory \u00B7 Direct browser calls to Gemini
               </motion.p>
 
               {/* Help Links */}
@@ -510,12 +513,12 @@ export function IntroScreen({
                     <BookOpen className="w-3.5 h-3.5" />
                     Player&apos;s Guide
                   </a>
-                  <span className="text-[#3a3020]">·</span>
+                  <span className="text-[#3a3020]">\u00B7</span>
                   <a href="/dm-handbook" className="text-[#40a070] text-xs hover:text-[#60e0a0] transition-colors inline-flex items-center gap-1" style={{ fontFamily: 'Cinzel, serif' }}>
                     <ScrollText className="w-3.5 h-3.5" />
                     DM Handbook
                   </a>
-                  <span className="text-[#3a3020]">·</span>
+                  <span className="text-[#3a3020]">\u00B7</span>
                   <a href="/codex" className="text-[#40a070] text-xs hover:text-[#60e0a0] transition-colors inline-flex items-center gap-1" style={{ fontFamily: 'Cinzel, serif' }}>
                     <BookOpen className="w-3.5 h-3.5" />
                     Codex
@@ -523,7 +526,7 @@ export function IntroScreen({
                 </div>
               </motion.div>
 
-              {/* ═══ DRAMATIC BEGIN BUTTON ═══ */}
+              {/* \u2550\u2550\u2550 DRAMATIC BEGIN BUTTON \u2550\u2550\u2550 */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -536,7 +539,7 @@ export function IntroScreen({
                   className="btn-begin-legend bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860] border border-[#7a5f20] px-8 sm:px-12 py-3 sm:py-4 text-sm sm:text-base transition-all disabled:opacity-40 disabled:animate-none"
                   style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.17em' }}
                 >
-                  ⚔ Begin Your Legend ⚔
+                  \u2694 Begin Your Legend \u2694
                 </Button>
 
                 {saveSlots.length > 0 && (
@@ -557,7 +560,7 @@ export function IntroScreen({
                 )}
               </motion.div>
 
-              {/* ═══ FEATURE GRID — Stagger entrance ═══ */}
+              {/* \u2550\u2550\u2550 FEATURE GRID \u2014 Stagger entrance \u2550\u2550\u2550 */}
               <motion.div
                 initial="hidden"
                 animate="visible"

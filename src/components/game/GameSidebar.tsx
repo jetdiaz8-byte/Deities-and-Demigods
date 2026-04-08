@@ -10,6 +10,7 @@ import { BookOpen, ScrollText, Star, Crown, Skull, Sparkles, CheckCircle, Swords
 import { NarrativeSection } from '@/components/game/GameComponents'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
 import { RegionIndicator } from '@/components/game/RegionIndicator'
+import { SidebarDiceArea } from '@/components/game/SidebarDiceArea'
 import { hpCls, aCol, getEntityPortrait, getAbilityBonus } from '@/lib/gameHelpers'
 import { getProphecyById } from '@/lib/prophecyData'
 import type { GameState, SaveSlot } from '@/lib/gameTypes'
@@ -79,10 +80,12 @@ export function GameSidebar({
             />
           </div>
         )}
-        {/* Region Indicator — below Story So Far, above tabs */}
+        {/* Region Indicator — below Story So Far, above dice area */}
         <div className="px-3 pt-2 pb-1 flex-shrink-0">
           <RegionIndicator gameState={gameState} />
         </div>
+        {/* BG3-Style Dice Tray — visible in sidebar, always accessible */}
+        <SidebarDiceArea diceRolls={gameState.lastDiceRolls} />
         <DesktopTabs
           gameState={gameState}
           activeTab={activeTab}
