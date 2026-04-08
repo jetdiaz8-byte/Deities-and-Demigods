@@ -55,6 +55,37 @@ export function IntroScreen({
     { icon: <Volume2 className="w-5 h-5" />, label: 'Voice Narration', desc: 'AI-powered TTS' },
   ]
 
+  // Build marquee portrait paths — pick a curated cross-section of gods, heroes, monsters
+  const marqueePortraits = useMemo(() => {
+    const picks = [
+      // Greater gods
+      'greater-gods/zeus', 'greater-gods/odin', 'greater-gods/thor', 'greater-gods/athena',
+      'greater-gods/loki', 'greater-gods/ra', 'greater-gods/set', 'greater-gods/poseidon',
+      'greater-gods/ares', 'greater-gods/hermes', 'greater-gods/aphrodite', 'greater-gods/hades',
+      'greater-gods/freya', 'greater-gods/anubis', 'greater-gods/osiris', 'greater-gods/isis',
+      'greater-gods/cthulhu', 'greater-gods/paladine', 'greater-gods/takhisis',
+      'greater-gods/shiva', 'greater-gods/amaterasu', 'greater-gods/quetzalcoatl',
+      // Heroes
+      'heroes/arthur', 'heroes/galahad', 'heroes/lancelot', 'heroes/merlin',
+      'heroes/heracles_hero', 'heroes/cuchulainn', 'heroes/perseus', 'heroes/odysseus',
+      'heroes/elric', 'heroes/fafhrd', 'heroes/gray_mouser', 'heroes/raistlin_majere_hero',
+      'heroes/sturm_brightblade', 'heroes/tanist_half_elven', 'heroes/goldmoon',
+      'heroes/tasslehoff_burrfoot', 'heroes/kitiara_uth_matar', 'heroes/caramon_majere',
+      // Monsters
+      'monsters/fenris', 'monsters/cerberus', 'monsters/apep', 'monsters/shoggoth',
+      'monsters/mi_go', 'monsters/jormungandr', 'monsters/byakhee', 'monsters/deep_ones',
+      'monsters/thunder_bird', 'monsters/blodug_hofi', 'monsters/draconians',
+      'monsters/spawn_cthulhu', 'monsters/primordial_one', 'monsters/nightgaunt',
+    ]
+    // Shuffle using a seeded approach (stable per session)
+    const shuffled = [...picks]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = (i * 7 + 13) % (i + 1) // deterministic "random" shuffle
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled.map(p => `/portraits/${p}.png`)
+  }, [])
+
   return (
     <div className="min-h-screen bg-[#060403] flex flex-col items-center justify-center p-4 overflow-hidden relative">
       <style>{`
@@ -190,13 +221,64 @@ export function IntroScreen({
             linear-gradient(to bottom, rgba(6,4,3,0.5) 0%, rgba(6,4,3,0.3) 40%, rgba(6,4,3,0.6) 100%);
         }
 
+        /* ── Portrait Marquee ── */
+        @keyframes marquee-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+
+        .intro-marquee {
+          position: fixed;
+          left: 0;
+          right: 0;
+          z-index: 2;
+          height: 72px;
+          display: flex;
+          align-items: center;
+          overflow: hidden;
+          pointer-events: none;
+        }
+
+        .intro-marquee--top {
+          top: 0;
+          background: linear-gradient(to bottom, rgba(6,4,3,0.85) 0%, rgba(6,4,3,0.4) 70%, transparent 100%);
+        }
+
+        .intro-marquee--bottom {
+          bottom: 0;
+          background: linear-gradient(to top, rgba(6,4,3,0.85) 0%, rgba(6,4,3,0.4) 70%, transparent 100%);
+        }
+
+        .intro-marquee--bottom .intro-marquee__track {
+          animation-direction: reverse;
+        }
+
+        .intro-marquee__track {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          animation: marquee-scroll 60s linear infinite;
+          width: max-content;
+        }
+
+        .intro-marquee__item {
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 1px solid rgba(212,175,55,0.25);
+          opacity: 0.6;
+          flex-shrink: 0;
+        }
+
         /* ── Reduced Motion ── */
         @media (prefers-reduced-motion: reduce) {
           .intro-ember,
           .parallax-layer-fog,
           .parallax-layer-runes,
           .btn-begin-legend,
-          .intro-bg-slide {
+          .intro-bg-slide,
+          .intro-marquee__track {
             animation: none !important;
           }
           .intro-ember { display: none; }
@@ -224,6 +306,37 @@ export function IntroScreen({
       />
       {/* Dark vignette overlay for text readability */}
       <div className="intro-bg-overlay" />
+
+      {/* ═══ PORTRAIT MARQUEE — TOP (scrolls left) ═══ */}
+      <div className="intro-marquee intro-marquee--top" aria-hidden="true">
+        <div className="intro-marquee__track">
+          {/* Duplicate the list for seamless loop */}
+          {[...marqueePortraits, ...marqueePortraits].map((src, i) => (
+            <img
+              key={`top-${i}`}
+              src={src}
+              alt=""
+              className="intro-marquee__item"
+              loading="eager"
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ═══ PORTRAIT MARQUEE — BOTTOM (scrolls right) ═══ */}
+      <div className="intro-marquee intro-marquee--bottom" aria-hidden="true">
+        <div className="intro-marquee__track">
+          {[...marqueePortraits, ...marqueePortraits].map((src, i) => (
+            <img
+              key={`bot-${i}`}
+              src={src}
+              alt=""
+              className="intro-marquee__item"
+              loading="eager"
+            />
+          ))}
+        </div>
+      </div>
 
       {/* ═══ PARALLAX BACKGROUND LAYERS ═══ */}
       <div className="parallax-layer-deep" />
