@@ -150,10 +150,17 @@ export function useGameEngine() {
   const narrRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
+  const safeLocalStorageGetItem = (key: string): string | null => {
+    try { return localStorage.getItem(key) } catch { return null }
+  }
+  const deepClone = <T>(obj: T): T => {
+    try { return structuredClone(obj) } catch { return JSON.parse(JSON.stringify(obj)) }
+  }
+
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
-    const savedGemini = localStorage.getItem('mythworld_gemini') || ''
-    const savedGroq = localStorage.getItem('mythworld_groq') || ''
+    const savedGemini = safeLocalStorageGetItem('mythworld_gemini') || ''
+    const savedGroq = safeLocalStorageGetItem('mythworld_groq') || ''
     setGeminiKey(savedGemini)
     setGroqKey(savedGroq)
     loadSaveSlots()
@@ -179,7 +186,7 @@ export function useGameEngine() {
   const loadSaveSlots = () => {
     const slots: SaveSlot[] = []
     for (let i = 0; i < 5; i++) {
-      const data = localStorage.getItem(`mythworld_save_${i}`)
+      const data = safeLocalStorageGetItem(`mythworld_save_${i}`)
       if (data) {
         try {
           const parsed = JSON.parse(data)
@@ -199,12 +206,19 @@ export function useGameEngine() {
     setSaveSlots(slots)
   }
 
+  const trimGameStateForSave = (gs: GameState): GameState => {
+    const clone = JSON.parse(JSON.stringify(gs))
+    if (Array.isArray(clone.log) && clone.log.length > 120) clone.log = clone.log.slice(-120)
+    if (Array.isArray(clone.turnHistory) && clone.turnHistory.length > 50) clone.turnHistory = clone.turnHistory.slice(-50)
+    return clone
+  }
+
   const saveGame = (slotId: string, name: string) => {
     const slotNum = parseInt(slotId.split('_')[1] || '0')
     const saveData = {
       name,
       timestamp: Date.now(),
-      gameState,
+      gameState: trimGameStateForSave(gameState),
       conversationHistory: conversationHistory.slice(-20),
       ttsSettings: { enabled: ttsEnabled, voice: ttsVoice, speed: ttsSpeed },
       achievementTracker: serializeTracker(achievementTrackerRef.current),
@@ -217,7 +231,7 @@ export function useGameEngine() {
 
   const loadGame = (slotId: string) => {
     const slotNum = parseInt(slotId.split('_')[1] || '0')
-    const data = localStorage.getItem(`mythworld_save_${slotNum}`)
+    const data = safeLocalStorageGetItem(`mythworld_save_${slotNum}`)
     if (data) {
       try {
         const parsed = JSON.parse(data)
@@ -865,7 +879,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           console.warn('⚠️ Gemini quota exceeded (429)')
           if (attempt === MAX_RETRIES - 1) {
             console.warn('📝 Using template fallback')
-            return getTemplateFallback(gs, 'quota_exceeded')
+            return getNarrationPreservationFallback(gs, 'quota_exceeded')
           }
           continue
         }
@@ -901,11 +915,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         if (attempt < MAX_RETRIES - 1 && String(e).includes('fetch')) continue
         if (attempt === MAX_RETRIES - 1) {
           console.warn('📝 Using template fallback due to error')
-          return getTemplateFallback(gs, String(e))
+          return getNarrationPreservationFallback(gs, String(e))
         }
       }
     }
-    return getTemplateFallback(gs, 'unrecoverable_failure')
+    return getNarrationPreservationFallback(gs, 'unrecoverable_failure')
   }
 
   const parseDMResponse = (raw: string, gs: GameState): DMResponse => {
@@ -931,7 +945,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
     if (!jsonStr) {
       console.warn('⚠️ No JSON in Gemini response, using template fallback')
-      return getTemplateFallback(gs, 'JSON payload missing')
+      return getNarrationPreservationFallback(gs, 'JSON payload missing')
     }
 
     // Repair JSON
@@ -941,7 +955,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       // Validate parsed result is a non-null object with dm_narration
       if (!parsed || typeof parsed !== 'object' || !parsed.dm_narration) {
         console.warn('⚠️ Parsed JSON missing dm_narration, using template fallback')
-        return getTemplateFallback(gs, 'Missing dm_narration field')
+        return getNarrationPreservationFallback(gs, 'Missing dm_narration field')
       }
       return parsed
     } catch { }
@@ -956,7 +970,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     }
 
     console.warn('⚠️ JSON parse failed, using template fallback')
-    return getTemplateFallback(gs, 'Payload structure unrecoverable')
+    return getNarrationPreservationFallback(gs, 'Payload structure unrecoverable')
   }
 
   const generateSmartFallback = (reason: string, gs: GameState): DMResponse => {
@@ -1006,7 +1020,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   // ═══════════════════════════════════════════════════════════════════════════
   // TEMPLATE FALLBACKS - High-quality pre-written narratives (SAVES 100% API CALLS)
   // ═══════════════════════════════════════════════════════════════════════════
-  const getTemplateFallback = (gs: GameState, reason: string): DMResponse => {
+  const getNarrationPreservationFallback = (gs: GameState, reason: string): DMResponse => {
     const pc = gs.pcs.find(p => !p.dead)
     const ant = getAntagonist(gs.antagonistId)
     const shard = gs.shardEntry
@@ -1890,9 +1904,9 @@ Each option needs: num, action, ability, align_note, source ("pc" or "companion"
 
   // ── RUN TURN ───────────────────────────────────────────────────────────
   const runTurn = async (isFirst: boolean, currentGS: GameState) => {
-    let gs = currentGS
+    let gs = deepClone(currentGS)
     gs.isProcessing = true
-    setGameState({ ...gs })
+    setGameState(deepClone(gs))
 
     const living = gs.pcs.filter(p => !p.dead)
     if (!living.length) {
@@ -2045,15 +2059,15 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         gs.waitingForHuman = true
         gs.pendingHumanChoice = null
 
-        setGameState({ ...gs })
+        setGameState(deepClone(gs))
         setStatusMessage(`YOUR TURN — ${humanPC.name}`)
       } else {
-        setGameState({ ...gs })
+        setGameState(deepClone(gs))
         setStatusMessage(`T${gs.turn} complete — ${living.length} standing`)
       }
     } catch (e) {
       gs.isProcessing = false
-      setGameState({ ...gs })
+      setGameState(deepClone(gs))
       appendNarrative(`<div class="error-box" style="color:#cc3030;padding:1rem;border:1px solid #cc3030;border-radius:4px">DM Engine Halted — ${String(e)}</div>`)
       setStatusMessage('Error — refresh recommended')
     }
@@ -2722,7 +2736,7 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
       }
     } catch (e) {
       gs.isProcessing = false
-      setGameState({ ...gs })
+      setGameState(deepClone(gs))
       appendNarrative(`<div class="error-box" style="color:#cc3030;padding:1rem;border:1px solid #cc3030;border-radius:4px">Resolution Engine Halted — ${String(e)}</div>`)
       setStatusMessage('Error — refresh recommended')
     }
@@ -3085,7 +3099,7 @@ ${isRivalSummon ? `3. ⚡ ARCHRIVAL SUMMON EVENT: ${gs.antagonistRival?.name}, $
     callGeminiDM,
     parseDMResponse,
     generateSmartFallback,
-    getTemplateFallback,
+    getNarrationPreservationFallback,
     callGroqForOptions,
     buildDefaultOptions,
     applyMechanics,

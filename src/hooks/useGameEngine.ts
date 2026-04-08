@@ -87,6 +87,14 @@ export function useGameEngine() {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   // Browser voice ref for cancel support
   const browserUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  const safeLocalStorageGetItem = (key: string): string | null => {
+    try { return localStorage.getItem(key) } catch { return null }
+  }
+  const deepClone = <T>(obj: T): T => {
+    try { return structuredClone(obj) } catch { return JSON.parse(JSON.stringify(obj)) }
+  }
 
   // ── BROWSER VOICE DETECTION ──────────────────────────────────────────
   useEffect(() => {
@@ -112,9 +120,9 @@ export function useGameEngine() {
     }
     loadVoices()
     window.speechSynthesis.addEventListener('voiceschanged', loadVoices)
-    const saved = localStorage.getItem('ddg_browser_voice')
+    const saved = safeLocalStorageGetItem('ddg_browser_voice')
     if (saved) setBrowserVoiceName(saved)
-    const savedEngine = localStorage.getItem('ddg_tts_engine') as 'browser' | 'neural' | null
+    const savedEngine = safeLocalStorageGetItem('ddg_tts_engine') as 'browser' | 'neural' | null
     if (savedEngine) setTtsEngine(savedEngine)
     return () => { window.speechSynthesis.removeEventListener('voiceschanged', loadVoices) }
   }, [])
@@ -182,7 +190,7 @@ export function useGameEngine() {
 
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
-    const savedGemini = localStorage.getItem('mythworld_gemini') || ''
+    const savedGemini = safeLocalStorageGetItem('mythworld_gemini') || ''
     setGeminiKey(savedGemini)
     loadSaveSlots()
   }, [])
@@ -220,7 +228,7 @@ export function useGameEngine() {
   const loadSaveSlots = () => {
     const slots: SaveSlot[] = []
     for (let i = 0; i < 5; i++) {
-      const data = localStorage.getItem(`mythworld_save_${i}`)
+      const data = safeLocalStorageGetItem(`mythworld_save_${i}`)
       if (data) {
         try {
           const parsed = JSON.parse(data)
@@ -240,12 +248,19 @@ export function useGameEngine() {
     setSaveSlots(slots)
   }
 
+  const trimGameStateForSave = (gs: GameState): GameState => {
+    const clone = JSON.parse(JSON.stringify(gs))
+    if (Array.isArray(clone.log) && clone.log.length > 120) clone.log = clone.log.slice(-120)
+    if (Array.isArray(clone.turnHistory) && clone.turnHistory.length > 50) clone.turnHistory = clone.turnHistory.slice(-50)
+    return clone
+  }
+
   const saveGame = (slotId: string, name: string) => {
     const slotNum = parseInt(slotId.split('_')[1] || '0')
     const saveData = {
       name,
       timestamp: Date.now(),
-      gameState,
+      gameState: trimGameStateForSave(gameState),
       conversationHistory: conversationHistory.slice(-20),
       ttsSettings: { enabled: ttsEnabled, voice: ttsVoice, speed: ttsSpeed, engine: ttsEngine, browserVoice: browserVoiceName },
       achievementTracker: serializeTracker(achievementTrackerRef.current),
@@ -262,7 +277,7 @@ export function useGameEngine() {
 
   const loadGame = (slotId: string) => {
     const slotNum = parseInt(slotId.split('_')[1] || '0')
-    const data = localStorage.getItem(`mythworld_save_${slotNum}`)
+    const data = safeLocalStorageGetItem(`mythworld_save_${slotNum}`)
     if (data) {
       try {
         const parsed = JSON.parse(data)
@@ -484,18 +499,21 @@ export function useGameEngine() {
     if (audioRef.current) {
       // Smart fade over 300ms
       try {
+        if (fadeIntervalRef.current) { clearInterval(fadeIntervalRef.current); fadeIntervalRef.current = null }
         audioRef.current.volume = 0.6
-        const fadeInterval = setInterval(() => {
+        fadeIntervalRef.current = setInterval(() => {
           if (audioRef.current) {
             const newVol = Math.max(0, (audioRef.current.volume || 0) - 0.15)
             audioRef.current.volume = newVol
             if (newVol <= 0) {
-              clearInterval(fadeInterval)
+              clearInterval(fadeIntervalRef.current!)
+              fadeIntervalRef.current = null
               audioRef.current.pause()
               audioRef.current = null
             }
           } else {
-            clearInterval(fadeInterval)
+            clearInterval(fadeIntervalRef.current!)
+            fadeIntervalRef.current = null
           }
         }, 50)
       } catch {
@@ -1113,7 +1131,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           console.warn('⚠️ Gemini quota exceeded (429)')
           if (attempt === MAX_RETRIES - 1) {
             console.warn('📝 Using template fallback')
-            return getTemplateFallback(gs, 'quota_exceeded')
+            return getNarrationPreservationFallback(gs, 'quota_exceeded')
           }
           // 429 needs longer wait — Gemini rate limits reset in ~60s per-minute window
           const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000) // 60s, 75s, 90s, 105s, 120s
@@ -1129,7 +1147,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           console.warn('⚠️ Gemini service unavailable (503)')
           if (attempt === MAX_RETRIES - 1) {
             console.warn('📝 Using template fallback')
-            return getTemplateFallback(gs, 'service_unavailable')
+            return getNarrationPreservationFallback(gs, 'service_unavailable')
           }
           const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000)
           const waitSec = Math.round(rateLimitWait / 1000)
@@ -1177,11 +1195,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         if (attempt < MAX_RETRIES - 1 && String(e).includes('fetch')) continue
         if (attempt === MAX_RETRIES - 1) {
           console.warn('📝 Using template fallback due to error')
-          return getTemplateFallback(gs, String(e))
+          return getNarrationPreservationFallback(gs, String(e))
         }
       }
     }
-    return getTemplateFallback(gs, 'unrecoverable_failure')
+    return getNarrationPreservationFallback(gs, 'unrecoverable_failure')
   }
 
   const parseDMResponse = (raw: string, gs: GameState): DMResponse => {
@@ -1225,7 +1243,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           quest_updates: [],
         }
       }
-      return getTemplateFallback(gs, 'JSON payload missing')
+      return getNarrationPreservationFallback(gs, 'JSON payload missing')
     }
 
     // Repair JSON
@@ -1235,7 +1253,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       // Validate parsed result is a non-null object with dm_narration
       if (!parsed || typeof parsed !== 'object' || !parsed.dm_narration) {
         console.warn('⚠️ Parsed JSON missing dm_narration, using template fallback')
-        return getTemplateFallback(gs, 'Missing dm_narration field')
+        return getNarrationPreservationFallback(gs, 'Missing dm_narration field')
       }
       return parsed
     } catch {
@@ -1244,7 +1262,17 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       // Strategy: trim to last complete value, then close unclosed structures.
       let repaired = s
       // Step 1: If we're mid-string (odd number of unescaped quotes), truncate to last complete string
-      const quoteCount = (repaired.match(/"/g) || []).length
+      const countUnescapedQuotes = (s: string): number => {
+        let count = 0
+        let i = 0
+        while (i < s.length) {
+          if (s[i] === '\\' && i + 1 < s.length) { i += 2; continue } // skip escaped chars
+          if (s[i] === '"') count++
+          i++
+        }
+        return count
+      }
+      const quoteCount = countUnescapedQuotes(repaired)
       if (quoteCount % 2 !== 0) {
         // Odd quotes = we're inside a string. Find the last opening quote and cut there.
         const lastQuote = repaired.lastIndexOf('"')
@@ -1325,7 +1353,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         quest_updates: [],
       }
     }
-    return getTemplateFallback(gs, 'Payload structure unrecoverable')
+    return getNarrationPreservationFallback(gs, 'Payload structure unrecoverable')
   }
 
   // ── TEMPLATE FALLBACK ──────────────────────────────────────────────────
@@ -1333,7 +1361,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   // ═══════════════════════════════════════════════════════════════════════════
   // TEMPLATE FALLBACKS - High-quality pre-written narratives (SAVES 100% API CALLS)
   // ═══════════════════════════════════════════════════════════════════════════
-  const getTemplateFallback = (gs: GameState, reason: string): DMResponse => {
+  const getNarrationPreservationFallback = (gs: GameState, reason: string): DMResponse => {
     const pc = gs.pcs.find(p => !p.dead)
     const ant = getAntagonist(gs.antagonistId)
     const shard = gs.shardEntry
@@ -2436,9 +2464,9 @@ ${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited 
 
   // ── RUN TURN ───────────────────────────────────────────────────────────
   const runTurn = async (isFirst: boolean, currentGS: GameState) => {
-    let gs = currentGS
+    let gs = deepClone(currentGS)
     gs.isProcessing = true
-    setGameState({ ...gs })
+    setGameState(deepClone(gs))
 
     const living = gs.pcs.filter(p => !p.dead)
     if (!living.length) {
@@ -2615,16 +2643,16 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         gs.pendingHumanChoice = null
         gs.pendingCompanionChoice = null
 
-        setGameState({ ...gs })
+        setGameState(deepClone(gs))
         setStatusMessage(`YOUR TURN — ${humanPC.name}${compOptions.length > 0 ? ` + ${gs.companionId ? gs.pcs.find(p => p.id === gs.companionId)?.name?.split(' ')[0] : 'Companion'}` : ''}`)
       setLastTurnReadyTime(Date.now())
       } else {
-        setGameState({ ...gs })
+        setGameState(deepClone(gs))
         setStatusMessage(`T${gs.turn} complete — ${living.length} standing`)
       }
     } catch (e) {
       gs.isProcessing = false
-      setGameState({ ...gs })
+      setGameState(deepClone(gs))
       appendNarrative(`<div class="error-box" style="color:#cc3030;padding:1rem;border:1px solid #cc3030;border-radius:4px">DM Engine Halted — ${String(e)}</div>`)
       setStatusMessage('Error — refresh recommended')
     }
@@ -3697,7 +3725,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       }
     } catch (e) {
       gs.isProcessing = false
-      setGameState({ ...gs })
+      setGameState(deepClone(gs))
       appendNarrative(`<div class="error-box" style="color:#cc3030;padding:1rem;border:1px solid #cc3030;border-radius:4px">Resolution Engine Halted — ${String(e)}</div>`)
       setStatusMessage('Error — refresh recommended')
     }
@@ -4064,7 +4092,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     buildDMSystem,
     callGeminiDM,
     parseDMResponse,
-    getTemplateFallback,
+    getNarrationPreservationFallback,
     buildDefaultOptions,
     applyMechanics,
     runTurn,
