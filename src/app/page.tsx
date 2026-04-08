@@ -530,9 +530,9 @@ export default function MythworldEngine() {
 
           <span className="flex-1 text-xs text-[#5a4d30] italic truncate min-w-0">{statusMessage}</span>
 
-          {/* Key Status */}
+          {/* API Status — key is now server-side, always available */}
           <div className="flex items-center gap-1">
-            <div className={`w-2 h-2 rounded-full ${geminiKey ? 'bg-[#40c080]' : 'bg-[#804040]'}`} />
+            <div className="w-2 h-2 rounded-full bg-[#40c080]" />
             <span className="text-[10px] text-[#5a4d30]">Gem2.5</span>
           </div>
           <span className="text-[8px] text-[#3a3020] hidden md:inline">v{version}</span>
@@ -578,16 +578,7 @@ export default function MythworldEngine() {
             <Download className="w-4 h-4 mr-1" /> Export
           </Button>
 
-          {/* API Key Input - hidden on mobile */}
-          <div className="hidden md:flex">
-            <Input
-              type="password"
-              placeholder="Gemini key..."
-              value={geminiKey}
-              onChange={e => setGeminiKey(e.target.value)}
-              className="w-40 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] text-xs"
-            />
-          </div>
+          {/* API key is now server-side — no client input needed */}
         </div>
 
         {/* Achievement Toast Notifications */}

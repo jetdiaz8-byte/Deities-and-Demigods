@@ -667,10 +667,7 @@ export function useGameEngine() {
 
   // ── START NEW CAMPAIGN ─────────────────────────────────────────────────
   const startNewCampaign = async () => {
-    if (!geminiKey) {
-      toast({ title: 'API Key Required', description: 'Enter your Gemini API key to begin', variant: 'destructive' })
-      return
-    }
+    // API key is now server-side — no client check needed
     clearEntityCache()
     await fetchAvailableHeroes()
     setGamePhase('party_select')
@@ -1092,8 +1089,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
+  // Server-side Gemini proxy — API key is hidden on the server, not in the client bundle
   const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`
+    const endpoint = '/api/gemini'
     const MAX_RETRIES = 6
     const BASE_DELAY = 6000
     // Gemini 429 rate limits need 60s+ to reset per-minute window
@@ -1121,52 +1119,58 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            system_instruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ role: 'user', parts: [{ text: toAscii(userMsg) }] }],
-            generationConfig: { temperature: 0.9, maxOutputTokens: maxTokens }
+            model: GEMINI_MODEL,
+            systemPrompt,
+            userMessage: toAscii(userMsg),
+            temperature: 0.9,
+            maxOutputTokens: maxTokens,
           })
         })
 
-        if (r.status === 429) {
-          console.warn('⚠️ Gemini quota exceeded (429)')
-          if (attempt === MAX_RETRIES - 1) {
-            console.warn('📝 Using template fallback')
-            return getNarrationPreservationFallback(gs, 'quota_exceeded')
-          }
-          // 429 needs longer wait — Gemini rate limits reset in ~60s per-minute window
-          const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000) // 60s, 75s, 90s, 105s, 120s
-          const waitSec = Math.round(rateLimitWait / 1000)
-          setStatusMessage(`⏳ Rate limited — waiting ${waitSec}s for API cooldown (attempt ${attempt + 2}/${MAX_RETRIES})...`)
-          console.warn(`⏳ Rate limited, waiting ${waitSec}s before retry...`)
-          await sleep(rateLimitWait)
-          continue
-        }
-
-        // 503 = service overloaded — use same long backoff as 429
-        if (r.status === 503) {
-          console.warn('⚠️ Gemini service unavailable (503)')
-          if (attempt === MAX_RETRIES - 1) {
-            console.warn('📝 Using template fallback')
-            return getNarrationPreservationFallback(gs, 'service_unavailable')
-          }
-          const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000)
-          const waitSec = Math.round(rateLimitWait / 1000)
-          setStatusMessage(`⏳ Gemini overloaded — waiting ${waitSec}s (attempt ${attempt + 2}/${MAX_RETRIES})...`)
-          console.warn(`⏳ 503 service unavailable, waiting ${waitSec}s before retry...`)
-          await sleep(rateLimitWait)
-          continue
-        }
-
+        // Server proxy forwards Gemini HTTP status codes (429, 503, etc.)
         if (!r.ok) {
-          const e = await r.text()
-          console.error(`❌ Gemini error ${r.status}:`, e.slice(0, 200))
-          throw new Error(`Gemini ${r.status}: ${e.slice(0, 150)}`)
+          const responseJson = await r.json().catch(() => ({}))
+          // 429 = rate limited — use long backoff
+          if (r.status === 429) {
+            console.warn('⚠️ Gemini quota exceeded (429)')
+            if (attempt === MAX_RETRIES - 1) {
+              return getNarrationPreservationFallback(gs, 'quota_exceeded')
+            }
+            const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000)
+            const waitSec = Math.round(rateLimitWait / 1000)
+            setStatusMessage(`⏳ Rate limited — waiting ${waitSec}s for API cooldown (attempt ${attempt + 2}/${MAX_RETRIES})...`)
+            console.warn(`⏳ Rate limited, waiting ${waitSec}s before retry...`)
+            await sleep(rateLimitWait)
+            continue
+          }
+          // 503 = service overloaded — use same long backoff as 429
+          if (r.status === 503) {
+            console.warn('⚠️ Gemini service unavailable (503)')
+            if (attempt === MAX_RETRIES - 1) {
+              return getNarrationPreservationFallback(gs, 'service_unavailable')
+            }
+            const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000)
+            const waitSec = Math.round(rateLimitWait / 1000)
+            setStatusMessage(`⏳ Gemini overloaded — waiting ${waitSec}s (attempt ${attempt + 2}/${MAX_RETRIES})...`)
+            console.warn(`⏳ 503 service unavailable, waiting ${waitSec}s before retry...`)
+            await sleep(rateLimitWait)
+            continue
+          }
+          // Other HTTP errors
+          const errMsg = responseJson.error || `Server error ${r.status}`
+          console.error(`❌ Gemini proxy error ${r.status}:`, errMsg)
+          throw new Error(errMsg)
         }
 
-        const data = await r.json()
-        if (data.error) {
-          console.error('❌ Gemini API error:', data.error)
-          throw new Error(data.error.message)
+        const responseJson = await r.json()
+        if (responseJson.error) {
+          console.error('❌ Gemini API error:', responseJson.error)
+          throw new Error(typeof responseJson.error === 'string' ? responseJson.error : JSON.stringify(responseJson.error))
+        }
+
+        const data = responseJson.data
+        if (!data) {
+          throw new Error('No data in Gemini proxy response')
         }
 
         // Detect truncation — if Gemini hit MAX_TOKENS, the narration is incomplete
