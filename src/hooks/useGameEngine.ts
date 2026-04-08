@@ -45,6 +45,17 @@ export function useGameEngine() {
 
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
+  // ── AI PROVIDER STATE ─────────────────────────────────────────────────
+  // 'gemini' = Google Gemini (cloud), 'lmstudio' = LM Studio (local)
+  const [aiProvider, setAiProvider] = useState<'gemini' | 'lmstudio'>(() => {
+    return (safeLocalStorageGetItem('mythworld_provider') as 'gemini' | 'lmstudio') || 'gemini'
+  })
+  const [lmStudioUrl, setLmStudioUrl] = useState(() => {
+    return safeLocalStorageGetItem('mythworld_lmstudio_url') || 'http://localhost:1234'
+  })
+  const [lmStudioModel, setLmStudioModel] = useState(() => {
+    return safeLocalStorageGetItem('mythworld_lmstudio_model') || 'default'
+  })
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
@@ -194,6 +205,17 @@ export function useGameEngine() {
     setGeminiKey(savedGemini)
     loadSaveSlots()
   }, [])
+
+  // ── SAVE PROVIDER SETTINGS TO STORAGE ──────────────────────────────────
+  useEffect(() => {
+    try { localStorage.setItem('mythworld_provider', aiProvider) } catch {}
+  }, [aiProvider])
+  useEffect(() => {
+    try { localStorage.setItem('mythworld_lmstudio_url', lmStudioUrl) } catch {}
+  }, [lmStudioUrl])
+  useEffect(() => {
+    try { localStorage.setItem('mythworld_lmstudio_model', lmStudioModel) } catch {}
+  }, [lmStudioModel])
 
   // ── SAVE KEYS TO STORAGE ───────────────────────────────────────────────
   useEffect(() => {
@@ -1089,19 +1111,20 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
-  // Server-side Gemini proxy — API key is hidden on the server, not in the client bundle
+  // Routes to Gemini (cloud) or LM Studio (local) based on aiProvider
   const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    const endpoint = '/api/gemini'
-    const MAX_RETRIES = 6
+    const isLocal = aiProvider === 'lmstudio'
+    const endpoint = isLocal ? '/api/lmstudio' : '/api/gemini'
+    const MAX_RETRIES = isLocal ? 3 : 6  // Local models don't need as many retries
     const BASE_DELAY = 6000
     // Gemini 429 rate limits need 60s+ to reset per-minute window
     const RATE_LIMIT_DELAY = 60000
     
     // maxOutputTokens — opening needs more for rich prose; regular turns need less
-    // Gemini 2.5 Flash supports up to 65536 output tokens
-    // Regular turns: 1 paragraph (~100 words = ~150 tokens) + JSON (~1200 tokens) = ~1500 needed
-    // Use 6144 for regular turns to avoid truncation when Gemini gets verbose
-    const maxTokens = isFirstTurn ? 20000 : 6144
+    // LM Studio / local models may have lower context limits
+    const maxTokens = isLocal
+      ? (isFirstTurn ? 8192 : 4096)  // Conservative for local 4B model
+      : (isFirstTurn ? 20000 : 6144) // Full for Gemini
     
     // Track input tokens
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
@@ -1115,23 +1138,38 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       }
 
       try {
+        const requestBody: Record<string, unknown> = {
+          systemPrompt,
+          userMessage: toAscii(userMsg),
+          temperature: 0.9,
+          maxOutputTokens: maxTokens,
+        }
+
+        // Add provider-specific fields
+        if (isLocal) {
+          requestBody.lmStudioUrl = lmStudioUrl
+          requestBody.model = lmStudioModel
+        } else {
+          requestBody.model = GEMINI_MODEL
+        }
+
         const r = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: GEMINI_MODEL,
-            systemPrompt,
-            userMessage: toAscii(userMsg),
-            temperature: 0.9,
-            maxOutputTokens: maxTokens,
-          })
+          body: JSON.stringify(requestBody)
         })
 
-        // Server proxy forwards Gemini HTTP status codes (429, 503, etc.)
+        // Server proxy forwards HTTP status codes
         if (!r.ok) {
           const responseJson = await r.json().catch(() => ({}))
-          // 429 = rate limited — use long backoff
-          if (r.status === 429) {
+          // LM Studio: 502 = connection refused (not running), no retries
+          if (isLocal && r.status === 502) {
+            const errMsg = responseJson.error || 'Cannot connect to LM Studio'
+            console.error(`❌ LM Studio connection failed:`, errMsg)
+            throw new Error(errMsg)
+          }
+          // Gemini: 429 = rate limited — use long backoff
+          if (!isLocal && r.status === 429) {
             console.warn('⚠️ Gemini quota exceeded (429)')
             if (attempt === MAX_RETRIES - 1) {
               return getNarrationPreservationFallback(gs, 'quota_exceeded')
@@ -1143,8 +1181,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
             await sleep(rateLimitWait)
             continue
           }
-          // 503 = service overloaded — use same long backoff as 429
-          if (r.status === 503) {
+          // Gemini: 503 = service overloaded
+          if (!isLocal && r.status === 503) {
             const errDetail = typeof responseJson.error === 'string' ? responseJson.error : JSON.stringify(responseJson.error || {})
             console.warn('⚠️ Gemini service unavailable (503) — details:', errDetail)
             if (attempt === MAX_RETRIES - 1) {
@@ -1158,32 +1196,36 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
             continue
           }
           // Other HTTP errors
+          const providerName = isLocal ? 'LM Studio' : 'proxy'
           const errMsg = responseJson.error || `Server error ${r.status}`
-          console.error(`❌ Gemini proxy error ${r.status}:`, errMsg)
+          console.error(`❌ ${providerName} error ${r.status}:`, errMsg)
           throw new Error(errMsg)
         }
 
         const responseJson = await r.json()
         if (responseJson.error) {
-          console.error('❌ Gemini API error:', responseJson.error)
+          console.error(`❌ ${isLocal ? 'LM Studio' : 'Gemini'} API error:`, responseJson.error)
           throw new Error(typeof responseJson.error === 'string' ? responseJson.error : JSON.stringify(responseJson.error))
         }
 
-        // Log which model actually responded (proxy auto-fallbacks server-side)
+        // Log which model actually responded
         if (responseJson.fallbackUsed) {
           console.warn(`🔄 Fallback model used: ${responseJson.modelUsed} (primary ${responseJson.originalModel} was unavailable)`)
+        }
+        if (responseJson.modelUsed) {
+          console.log(`🤖 Model: ${responseJson.modelUsed}`)
         }
 
         const data = responseJson.data
         if (!data) {
-          throw new Error('No data in Gemini proxy response')
+          throw new Error(`No data in ${isLocal ? 'LM Studio' : 'Gemini'} proxy response`)
         }
 
-        // Detect truncation — if Gemini hit MAX_TOKENS, the narration is incomplete
+        // Detect truncation
         const candidate = (data.candidates || [])[0]
         const finishReason = candidate?.finishReason
         if (finishReason === 'MAX_TOKENS') {
-          console.warn(`⚠️ Gemini response TRUNCATED (finishReason: MAX_TOKENS). Narration may be incomplete.`)
+          console.warn(`⚠️ Response TRUNCATED (finishReason: MAX_TOKENS). Narration may be incomplete.`)
         }
 
         const parts = candidate?.content?.parts || []
@@ -1193,7 +1235,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         }
         
         // Log success
-        console.log(`✅ Gemini response: ${raw.length} chars, ${isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn}`)
+        console.log(`✅ ${isLocal ? 'LM Studio' : 'Gemini'} response: ${raw.length} chars, ${isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn}`)
         
         // Track token usage
         updateTokenUsage(totalInput, raw)
@@ -1201,7 +1243,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         return parseDMResponse(raw, gs)
 
       } catch (e) {
-        console.error(`❌ Gemini fetch error (attempt ${attempt + 1}):`, e)
+        console.error(`❌ ${isLocal ? 'LM Studio' : 'Gemini'} fetch error (attempt ${attempt + 1}):`, e)
         if (attempt < MAX_RETRIES - 1 && String(e).includes('fetch')) continue
         if (attempt === MAX_RETRIES - 1) {
           console.warn('📝 Using template fallback due to error')
@@ -4051,6 +4093,9 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     // ── STATE ──────────────────────────────────────────────────────────────
     gameState, setGameState,
     geminiKey, setGeminiKey,
+    aiProvider, setAiProvider,
+    lmStudioUrl, setLmStudioUrl,
+    lmStudioModel, setLmStudioModel,
     gamePhase, setGamePhase,
     availableHeroes, setAvailableHeroes,
     selectedParty, setSelectedParty,

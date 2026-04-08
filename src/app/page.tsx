@@ -34,6 +34,9 @@ export default function MythworldEngine() {
   const {
     gameState, setGameState,
     geminiKey, setGeminiKey,
+    aiProvider, setAiProvider,
+    lmStudioUrl, setLmStudioUrl,
+    lmStudioModel, setLmStudioModel,
     gamePhase, setGamePhase,
     availableHeroes,
     selectedParty, setSelectedParty,
@@ -218,6 +221,12 @@ export default function MythworldEngine() {
       <IntroScreen
         geminiKey={geminiKey}
         setGeminiKey={setGeminiKey}
+        aiProvider={aiProvider}
+        setAiProvider={setAiProvider}
+        lmStudioUrl={lmStudioUrl}
+        setLmStudioUrl={setLmStudioUrl}
+        lmStudioModel={lmStudioModel}
+        setLmStudioModel={setLmStudioModel}
         startNewCampaign={startNewCampaign}
         saveSlots={saveSlots}
         setShowLoadDialog={setShowLoadDialog}
@@ -530,10 +539,10 @@ export default function MythworldEngine() {
 
           <span className="flex-1 text-xs text-[#5a4d30] italic truncate min-w-0">{statusMessage}</span>
 
-          {/* API Status — key is now server-side, always available */}
+          {/* API Status — shows active provider */}
           <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-[#40c080]" />
-            <span className="text-[10px] text-[#5a4d30]">Gem2.5</span>
+            <div className={`w-2 h-2 rounded-full ${aiProvider === 'gemini' ? 'bg-[#40c080]' : 'bg-[#60a0f0]'}`} />
+            <span className="text-[10px] text-[#5a4d30]">{aiProvider === 'gemini' ? 'Gem2.5' : 'LM Studio'}</span>
           </div>
           <span className="text-[8px] text-[#3a3020] hidden md:inline">v{version}</span>
 
