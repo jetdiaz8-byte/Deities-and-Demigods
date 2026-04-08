@@ -76,15 +76,6 @@ export function useGameEngine() {
 
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
-  const [aiProvider, setAiProvider] = useState<'gemini' | 'lmstudio'>('gemini')
-  const [engineMode, setEngineMode] = useState<'gemini' | 'lmstudio' | 'dual'>(() => (safeLocalStorageGetItem('mw_engineMode') as 'gemini' | 'lmstudio' | 'dual') || 'gemini')
-  const [lmStudioUrl, setLmStudioUrl] = useState(() => safeLocalStorageGetItem('mw_lmStudioUrl') || 'http://localhost:1234')
-  const [lmStudioModel, setLmStudioModel] = useState(() => safeLocalStorageGetItem('mw_lmStudioModel') || 'default')
-
-  // Persist dual-engine settings to localStorage
-  useEffect(() => { safeLocalStorageSetItem('mw_engineMode', engineMode) }, [engineMode])
-  useEffect(() => { safeLocalStorageSetItem('mw_lmStudioUrl', lmStudioUrl) }, [lmStudioUrl])
-  useEffect(() => { safeLocalStorageSetItem('mw_lmStudioModel', lmStudioModel) }, [lmStudioModel])
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
@@ -2438,123 +2429,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   }
 
   // ── RUN TURN ───────────────────────────────────────────────────────────
-  // ═══════════════════════════════════════════════════════════════════
-  // DUAL-ENGINE DM SYSTEM v2.11.0
-  //   LM Studio  → mechanics (dice, rules, state changes)
-  //   Gemini     → creative narration (prose, dialogue, atmosphere)
-  //   Dual mode  → both in parallel, merge best of each
-  // ═══════════════════════════════════════════════════════════════════
-
-  const callLMStudioDM = async (
-    userMsg: string, gs: GameState, isFirst: boolean = false,
-    opts?: { noGeminiFallback?: boolean }
-  ): Promise<DMResponse> => {
-    const systemPrompt = buildDMSystem(gs, true, isFirst)
-    setStatusMessage('LM Studio processing...')
-    try {
-      const r = await fetch('/api/lmstudio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemPrompt, userMessage: toAscii(userMsg),
-          temperature: 0.7, maxOutputTokens: isFirst ? 16000 : 6144,
-          lmStudioUrl, model: lmStudioModel,
-        }),
-      })
-      if (!r.ok) {
-        const errText = await r.text().catch(() => 'Unknown')
-        if (r.status === 502 && !opts?.noGeminiFallback && geminiKey) {
-          setStatusMessage('LM Studio unavailable - Gemini fallback...')
-          return callGeminiDM(userMsg, gs, isFirst)
-        }
-        throw new Error('LM Studio ' + r.status + ': ' + errText.slice(0, 200))
-      }
-      const { data, modelUsed } = await r.json()
-      const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
-      if (!text) throw new Error('LM Studio returned empty response')
-      console.log('[LM Studio] OK ' + (modelUsed || 'local') + ' - ' + text.length + ' chars')
-      const jsonMatch = text.match(/\{[\s\S]*?\"dm_narration\"[\s\S]*\}/)
-      if (jsonMatch) {
-        try {
-          const cleaned = jsonMatch[0].replace(/\\\json\s*/ig, '').replace(/\\\\s*/g, '').trim()
-          const parsed = JSON.parse(cleaned)
-          if (parsed && typeof parsed === 'object' && parsed.dm_narration) {
-            if (parsed.dm_narration.length > 30) setLastDMNarrative(parsed.dm_narration)
-            return parsed as DMResponse
-          }
-        } catch (pe) { console.warn('[LM Studio] JSON parse failed:', pe) }
-      }
-      const narrative = text.split(/\n*\{/)[0].trim()
-      if (narrative.length > 30) {
-        return {
-          dm_narration: narrative.slice(0, 2000),
-          story_summary: gs.storySummary || 'The adventure continues...',
-          journey_so_far: gs.journeySoFar || '',
-          npc_encounters: [], dice_rolls: [], damage_dealt: [],
-          injury_events: [], state_updates: [], item_drops: [], quest_updates: [],
-        }
-      }
-      throw new Error('LM Studio: Could not parse response into game data')
-    } catch (e) {
-      console.error('[LM Studio] Error:', e)
-      if (!opts?.noGeminiFallback && geminiKey) {
-        setStatusMessage('LM Studio error - Gemini fallback...')
-        return callGeminiDM(userMsg, gs, isFirst)
-      }
-      return getNarrationPreservationFallback(gs, 'LM Studio: ' + String(e).slice(0, 100))
-    }
-  }
-
-  // ─── DUAL MODE: both engines in parallel, merge results ───
-  const callDualEngineDM = async (userMsg: string, gs: GameState, isFirst: boolean = false): Promise<DMResponse> => {
-    setStatusMessage('Dual Engine: LM Studio + Gemini...')
-    const [lmResult, geminiResult] = await Promise.allSettled([
-      callLMStudioDM(userMsg, gs, isFirst, { noGeminiFallback: true }),
-      callGeminiDM(userMsg, gs, isFirst),
-    ])
-    const lmOk = lmResult.status === 'fulfilled'
-    const geminiOk = geminiResult.status === 'fulfilled'
-    if (lmOk && geminiOk) {
-      const lm = lmResult.value as DMResponse
-      const g = geminiResult.value as DMResponse
-      const merged: DMResponse = {
-        ...g,
-        dice_rolls: lm.dice_rolls?.length ? lm.dice_rolls : g.dice_rolls,
-        damage_dealt: lm.damage_dealt?.length ? lm.damage_dealt : g.damage_dealt,
-        state_updates: lm.state_updates?.length ? lm.state_updates : g.state_updates,
-        injury_events: lm.injury_events?.length ? lm.injury_events : g.injury_events,
-        item_drops: lm.item_drops?.length ? lm.item_drops : g.item_drops,
-        quest_updates: lm.quest_updates?.length ? lm.quest_updates : g.quest_updates,
-        story_summary: g.story_summary || lm.story_summary,
-        journey_so_far: g.journey_so_far || lm.journey_so_far,
-        dm_narration: g.dm_narration,
-      }
-      console.log('[Dual Engine] Merged:', { lm: (lm.dice_rolls?.length || 0) + 'd/' + (lm.state_updates?.length || 0) + 's', g: (g.dm_narration?.length || 0) + ' chars' })
-      return merged
-    }
-    if (geminiOk) {
-      console.warn('[Dual Engine] LM Studio failed, Gemini-only')
-      setStatusMessage('LM Studio unavailable - Gemini handling everything')
-      return geminiResult.value as DMResponse
-    }
-    if (lmOk) {
-      console.warn('[Dual Engine] Gemini failed, LM Studio-only')
-      setStatusMessage('Gemini unavailable - LM Studio handling everything')
-      return lmResult.value as DMResponse
-    }
-    const err = geminiResult.reason instanceof Error ? geminiResult.reason.message : String(geminiResult.reason)
-    return getNarrationPreservationFallback(gs, 'Both engines failed: ' + err.slice(0, 80))
-  }
-
-  // ─── ROUTER: select engine based on mode ───
-  const callDM = async (userMsg: string, gs: GameState, isFirst: boolean = false): Promise<DMResponse> => {
-    switch (engineMode) {
-      case 'lmstudio': return callLMStudioDM(userMsg, gs, isFirst)
-      case 'dual': return callDualEngineDM(userMsg, gs, isFirst)
-      default: return callGeminiDM(userMsg, gs, isFirst)
-    }
-  }
-
   const runTurn = async (isFirst: boolean, currentGS: GameState) => {
     let gs = deepClone(currentGS)
     gs.isProcessing = true
@@ -2694,7 +2568,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     }
 
     try {
-      const res = await callDM(userMsg, gs, isFirst)
+      const res = await callGeminiDM(userMsg, gs, isFirst)
 
       // Determine human PC
       let humanPCId = res.human_pc_id || (living[0]?.id || null)
@@ -4133,10 +4007,6 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     // ── STATE ──────────────────────────────────────────────────────────────
     gameState, setGameState,
     geminiKey, setGeminiKey,
-    aiProvider, setAiProvider,
-    engineMode, setEngineMode,
-    lmStudioUrl, setLmStudioUrl,
-    lmStudioModel, setLmStudioModel,
     gamePhase, setGamePhase,
     availableHeroes, setAvailableHeroes,
     selectedParty, setSelectedParty,
