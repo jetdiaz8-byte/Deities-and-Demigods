@@ -1145,7 +1145,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           }
           // 503 = service overloaded — use same long backoff as 429
           if (r.status === 503) {
-            console.warn('⚠️ Gemini service unavailable (503)')
+            const errDetail = typeof responseJson.error === 'string' ? responseJson.error : JSON.stringify(responseJson.error || {})
+            console.warn('⚠️ Gemini service unavailable (503) — details:', errDetail)
             if (attempt === MAX_RETRIES - 1) {
               return getNarrationPreservationFallback(gs, 'service_unavailable')
             }

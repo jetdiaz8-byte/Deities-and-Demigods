@@ -52,8 +52,9 @@ export async function POST(request: NextRequest) {
     // The client handles retries and backoff
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error')
+      console.error(`[Gemini Proxy] ${response.status} from Google:`, errorText.slice(0, 500))
       return NextResponse.json(
-        { error: `Gemini ${response.status}: ${errorText.slice(0, 200)}`, status: response.status },
+        { error: `Gemini ${response.status}: ${errorText.slice(0, 300)}` },
         { status: response.status }
       )
     }
