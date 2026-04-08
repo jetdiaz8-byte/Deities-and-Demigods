@@ -32,6 +32,37 @@ import {
 
 export function useGameEngine() {
 
+  const deepClone = <T,>(value: T): T => {
+    // Avoid in-place mutation of React state objects.
+    // structuredClone is available in modern browsers; JSON fallback covers plain data.
+    if (typeof structuredClone === 'function') return structuredClone(value)
+    return JSON.parse(JSON.stringify(value)) as T
+  }
+
+  const safeLocalStorageGetItem = (key: string): string | null => {
+    try {
+      return localStorage.getItem(key)
+    } catch {
+      return null
+    }
+  }
+
+  const safeLocalStorageSetItem = (key: string, value: string): void => {
+    try {
+      localStorage.setItem(key, value)
+    } catch {
+      // ignore — callers may toast on failure
+    }
+  }
+
+  const safeLocalStorageRemoveItem = (key: string): void => {
+    try {
+      localStorage.removeItem(key)
+    } catch {
+      // ignore
+    }
+  }
+
   // Screen effects — applies CSS class to body temporarily
   const triggerScreenEffect = (effectClass: string) => {
     if (typeof document === 'undefined') return
@@ -45,21 +76,6 @@ export function useGameEngine() {
 
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
-  // ── AI PROVIDER STATE ─────────────────────────────────────────────────
-  // aiProvider: which AI provider(s) to use
-  // engineMode: 'gemini' = Gemini only, 'lmstudio' = LM Studio only, 'dual' = LM Studio (mechanics) + Gemini (narration)
-  const [aiProvider, setAiProvider] = useState<'gemini' | 'lmstudio'>(() => {
-    return (safeLocalStorageGetItem('mythworld_provider') as 'gemini' | 'lmstudio') || 'gemini'
-  })
-  const [engineMode, setEngineMode] = useState<'gemini' | 'lmstudio' | 'dual'>(() => {
-    return (safeLocalStorageGetItem('mythworld_engine_mode') as 'gemini' | 'lmstudio' | 'dual') || 'gemini'
-  })
-  const [lmStudioUrl, setLmStudioUrl] = useState(() => {
-    return safeLocalStorageGetItem('mythworld_lmstudio_url') || 'http://localhost:1234'
-  })
-  const [lmStudioModel, setLmStudioModel] = useState(() => {
-    return safeLocalStorageGetItem('mythworld_lmstudio_model') || 'default'
-  })
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
@@ -103,13 +119,6 @@ export function useGameEngine() {
   // Browser voice ref for cancel support
   const browserUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  const safeLocalStorageGetItem = (key: string): string | null => {
-    try { return localStorage.getItem(key) } catch { return null }
-  }
-  const deepClone = <T>(obj: T): T => {
-    try { return structuredClone(obj) } catch { return JSON.parse(JSON.stringify(obj)) }
-  }
 
   // ── BROWSER VOICE DETECTION ──────────────────────────────────────────
   useEffect(() => {
@@ -210,26 +219,20 @@ export function useGameEngine() {
     loadSaveSlots()
   }, [])
 
-  // ── SAVE PROVIDER SETTINGS TO STORAGE ──────────────────────────────────
-  useEffect(() => {
-    try { localStorage.setItem('mythworld_provider', aiProvider) } catch {}
-  }, [aiProvider])
-  useEffect(() => {
-    try { localStorage.setItem('mythworld_engine_mode', engineMode) } catch {}
-  }, [engineMode])
-  useEffect(() => {
-    try { localStorage.setItem('mythworld_lmstudio_url', lmStudioUrl) } catch {}
-  }, [lmStudioUrl])
-  useEffect(() => {
-    try { localStorage.setItem('mythworld_lmstudio_model', lmStudioModel) } catch {}
-  }, [lmStudioModel])
-
   // ── SAVE KEYS TO STORAGE ───────────────────────────────────────────────
   useEffect(() => {
-    try { if (geminiKey) localStorage.setItem('mythworld_gemini', geminiKey) } catch (e: any) {
-      if (e?.name === 'QuotaExceededError') console.warn('localStorage full — key not saved')
-    }
+    if (geminiKey) safeLocalStorageSetItem('mythworld_gemini', geminiKey)
   }, [geminiKey])
+
+  // Cleanup any pending audio fade interval on unmount
+  useEffect(() => {
+    return () => {
+      if (fadeIntervalRef.current) {
+        clearInterval(fadeIntervalRef.current)
+        fadeIntervalRef.current = null
+      }
+    }
+  }, [])
 
 
   // ── AUTO SCROLL ────────────────────────────────────────────────────────
@@ -278,10 +281,26 @@ export function useGameEngine() {
   }
 
   const trimGameStateForSave = (gs: GameState): GameState => {
-    const clone = JSON.parse(JSON.stringify(gs))
-    if (Array.isArray(clone.log) && clone.log.length > 120) clone.log = clone.log.slice(-120)
-    if (Array.isArray(clone.turnHistory) && clone.turnHistory.length > 50) clone.turnHistory = clone.turnHistory.slice(-50)
-    return clone
+    // Keep gameplay-critical state; trim high-growth fields.
+    // Avoid mutating in-memory game state by cloning first.
+    const trimmed: GameState = deepClone(gs)
+    if (Array.isArray(trimmed.log) && trimmed.log.length > 120) trimmed.log = trimmed.log.slice(-120)
+    // Defensive: cap any other large arrays if present on the state object.
+    // These are optional in type space; checks prevent TS errors while remaining safe at runtime.
+    const maybe: Record<string, unknown> = trimmed as unknown as Record<string, unknown>
+    const capArray = (key: string, max: number) => {
+      const v = maybe[key]
+      if (Array.isArray(v) && v.length > max) {
+        maybe[key] = v.slice(-max)
+      }
+    }
+    capArray('history', 50)
+    capArray('narrative', 50)
+    capArray('tokenUsage', 1)
+    capArray('token_usage', 1)
+    capArray('narrationHistory', 25)
+    capArray('diceHistory', 50)
+    return trimmed
   }
 
   const saveGame = (slotId: string, name: string) => {
@@ -295,7 +314,7 @@ export function useGameEngine() {
       achievementTracker: serializeTracker(achievementTrackerRef.current),
     }
     try {
-      localStorage.setItem(`mythworld_save_${slotNum}`, JSON.stringify(saveData))
+      safeLocalStorageSetItem(`mythworld_save_${slotNum}`, JSON.stringify(saveData))
       loadSaveSlots()
       toast({ title: 'Game Saved', description: `Saved to ${name}` })
       setShowSaveDialog(false)
@@ -310,7 +329,7 @@ export function useGameEngine() {
     if (data) {
       try {
         const parsed = JSON.parse(data)
-        setGameState({ ...createInitialState(), ...parsed.gameState })
+        setGameState(deepClone({ ...createInitialState(), ...parsed.gameState }))
         setGamePhase('playing')
         setNarrativeContent([])
         setShowLoadDialog(false)
@@ -354,9 +373,27 @@ export function useGameEngine() {
 
   const deleteSave = (slotId: string) => {
     const slotNum = parseInt(slotId.split('_')[1] || '0')
-    localStorage.removeItem(`mythworld_save_${slotNum}`)
+    safeLocalStorageRemoveItem(`mythworld_save_${slotNum}`)
     loadSaveSlots()
     toast({ title: 'Save Deleted' })
+  }
+
+  const getNarrationPreservationFallback = (gs: GameState, reason: string, narrativeOverride?: string): DMResponse => {
+    const prose = (narrativeOverride || preJsonNarrativeRef.current || '').trim()
+    const narration = prose && prose.length > 30 ? prose.slice(0, 2000) : 'The story pauses as the threads of fate tangle. Choose your next action.'
+    console.warn('📝 Using narrative-preservation fallback:', reason)
+    return {
+      dm_narration: narration,
+      story_summary: gs.storySummary || 'The adventure continues...',
+      journey_so_far: gs.journeySoFar || '',
+      npc_encounters: [],
+      dice_rolls: [],
+      damage_dealt: [],
+      injury_events: [],
+      state_updates: [],
+      item_drops: [],
+      quest_updates: [],
+    }
   }
 
   // ── TTS FUNCTIONS ────────────────────────────────────────────────────────
@@ -519,6 +556,12 @@ export function useGameEngine() {
 
   const stopSpeaking = () => {
     abortSpeakRef.current = true
+
+    if (fadeIntervalRef.current) {
+      clearInterval(fadeIntervalRef.current)
+      fadeIntervalRef.current = null
+    }
+
     // Cancel browser speech
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel()
@@ -528,21 +571,24 @@ export function useGameEngine() {
     if (audioRef.current) {
       // Smart fade over 300ms
       try {
-        if (fadeIntervalRef.current) { clearInterval(fadeIntervalRef.current); fadeIntervalRef.current = null }
         audioRef.current.volume = 0.6
         fadeIntervalRef.current = setInterval(() => {
           if (audioRef.current) {
             const newVol = Math.max(0, (audioRef.current.volume || 0) - 0.15)
             audioRef.current.volume = newVol
             if (newVol <= 0) {
-              clearInterval(fadeIntervalRef.current!)
-              fadeIntervalRef.current = null
+              if (fadeIntervalRef.current) {
+                clearInterval(fadeIntervalRef.current)
+                fadeIntervalRef.current = null
+              }
               audioRef.current.pause()
               audioRef.current = null
             }
           } else {
-            clearInterval(fadeIntervalRef.current!)
-            fadeIntervalRef.current = null
+            if (fadeIntervalRef.current) {
+              clearInterval(fadeIntervalRef.current)
+              fadeIntervalRef.current = null
+            }
           }
         }, 50)
       } catch {
@@ -696,7 +742,10 @@ export function useGameEngine() {
 
   // ── START NEW CAMPAIGN ─────────────────────────────────────────────────
   const startNewCampaign = async () => {
-    // API key is now server-side — no client check needed
+    if (!geminiKey) {
+      toast({ title: 'API Key Required', description: 'Enter your Gemini API key to begin', variant: 'destructive' })
+      return
+    }
     clearEntityCache()
     await fetchAvailableHeroes()
     setGamePhase('party_select')
@@ -1117,335 +1166,21 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 {"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — 600-1000 words for opening scenes, 60-120 words for regular turns, ONE paragraph only. REST/SLEEP actions: 2-3 sentences max. COMBAT actions: up to 150 words. Do NOT exceed these limits.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  // DUAL-ENGINE DM SYSTEM (v2.11.0)
-  // ═══════════════════════════════════════════════════════════════════════════
-  // Three modes:
-  //   'gemini'    — Gemini handles everything (narration + mechanics)
-  //   'lmstudio'  — LM Studio handles everything (narration + mechanics)
-  //   'dual'      — LM Studio handles mechanics (JSON), Gemini handles narration (prose)
-  // ═══════════════════════════════════════════════════════════════════════════
-
-  // ── MECHANICS PROMPT (for LM Studio in dual mode) ─────────────────────
-  // Compact prompt focusing ONLY on game rules, dice, and state updates.
-  // No prose required — just JSON output.
-  const buildMechanicsPrompt = (gs: GameState): string => {
-    const ant = getAntagonist(gs.antagonistId)
-    const living = gs.pcs.filter(p => !p.dead)
-    const mainPC = living[0]
-    const actCtx = gs.act === ACTS.ONE
-      ? 'ACT I: Exploration phase. Introduce world, no combat yet.'
-      : gs.act === ACTS.TWO
-        ? 'ACT II: Rising tension. Mix exploration, social, escalating combat.'
-        : `ACT III BOSS: ${ant?.name} Phase ${gs.antagonistPhase}/3. HP:${gs.antagonistHp}/${gs.antagonistMaxHp}.`
-
-    return `You are a D&D game mechanics engine (Fate Core + AD&D). Process the player's action and output ONLY a JSON object.
-
-RULES:
-- Roll dice for skill checks and combat. Use d20 for attacks/skills, appropriate dice for damage.
-- Apply Fate Core aspects: +2 when invoked, compels earn Fate Points.
-- Track HP, stress, stamina, conditions, items.
-- NPCs act according to alignment+personality.
-- Combat: enemies attack every 2-3 turns. Vary targets.
-- Outcome tiers: critical_success (nat 20), full_success (10+), partial_success (7-9), miss (6 or less).
-- Include consequences, tension notes, paragon/renegade deltas.
-- Act I turns 1-7: NO enemies. Exploration only.
-
-CURRENT STATE:
-Turn: ${gs.turn} | ${actCtx}
-Main PC: ${mainPC?.name} [${mainPC?.align}] HP:${mainPC?.hp}/${mainPC?.maxHp}
-Fate Points: ${gs.fatePoints}/5 | Aspects: ${gs.aspects.map(a => a.name).join(', ') || 'None'}
-Stamina: ${gs.stamina}/${gs.maxStamina}
-Shard Charges: ${gs.shardCharges}/2 | Antagonist: ${gs.act === ACTS.THREE ? `${ant?.name} HP:${gs.antagonistHp}/${gs.antagonistMaxHp}` : 'Hidden'}
-Success Rate: ${gs.currentSuccessRate}%
-Prophecy: ${gs.prophecies[0]?.riddle.slice(0, 80) || 'None'} [${gs.prophecies[0]?.state || 'dormant'}]
-${gs.journeySoFar ? `Journey: ${gs.journeySoFar}\n` : ''}Party: ${living.map(p => `${p.name}[HP:${p.hp}/${p.maxHp},AC:${p.AC}]`).join(', ')}
-Active NPCs: ${gs.activeNPCs.map(n => `${n.name}[${n.encounter_type || '?'}]`).join(', ') || 'None'}
-Inventory: ${gs.inventory.map(i => i.name).join(', ') || 'Empty'}
-Quests: ${gs.quests.filter(q => q.status === 'active').map(q => q.title).join(', ') || 'None'}
-
-OUTPUT — ONLY valid JSON, no prose:
-{"mechanical_summary":"1-2 sentence dry description of what mechanically happened","dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"outcome_tier":"critical_success|full_success|partial_success|miss","consequences":"string","tension_note":"string","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string or null","human_pc_id":"string|null","human_pc_reason":"string","next_pc_id":"string|null","boss_phase_trigger":false}`
-  }
-
-  // ── NARRATION PROMPT (for Gemini in dual mode) ───────────────────────
-  // Receives the mechanical result and writes beautiful Neil Gaiman-style prose.
-  const buildNarrationPrompt = (gs: GameState, mechanicalResult: string): string => {
-    const ant = getAntagonist(gs.antagonistId)
-    const living = gs.pcs.filter(p => !p.dead)
-    const mainPC = living[0]
-    const shard = gs.shardEntry
-
-    return `You are the DM narrator of a mythic AD&D campaign (TSR Deities & Demigods 1980).
-
-YOUR ONLY JOB: Write beautiful narration based on the mechanical game result. You do NOT handle game rules — those are already processed.
-
-NARRATION STYLE — NEIL GAIMAN:
-- Write exactly ONE paragraph (60-120 words). No exceptions.
-- CRITICAL: NEVER repeat narration from previous turns. Every turn must contain ENTIRELY NEW prose.
-- Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
-- Use specific sensory language: the taste of copper, the weight of shadows
-- ONE paragraph must contain: what happened, character reaction, and a hook/tension
-- Include dialogue naturally — 1-2 lines max
-- For REST/SLEEP: 2-3 sentences max. For COMBAT: up to 150 words.
-- Reference past events, the shard, the prophecy when relevant
-
-THE SHARD — ${shard?.name} [${shard?.pantheon || 'Unknown'} Pantheon]
-${toAscii(shard?.origin || '')}
-
-MAIN PC: ${mainPC?.name} [${mainPC?.pantheon}] [${mainPC?.align}]
-Personality: ${toAscii(mainPC?.personality || '').slice(0, 60)}
-${living.length > 1 ? `COMPANION: ${living[1]?.name} [${living[1]?.pantheon}] [${living[1]?.align}]
-Personality: ${toAscii(living[1]?.personality || '').slice(0, 60)}` : ''}
-
-PROPHECY: ${gs.prophecies[0]?.riddle.slice(0, 150) || 'None'} [${gs.prophecies[0]?.state || 'dormant'}]
-${gs.journeySoFar ? `JOURNEY SO FAR: ${gs.journeySoFar}\n` : ''}${gs.act === ACTS.THREE ? `ANTAGONIST: ${ant?.name} | HP:${gs.antagonistHp}/${gs.antagonistMaxHp}\n` : ''}CURRENT TURN: ${gs.turn} | Act: ${gs.act === ACTS.ONE ? 'I' : gs.act === ACTS.TWO ? 'II' : 'III'}
-Active Aspects: ${gs.aspects.map(a => `${a.name} (${a.type})`).join(', ') || 'None'}
-Fate Points: ${gs.fatePoints}/5
-
-MECHANICAL RESULT (what happened this turn):
-${mechanicalResult}
-
-Based on the mechanical result above, write the narration paragraph. Then provide 3-4 action OPTIONS for the player.
-
-OUTPUT FORMAT:
-[Your narration paragraph here]
-
-Then append this JSON:
-{"dm_narration":"your exact narration text","human_pc_id":"id of who acts next","human_pc_reason":"why","options":[{"text":"action description","ability":"ability name"},{"text":"action description","ability":"ability name"},{"text":"action description","ability name"}]}`
-  }
-
-  // ── DUAL-ENGINE CALL ─────────────────────────────────────────────────
-  // Step 1: LM Studio processes mechanics (JSON only)
-  // Step 2: Gemini writes narration based on mechanical result
-  const callDualEngine = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    setStatusMessage('⚙️ Processing mechanics (LM Studio)...')
-
-    // ── STEP 1: MECHANICS via LM Studio ──
-    const mechanicsPrompt = buildMechanicsPrompt(gs)
-    let mechanicalJson = ''
-    let mechanicalData: Record<string, unknown> | null = null
-
-    try {
-      const mechResponse = await fetch('/api/lmstudio', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemPrompt: mechanicsPrompt,
-          userMessage: toAscii(userMsg),
-          temperature: 0.3, // Lower temp for consistent mechanics
-          maxOutputTokens: 3072,
-          lmStudioUrl,
-          model: lmStudioModel,
-        }),
-      })
-
-      if (!mechResponse.ok) {
- const err = await mechResponse.json().catch(() => ({}))
- throw new Error(typeof err.error === 'string' ? err.error : 'LM Studio mechanics failed')
-      }
-
-      const mechData = await mechResponse.json()
-      const parts = mechData?.data?.candidates?.[0]?.content?.parts || []
-      for (const part of parts) {
-        if (part.text) mechanicalJson += part.text
-      }
-
-      // Extract JSON from mechanical response
-      let jsonStr = mechanicalJson
-      const jsonStart = mechanicalJson.indexOf('{')
-      const jsonEnd = mechanicalJson.lastIndexOf('}')
-      if (jsonStart >= 0 && jsonEnd > jsonStart) {
-        jsonStr = mechanicalJson.substring(jsonStart, jsonEnd + 1)
-      }
-      mechanicalData = JSON.parse(jsonStr)
-      if (!mechanicalData) mechanicalData = {}
-      console.log('✅ Dual Engine — Mechanics processed:', mechanicalData.mechanical_summary)
-    } catch (e) {
-      console.error('❌ Dual Engine — Mechanics failed, falling back to Gemini-only:', e)
-      // If LM Studio fails, fall back to Gemini-only mode for this turn
-      setStatusMessage('⚠️ LM Studio failed, using Gemini for full response...')
-      return callSingleEngine(userMsg, gs, isFirstTurn)
-    }
-
-    // ── STEP 2: NARRATION via Gemini ──
-    setStatusMessage('✍️ Writing narration (Gemini 2.5)...')
-
-    const mechanicalSummary = typeof mechanicalData!.mechanical_summary === 'string'
-      ? mechanicalData!.mechanical_summary
-      : JSON.stringify(mechanicalData)
-
-    const narrationPrompt = buildNarrationPrompt(gs, mechanicalSummary)
-
+  // ── API CALLS ──────────────────────────────────────────────────────────
+  const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${geminiKey}`
     const MAX_RETRIES = 6
     const BASE_DELAY = 6000
+    // Gemini 429 rate limits need 60s+ to reset per-minute window
     const RATE_LIMIT_DELAY = 60000
-    const maxTokens = isFirstTurn ? 16000 : 6144
-
-    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-      if (attempt > 0) {
-        const waitSec = Math.round((BASE_DELAY * Math.pow(2, attempt - 1)) / 1000)
-        setStatusMessage(`Retrying narration in ${waitSec}s...`)
-        await sleep(BASE_DELAY * Math.pow(2, attempt - 1))
-      }
-
-      try {
-        const r = await fetch('/api/gemini', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: GEMINI_MODEL,
-            systemPrompt: narrationPrompt,
-            userMessage: `Turn ${gs.turn}: ${userMsg}`,
-            temperature: 0.9,
-            maxOutputTokens: maxTokens,
-          }),
-        })
-
-        if (!r.ok) {
-          const errData = await r.json().catch(() => ({}))
-          if (r.status === 429 || r.status === 503) {
-            if (attempt === MAX_RETRIES - 1) {
-              // Gemini failed — return mechanical result with basic narration
-              return buildFallbackFromMechanics(mechanicalData!, gs)
-            }
-            const waitSec = Math.round((RATE_LIMIT_DELAY + attempt * 15000) / 1000)
-            setStatusMessage(`⏳ Narration rate limited, waiting ${waitSec}s...`)
-            await sleep(RATE_LIMIT_DELAY + attempt * 15000)
-            continue
-          }
-          throw new Error(typeof errData.error === 'string' ? errData.error : `Gemini error ${r.status}`)
-        }
-
-        const respData = await r.json()
-        if (respData.error) throw new Error(typeof respData.error === 'string' ? respData.error : 'Gemini API error')
-
-        const data = respData.data
-        const parts = data?.candidates?.[0]?.content?.parts || []
-        let raw = ''
-        for (const part of parts) {
-          if (part.text && part.text.trim().length > 10) raw += part.text
-        }
-
-        // Parse narration + merge with mechanical data
-        return mergeDualResponse(raw, mechanicalData!, gs)
-
-      } catch (e) {
-        console.error(`❌ Dual Engine — Narration attempt ${attempt + 1} failed:`, e)
-        if (attempt === MAX_RETRIES - 1) {
-          // Both engines failed for narration — return mechanical result with basic narration
-          return buildFallbackFromMechanics(mechanicalData!, gs)
-        }
-      }
-    }
-
-    return buildFallbackFromMechanics(mechanicalData!, gs)
-  }
-
-  // ── MERGE DUAL RESPONSE ───────────────────────────────────────────────
-  // Combines Gemini's narration with LM Studio's mechanical JSON
-  const mergeDualResponse = (raw: string, mechanics: Record<string, unknown>, gs: GameState): DMResponse => {
-    let narration = ''
-    let optionsFromNarration: Array<{ text: string; ability: string }> = []
-
-    // Extract narration and options from Gemini's response
-    let splitPos = raw.indexOf('```json')
-    if (splitPos === -1) {
-      let keyIdx = raw.indexOf('"dm_narration"')
-      if (keyIdx === -1) keyIdx = raw.indexOf('"options"')
-      if (keyIdx > -1) splitPos = raw.lastIndexOf('{', keyIdx)
-    }
-
-    if (splitPos > -1) {
-      narration = raw.slice(0, splitPos).trim()
-      const jsonStr = raw.slice(splitPos).trim().replace(/```(json)?\s*$/gi, '').replace(/```.*/g, '').trim()
-      try {
-        const narrJson = JSON.parse(jsonStr)
-        if (narrJson.dm_narration) narration = narrJson.dm_narration
-        if (Array.isArray(narrJson.options)) optionsFromNarration = narrJson.options
-      } catch { /* options parse failed, use narration text only */ }
-    } else {
-      narration = raw.trim()
-    }
-
-    narration = narration.replace(/```(json)?\s*$/i, '').trim()
-    preJsonNarrativeRef.current = narration
-    if (narration.length > 30) setLastDMNarrative(narration)
-
-    // Build merged response: mechanics JSON + Gemini narration
-    const merged: DMResponse = {
-      dm_narration: narration.length > 30 ? narration : (mechanics.mechanical_summary as string || 'The adventure continues...'),
-      story_summary: gs.storySummary || 'The adventure continues...',
-      journey_so_far: gs.journeySoFar || '',
-      dice_rolls: (mechanics.dice_rolls as DMResponse['dice_rolls']) || [],
-      damage_dealt: (mechanics.damage_dealt as DMResponse['damage_dealt']) || [],
-      injury_events: (mechanics.injury_events as DMResponse['injury_events']) || [],
-      state_updates: (mechanics.state_updates as DMResponse['state_updates']) || [],
-      npc_encounters: (mechanics.npc_encounters as DMResponse['npc_encounters']) || [],
-      item_drops: (mechanics.item_drops as DMResponse['item_drops']) || [],
-      quest_updates: (mechanics.quest_updates as DMResponse['quest_updates']) || [],
-      shard_event: (mechanics.shard_event as DMResponse['shard_event']) || { invoked: false, invoker_pc_id: undefined, intended_god: undefined, roll: 0, success: false, summoned_id: undefined, summoned_name: undefined, is_greater: false },
-      outcome_tier: (mechanics.outcome_tier as DMResponse['outcome_tier']) || null,
-      consequences: (mechanics.consequences as string) || '',
-      tension_note: (mechanics.tension_note as string) || '',
-      paragon_delta: (mechanics.paragon_delta as number) || 0,
-      renegade_delta: (mechanics.renegade_delta as number) || 0,
-      new_aspect: (mechanics.new_aspect as string | null) ?? undefined,
-      clue_revealed: (mechanics.clue_revealed as string | undefined | null) ?? undefined,
-      human_pc_id: (mechanics.human_pc_id as string | undefined) ?? undefined,
-      human_pc_reason: (mechanics.human_pc_reason as string) || '',
-      next_pc_id: (mechanics.next_pc_id as string | undefined) ?? undefined,
-      boss_phase_trigger: (mechanics.boss_phase_trigger as boolean) || false,
-    }
-
-    // If Gemini provided player options, store them for the choice panel
-    if (optionsFromNarration.length > 0) {
-      (merged as unknown as Record<string, unknown>)._dualEngineOptions = optionsFromNarration
-    }
-
-    console.log('✅ Dual Engine — Merged response ready')
-    return merged
-  }
-
-  // ── FALLBACK FROM MECHANICS ──────────────────────────────────────────
-  // When Gemini narration fails, build a basic response from mechanical data
-  const buildFallbackFromMechanics = (mechanics: Record<string, unknown>, gs: GameState): DMResponse => {
-    const summary = (mechanics.mechanical_summary as string) || 'Something happened.'
-    return {
-      dm_narration: summary,
-      story_summary: gs.storySummary || 'The adventure continues...',
-      journey_so_far: gs.journeySoFar || '',
-      dice_rolls: (mechanics.dice_rolls as DMResponse['dice_rolls']) || [],
-      damage_dealt: (mechanics.damage_dealt as DMResponse['damage_dealt']) || [],
-      injury_events: (mechanics.injury_events as DMResponse['injury_events']) || [],
-      state_updates: (mechanics.state_updates as DMResponse['state_updates']) || [],
-      npc_encounters: (mechanics.npc_encounters as DMResponse['npc_encounters']) || [],
-      item_drops: (mechanics.item_drops as DMResponse['item_drops']) || [],
-      quest_updates: (mechanics.quest_updates as DMResponse['quest_updates']) || [],
-      shard_event: (mechanics.shard_event as DMResponse['shard_event']) || { invoked: false, invoker_pc_id: undefined, intended_god: undefined, roll: 0, success: false, summoned_id: undefined, summoned_name: undefined, is_greater: false },
-      outcome_tier: (mechanics.outcome_tier as DMResponse['outcome_tier']) || null,
-      consequences: (mechanics.consequences as string) || '',
-      tension_note: (mechanics.tension_note as string) || '',
-      paragon_delta: (mechanics.paragon_delta as number) || 0,
-      renegade_delta: (mechanics.renegade_delta as number) || 0,
-      new_aspect: (mechanics.new_aspect as string | null) ?? undefined,
-      human_pc_id: (mechanics.human_pc_id as string | undefined) ?? undefined,
-      human_pc_reason: (mechanics.human_pc_reason as string) || '',
-      next_pc_id: (mechanics.next_pc_id as string | undefined) ?? undefined,
-      boss_phase_trigger: (mechanics.boss_phase_trigger as boolean) || false,
-    }
-  }
-
-  // ── SINGLE ENGINE CALL (original behavior) ──────────────────────────
-  const callSingleEngine = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    const isLocal = engineMode === 'lmstudio'
-    const endpoint = isLocal ? '/api/lmstudio' : '/api/gemini'
-    const MAX_RETRIES = isLocal ? 3 : 6
-    const BASE_DELAY = 6000
-    const RATE_LIMIT_DELAY = 60000
-    const maxTokens = isLocal
-      ? (isFirstTurn ? 8192 : 4096)
-      : (isFirstTurn ? 20000 : 6144)
+    
+    // maxOutputTokens — opening needs more for rich prose; regular turns need less
+    // Gemini 2.5 Flash supports up to 65536 output tokens
+    // Regular turns: 1 paragraph (~100 words = ~150 tokens) + JSON (~1200 tokens) = ~1500 needed
+    // Use 6144 for regular turns to avoid truncation when Gemini gets verbose
+    const maxTokens = isFirstTurn ? 20000 : 6144
+    
+    // Track input tokens
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
     const totalInput = systemPrompt + userMsg
 
@@ -1457,96 +1192,61 @@ Then append this JSON:
       }
 
       try {
-        const requestBody: Record<string, unknown> = {
-          systemPrompt,
-          userMessage: toAscii(userMsg),
-          temperature: 0.9,
-          maxOutputTokens: maxTokens,
-        }
-
-        // Add provider-specific fields
-        if (isLocal) {
-          requestBody.lmStudioUrl = lmStudioUrl
-          requestBody.model = lmStudioModel
-        } else {
-          requestBody.model = GEMINI_MODEL
-        }
-        // Track which engine mode is active for logging
-        console.log(`[callSingleEngine] mode=${engineMode} endpoint=${endpoint}`)
-
         const r = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestBody)
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: 'user', parts: [{ text: toAscii(userMsg) }] }],
+            generationConfig: { temperature: 0.9, maxOutputTokens: maxTokens }
+          })
         })
 
-        // Server proxy forwards HTTP status codes
+        if (r.status === 429) {
+          console.warn('⚠️ Gemini quota exceeded (429)')
+          if (attempt === MAX_RETRIES - 1) {
+            return getNarrationPreservationFallback(gs, 'quota_exceeded')
+          }
+          // 429 needs longer wait — Gemini rate limits reset in ~60s per-minute window
+          const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000) // 60s, 75s, 90s, 105s, 120s
+          const waitSec = Math.round(rateLimitWait / 1000)
+          setStatusMessage(`⏳ Rate limited — waiting ${waitSec}s for API cooldown (attempt ${attempt + 2}/${MAX_RETRIES})...`)
+          console.warn(`⏳ Rate limited, waiting ${waitSec}s before retry...`)
+          await sleep(rateLimitWait)
+          continue
+        }
+
+        // 503 = service overloaded — use same long backoff as 429
+        if (r.status === 503) {
+          console.warn('⚠️ Gemini service unavailable (503)')
+          if (attempt === MAX_RETRIES - 1) {
+            return getNarrationPreservationFallback(gs, 'service_unavailable')
+          }
+          const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000)
+          const waitSec = Math.round(rateLimitWait / 1000)
+          setStatusMessage(`⏳ Gemini overloaded — waiting ${waitSec}s (attempt ${attempt + 2}/${MAX_RETRIES})...`)
+          console.warn(`⏳ 503 service unavailable, waiting ${waitSec}s before retry...`)
+          await sleep(rateLimitWait)
+          continue
+        }
+
         if (!r.ok) {
-          const responseJson = await r.json().catch(() => ({}))
-          // LM Studio: 502 = connection refused (not running), no retries
-          if (isLocal && r.status === 502) {
-            const errMsg = responseJson.error || 'Cannot connect to LM Studio'
-            console.error(`❌ LM Studio connection failed:`, errMsg)
-            throw new Error(errMsg)
-          }
-          // Gemini: 429 = rate limited — use long backoff
-          if (!isLocal && r.status === 429) {
-            console.warn('⚠️ Gemini quota exceeded (429)')
-            if (attempt === MAX_RETRIES - 1) {
-              return getNarrationPreservationFallback(gs, 'quota_exceeded')
-            }
-            const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000)
-            const waitSec = Math.round(rateLimitWait / 1000)
-            setStatusMessage(`⏳ Rate limited — waiting ${waitSec}s for API cooldown (attempt ${attempt + 2}/${MAX_RETRIES})...`)
-            console.warn(`⏳ Rate limited, waiting ${waitSec}s before retry...`)
-            await sleep(rateLimitWait)
-            continue
-          }
-          // Gemini: 503 = service overloaded
-          if (!isLocal && r.status === 503) {
-            const errDetail = typeof responseJson.error === 'string' ? responseJson.error : JSON.stringify(responseJson.error || {})
-            console.warn('⚠️ Gemini service unavailable (503) — details:', errDetail)
-            if (attempt === MAX_RETRIES - 1) {
-              return getNarrationPreservationFallback(gs, 'service_unavailable')
-            }
-            const rateLimitWait = RATE_LIMIT_DELAY + (attempt * 15000)
-            const waitSec = Math.round(rateLimitWait / 1000)
-            setStatusMessage(`⏳ Gemini overloaded — waiting ${waitSec}s (attempt ${attempt + 2}/${MAX_RETRIES})...`)
-            console.warn(`⏳ 503 service unavailable, waiting ${waitSec}s before retry...`)
-            await sleep(rateLimitWait)
-            continue
-          }
-          // Other HTTP errors
-          const providerName = isLocal ? 'LM Studio' : 'proxy'
-          const errMsg = responseJson.error || `Server error ${r.status}`
-          console.error(`❌ ${providerName} error ${r.status}:`, errMsg)
-          throw new Error(errMsg)
+          const e = await r.text()
+          console.error(`❌ Gemini error ${r.status}:`, e.slice(0, 200))
+          throw new Error(`Gemini ${r.status}: ${e.slice(0, 150)}`)
         }
 
-        const responseJson = await r.json()
-        if (responseJson.error) {
-          console.error(`❌ ${isLocal ? 'LM Studio' : 'Gemini'} API error:`, responseJson.error)
-          throw new Error(typeof responseJson.error === 'string' ? responseJson.error : JSON.stringify(responseJson.error))
+        const data = await r.json()
+        if (data.error) {
+          console.error('❌ Gemini API error:', data.error)
+          throw new Error(data.error.message)
         }
 
-        // Log which model actually responded
-        if (responseJson.fallbackUsed) {
-          console.warn(`🔄 Fallback model used: ${responseJson.modelUsed} (primary ${responseJson.originalModel} was unavailable)`)
-        }
-        if (responseJson.modelUsed) {
-          console.log(`🤖 Model: ${responseJson.modelUsed}`)
-        }
-
-        const data = responseJson.data
-        if (!data) {
-          throw new Error(`No data in ${isLocal ? 'LM Studio' : 'Gemini'} proxy response`)
-        }
-
-        // Detect truncation
+        // Detect truncation — if Gemini hit MAX_TOKENS, the narration is incomplete
         const candidate = (data.candidates || [])[0]
         const finishReason = candidate?.finishReason
         if (finishReason === 'MAX_TOKENS') {
-          console.warn(`⚠️ Response TRUNCATED (finishReason: MAX_TOKENS). Narration may be incomplete.`)
+          console.warn(`⚠️ Gemini response TRUNCATED (finishReason: MAX_TOKENS). Narration may be incomplete.`)
         }
 
         const parts = candidate?.content?.parts || []
@@ -1556,7 +1256,7 @@ Then append this JSON:
         }
         
         // Log success
-        console.log(`✅ ${isLocal ? 'LM Studio' : 'Gemini'} response: ${raw.length} chars, ${isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn}`)
+        console.log(`✅ Gemini response: ${raw.length} chars, ${isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn}`)
         
         // Track token usage
         updateTokenUsage(totalInput, raw)
@@ -1564,27 +1264,14 @@ Then append this JSON:
         return parseDMResponse(raw, gs)
 
       } catch (e) {
-        console.error(`❌ ${isLocal ? 'LM Studio' : 'Gemini'} fetch error (attempt ${attempt + 1}):`, e)
+        console.error(`❌ Gemini fetch error (attempt ${attempt + 1}):`, e)
         if (attempt < MAX_RETRIES - 1 && String(e).includes('fetch')) continue
         if (attempt === MAX_RETRIES - 1) {
-          console.warn('📝 Using template fallback due to error')
           return getNarrationPreservationFallback(gs, String(e))
         }
       }
     }
     return getNarrationPreservationFallback(gs, 'unrecoverable_failure')
-  }
-
-  // ── MAIN DM ENTRY POINT ───────────────────────────────────────────────
-  // Routes to dual-engine or single-engine based on engineMode
-  const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    if (engineMode === 'dual') {
-      console.log(`[DM] Dual Engine mode — LM Studio (mechanics) + Gemini (narration)`)
-      return callDualEngine(userMsg, gs, isFirstTurn)
-    }
-    // Single engine (gemini or lmstudio)
-    console.log(`[DM] ${engineMode === 'lmstudio' ? 'LM Studio' : 'Gemini'} only mode`)
-    return callSingleEngine(userMsg, gs, isFirstTurn)
   }
 
   const parseDMResponse = (raw: string, gs: GameState): DMResponse => {
@@ -1647,13 +1334,15 @@ Then append this JSON:
       // Strategy: trim to last complete value, then close unclosed structures.
       let repaired = s
       // Step 1: If we're mid-string (odd number of unescaped quotes), truncate to last complete string
-      const countUnescapedQuotes = (s: string): number => {
+      const countUnescapedQuotes = (input: string): number => {
         let count = 0
-        let i = 0
-        while (i < s.length) {
-          if (s[i] === '\\' && i + 1 < s.length) { i += 2; continue } // skip escaped chars
-          if (s[i] === '"') count++
-          i++
+        for (let i = 0; i < input.length; i++) {
+          if (input[i] !== '"') continue
+          // Count backslashes immediately preceding this quote.
+          let bs = 0
+          for (let j = i - 1; j >= 0 && input[j] === '\\'; j--) bs++
+          // Quote is unescaped if preceded by an even number of backslashes.
+          if (bs % 2 === 0) count++
         }
         return count
       }
@@ -1739,114 +1428,6 @@ Then append this JSON:
       }
     }
     return getNarrationPreservationFallback(gs, 'Payload structure unrecoverable')
-  }
-
-  // ── TEMPLATE FALLBACK ──────────────────────────────────────────────────
-  
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TEMPLATE FALLBACKS - High-quality pre-written narratives (SAVES 100% API CALLS)
-  // ═══════════════════════════════════════════════════════════════════════════
-  const getNarrationPreservationFallback = (gs: GameState, reason: string): DMResponse => {
-    const pc = gs.pcs.find(p => !p.dead)
-    const ant = getAntagonist(gs.antagonistId)
-    const shard = gs.shardEntry
-    
-    // Pre-written HIGH-QUALITY Gaiman-style templates - 1-2 RICH PARAGRAPHS
-    const templates = {
-      combat: [
-        `The air fills with the percussion of violence—steel meeting steel, the wet sound of blade parting flesh. ${pc?.name || 'The hero'} moves through chaos like a dancer through storm, each strike a word in a sentence written long before they were born.
-
-${shard ? `The ${shard.name} pulses with something that might be excitement or fear. Even ancient things are not immune to the electric terror of battle.` : `And in the spaces between attacks, something older than the combatants watches with patient, hungry eyes.`}`,
-
-        `There is a poetry to violence that the peaceful never understand. ${pc?.name || 'The warrior'} finds a strange clarity in the heart of chaos—that peculiar stillness where training becomes instinct and thought becomes action.
-
-${shard ? `The ${shard.name} thrums against its bearer's chest, a second heartbeat of ancient power, remembering every battle it has witnessed across the centuries.` : `The fight is a conversation written in blood, and every hesitation is a word left unsaid.`}`
-      ],
-      
-      exploration: [
-        `The path winds deeper into darkness, each step a small act of faith against the void. ${pc?.name || 'The traveler'} feels the weight of forgotten histories pressing against their shoulders—this place remembers things the world above chose to forget.
-
-${shard ? `The ${shard.name} grows warmer—or perhaps colder, it is difficult to tell which. The ancient thing is responding to something, calling out to something that may or may not wish to be found.` : `Something ahead breathes with an ancient, patient rhythm. It has been waiting since before the stones were laid.`}`,
-
-        `Every step into the unknown is a negotiation with the darkness. ${pc?.name || 'The explorer'} has learned that shadows are never empty—they are full of things that simply have not yet chosen to reveal themselves.
-
-${shard ? `The ${shard.name} pulses in response to whispers in languages that predate speech, a conversation at frequencies below hearing.` : `The walls lean inward, conspiratorial. In places this old, the distinction between stone and spirit grows thin as paper.`}`
-      ],
-      
-      dialogue: [
-        `Words hang in the air like smoke from a snuffed candle. ${pc?.name || 'The speaker'} chooses each one with the care of a jeweler setting diamonds—knowing that what is said here will echo in ways that cannot be predicted, cannot be taken back.
-
-${shard ? `The ${shard.name} watches—or whatever passes for watching when you are a thing of power spanning centuries. It has seen empires rise and fall on smaller words than these.` : `The moment stretches, elastic and dangerous. Something is about to change, and everyone present can feel it.`}`,
-
-        `The conversation is a dance where neither party is certain who leads. ${pc?.name || 'The negotiator'} speaks carefully, aware that in this crystalline moment, words carry more weight than any blade.
-
-${shard ? `Power radiates from the ${shard.name} like heat from a sun that burned before words were invented. It is listening. It is judging. It remembers everything.` : `The air itself leans in, hungry to know what will be promised, what will be broken.`}`
-      ],
-      
-      tension: [
-        `The moment before action stretches thin as spider silk. ${pc?.name || 'The hero'} stands at the crossroads of a thousand possible futures, each one demanding a price that may or may not be worth paying.
-
-${shard ? `The ${shard.name} thrums with an energy that might be anticipation or warning. It has seen this moment before, with other heroes at other crossroads. It knows what comes next. It does not say.` : `Time slows, heartbeats becoming thunder. Something is about to happen—something that will divide all history into before and after.`}`,
-
-        `Silence falls like a blade. ${pc?.name || 'The watcher'} feels destiny pressing down with physical force—the weight of the moment between heartbeats where heroes are made or unmade.
-
-${shard ? `The ${shard.name} pulses once, twice, three times—a countdown, or a heartbeat, or the footsteps of something approaching from very far away.` : `In the distance, something howls—triumph or grief or something older than both. It might be welcoming. It might be warning. It might be both.`}`,
-
-        `The air grows heavy with the weight of unmade choices. ${pc?.name || 'The hero'} understands, in that bone-deep way that needs no words, that this moment will echo through all the days that follow.
-
-${shard ? `The ${shard.name} grows warm—or perhaps cold, temperature having become a suggestion rather than a fact. It is paying attention now. Whatever comes next, it will remember.` : `Somewhere beyond the veil of the mundane world, something ancient leans forward, curious to see which thread in the tapestry will be pulled.`}`
-      ],
-      
-      quota_exceeded: [
-        `The threads of fate tangle around themselves, and for a moment, the story itself seems to hesitate. Even destiny must catch its breath sometimes.
-
-${pc?.name || 'The hero'} feels the weight of possibility pressing against them, patient as the tide. The moment will come. It always comes.
-
-*(The mists of fate grow thick. The next action will clarify the path ahead.)*`,
-
-        `Time itself stutters, caught between heartbeats. ${pc?.name || 'The protagonist'} stands at the center of potential futures, each one waiting for the push that will make it real.
-
-${ant && gs.act === ACTS.THREE ? `${ant.name} waits with the patience of something that was ancient before the stars learned to burn.` : `In the shadows, something patient observes. It has outlasted empires. It can outlast this pause.`}
-
-*(The tapestry of fate catches on a snag. A moment's patience, and the threads will realign.)*`,
-
-        `The story pauses at the edge of a breath. ${pc?.name || 'The hero'} waits, not with impatience but with the understanding that even heroes must sometimes stand still.
-
-${shard ? `The ${shard.name} dims slightly, conserving its power. It has waited centuries. It can wait a moment more.` : `Beyond the veil, something gathers itself, preparing for what comes next. The pause will not last forever.`}
-
-*(The narrative gathers itself. Your next action will write what comes next.)*`
-      ]
-    }
-    
-    // Select appropriate template based on game state
-    const hasLivingEnemies = gs.activeNPCs.some(n => !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'))
-    let category: keyof typeof templates = 'tension'
-    if (hasLivingEnemies) category = 'combat'
-    else if (reason.toLowerCase().includes('quota') || reason.toLowerCase().includes('exceeded')) category = 'quota_exceeded'
-    else if (gs.activeNPCs.length > 0) category = 'dialogue'
-    else if (gs.turn > 0) category = 'exploration'
-    
-    const templateOptions = templates[category]
-    const selectedTemplate = templateOptions[Math.floor(Math.random() * templateOptions.length)]
-    
-    return {
-      story_summary: gs.storySummary || 'The heroes navigate a world where ancient powers stir and every choice echoes through eternity.',
-      dm_narration: selectedTemplate,
-      human_pc_id: pc?.id || undefined,
-      human_pc_reason: 'The narrative pauses at a crucial moment. Your action will determine what comes next.',
-      npc_encounters: [],
-      dice_rolls: [],
-      damage_dealt: [],
-      injury_events: [],
-      state_updates: [],
-      new_active_npcs: [],
-      shard_event: { invoked: false },
-      next_pc_id: undefined,
-      pc_agreement: {},
-      boss_phase_trigger: false,
-      consequences: 'The moment stretches. Consequences await the next action.',
-      tension_note: 'The story pauses at a turning point.'
-    }
   }
 
   const buildDefaultOptions = (pc: Entity): { pcOptions: GameOption[]; compOptions: GameOption[]; extraOptions: GameOption[] } => {
@@ -4426,10 +4007,6 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     // ── STATE ──────────────────────────────────────────────────────────────
     gameState, setGameState,
     geminiKey, setGeminiKey,
-    aiProvider, setAiProvider,
-    engineMode, setEngineMode,
-    lmStudioUrl, setLmStudioUrl,
-    lmStudioModel, setLmStudioModel,
     gamePhase, setGamePhase,
     availableHeroes, setAvailableHeroes,
     selectedParty, setSelectedParty,
@@ -4481,7 +4058,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     buildDMSystem,
     callGeminiDM,
     parseDMResponse,
-    getNarrationPreservationFallback,
+    // getTemplateFallback removed (deprecated)
     buildDefaultOptions,
     applyMechanics,
     runTurn,

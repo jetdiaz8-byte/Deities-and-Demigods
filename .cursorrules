@@ -1,0 +1,90 @@
+# Deities & Demigods — Fate Core RPG Web App
+
+## Project Overview
+Interactive text-based RPG powered by Gemini 2.5 Flash AI. Players choose mythological demigod heroes across a 3-act structure with Fate Core dice mechanics, DM narration, TTS voice acting, ambient audio, and visual portraits.
+
+## Tech Stack
+- Framework: Next.js 16 (App Router), React 19, TypeScript 6
+- Styling: Tailwind CSS 4, shadcn/ui, custom medieval CSS theme
+- AI: Gemini 2.5 Flash via z-ai-web-dev-sdk (client-side)
+- TTS: Dual engine — Browser Web Speech API (primary) + Edge TTS /api/tts (neural fallback)
+- Audio: Web Audio API via useGameAudio.ts
+- Database: SQLite via Prisma (entity/codex only, not game state)
+- State: In-memory React state in useGameEngine.ts
+- Deployment: Vercel serverless | Version: 2.7.9
+
+## Architecture
+- src/hooks/useGameEngine.ts (~3900 lines) — THE monolith. All game logic. Changes require extreme care.
+- src/lib/gameTypes.ts — All TS interfaces (GameState, PlayerCharacter, DMResponse)
+- src/components/game/GameHeader.tsx — Voice controls, dual engine toggle, party portraits
+- src/components/game/GameNarrative.tsx — DM narration with mood-based parchment styling
+- src/app/api/tts/route.ts — Edge TTS endpoint, node-edge-tts, maxDuration=30
+
+## Critical Constraints
+- Vercel Hobby: 10s timeout. Edge TTS often fails. ws must be in serverExternalPackages.
+- Zero TS errors standard (ignoreBuildErrors is true but we maintain clean code).
+- All game state is in-memory. No persistence. Page refresh = lost game.
+- maxOutputTokens: 6144. 429/503: 60s+ exponential backoff, max 3 retries.
+- JSON parse failure: use getNarrationPreservationFallback() NEVER getTemplateFallback().
+
+## TTS Dual Engine
+- Browser (default): window.speechSynthesis, zero server dependency
+- Neural (fallback): /api/tts, Edge TTS, may fail on hobby plan
+- localStorage keys: ddg_tts_engine, ddg_browser_voice
+- Neural voices: Guy (DM), Christopher, Brian, Ryan (British), Aria, Jenny, Connor (Irish), Thomas, Davis, Jason
+
+## Code Style
+- Functional components + hooks only. Tailwind medieval palette.
+- console.error only. No any types. Mobile-first 44px touch targets.
+
+## Pending Tasks
+1. Full bug scan — all files for bugs, edge cases, code quality
+2. Performance audit — useGameEngine.ts re-renders, memoization
+3. Game state persistence — localStorage or IndexedDB
+4. API key security — move Gemini key server-side
+Create a file called .cursorrules at the project root with the following content:
+
+# Deities & Demigods — Fate Core RPG Web App
+
+## Project Overview
+Interactive text-based RPG powered by Gemini 2.5 Flash AI. Players choose mythological demigod heroes across a 3-act structure with Fate Core dice mechanics, DM narration, TTS voice acting, ambient audio, and visual portraits.
+
+## Tech Stack
+- Framework: Next.js 16 (App Router), React 19, TypeScript 6
+- Styling: Tailwind CSS 4, shadcn/ui, custom medieval CSS theme
+- AI: Gemini 2.5 Flash via z-ai-web-dev-sdk (client-side)
+- TTS: Dual engine — Browser Web Speech API (primary) + Edge TTS /api/tts (neural fallback)
+- Audio: Web Audio API via useGameAudio.ts
+- Database: SQLite via Prisma (entity/codex only, not game state)
+- State: In-memory React state in useGameEngine.ts
+- Deployment: Vercel serverless | Version: 2.7.9
+
+## Architecture
+- src/hooks/useGameEngine.ts (~3900 lines) — THE monolith. All game logic. Changes require extreme care.
+- src/lib/gameTypes.ts — All TS interfaces (GameState, PlayerCharacter, DMResponse)
+- src/components/game/GameHeader.tsx — Voice controls, dual engine toggle, party portraits
+- src/components/game/GameNarrative.tsx — DM narration with mood-based parchment styling
+- src/app/api/tts/route.ts — Edge TTS endpoint, node-edge-tts, maxDuration=30
+
+## Critical Constraints
+- Vercel Hobby: 10s timeout. Edge TTS often fails. ws must be in serverExternalPackages.
+- Zero TS errors standard (ignoreBuildErrors is true but we maintain clean code).
+- All game state is in-memory. No persistence. Page refresh = lost game.
+- maxOutputTokens: 6144. 429/503: 60s+ exponential backoff, max 3 retries.
+- JSON parse failure: use getNarrationPreservationFallback() NEVER getTemplateFallback().
+
+## TTS Dual Engine
+- Browser (default): window.speechSynthesis, zero server dependency
+- Neural (fallback): /api/tts, Edge TTS, may fail on hobby plan
+- localStorage keys: ddg_tts_engine, ddg_browser_voice
+- Neural voices: Guy (DM), Christopher, Brian, Ryan (British), Aria, Jenny, Connor (Irish), Thomas, Davis, Jason
+
+## Code Style
+- Functional components + hooks only. Tailwind medieval palette.
+- console.error only. No any types. Mobile-first 44px touch targets.
+
+## Pending Tasks
+1. Full bug scan — all files for bugs, edge cases, code quality
+2. Performance audit — useGameEngine.ts re-renders, memoization
+3. Game state persistence — localStorage or IndexedDB
+4. API key security — move Gemini key server-side
