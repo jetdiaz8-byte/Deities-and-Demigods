@@ -1169,6 +1169,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           throw new Error(typeof responseJson.error === 'string' ? responseJson.error : JSON.stringify(responseJson.error))
         }
 
+        // Log which model actually responded (proxy auto-fallbacks server-side)
+        if (responseJson.fallbackUsed) {
+          console.warn(`🔄 Fallback model used: ${responseJson.modelUsed} (primary ${responseJson.originalModel} was unavailable)`)
+        }
+
         const data = responseJson.data
         if (!data) {
           throw new Error('No data in Gemini proxy response')

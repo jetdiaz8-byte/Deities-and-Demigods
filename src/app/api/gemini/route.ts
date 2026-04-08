@@ -2,10 +2,109 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Server-side Gemini proxy — hides API key from the client bundle
 // The key is stored as GEMINI_API_KEY environment variable on Vercel
+//
+// 3-tier fallback chain for reliability:
+//   1. gemini-2.5-flash     (best prose quality, 65k output)
+//   2. gemma-4-31b-it       (1,500 RPD, 32k output, rarely 503s)
+//   3. gemini-2.5-flash-lite (1,000 RPD, 16k output, ultra-light)
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 
+// Max output tokens per model — fallbacks have lower limits
+const MODEL_TOKEN_LIMITS: Record<string, number> = {
+  'gemini-2.5-flash':       65536,
+  'gemma-4-31b-it':         32768,
+  'gemini-2.5-flash-lite':  16384,
+}
+
+// Fallback models tried server-side when primary returns 503
+const FALLBACK_MODELS = ['gemma-4-31b-it', 'gemini-2.5-flash-lite']
+
 export const maxDuration = 60
+
+// Build the request body for Gemini API
+function buildRequestBody(
+  systemPrompt: string | undefined,
+  userMessage: string,
+  temperature: number | undefined,
+  maxOutputTokens: number,
+) {
+  const body: Record<string, unknown> = {
+    contents: [{ role: 'user', parts: [{ text: userMessage }] }],
+    generationConfig: {
+      temperature: temperature ?? 0.9,
+      maxOutputTokens,
+    },
+  }
+
+  if (systemPrompt) {
+    body.system_instruction = { parts: [{ text: systemPrompt }] }
+  }
+
+  return body
+}
+
+// Try a single model — returns { ok, data?, error?, status?, modelUsed? }
+async function tryModel(
+  model: string,
+  systemPrompt: string | undefined,
+  userMessage: string,
+  temperature: number | undefined,
+  maxOutputTokens: number,
+): Promise<{
+  ok: boolean
+  data?: unknown
+  error?: string
+  status?: number
+  modelUsed: string
+}> {
+  const tokenLimit = MODEL_TOKEN_LIMITS[model] ?? 6144
+  // Cap output tokens to the model's max
+  const cappedTokens = Math.min(maxOutputTokens, tokenLimit)
+
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(
+        buildRequestBody(systemPrompt, userMessage, temperature, cappedTokens),
+      ),
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error')
+      return {
+        ok: false,
+        error: `Gemini ${response.status}: ${errorText.slice(0, 300)}`,
+        status: response.status,
+        modelUsed: model,
+      }
+    }
+
+    const data = await response.json()
+
+    if (data.error) {
+      return {
+        ok: false,
+        error: data.error.message || 'Gemini API error',
+        status: 500,
+        modelUsed: model,
+      }
+    }
+
+    return { ok: true, data, modelUsed: model }
+
+  } catch (err) {
+    return {
+      ok: false,
+      error: `Network error: ${err instanceof Error ? err.message : String(err)}`,
+      status: 502,
+      modelUsed: model,
+    }
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +112,7 @@ export async function POST(request: NextRequest) {
     if (!GEMINI_API_KEY) {
       return NextResponse.json(
         { error: 'GEMINI_API_KEY not configured on server. Add it to Vercel environment variables.' },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
@@ -23,58 +122,80 @@ export async function POST(request: NextRequest) {
     if (!model || !userMessage) {
       return NextResponse.json(
         { error: 'Missing required fields: model, userMessage' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`
+    const requestedTokens = maxOutputTokens ?? 6144
 
-    const requestBody: Record<string, unknown> = {
-      contents: [{ role: 'user', parts: [{ text: userMessage }] }],
-      generationConfig: {
-        temperature: temperature ?? 0.9,
-        maxOutputTokens: maxOutputTokens ?? 6144,
-      },
+    // ── Try primary model ──
+    const primary = await tryModel(model, systemPrompt, userMessage, temperature, requestedTokens)
+
+    if (primary.ok) {
+      console.log(`[Gemini Proxy] ✅ ${model} — success`)
+      return NextResponse.json({
+        data: primary.data,
+        modelUsed: primary.modelUsed,
+        fallbackUsed: false,
+      })
     }
 
-    // Only include system_instruction if provided
-    if (systemPrompt) {
-      requestBody.system_instruction = { parts: [{ text: systemPrompt }] }
-    }
+    // ── Primary failed — check if it's a retriable error (503 or 429) ──
+    const isRetriable = primary.status === 503 || primary.status === 429
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    })
-
-    // Forward the Gemini response status as-is (429, 503, etc.)
-    // The client handles retries and backoff
-    if (!response.ok) {
-      const errorText = await response.text().catch(() => 'Unknown error')
-      console.error(`[Gemini Proxy] ${response.status} from Google:`, errorText.slice(0, 500))
+    if (!isRetriable) {
+      // Non-retriable error (400, 401, 403, etc.) — return immediately
+      console.error(`[Gemini Proxy] ❌ ${model} — ${primary.status} (non-retriable): ${primary.error}`)
       return NextResponse.json(
-        { error: `Gemini ${response.status}: ${errorText.slice(0, 300)}` },
-        { status: response.status }
+        { error: primary.error },
+        { status: primary.status || 500 },
       )
     }
 
-    const data = await response.json()
+    // ── Retriable error — try fallback models ──
+    console.warn(`[Gemini Proxy] ⚠️ ${model} returned ${primary.status}, trying fallback models...`)
 
-    if (data.error) {
-      return NextResponse.json(
-        { error: data.error.message || 'Gemini API error', geminiError: data.error },
-        { status: 500 }
-      )
+    for (const fallbackModel of FALLBACK_MODELS) {
+      // Don't retry the same model that just failed
+      if (fallbackModel === model) continue
+
+      const fallback = await tryModel(fallbackModel, systemPrompt, userMessage, temperature, requestedTokens)
+
+      if (fallback.ok) {
+        console.log(`[Gemini Proxy] ✅ ${fallbackModel} — fallback success (primary ${model} returned ${primary.status})`)
+        return NextResponse.json({
+          data: fallback.data,
+          modelUsed: fallback.modelUsed,
+          fallbackUsed: true,
+          originalModel: model,
+          originalError: primary.error,
+        })
+      }
+
+      // Only continue fallback chain on 503/429 — other errors are terminal
+      if (fallback.status !== 503 && fallback.status !== 429) {
+        console.error(`[Gemini Proxy] ❌ ${fallbackModel} — ${fallback.status} (terminal): ${fallback.error}`)
+        return NextResponse.json(
+          { error: fallback.error },
+          { status: fallback.status || 500 },
+        )
+      }
+
+      console.warn(`[Gemini Proxy] ⚠️ ${fallbackModel} also returned ${fallback.status}, trying next...`)
     }
 
-    return NextResponse.json({ data })
+    // ── All models failed ──
+    console.error(`[Gemini Proxy] ❌ All models exhausted. Last error from ${FALLBACK_MODELS[FALLBACK_MODELS.length - 1]}`)
+    return NextResponse.json(
+      { error: `All models unavailable (503/429). Tried: ${model}, ${FALLBACK_MODELS.join(', ')}` },
+      { status: 503 },
+    )
 
   } catch (error) {
-    console.error('Gemini proxy error:', error)
+    console.error('[Gemini Proxy] Unexpected error:', error)
     return NextResponse.json(
       { error: `Server error: ${error instanceof Error ? error.message : String(error)}` },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

@@ -4,8 +4,26 @@
 
 import type { Injury, Item, AntagonistClue } from '@/lib/gameTypes'
 
-// Gemini AI Model — change this to switch models without code search
+// ═══════════════════════════════════════════════════════════════════════════
+// AI MODEL CONFIGURATION — 3-tier fallback for reliability
+// All models use the same Gemini API (same key, same endpoint format)
+// ═══════════════════════════════════════════════════════════════════════════
+
 export const GEMINI_MODEL = 'gemini-2.5-flash'
+
+// Fallback chain: tried server-side in /api/gemini when primary returns 503
+// Order matters — best quality first, most reliable last
+export const GEMINI_FALLBACK_MODELS = [
+  'gemma-4-31b-it',          // 1,500 RPD free, 32k output, rarely 503s
+  'gemini-2.5-flash-lite',    // 1,000 RPD free, ~16k output, ultra-light
+]
+
+// Max output tokens per model — capped to avoid rejection
+export const GEMINI_MODEL_TOKEN_LIMITS: Record<string, number> = {
+  'gemini-2.5-flash':       65536,
+  'gemma-4-31b-it':         32768,
+  'gemini-2.5-flash-lite':  16384,
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SHARD TYPES - Artifacts from all DDG 1980 pantheons
