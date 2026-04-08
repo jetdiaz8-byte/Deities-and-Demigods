@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { version } from '../../../package.json'
-import Image from 'next/image'
 
 export interface IntroScreenProps {
   geminiKey: string
@@ -54,14 +53,6 @@ export function IntroScreen({
     { icon: <Sparkles className="w-5 h-5" />, label: 'Prophecies', desc: '9 Gaiman-style fates' },
     { icon: <Skull className="w-5 h-5" />, label: 'Boss Fights', desc: '3-phase god battles' },
     { icon: <Volume2 className="w-5 h-5" />, label: 'Voice Narration', desc: 'AI-powered TTS' },
-  ]
-
-  // Gallery images for the intro screen
-  const galleryImages = [
-    { src: '/images/intro/dragon.png', alt: 'Ancient Dragon', label: 'Dragons' },
-    { src: '/images/intro/hero.png', alt: 'Epic Hero', label: 'Heroes' },
-    { src: '/images/intro/god.png', alt: 'Cosmic Deity', label: 'Gods' },
-    { src: '/images/intro/monster.png', alt: 'Eldritch Horror', label: 'Monsters' },
   ]
 
   return (
@@ -168,17 +159,71 @@ export function IntroScreen({
           animation: btn-shimmer 4s linear infinite, btn-glow-pulse 2.5s ease-in-out infinite;
         }
 
+        /* ── Cinematic Background Crossfade ── */
+        @keyframes intro-bg-fade {
+          0%, 20% { opacity: 1; }
+          25%, 95% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+
+        .intro-bg-slide {
+          position: fixed;
+          inset: 0;
+          z-index: 0;
+          background-size: cover;
+          background-position: center;
+          opacity: 0;
+          animation: intro-bg-fade 28s infinite;
+        }
+
+        .intro-bg-slide:nth-child(1) { animation-delay: 0s; }
+        .intro-bg-slide:nth-child(2) { animation-delay: 7s; }
+        .intro-bg-slide:nth-child(3) { animation-delay: 14s; }
+        .intro-bg-slide:nth-child(4) { animation-delay: 21s; }
+
+        .intro-bg-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 1;
+          background:
+            radial-gradient(ellipse at center, rgba(6,4,3,0.4) 0%, rgba(6,4,3,0.75) 60%, rgba(6,4,3,0.92) 100%),
+            linear-gradient(to bottom, rgba(6,4,3,0.5) 0%, rgba(6,4,3,0.3) 40%, rgba(6,4,3,0.6) 100%);
+        }
+
         /* ── Reduced Motion ── */
         @media (prefers-reduced-motion: reduce) {
           .intro-ember,
           .parallax-layer-fog,
           .parallax-layer-runes,
-          .btn-begin-legend {
+          .btn-begin-legend,
+          .intro-bg-slide {
             animation: none !important;
           }
           .intro-ember { display: none; }
+          .intro-bg-slide { opacity: 0; }
+          .intro-bg-slide:nth-child(1) { opacity: 1; }
         }
       `}</style>
+
+      {/* ═══ CINEMATIC FULL-BLEED BACKGROUNDS ═══ */}
+      <div
+        className="intro-bg-slide"
+        style={{ backgroundImage: 'url(/images/intro/dragon.png)' }}
+      />
+      <div
+        className="intro-bg-slide"
+        style={{ backgroundImage: 'url(/images/intro/hero.png)' }}
+      />
+      <div
+        className="intro-bg-slide"
+        style={{ backgroundImage: 'url(/images/intro/god.png)' }}
+      />
+      <div
+        className="intro-bg-slide"
+        style={{ backgroundImage: 'url(/images/intro/monster.png)' }}
+      />
+      {/* Dark vignette overlay for text readability */}
+      <div className="intro-bg-overlay" />
 
       {/* ═══ PARALLAX BACKGROUND LAYERS ═══ */}
       <div className="parallax-layer-deep" />
@@ -278,72 +323,18 @@ export function IntroScreen({
           </motion.p>
         </div>
 
-        {/* ═══ IMAGE GALLERY — Dragons, Heroes, Gods, Monsters ═══ */}
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: {},
-            visible: { transition: { staggerChildren: 0.15 } },
-          }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6"
-        >
-          {galleryImages.map((img, i) => (
-            <motion.div
-              key={img.label}
-              variants={{
-                hidden: { opacity: 0, y: 20, scale: 0.95 },
-                visible: {
-                  opacity: 1,
-                  y: 0,
-                  scale: 1,
-                  transition: {
-                    delay: 1.4 + i * 0.15,
-                    duration: 0.6,
-                    ease: 'easeOut',
-                  },
-                },
-              }}
-              className="relative group overflow-hidden rounded-sm border border-[#2e2008]/60"
-            >
-              <div className="aspect-[16/9] relative">
-                <Image
-                  src={img.src}
-                  alt={img.alt}
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110"
-                  sizes="(max-width: 640px) 50vw, 25vw"
-                />
-                {/* Dark gradient overlay for label readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                {/* Hover glow effect */}
-                <div className="absolute inset-0 bg-[#d4af37]/0 group-hover:bg-[#d4af37]/10 transition-colors duration-500" />
-              </div>
-              {/* Label */}
-              <div className="absolute bottom-0 inset-x-0 px-2 py-1.5">
-                <span
-                  className="text-[10px] sm:text-xs tracking-[.2em] uppercase text-[#f0c860]/80"
-                  style={{ fontFamily: 'Cinzel, serif' }}
-                >
-                  {img.label}
-                </span>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
-
         {/* Main Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 2.2, duration: 0.5 }}
+          transition={{ delay: 1.2, duration: 0.5 }}
         >
           <Card className="w-full bg-[#110d07]/90 backdrop-blur-sm border-[#2e2008]">
             <CardContent className="p-6">
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 2.4, duration: 0.5 }}
+                transition={{ delay: 1.4, duration: 0.5 }}
                 className="text-[#9a8860] text-center mb-6 italic leading-relaxed"
                 style={{ fontFamily: '"IM Fell English", serif' }}
               >
@@ -369,7 +360,7 @@ export function IntroScreen({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 2.6, duration: 0.4 }}
+                transition={{ delay: 1.6, duration: 0.4 }}
                 className="space-y-4"
               >
                 <div className="flex gap-3 items-center">
@@ -388,7 +379,7 @@ export function IntroScreen({
               <motion.p
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 2.7, duration: 0.4 }}
+                transition={{ delay: 1.7, duration: 0.4 }}
                 className="text-[#5a4d30] text-xs text-center mt-4 italic"
               >
                 Key auto-saves to browser memory · Direct browser calls to Gemini
@@ -398,7 +389,7 @@ export function IntroScreen({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 2.7, duration: 0.4 }}
+                transition={{ delay: 1.7, duration: 0.4 }}
                 className="text-center mt-4"
               >
                 <div className="flex items-center justify-center gap-4 text-[#5a4d30]">
@@ -423,7 +414,7 @@ export function IntroScreen({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 3.0, duration: 0.5 }}
+                transition={{ delay: 1.8, duration: 0.5 }}
                 className="flex gap-3 mt-6 justify-center flex-wrap"
               >
                 <Button
@@ -439,7 +430,7 @@ export function IntroScreen({
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: 3.3, duration: 0.4 }}
+                    transition={{ delay: 2.1, duration: 0.4 }}
                   >
                     <Button
                       onClick={() => setShowLoadDialog(true)}
@@ -472,7 +463,7 @@ export function IntroScreen({
                         opacity: 1,
                         y: 0,
                         transition: {
-                          delay: 3.2 + i * 0.1,
+                          delay: 2.0 + i * 0.1,
                           duration: 0.4,
                           ease: 'easeOut',
                         },
