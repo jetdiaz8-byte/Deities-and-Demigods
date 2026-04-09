@@ -1212,7 +1212,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     const totalInput = systemPrompt + userMsg
 
     setStatusMessage('Calling OpenRouter...')
-    const apiKey = serverKey
+    const apiKey = serverKey || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
     if (!apiKey) return getNarrationPreservationFallback(gs, 'no_api_key')
     const endpoint = 'https://openrouter.ai/api/v1/chat/completions'
     const MAX_RETRIES = 4

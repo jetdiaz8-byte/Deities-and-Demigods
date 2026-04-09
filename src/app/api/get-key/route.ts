@@ -2,10 +2,10 @@ import { NextResponse } from 'next/server'
 
 export async function GET() {
   try {
-    const key = process.env.OPENROUTER_API_KEY || ''
+    const key = process.env.OPENROUTER_API_KEY || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
 
     if (!key) {
-      console.warn('/api/get-key: OPENROUTER_API_KEY is empty or not set')
+      console.warn('/api/get-key: no key found. Checked OPENROUTER_API_KEY and NEXT_PUBLIC_OPENROUTER_API_KEY')
       return NextResponse.json({ key: '' })
     }
 
