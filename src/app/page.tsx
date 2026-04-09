@@ -33,6 +33,11 @@ import { version } from '../../package.json'
 // ═══════════════════════════════════════════════════════════════════════════
 
 export default function MythworldEngine() {
+  // SSR guard — useGameEngine needs browser APIs (localStorage, etc.)
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { setMounted(true) }, [])
+
+  const gameEngineResult = useGameEngine()
   const {
     gameState, setGameState,
     geminiKey, setGeminiKey,
@@ -94,7 +99,7 @@ export default function MythworldEngine() {
     achievementUnlocks,
     showAchievementsDialog,
     setShowAchievementsDialog,
-  } = useGameEngine()
+  } = mounted ? gameEngineResult : {} as any
 
   // ── AUDIO ENGINE ─────────────────────────────────────────────────────
   const audio = useGameAudio()
@@ -227,6 +232,9 @@ export default function MythworldEngine() {
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER — Phase Routing
   // ═══════════════════════════════════════════════════════════════════════════
+
+  // SSR guard — don't render until client-side hydration is complete
+  if (!mounted) return null
 
   // ── INTRO SCREEN ───────────────────────────────────────────────────────
   if (gamePhase === 'intro') {
