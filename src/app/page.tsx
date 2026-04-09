@@ -38,10 +38,10 @@ export default function MythworldEngine() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
-  // useGameEngine() always returns a valid object on the client (no early returns).
-  // On the server it may be undefined — but the if (!mounted) return null guard below
-  // prevents any rendering.  We only need a safe gameState for the few hooks that
-  // execute BEFORE that guard (useSceneMusic, useMemo, useEffect).
+  // useGameEngine() always returns a valid object (no early returns in the hook).
+  // On the server during SSR prerender, the hooks still execute but effects don't run.
+  // The `if (!mounted) return null` guard below prevents any JSX rendering during SSR.
+  // We only need safeGS for hooks that execute BEFORE that guard.
   const gameEngineResult = useGameEngine() as any
   const {
     gameState,
@@ -108,7 +108,6 @@ export default function MythworldEngine() {
   } = gameEngineResult ?? {}
 
   // Safe gameState for hooks that run before the mounted guard.
-  // After hydration (mounted=true), this is always the real gameState from the hook.
   const safeGS = gameState ?? createInitialState()
 
   // ── AUDIO ENGINE ─────────────────────────────────────────────────────
@@ -183,12 +182,12 @@ export default function MythworldEngine() {
   // Achievement toast — watch for newly unlocked achievements
   const lastAchievementCount = React.useRef(0)
   React.useEffect(() => {
-    if (achievementUnlocks.length > lastAchievementCount.current && lastAchievementCount.current > 0) {
+    if ((achievementUnlocks?.length ?? 0) > lastAchievementCount.current && lastAchievementCount.current > 0) {
       const latest = achievementUnlocks[achievementUnlocks.length - 1]
       const def = getAchievementDef(latest.id)
       showToast(def?.name || 'Achievement Unlocked', def?.description || 'Something happened', '🏆')
     }
-    lastAchievementCount.current = achievementUnlocks.length
+    lastAchievementCount.current = achievementUnlocks?.length ?? 0
   }, [achievementUnlocks, showToast])
 
   // ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────────
@@ -429,14 +428,14 @@ export default function MythworldEngine() {
                 turn={gameState.turn}
                 gameState={gameState}
               />
-              {narrativeContent.map((item, idx) => {
-                const isLast = idx === narrativeContent.length - 1
+              {(narrativeContent ?? []).map((item, idx) => {
+                const isLast = idx === (narrativeContent ?? []).length - 1
                 if (typingMode && !isLast) {
                   return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} style={{ opacity: 0.6 }} />
                 }
                 return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} />
               })}
-              {comicMode && comicPanels.length > 0 && (
+              {comicMode && (comicPanels ?? []).length > 0 && (
                 <div className="mt-4">
                   <ComicPanel panels={comicPanels} artStyle={comicArtStyle} />
                 </div>
@@ -596,7 +595,7 @@ export default function MythworldEngine() {
             className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             <Package className="w-4 h-4 mr-1" />
-            <Badge variant="secondary" className="ml-1 text-[10px]">{gameState.inventory.length}</Badge>
+            <Badge variant="secondary" className="ml-1 text-[10px]">{gameState.inventory?.length ?? 0}</Badge>
           </Button>
 
           {/* Save Button */}
