@@ -7,7 +7,7 @@ import type {
   GreaterGodData, ShardType, InjuryTemplate, PlayerSkills, Aspect
 } from '@/lib/gameTypes'
 import { ACTS, SKILL_ABILITY_MAP } from '@/lib/gameTypes'
-import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES, GEMINI_MODEL } from '@/lib/gameConstants'
+import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES, OPENROUTER_MODEL, OPENROUTER_FALLBACK_MODELS } from '@/lib/gameConstants'
 import { createInitialState } from '@/lib/gameState'
 import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, fullStaminaRestore, assignSkillProficiencies, inferClassesFromCharacter, clearEntityCache } from '@/lib/gameHelpers'
 import { getRandomHeroes } from '@/lib/fallbackEntities'
@@ -1203,10 +1203,10 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
     const totalInput = systemPrompt + userMsg
 
-    setStatusMessage('Calling Gemini...')
-    const key = serverKey
-    if (!key) return getNarrationPreservationFallback(gs, 'no_api_key')
-    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=' + key
+    setStatusMessage('Calling OpenRouter...')
+    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || serverKey
+    if (!apiKey) return getNarrationPreservationFallback(gs, 'no_api_key')
+    const endpoint = 'https://openrouter.ai/api/v1/chat/completions'
     const MAX_RETRIES = 4
     const BASE_DELAY = 6000
     const RATE_LIMIT_DELAY = 60000
@@ -1217,13 +1217,25 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         await new Promise(r => setTimeout(r, BASE_DELAY * Math.pow(2, attempt - 1)))
       }
       try {
+        const fallbackModel = OPENROUTER_FALLBACK_MODELS[attempt % OPENROUTER_FALLBACK_MODELS.length]
+        const model = fallbackModel || OPENROUTER_MODEL
+        const messages = [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: toAscii(userMsg) },
+        ]
         const r = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://deities-and-demigods.vercel.app',
+            'X-Title': 'Deities & Demigods - Mythworld Engine',
+          },
           body: JSON.stringify({
-            system_instruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ role: 'user', parts: [{ text: toAscii(userMsg) }] }],
-            generationConfig: { temperature: 0.9, maxOutputTokens: maxTokens }
+            model,
+            messages,
+            max_tokens: maxTokens,
+            temperature: 0.85,
           }),
         })
         if (r.status === 429) {
@@ -1233,30 +1245,33 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           await new Promise(r => setTimeout(r, wait))
           continue
         }
+        if (r.status === 502) {
+          if (attempt === MAX_RETRIES - 1) return getNarrationPreservationFallback(gs, 'service_unavailable')
+          const wait = RATE_LIMIT_DELAY + (attempt * 15000)
+          setStatusMessage('OpenRouter upstream issue - waiting ' + Math.round(wait / 1000) + 's...')
+          await new Promise(r => setTimeout(r, wait))
+          continue
+        }
         if (r.status === 503) {
           if (attempt === MAX_RETRIES - 1) return getNarrationPreservationFallback(gs, 'service_unavailable')
           const wait = RATE_LIMIT_DELAY + (attempt * 15000)
-          setStatusMessage('Gemini overloaded - waiting ' + Math.round(wait / 1000) + 's...')
+          setStatusMessage('OpenRouter overloaded - waiting ' + Math.round(wait / 1000) + 's...')
           await new Promise(r => setTimeout(r, wait))
           continue
         }
         if (!r.ok) {
-          const e = await r.text()
-          console.error('Gemini error ' + r.status + ':', e.slice(0, 200))
-          throw new Error('Gemini ' + r.status + ': ' + e.slice(0, 150))
+          const errData = await r.json().catch(() => ({} as { error?: { message?: string } }))
+          const errMsg = errData?.error?.message || `HTTP ${r.status}`
+          throw new Error(`OpenRouter ${r.status}: ${errMsg}`)
         }
         const data = await r.json()
-        if (data.error) { console.error('Gemini API error:', data.error); throw new Error(data.error.message) }
-        const candidate = (data.candidates || [])[0]
-        if (candidate?.finishReason === 'MAX_TOKENS') console.warn('Gemini response TRUNCATED.')
-        const parts = candidate?.content?.parts || []
-        let raw = ''
-        for (const part of parts) { if (part.text && part.text.trim().length > 10) raw += part.text }
-        console.log('Gemini response: ' + raw.length + ' chars, ' + (isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn))
-        updateTokenUsage(totalInput, raw)
-        return parseDMResponse(raw, gs)
+        const text = data.choices?.[0]?.message?.content || ''
+        if (!text || text.trim().length < 10) throw new Error('OpenRouter returned empty response')
+        console.log('OpenRouter response: ' + text.length + ' chars, ' + (isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn))
+        updateTokenUsage(totalInput, text)
+        return parseDMResponse(text, gs)
       } catch (e) {
-        console.error('Gemini fetch error (attempt ' + (attempt + 1) + '):', e)
+        console.error('OpenRouter fetch error (attempt ' + (attempt + 1) + '):', e)
         if (attempt < MAX_RETRIES - 1 && String(e).includes('fetch')) continue
         if (attempt === MAX_RETRIES - 1) return getNarrationPreservationFallback(gs, String(e))
       }

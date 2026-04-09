@@ -5,25 +5,24 @@
 import type { Injury, Item, AntagonistClue } from '@/lib/gameTypes'
 
 // ═══════════════════════════════════════════════════════════════════════════
-// AI MODEL CONFIGURATION — 3-tier fallback for reliability
-// All models use the same Gemini API (same key, same endpoint format)
+// AI MODEL CONFIGURATION — OpenRouter fallback chain
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const GEMINI_MODEL = 'gemini-flash-latest'
+export const OPENROUTER_MODEL = 'mistralai/mistral-large'
 
-// Fallback chain: tried server-side in /api/gemini when primary returns 503
-// Order matters — best quality first, most reliable last
-export const GEMINI_FALLBACK_MODELS = [
-  'gemma-4-31b-it',          // 1,500 RPD free, 32k output, rarely 503s
-  'gemini-2.5-flash-lite',    // 1,000 RPD free, ~16k output, ultra-light
-]
-
-// Max output tokens per model — capped to avoid rejection
-export const GEMINI_MODEL_TOKEN_LIMITS: Record<string, number> = {
-  'gemini-flash-latest':       65536,
-  'gemma-4-31b-it':         32768,
-  'gemini-2.5-flash-lite':  16384,
+export const OPENROUTER_MODEL_TOKEN_LIMITS: Record<string, number> = {
+  'mistralai/mistral-large': 65536,
+  'cohere/command-r-plus': 128000,
+  'deepseek/deepseek-chat-v3-0324:free': 65536,
+  'google/gemma-3-27b-it:free': 8192,
 }
+
+export const OPENROUTER_FALLBACK_MODELS = [
+  'mistralai/mistral-large',
+  'cohere/command-r-plus',
+  'deepseek/deepseek-chat-v3-0324:free',
+  'google/gemma-3-27b-it:free',
+]
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SHARD TYPES - Artifacts from all DDG 1980 pantheons
