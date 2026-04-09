@@ -38,7 +38,7 @@ export default function MythworldEngine() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
-  const gameEngineResult = useGameEngine()
+  const gameEngineResult = useGameEngine() ?? {}
   const {
     gameState, setGameState,
     geminiKey, setGeminiKey,
