@@ -488,7 +488,7 @@ export function IntroScreen({
 
               <p className="text-[#5a4d30] text-[10px] text-center mt-1 italic">
                 {engineMode === 'gemini'
-                  ? 'Key auto-saves to browser \u00b7 Direct calls to Gemini'
+                  ? 'Server proxy mode \u00b7 Gemini key optional'
                   : engineMode === 'dual'
                     ? 'Dual Engine \u00b7 Mechanics locally + narration via cloud'
                     : 'Local LLM \u00b7 No API key needed \u00b7 Runs on your machine'}
@@ -511,7 +511,7 @@ export function IntroScreen({
 
               {/* Begin button */}
               <div className="flex gap-2 mt-4 justify-center flex-wrap">
-                <Button onClick={startNewCampaign} disabled={engineMode === 'gemini' ? !geminiKey : !lmConnected}
+                <Button onClick={startNewCampaign} disabled={engineMode !== 'gemini' && !lmConnected}
                   className="btn-begin-legend bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860] border border-[#7a5f20] px-6 sm:px-10 py-2.5 sm:py-3 text-sm transition-all disabled:opacity-40 disabled:animate-none"
                   style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.17em' }}>
                   {'\u2694'} Begin Your Legend {'\u2694'}

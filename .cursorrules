@@ -45,13 +45,13 @@ AI-driven mythological RPG powered by DDG 1980 compendium. 3-act structure, Gaim
 ## Game Systems
 - ACTS: I (intro, shadow antagonist, 10-100 turns) → II (full party, clues, 20-60 turns) → III (boss fight, 3 phases)
 - PC STRUCTURE: 1 Main PC (shard carrier) + 1 Companion (affinity -100 to +100) + 3 RNG Heroes + 3 RNG Demigods
-- SHARD: Central plot device, chose main PC, whispers visions, senses antagonist, pantheon affinity, 2 summoning charges
+- SHARD: Central plot device that chose the main PC, whispers prophetic visions, senses antagonist activity, tracks pantheon affinity, and holds 2 summoning charges.
 - PROPHECY: Bound to shard, d9 roll for riddle, states dormant→awakening→manifesting→fulfilled, transfers on PC death
 - ANTAGONIST: Random Greater God (HP>=300) or Super Monster, hidden until Act III, clues revealed gradually
 - COMBAT: d20 vs DC, damage/injury via JSON state, INJURY_TABLE for effects
 - SUCCESS RATE: 50% base + 2/living PC + 3-8/prophecy state + 3/allied god, each factor capped at +5%
 - PERMADEATH: Real death, shard summons replacement, prophecy transfers
-- COMPANION AFFINITY: -100 to +100, moods: devoted/loyal/concerned/conflicted/hostile
+- COMPANION AFFINITY: -100 to +100 relationship scale that maps to moods (devoted/loyal/concerned/conflicted/hostile) and guides companion suggestion tone.
 - COMIC PANELS: 2-4 panels per turn, Larry Elmore style, toggle on/off, lazy-loaded
 - SAVE/LOAD: localStorage with safeLocalStorageGetItem/SetItem (no TDZ), quota handling
 

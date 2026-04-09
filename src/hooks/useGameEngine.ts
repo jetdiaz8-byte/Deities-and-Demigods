@@ -751,10 +751,6 @@ export function useGameEngine() {
 
   // ── START NEW CAMPAIGN ─────────────────────────────────────────────────
   const startNewCampaign = async () => {
-    if (!geminiKey) {
-      toast({ title: 'API Key Required', description: 'Enter your Gemini API key to begin', variant: 'destructive' })
-      return
-    }
     clearEntityCache()
     await fetchAvailableHeroes()
     setGamePhase('party_select')
@@ -1230,6 +1226,13 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       console.error('Gemini proxy fetch error:', e)
       return getNarrationPreservationFallback(gs, String(e))
     }
+  }
+
+  const parseDMResponse = (raw: string, gs: GameState): DMResponse => {
+    let splitPos = raw.lastIndexOf('\n{')
+    let keyIdx = raw.indexOf('"story_summary"')
+    if (keyIdx === -1) keyIdx = raw.indexOf('"dm_narration"')
+    if (keyIdx > -1) splitPos = raw.lastIndexOf('{', keyIdx)
 
     let narrative = ''
     let jsonStr = ''
