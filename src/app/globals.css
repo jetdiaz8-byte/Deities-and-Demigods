@@ -76,6 +76,37 @@ body {
 .narrative-area { font-size: 0.875rem; line-height: 1.6; }
 @media (min-width: 640px) { .narrative-area { font-size: 0.9375rem; } }
 
+/* DM narration parchment block */
+.dm-narration-block {
+  background:
+    radial-gradient(ellipse at top, rgba(112, 88, 52, 0.14), transparent 55%),
+    linear-gradient(180deg, rgba(32, 24, 14, 0.92) 0%, rgba(24, 18, 10, 0.94) 100%);
+  border: 1px solid rgba(122, 95, 32, 0.4);
+  border-radius: 10px;
+  color: #e8dcc8;
+  padding: 12px 12px 10px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 230, 180, 0.06),
+    0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.dm-narration-collapsed {
+  max-height: 22rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.dm-narration-collapsed::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4rem;
+  background: linear-gradient(180deg, rgba(24, 18, 10, 0) 0%, rgba(24, 18, 10, 0.95) 100%);
+  pointer-events: none;
+}
+
 .sidebar-sheet { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
 
 .comic-grid { display: grid; gap: 6px; margin: 8px 0; }
