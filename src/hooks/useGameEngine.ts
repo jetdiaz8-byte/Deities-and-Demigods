@@ -247,16 +247,9 @@ export function useGameEngine() {
 
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
-    const savedGemini = safeLocalStorageGetItem('mythworld_gemini') || ''
-    setGeminiKey(savedGemini)
     fetch('/api/get-key').then(r => r.json()).then(d => { if (d.key) setServerKey(d.key) }).catch(() => {})
     loadSaveSlots()
   }, [])
-
-  // ── SAVE KEYS TO STORAGE ───────────────────────────────────────────────
-  useEffect(() => {
-    if (geminiKey) safeLocalStorageSetItem('mythworld_gemini', geminiKey)
-  }, [geminiKey])
 
   // Cleanup any pending audio fade interval on unmount
   useEffect(() => {
@@ -1204,7 +1197,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     const totalInput = systemPrompt + userMsg
 
     setStatusMessage('Calling Gemini...')
-    const key = serverKey || geminiKey
+    const key = serverKey
     if (!key) return getNarrationPreservationFallback(gs, 'no_api_key')
     const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + key
     const MAX_RETRIES = 4
