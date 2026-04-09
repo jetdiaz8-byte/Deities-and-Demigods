@@ -1230,9 +1230,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       console.error('Gemini proxy fetch error:', e)
       return getNarrationPreservationFallback(gs, String(e))
     }
-      if (keyIdx === -1) keyIdx = raw.indexOf('"dm_narration"')
-      if (keyIdx > -1) splitPos = raw.lastIndexOf('{', keyIdx)
-    }
 
     let narrative = ''
     let jsonStr = ''
