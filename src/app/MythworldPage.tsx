@@ -109,7 +109,7 @@ export default function MythworldEngine() {
 
   // Typing mode toggle for narrative reveal
   const [typingMode, setTypingMode] = React.useState(false)
-  const [expandedNarrationAt, setExpandedNarrationAt] = React.useState<number | null>(null)
+  const [showFullNarration, setShowFullNarration] = React.useState(false)
 
   // Quest Journal modal state
   const [showQuestJournal, setShowQuestJournal] = React.useState(false)
@@ -167,7 +167,6 @@ export default function MythworldEngine() {
     [latestNarrativeHtml],
   )
   const shouldCollapseNarration = latestNarrativeText.length > 1200
-  const showFullNarration = expandedNarrationAt === narrativeCount
   const autoNarratedTurnRef = useRef<number>(-1)
 
   // ── TOAST NOTIFICATION SYSTEM ─────────────────────────────────────────
@@ -203,6 +202,20 @@ export default function MythworldEngine() {
     }, 350)
     return () => clearTimeout(timer)
   }, [narratorMode, lastDMNarrative, gameState?.turn, gameState?.isProcessing, isSpeaking, speakNarrative])
+
+  // Retry auto-TTS when narrative text updates (not only on turn increments).
+  useEffect(() => {
+    if (narratorMode !== 'auto') return
+    if (!latestNarrativeText || gameState?.isProcessing || isSpeaking) return
+    if (typeof document !== 'undefined' && document.hidden) return
+    const turn = gameState?.turn ?? 0
+    if (autoNarratedTurnRef.current === turn) return
+    autoNarratedTurnRef.current = turn
+    const timer = setTimeout(() => {
+      speakNarrative()
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [narratorMode, latestNarrativeText, gameState?.turn, gameState?.isProcessing, isSpeaking, speakNarrative])
 
   // ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────────
   // 1-9: Select PC action | A/B/C: Select companion action | Enter: Confirm
@@ -442,7 +455,7 @@ export default function MythworldEngine() {
               {(narrativeContent ?? []).map((item, idx) => {
                 const isLast = idx === (narrativeContent ?? []).length - 1
                 const collapseClass = isLast && shouldCollapseNarration && !showFullNarration
-                  ? 'dm-narration-collapsed'
+                  ? 'dm-narration-collapsed line-clamp-3 overflow-hidden'
                   : ''
                 if (typingMode && !isLast) {
                   return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} style={{ opacity: 0.6 }} />
@@ -450,7 +463,7 @@ export default function MythworldEngine() {
                 return (
                   <div
                     key={idx}
-                    className={isLast ? `dm-narration-block ${collapseClass}` : undefined}
+                    className={isLast ? `dm-narration-block bg-[#1a1a0e] text-[#e8dcc8] border border-[#5a4018] ${collapseClass}` : undefined}
                     dangerouslySetInnerHTML={{ __html: item.html }}
                   />
                 )
@@ -458,11 +471,11 @@ export default function MythworldEngine() {
               {shouldCollapseNarration && (
                 <div className="mt-2 mb-3 text-center">
                   <button
-                    onClick={() => setExpandedNarrationAt(showFullNarration ? null : narrativeCount)}
+                    onClick={() => setShowFullNarration(!showFullNarration)}
                     className="min-h-[44px] px-4 py-2 text-xs rounded border border-[#5a4018] text-[#d4af37] bg-[rgba(20,14,8,0.7)] hover:bg-[rgba(32,22,12,0.8)] transition-all"
                     style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}
                   >
-                    {showFullNarration ? 'Show less' : 'Continue reading'}
+                    {showFullNarration ? 'Show less ▲' : 'Continue reading ▼'}
                   </button>
                 </div>
               )}
