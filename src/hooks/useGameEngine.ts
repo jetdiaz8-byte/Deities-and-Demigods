@@ -78,21 +78,36 @@ export function useGameEngine() {
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
   const [aiProvider, setAiProvider] = useState<'gemini' | 'lmstudio'>('gemini')
-  const [engineMode, setEngineMode] = useState<'gemini' | 'lmstudio' | 'dual'>(() => (safeLocalStorageGetItem('mw_engineMode') as 'gemini' | 'lmstudio' | 'dual') || 'gemini')
-  const [lmStudioUrl, setLmStudioUrl] = useState(() => safeLocalStorageGetItem('mw_lmStudioUrl') || 'http://localhost:1234')
-  const [lmStudioModel, setLmStudioModel] = useState(() => safeLocalStorageGetItem('mw_lmStudioModel') || 'default')
-  const [comicMode, setComicMode] = useState<boolean>(() => safeLocalStorageGetItem('mw_comicMode') === 'true')
+  const [engineMode, setEngineMode] = useState<'gemini' | 'lmstudio' | 'dual'>('gemini')
+  const [lmStudioUrl, setLmStudioUrl] = useState('http://localhost:1234')
+  const [lmStudioModel, setLmStudioModel] = useState('default')
+  const [comicMode, setComicMode] = useState<boolean>(false)
   const [comicPanels, setComicPanels] = useState<ComicPanelData[]>([])
-  const [comicArtStyle, setComicArtStyle] = useState<'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor'>(
-    () => (safeLocalStorageGetItem('mw_comicArtStyle') as 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor') || 'larry-elmore'
-  )
+  const [comicArtStyle, setComicArtStyle] = useState<'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor'>('larry-elmore')
+  const [settingsHydrated, setSettingsHydrated] = useState(false)
+
+  // Hydrate persisted settings after mount to avoid SSR/client mismatch.
+  useEffect(() => {
+    const savedMode = safeLocalStorageGetItem('mw_engineMode') as 'gemini' | 'lmstudio' | 'dual' | null
+    const savedUrl = safeLocalStorageGetItem('mw_lmStudioUrl')
+    const savedModel = safeLocalStorageGetItem('mw_lmStudioModel')
+    const savedComicMode = safeLocalStorageGetItem('mw_comicMode')
+    const savedComicStyle = safeLocalStorageGetItem('mw_comicArtStyle') as 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor' | null
+
+    if (savedMode) setEngineMode(savedMode)
+    if (savedUrl) setLmStudioUrl(savedUrl)
+    if (savedModel) setLmStudioModel(savedModel)
+    if (savedComicMode === 'true') setComicMode(true)
+    if (savedComicStyle) setComicArtStyle(savedComicStyle)
+    setSettingsHydrated(true)
+  }, [])
 
   // Persist dual-engine settings to localStorage
-  useEffect(() => { safeLocalStorageSetItem('mw_engineMode', engineMode) }, [engineMode])
-  useEffect(() => { safeLocalStorageSetItem('mw_lmStudioUrl', lmStudioUrl) }, [lmStudioUrl])
-  useEffect(() => { safeLocalStorageSetItem('mw_lmStudioModel', lmStudioModel) }, [lmStudioModel])
-  useEffect(() => { safeLocalStorageSetItem('mw_comicMode', comicMode ? 'true' : 'false') }, [comicMode])
-  useEffect(() => { safeLocalStorageSetItem('mw_comicArtStyle', comicArtStyle) }, [comicArtStyle])
+  useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_engineMode', engineMode) }, [engineMode, settingsHydrated])
+  useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_lmStudioUrl', lmStudioUrl) }, [lmStudioUrl, settingsHydrated])
+  useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_lmStudioModel', lmStudioModel) }, [lmStudioModel, settingsHydrated])
+  useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_comicMode', comicMode ? 'true' : 'false') }, [comicMode, settingsHydrated])
+  useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_comicArtStyle', comicArtStyle) }, [comicArtStyle, settingsHydrated])
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
