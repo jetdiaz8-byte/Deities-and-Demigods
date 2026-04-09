@@ -77,6 +77,7 @@ export function useGameEngine() {
 
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [geminiKey, setGeminiKey] = useState('')
+  const [serverKey, setServerKey] = useState('')
   const [aiProvider, setAiProvider] = useState<'gemini' | 'lmstudio'>('gemini')
   const [engineMode, setEngineMode] = useState<'gemini' | 'lmstudio' | 'dual'>('gemini')
   const [lmStudioUrl, setLmStudioUrl] = useState('http://localhost:1234')
@@ -248,6 +249,7 @@ export function useGameEngine() {
   useEffect(() => {
     const savedGemini = safeLocalStorageGetItem('mythworld_gemini') || ''
     setGeminiKey(savedGemini)
+    fetch('/api/get-key').then(r => r.json()).then(d => { if (d.key) setServerKey(d.key) }).catch(() => {})
     loadSaveSlots()
   }, [])
 
@@ -2406,7 +2408,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ── RUN TURN ───────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════
-  // DUAL-ENGINE DM SYSTEM v2.11.0
+  // DUAL-ENGINE DM SYSTEM v2.12.1
   //   LM Studio  → mechanics (dice, rules, state changes)
   //   Gemini     → creative narration (prose, dialogue, atmosphere)
   //   Dual mode  → both in parallel, merge best of each
@@ -2430,7 +2432,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       })
       if (!r.ok) {
         const errText = await r.text().catch(() => 'Unknown')
-        if (r.status === 502 && !opts?.noGeminiFallback) {
+        if (r.status === 502 && !opts?.noGeminiFallback && (serverKey || geminiKey)) {
           setStatusMessage('LM Studio unavailable - Gemini fallback...')
           return callGeminiDM(userMsg, gs, isFirst)
         }
