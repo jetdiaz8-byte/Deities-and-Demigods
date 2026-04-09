@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 // The key is stored as GEMINI_API_KEY environment variable on Vercel
 //
 // 3-tier fallback chain for reliability:
-//   1. gemini-2.5-flash     (best prose quality, 65k output)
+//   1. gemini-flash-latest     (best prose quality, 65k output)
 //   2. gemma-4-31b-it       (1,500 RPD, 32k output, rarely 503s)
 //   3. gemini-2.5-flash-lite (1,000 RPD, 16k output, ultra-light)
 
@@ -12,7 +12,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 
 // Max output tokens per model — fallbacks have lower limits
 const MODEL_TOKEN_LIMITS: Record<string, number> = {
-  'gemini-2.5-flash':       65536,
+  'gemini-flash-latest':       65536,
   'gemma-4-31b-it':         32768,
   'gemini-2.5-flash-lite':  16384,
 }
