@@ -1,90 +1,73 @@
-# Deities & Demigods — Fate Core RPG Web App
+# Deities & Demigods — Mythworld Engine v2.12.1
 
 ## Project Overview
-Interactive text-based RPG powered by Gemini 2.5 Flash AI. Players choose mythological demigod heroes across a 3-act structure with Fate Core dice mechanics, DM narration, TTS voice acting, ambient audio, and visual portraits.
+AI-driven mythological RPG powered by DDG 1980 compendium. 3-act structure, Gaiman-style narration, permadeath, prophecy, shard system, companion affinity, divine combat. Dual-engine DM: Gemini (narrative) + LM Studio (mechanics).
 
 ## Tech Stack
-- Framework: Next.js 16 (App Router), React 19, TypeScript 6
-- Styling: Tailwind CSS 4, shadcn/ui, custom medieval CSS theme
-- AI: Gemini 2.5 Flash via z-ai-web-dev-sdk (client-side)
-- TTS: Dual engine — Browser Web Speech API (primary) + Edge TTS /api/tts (neural fallback)
-- Audio: Web Audio API via useGameAudio.ts
-- Database: SQLite via Prisma (entity/codex only, not game state)
-- State: In-memory React state in useGameEngine.ts
-- Deployment: Vercel serverless | Version: 2.7.9
+- Framework: Next.js 15 (App Router), React 19, TypeScript
+- Styling: Tailwind CSS 4, shadcn/ui, custom medieval dark theme
+- AI DM: Gemini 2.5 Flash via /api/gemini proxy (server-side, 3-tier fallback)
+- AI Mechanics: LM Studio via /api/lmstudio proxy (local LLM, falls back to Gemini)
+- AI Actions: Groq API for 6 player action options per turn
+- TTS: Browser Web Speech API (primary) + Edge TTS /api/tts (fallback)
+- Comic Panels: /api/generate-image, Larry Elmore style, lazy-loaded
+- Database: SQLite via Prisma (170+ DDG entities, query-only)
+- State: React state in useGameEngine.ts + localStorage save/load
+- Deployment: Vercel serverless | PWA manifest
 
 ## Architecture
-- src/hooks/useGameEngine.ts (~3900 lines) — THE monolith. All game logic. Changes require extreme care.
+- src/hooks/useGameEngine.ts (~4100 lines) — THE monolith. ALL game logic. Changes require extreme care.
+- src/app/page.tsx (~3900 lines) — All UI rendering in one file
+- src/lib/gameConstants.ts — GEMINI_MODEL, SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES
 - src/lib/gameTypes.ts — All TS interfaces (GameState, PlayerCharacter, DMResponse)
-- src/components/game/GameHeader.tsx — Voice controls, dual engine toggle, party portraits
-- src/components/game/GameNarrative.tsx — DM narration with mood-based parchment styling
-- src/app/api/tts/route.ts — Edge TTS endpoint, node-edge-tts, maxDuration=30
+- src/lib/characterData.ts — DDG 1980 entities (heroes, demigods, gods, monsters)
+- src/lib/krynnCharacters.ts — Dragonlance entities
+- src/lib/prophecyData.ts — 9 prophecies (d9 roll, Gaiman-style riddles)
+- src/lib/antagonistPool.ts — Boss pool (Greater Gods HP>=300 + Super Monsters)
+- src/lib/fallbackEntities.ts — Fallback data when API fails
+- src/lib/comicPanelGenerator.ts — Splits narration into 2-4 comic panels
+- src/components/game/ComicPanel.tsx — Comic panel grid UI
+- src/app/api/gemini/route.ts — Server-side Gemini proxy (3-tier: Flash → Gemma 4 → Flash-Lite)
+- src/app/api/lmstudio/route.ts — LM Studio local LLM proxy
+- src/app/api/generate-image/route.ts — Image generation for comic panels
+- src/app/api/tts/route.ts — Edge TTS endpoint
+- src/app/api/game-entities/route.ts — Entity database query
 
 ## Critical Constraints
-- Vercel Hobby: 10s timeout. Edge TTS often fails. ws must be in serverExternalPackages.
-- Zero TS errors standard (ignoreBuildErrors is true but we maintain clean code).
-- All game state is in-memory. No persistence. Page refresh = lost game.
-- maxOutputTokens: 6144. 429/503: 60s+ exponential backoff, max 3 retries.
+- Gemini calls MUST go through /api/gemini proxy. NEVER call generativelanguage.googleapis.com directly from client. No exposed API keys.
+- /api/gemini handles retries + 3-tier fallback server-side. Client should NOT retry Gemini calls.
+- LM Studio fallback to Gemini must work WITHOUT any client-side API key check.
+- Zero TS errors. No any types.
 - JSON parse failure: use getNarrationPreservationFallback() NEVER getTemplateFallback().
+- maxOutputTokens: 6144 regular turns, 20000 opening turns.
+- Mobile-first: 48px touch targets, safe-area-inset, viewport-fit cover, no pinch-zoom.
+
+## Game Systems
+- ACTS: I (intro, shadow antagonist, 10-100 turns) → II (full party, clues, 20-60 turns) → III (boss fight, 3 phases)
+- PC STRUCTURE: 1 Main PC (shard carrier) + 1 Companion (affinity -100 to +100) + 3 RNG Heroes + 3 RNG Demigods
+- SHARD: Central plot device, chose main PC, whispers visions, senses antagonist, pantheon affinity, 2 summoning charges
+- PROPHECY: Bound to shard, d9 roll for riddle, states dormant→awakening→manifesting→fulfilled, transfers on PC death
+- ANTAGONIST: Random Greater God (HP>=300) or Super Monster, hidden until Act III, clues revealed gradually
+- COMBAT: d20 vs DC, damage/injury via JSON state, INJURY_TABLE for effects
+- SUCCESS RATE: 50% base + 2/living PC + 3-8/prophecy state + 3/allied god, each factor capped at +5%
+- PERMADEATH: Real death, shard summons replacement, prophecy transfers
+- COMPANION AFFINITY: -100 to +100, moods: devoted/loyal/concerned/conflicted/hostile
+- COMIC PANELS: 2-4 panels per turn, Larry Elmore style, toggle on/off, lazy-loaded
+- SAVE/LOAD: localStorage with safeLocalStorageGetItem/SetItem (no TDZ), quota handling
 
 ## TTS Dual Engine
 - Browser (default): window.speechSynthesis, zero server dependency
-- Neural (fallback): /api/tts, Edge TTS, may fail on hobby plan
+- Neural (fallback): /api/tts, Edge TTS
 - localStorage keys: ddg_tts_engine, ddg_browser_voice
-- Neural voices: Guy (DM), Christopher, Brian, Ryan (British), Aria, Jenny, Connor (Irish), Thomas, Davis, Jason
 
 ## Code Style
-- Functional components + hooks only. Tailwind medieval palette.
-- console.error only. No any types. Mobile-first 44px touch targets.
+- Functional components + hooks only. Tailwind medieval dark palette.
+- console.error for errors, console.log for success tracking, console.warn for warnings.
+- Mobile-first responsive: sm: breakpoint for tablet, md: for desktop.
 
 ## Pending Tasks
-1. Full bug scan — all files for bugs, edge cases, code quality
-2. Performance audit — useGameEngine.ts re-renders, memoization
-3. Game state persistence — localStorage or IndexedDB
-4. API key security — move Gemini key server-side
-Create a file called .cursorrules at the project root with the following content:
-
-# Deities & Demigods — Fate Core RPG Web App
-
-## Project Overview
-Interactive text-based RPG powered by Gemini 2.5 Flash AI. Players choose mythological demigod heroes across a 3-act structure with Fate Core dice mechanics, DM narration, TTS voice acting, ambient audio, and visual portraits.
-
-## Tech Stack
-- Framework: Next.js 16 (App Router), React 19, TypeScript 6
-- Styling: Tailwind CSS 4, shadcn/ui, custom medieval CSS theme
-- AI: Gemini 2.5 Flash via z-ai-web-dev-sdk (client-side)
-- TTS: Dual engine — Browser Web Speech API (primary) + Edge TTS /api/tts (neural fallback)
-- Audio: Web Audio API via useGameAudio.ts
-- Database: SQLite via Prisma (entity/codex only, not game state)
-- State: In-memory React state in useGameEngine.ts
-- Deployment: Vercel serverless | Version: 2.7.9
-
-## Architecture
-- src/hooks/useGameEngine.ts (~3900 lines) — THE monolith. All game logic. Changes require extreme care.
-- src/lib/gameTypes.ts — All TS interfaces (GameState, PlayerCharacter, DMResponse)
-- src/components/game/GameHeader.tsx — Voice controls, dual engine toggle, party portraits
-- src/components/game/GameNarrative.tsx — DM narration with mood-based parchment styling
-- src/app/api/tts/route.ts — Edge TTS endpoint, node-edge-tts, maxDuration=30
-
-## Critical Constraints
-- Vercel Hobby: 10s timeout. Edge TTS often fails. ws must be in serverExternalPackages.
-- Zero TS errors standard (ignoreBuildErrors is true but we maintain clean code).
-- All game state is in-memory. No persistence. Page refresh = lost game.
-- maxOutputTokens: 6144. 429/503: 60s+ exponential backoff, max 3 retries.
-- JSON parse failure: use getNarrationPreservationFallback() NEVER getTemplateFallback().
-
-## TTS Dual Engine
-- Browser (default): window.speechSynthesis, zero server dependency
-- Neural (fallback): /api/tts, Edge TTS, may fail on hobby plan
-- localStorage keys: ddg_tts_engine, ddg_browser_voice
-- Neural voices: Guy (DM), Christopher, Brian, Ryan (British), Aria, Jenny, Connor (Irish), Thomas, Davis, Jason
-
-## Code Style
-- Functional components + hooks only. Tailwind medieval palette.
-- console.error only. No any types. Mobile-first 44px touch targets.
-
-## Pending Tasks
-1. Full bug scan — all files for bugs, edge cases, code quality
-2. Performance audit — useGameEngine.ts re-renders, memoization
-3. Game state persistence — localStorage or IndexedDB
-4. API key security — move Gemini key server-side
+1. Fix corrupted parseDMResponse splice in useGameEngine.ts (orphaned lines after callGeminiDM)
+2. Full bug scan — all 18 game systems for edge cases
+3. Performance audit — useGameEngine.ts re-renders, memoization
+4. Comic panel image generation — verify /api/generate-image works end-to-end
+5. Game state persistence upgrade — localStorage → IndexedDB for larger saves
