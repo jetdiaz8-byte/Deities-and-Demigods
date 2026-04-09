@@ -1206,7 +1206,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     setStatusMessage('Calling Gemini...')
     const key = serverKey
     if (!key) return getNarrationPreservationFallback(gs, 'no_api_key')
-    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' + key
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key
     const MAX_RETRIES = 4
     const BASE_DELAY = 6000
     const RATE_LIMIT_DELAY = 60000
