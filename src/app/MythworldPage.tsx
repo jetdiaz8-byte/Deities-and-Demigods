@@ -132,11 +132,11 @@ export default function MythworldEngine() {
   [])
 
   // Act-dependent atmosphere class
-  const atmosphereClass = gameState.act === 'act1' ? 'atmosphere-act1' : gameState.act === 'act2' ? 'atmosphere-act2' : 'atmosphere-act3'
+  const atmosphereClass = gameState?.act === 'act1' ? 'atmosphere-act1' : gameState?.act === 'act2' ? 'atmosphere-act2' : 'atmosphere-act3'
 
   // Smart skip: fade out speech when player interacts
   useEffect(() => {
-    if (gameState.waitingForHuman && narratorMode === 'auto') {
+    if (gameState?.waitingForHuman && narratorMode === 'auto') {
       // Small delay to let narration render first
       const timer = setTimeout(() => {
         if (isSpeaking) {
@@ -145,16 +145,16 @@ export default function MythworldEngine() {
       }, 2000)
       return () => clearTimeout(timer)
     }
-  }, [gameState.waitingForHuman, narratorMode, isSpeaking])
+  }, [gameState?.waitingForHuman, narratorMode, isSpeaking])
 
   // Day/night cycle based on turn count
   const timeOfDay = useMemo(() => {
-    const cycle = gameState.turn % 40 // Full cycle every 40 turns
+    const cycle = (gameState?.turn ?? 0) % 40 // Full cycle every 40 turns
     if (cycle < 10) return 'time-dawn'
     if (cycle < 20) return 'time-day'
     if (cycle < 30) return 'time-dusk'
     return 'time-night'
-  }, [gameState.turn])
+  }, [gameState?.turn])
 
   // Achievement notification handler
   const [processedAchievements, setProcessedAchievements] = useState<Set<string>>(new Set())
@@ -185,7 +185,7 @@ export default function MythworldEngine() {
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Only handle keys when game is active and waiting for input
-      if (!gameState.waitingForHuman && !gameState.isProcessing && !gameState.ended) return
+      if (!gameState?.waitingForHuman && !gameState?.isProcessing && !gameState?.ended) return
 
       // Don't trigger if user is typing in an input
       if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return
@@ -193,9 +193,9 @@ export default function MythworldEngine() {
       const key = e.key.toUpperCase()
 
       // Number keys 1-9 select PC options
-      if (key >= '1' && key <= '9' && gameState.waitingForHuman) {
+      if (key >= '1' && key <= '9' && gameState?.waitingForHuman) {
         const idx = parseInt(key) - 1
-        if (idx < gameState.humanOptions.length) {
+        if (idx < (gameState?.humanOptions ?? []).length) {
           e.preventDefault()
           selectOption(idx)
           return
@@ -203,9 +203,9 @@ export default function MythworldEngine() {
       }
 
       // Letter keys A-C select companion options
-      if (['A', 'B', 'C'].includes(key) && gameState.waitingForHuman && gameState.companionOptions.length > 0) {
+      if (['A', 'B', 'C'].includes(key) && gameState?.waitingForHuman && (gameState?.companionOptions ?? []).length > 0) {
         const idx = key.charCodeAt(0) - 65 // A=0, B=1, C=2
-        if (idx < gameState.companionOptions.length) {
+        if (idx < (gameState?.companionOptions ?? []).length) {
           e.preventDefault()
           selectCompanionOption(idx)
           return
@@ -215,9 +215,9 @@ export default function MythworldEngine() {
       // Enter confirms choice or advances turn
       if (key === 'ENTER') {
         e.preventDefault()
-        if (gameState.pendingHumanChoice !== null) {
+        if (gameState?.pendingHumanChoice !== null && gameState?.pendingHumanChoice !== undefined) {
           confirmChoice()
-        } else if (!gameState.waitingForHuman && !gameState.isProcessing) {
+        } else if (!gameState?.waitingForHuman && !gameState?.isProcessing) {
           advanceTurn()
         }
         return
@@ -226,7 +226,7 @@ export default function MythworldEngine() {
 
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [gameState.waitingForHuman, gameState.isProcessing, gameState.ended, gameState.humanOptions, gameState.companionOptions, gameState.pendingHumanChoice, gameState.pendingCompanionChoice, selectOption, selectCompanionOption, confirmChoice, advanceTurn])
+  }, [gameState?.waitingForHuman, gameState?.isProcessing, gameState?.ended, gameState?.humanOptions, gameState?.companionOptions, gameState?.pendingHumanChoice, gameState?.pendingCompanionChoice, selectOption, selectCompanionOption, confirmChoice, advanceTurn])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER — Phase Routing
@@ -273,7 +273,7 @@ export default function MythworldEngine() {
   return (
     <TooltipProvider>
       <EquipmentTooltipProvider>
-      <LoreGlossaryProvider pcs={gameState.pcs} activeNPCs={gameState.activeNPCs} npcHistory={gameState.npcHistory}>
+      <LoreGlossaryProvider pcs={gameState?.pcs ?? []} activeNPCs={gameState?.activeNPCs ?? []} npcHistory={gameState?.npcHistory ?? []}>
       <div className="min-h-screen bg-[#060403] flex flex-col" data-screen-root>
         {/* Screen Effects */}
         <style>{`
@@ -373,9 +373,9 @@ export default function MythworldEngine() {
         />
 
         {/* Dice Rolls Display */}
-        {gameState.lastDiceRolls.length > 0 && (
+        {(gameState?.lastDiceRolls ?? []).length > 0 && (
           <div className="px-3 py-2">
-            {gameState.lastDiceRolls.map((roll, idx) => (
+            {(gameState?.lastDiceRolls ?? []).map((roll, idx) => (
               <VisualDiceRoll
                 key={idx}
                 die={roll.die}
@@ -396,9 +396,9 @@ export default function MythworldEngine() {
             ref={narrRef}
             className={`flex-1 overflow-y-auto p-3 md:p-4 md:mr-80 scroll-smooth ${atmosphereClass}`}
             style={{
-              background: gameState.act === 'act1'
+              background: gameState?.act === 'act1'
                 ? 'rgba(6,4,3,.98)'
-                : gameState.act === 'act2'
+                : gameState?.act === 'act2'
                   ? 'rgba(8,4,2,.98)'
                   : 'rgba(12,2,2,.98)',
               transition: 'background 1s ease'
@@ -411,8 +411,8 @@ export default function MythworldEngine() {
               {/* Scene Illustration — auto-generates at key moments */}
               <SceneIllustration
                 narration={lastDMNarrative}
-                act={gameState.act}
-                turn={gameState.turn}
+                act={gameState?.act ?? 'act1'}
+                turn={gameState?.turn ?? 0}
                 gameState={gameState}
               />
               {(narrativeContent ?? []).map((item, idx) => {
@@ -558,7 +558,7 @@ export default function MythworldEngine() {
 
           <Button
             onClick={advanceTurn}
-            disabled={gameState.ended || gameState.waitingForHuman || gameState.isProcessing}
+            disabled={!!gameState?.ended || !!gameState?.waitingForHuman || !!gameState?.isProcessing}
             className="bg-gradient-to-b from-[#362200] to-[#1e1100] hover:from-[#502f00] hover:to-[#301a00] text-[#f0c860] border border-[#7a5f20] min-h-[44px]"
             style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.12em' }}
           >
@@ -582,7 +582,7 @@ export default function MythworldEngine() {
             className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             <Package className="w-4 h-4 mr-1" />
-            <Badge variant="secondary" className="ml-1 text-[10px]">{gameState.inventory?.length ?? 0}</Badge>
+            <Badge variant="secondary" className="ml-1 text-[10px]">{gameState?.inventory?.length ?? 0}</Badge>
           </Button>
 
           {/* Save Button */}
@@ -699,7 +699,7 @@ export default function MythworldEngine() {
       {/* Achievement Notification Toasts */}
       <AchievementNotificationQueue
         unlockQueue={pendingAchievements}
-        currentTurn={gameState.turn}
+        currentTurn={gameState?.turn ?? 0}
         onProcessed={(id) => setProcessedAchievements(prev => new Set(prev).add(id))}
       />
 

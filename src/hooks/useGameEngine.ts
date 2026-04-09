@@ -1264,6 +1264,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       }
     }
     return getNarrationPreservationFallback(gs, 'unrecoverable_failure')
+  }
 
   const parseDMResponse = (raw: string, gs: GameState): DMResponse => {
     let splitPos = raw.lastIndexOf('\n{')
@@ -4214,5 +4215,4 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     showAchievementsDialog,
     setShowAchievementsDialog,
   }
-}
 }
