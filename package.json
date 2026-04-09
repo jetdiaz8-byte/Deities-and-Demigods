@@ -3,7 +3,7 @@
   "version": "2.11.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3000 2>&1 | tee dev.log",
+    "dev": "next dev -p 3000",
     "build": "bash -c 'mv .config .config_bak 2>/dev/null; prisma generate; res=$?; mv .config_bak .config 2>/dev/null; exit $res' && next build",
     "build:standalone": "bash -c 'mv .config .config_bak 2>/dev/null; prisma generate; res=$?; mv .config_bak .config 2>/dev/null; exit $res' && DEPLOY_TARGET=standalone next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/ && mkdir -p .next/standalone/db && cp db/custom.db .next/standalone/db/",
     "start": "npm run build:standalone && NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",

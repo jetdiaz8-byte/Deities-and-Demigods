@@ -35,17 +35,15 @@ export function IntroScreen({
   saveSlots,
   setShowLoadDialog,
 }: IntroScreenProps) {
-  const particles = useMemo(() =>
-    Array.from({ length: 25 }).map((_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      size: `${2 + Math.random() * 4}px`,
-      duration: `${6 + Math.random() * 10}s`,
-      delay: `${Math.random() * 8}s`,
-      opacity: 0.2 + Math.random() * 0.5,
-      drift: `${(Math.random() - 0.5) * 40}px`,
-    })),
-  [])
+  const [particles, setParticles] = useState<Array<{
+    id: number
+    left: string
+    size: string
+    duration: string
+    delay: string
+    opacity: number
+    drift: string
+  }>>([])
 
   // LM Studio connection check
   const [lmConnected, setLmConnected] = useState<boolean | null>(null)
@@ -81,6 +79,21 @@ export function IntroScreen({
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engineMode, lmStudioUrl])
+
+  // Build ember particles client-side only to avoid SSR hydration mismatch.
+  useEffect(() => {
+    setParticles(
+      Array.from({ length: 25 }).map((_, i) => ({
+        id: i,
+        left: `${Math.random() * 100}%`,
+        size: `${2 + Math.random() * 4}px`,
+        duration: `${6 + Math.random() * 10}s`,
+        delay: `${Math.random() * 8}s`,
+        opacity: 0.2 + Math.random() * 0.5,
+        drift: `${(Math.random() - 0.5) * 40}px`,
+      })),
+    )
+  }, [])
 
   const titleText = 'DEITIES & DEMIGODS'
   const titleLetters = titleText.split('')

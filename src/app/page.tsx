@@ -108,15 +108,22 @@ export default function MythworldEngine() {
   // Quest Journal modal state
   const [showQuestJournal, setShowQuestJournal] = React.useState(false)
 
-  // Ember particle positions — generated once
+  // Deterministic ember positions prevent server/client hydration mismatch.
   const emberPositions = useMemo(() =>
-    Array.from({ length: 15 }).map(() => ({
-      left: `${Math.random() * 100}%`,
-      duration: `${8 + Math.random() * 12}s`,
-      delay: `${Math.random() * 10}s`,
-      width: `${2 + Math.random() * 3}px`,
-      height: `${2 + Math.random() * 3}px`,
-    })),
+    Array.from({ length: 15 }).map((_, i) => {
+      const n1 = (i * 37 + 11) % 100
+      const n2 = (i * 19 + 7) % 100
+      const n3 = (i * 29 + 13) % 100
+      const n4 = (i * 23 + 17) % 100
+      const n5 = (i * 31 + 5) % 100
+      return {
+        left: `${n1}%`,
+        duration: `${8 + (n2 / 100) * 12}s`,
+        delay: `${(n3 / 100) * 10}s`,
+        width: `${2 + (n4 / 100) * 3}px`,
+        height: `${2 + (n5 / 100) * 3}px`,
+      }
+    }),
   [])
 
   // Act-dependent atmosphere class
