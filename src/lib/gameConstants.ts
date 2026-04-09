@@ -9,7 +9,7 @@ import type { Injury, Item, AntagonistClue } from '@/lib/gameTypes'
 // All models use the same Gemini API (same key, same endpoint format)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const GEMINI_MODEL = 'gemini-2.0-pro'
+export const GEMINI_MODEL = 'gemini-2.5-pro'
 
 // Fallback chain: tried server-side in /api/gemini when primary returns 503
 // Order matters — best quality first, most reliable last
@@ -20,7 +20,7 @@ export const GEMINI_FALLBACK_MODELS = [
 
 // Max output tokens per model — capped to avoid rejection
 export const GEMINI_MODEL_TOKEN_LIMITS: Record<string, number> = {
-  'gemini-2.0-pro': 65536,
+  'gemini-2.5-pro': 65536,
   'gemini-2.5-flash':       65536,
   'gemma-4-31b-it':         32768,
   'gemini-2.5-flash-lite':  16384,
