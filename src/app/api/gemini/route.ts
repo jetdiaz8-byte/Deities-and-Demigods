@@ -12,6 +12,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 
 // Max output tokens per model — fallbacks have lower limits
 const MODEL_TOKEN_LIMITS: Record<string, number> = {
+  'gemini-2.0-flash-preview': 65536,
   'gemini-2.5-flash':       65536,
   'gemma-4-31b-it':         32768,
   'gemini-2.5-flash-lite':  16384,

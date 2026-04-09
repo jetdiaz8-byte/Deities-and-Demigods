@@ -159,6 +159,13 @@ export function useGameEngine() {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'))
       setBrowserVoices(voices)
+      // Chrome warm-up: first speak() after load can be swallowed without this prime.
+      try {
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(''))
+        window.speechSynthesis.cancel()
+      } catch {
+        // ignore
+      }
       if (voices.length > 0) {
         const preferred = [
           'Google UK English Male', 'Microsoft George Online', 'Microsoft Mark Online',
