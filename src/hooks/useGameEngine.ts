@@ -254,7 +254,15 @@ export function useGameEngine() {
 
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
-    fetch('/api/get-key').then(r => r.json()).then(d => { if (d.key) setServerKey(d.key) }).catch(() => {})
+    fetch('/api/get-key')
+      .then(async r => {
+        if (!r.ok) return null
+        return r.json().catch(() => null)
+      })
+      .then(d => {
+        if (d?.key && typeof d.key === 'string') setServerKey(d.key)
+      })
+      .catch(() => {})
     loadSaveSlots()
   }, [])
 
@@ -1204,7 +1212,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     const totalInput = systemPrompt + userMsg
 
     setStatusMessage('Calling OpenRouter...')
-    const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || serverKey
+    const apiKey = serverKey
     if (!apiKey) return getNarrationPreservationFallback(gs, 'no_api_key')
     const endpoint = 'https://openrouter.ai/api/v1/chat/completions'
     const MAX_RETRIES = 4
