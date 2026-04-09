@@ -26,6 +26,7 @@ import { AchievementsDialog } from '@/components/game/AchievementsDialog'
 import { useGameEngine } from '@/hooks/useGameEngine'
 import { useGameAudio, useSceneMusic } from '@/hooks/useGameAudio'
 import { getUnlockedCount, getTotalCount, getAchievementDef } from '@/lib/achievements'
+import { createInitialState } from '@/lib/gameState'
 import { version } from '../../package.json'
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -99,7 +100,65 @@ export default function MythworldEngine() {
     achievementUnlocks,
     showAchievementsDialog,
     setShowAchievementsDialog,
-  } = mounted ? gameEngineResult : {} as any
+  } = mounted ? gameEngineResult : {
+    gameState: createInitialState(),
+    setGameState: () => {},
+    geminiKey: '', setGeminiKey: () => {},
+    aiProvider: 'gemini' as const, setAiProvider: () => {},
+    engineMode: 'gemini' as const, setEngineMode: () => {},
+    lmStudioUrl: 'http://localhost:1234', setLmStudioUrl: () => {},
+    lmStudioModel: 'default', setLmStudioModel: () => {},
+    comicMode: false, setComicMode: () => {},
+    comicPanels: [],
+    comicArtStyle: 'larry-elmore' as const, setComicArtStyle: () => {},
+    gamePhase: 'intro' as const, setGamePhase: () => {},
+    availableHeroes: [],
+    selectedParty: [], setSelectedParty: () => {},
+    previewHero: null, setPreviewHero: () => {},
+    saveSlots: [],
+    showSaveDialog: false, setShowSaveDialog: () => {},
+    showLoadDialog: false, setShowLoadDialog: () => {},
+    showInventoryDialog: false, setShowInventoryDialog: () => {},
+    activeTab: 'party' as const, setActiveTab: () => {},
+    expandedPC: null, setExpandedPC: () => {},
+    expandedNPC: null, setExpandedNPC: () => {},
+    narrativeContent: [],
+    shardDialogOpen: false, setShardDialogOpen: () => {},
+    shardSummonName: '', setShardSummonName: () => {},
+    sidebarOpen: false, setSidebarOpen: () => {},
+    statusMessage: '',
+    lastDMNarrative: '',
+    lastTurnReadyTime: 0,
+    portraitModalOpen: false, setPortraitModalOpen: () => {},
+    selectedPortrait: null, setSelectedPortrait: () => {},
+    ttsVoice: null, setTtsVoice: () => {},
+    ttsEngine: 'browser' as const, setTtsEngine: () => {},
+    browserVoices: [], browserVoiceName: '', setBrowserVoiceName: () => {},
+    isSpeaking: false,
+    narratorMode: 'off' as const, setNarratorMode: () => {},
+    tokenUsage: { prompt: 0, completion: 0, total: 0 },
+    conversationHistory: [],
+    narrRef: { current: null },
+    startNewCampaign: async () => {},
+    confirmPartySelection: () => {},
+    loadGame: () => {},
+    deleteSave: () => {},
+    saveGame: () => {},
+    selectOption: () => {},
+    selectCompanionOption: () => {},
+    confirmChoice: () => {},
+    advanceTurn: async () => {},
+    exportStory: () => {},
+    speakNarrative: () => {},
+    stopSpeaking: () => {},
+    invokeShard: async () => {},
+    handleUseItem: () => {},
+    resolveTestOfFaith: () => {},
+    combatFlashType: null,
+    achievementTracker: {},
+    achievementUnlocks: [],
+    showAchievementsDialog: false, setShowAchievementsDialog: () => {},
+  }
 
   // ── AUDIO ENGINE ─────────────────────────────────────────────────────
   const audio = useGameAudio()
