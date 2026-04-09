@@ -38,37 +38,14 @@ export default function MythworldEngine() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
-  // ── LOCAL BRIDGE STATE ─────────────────────────────────────────────────
-  // These allow the intro-screen inputs (API key, LM Studio URL, etc.) to
-  // work even before useGameEngine() has finished initialising.  When the
-  // engine becomes ready we flush the local values into the real hook.
-  const [_localKey, _setLocalKey]           = useState('')
-  const [_localLmUrl, _setLocalLmUrl]       = useState('http://localhost:1234')
-  const [_localLmModel, _setLocalLmModel]   = useState('default')
-  const [_localEngine, _setLocalEngine]     = useState<'gemini' | 'lmstudio' | 'dual'>('gemini')
-  const [_localProvider, _setLocalProvider] = useState<'gemini' | 'lmstudio'>('gemini')
-
-  // useGameEngine() may return undefined during SSR or if browser APIs fail.
-  // We MUST provide a structurally-complete fallback so that every hook and
-  // useMemo below (useSceneMusic, atmosphereClass, timeOfDay, …) always
-  // receives a valid gameState object — never undefined.
-  const gameEngineResult = useGameEngine()
-  const _engineReady = mounted && gameEngineResult?.gameState
-
-  // Once the engine is live, push any user-typed local values into the hook
-  // so the rest of the app picks them up.
-  useEffect(() => {
-    if (!_engineReady) return
-    if (_localKey)                  gameEngineResult.setGeminiKey(_localKey)
-    if (_localLmUrl !== 'http://localhost:1234')  gameEngineResult.setLmStudioUrl(_localLmUrl)
-    if (_localLmModel !== 'default') gameEngineResult.setLmStudioModel(_localLmModel)
-    if (_localEngine !== 'gemini')   gameEngineResult.setEngineMode(_localEngine)
-    if (_localProvider !== 'gemini') gameEngineResult.setAiProvider(_localProvider)
-  // Only run once when engine transitions to ready
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [_engineReady])
+  // useGameEngine() always returns a valid object on the client (no early returns).
+  // On the server it may be undefined — but the if (!mounted) return null guard below
+  // prevents any rendering.  We only need a safe gameState for the few hooks that
+  // execute BEFORE that guard (useSceneMusic, useMemo, useEffect).
+  const gameEngineResult = useGameEngine() as any
   const {
-    gameState, setGameState,
+    gameState,
+    setGameState,
     geminiKey, setGeminiKey,
     aiProvider, setAiProvider,
     engineMode, setEngineMode,
@@ -128,69 +105,15 @@ export default function MythworldEngine() {
     achievementUnlocks,
     showAchievementsDialog,
     setShowAchievementsDialog,
-  } = _engineReady ? gameEngineResult : {
-    gameState: createInitialState(),
-    setGameState: () => {},
-    geminiKey: _localKey, setGeminiKey: _setLocalKey,
-    aiProvider: _localProvider as 'gemini' | 'lmstudio', setAiProvider: _setLocalProvider as any,
-    engineMode: _localEngine as 'gemini' | 'lmstudio' | 'dual', setEngineMode: _setLocalEngine as any,
-    lmStudioUrl: _localLmUrl, setLmStudioUrl: _setLocalLmUrl,
-    lmStudioModel: _localLmModel, setLmStudioModel: _setLocalLmModel,
-    comicMode: false, setComicMode: () => {},
-    comicPanels: [],
-    comicArtStyle: 'larry-elmore' as const, setComicArtStyle: () => {},
-    gamePhase: 'intro' as const, setGamePhase: () => {},
-    availableHeroes: [],
-    selectedParty: [], setSelectedParty: () => {},
-    previewHero: null, setPreviewHero: () => {},
-    saveSlots: [],
-    showSaveDialog: false, setShowSaveDialog: () => {},
-    showLoadDialog: false, setShowLoadDialog: () => {},
-    showInventoryDialog: false, setShowInventoryDialog: () => {},
-    activeTab: 'party' as const, setActiveTab: () => {},
-    expandedPC: null, setExpandedPC: () => {},
-    expandedNPC: null, setExpandedNPC: () => {},
-    narrativeContent: [],
-    shardDialogOpen: false, setShardDialogOpen: () => {},
-    shardSummonName: '', setShardSummonName: () => {},
-    sidebarOpen: false, setSidebarOpen: () => {},
-    statusMessage: '',
-    lastDMNarrative: '',
-    lastTurnReadyTime: 0,
-    portraitModalOpen: false, setPortraitModalOpen: () => {},
-    selectedPortrait: null, setSelectedPortrait: () => {},
-    ttsVoice: null, setTtsVoice: () => {},
-    ttsEngine: 'browser' as const, setTtsEngine: () => {},
-    browserVoices: [], browserVoiceName: '', setBrowserVoiceName: () => {},
-    isSpeaking: false,
-    narratorMode: 'off' as const, setNarratorMode: () => {},
-    tokenUsage: { prompt: 0, completion: 0, total: 0 },
-    conversationHistory: [],
-    narrRef: { current: null },
-    startNewCampaign: async () => {},
-    confirmPartySelection: () => {},
-    loadGame: () => {},
-    deleteSave: () => {},
-    saveGame: () => {},
-    selectOption: () => {},
-    selectCompanionOption: () => {},
-    confirmChoice: () => {},
-    advanceTurn: async () => {},
-    exportStory: () => {},
-    speakNarrative: () => {},
-    stopSpeaking: () => {},
-    invokeShard: async () => {},
-    handleUseItem: () => {},
-    resolveTestOfFaith: () => {},
-    combatFlashType: null,
-    achievementTracker: {},
-    achievementUnlocks: [],
-    showAchievementsDialog: false, setShowAchievementsDialog: () => {},
-  }
+  } = gameEngineResult ?? {}
+
+  // Safe gameState for hooks that run before the mounted guard.
+  // After hydration (mounted=true), this is always the real gameState from the hook.
+  const safeGS = gameState ?? createInitialState()
 
   // ── AUDIO ENGINE ─────────────────────────────────────────────────────
   const audio = useGameAudio()
-  const sceneMusic = useSceneMusic(gameState)
+  const sceneMusic = useSceneMusic(safeGS)
 
   // Combat flash overlay ref
   const flashRef = useRef<HTMLDivElement>(null)
@@ -220,11 +143,11 @@ export default function MythworldEngine() {
   [])
 
   // Act-dependent atmosphere class
-  const atmosphereClass = gameState.act === 'act1' ? 'atmosphere-act1' : gameState.act === 'act2' ? 'atmosphere-act2' : 'atmosphere-act3'
+  const atmosphereClass = safeGS.act === 'act1' ? 'atmosphere-act1' : safeGS.act === 'act2' ? 'atmosphere-act2' : 'atmosphere-act3'
 
   // Smart skip: fade out speech when player interacts
   useEffect(() => {
-    if (gameState.waitingForHuman && narratorMode === 'auto') {
+    if (safeGS.waitingForHuman && narratorMode === 'auto') {
       // Small delay to let narration render first
       const timer = setTimeout(() => {
         if (isSpeaking) {
@@ -233,20 +156,20 @@ export default function MythworldEngine() {
       }, 2000)
       return () => clearTimeout(timer)
     }
-  }, [gameState.waitingForHuman, narratorMode, isSpeaking])
+  }, [safeGS.waitingForHuman, narratorMode, isSpeaking])
 
   // Day/night cycle based on turn count
   const timeOfDay = useMemo(() => {
-    const cycle = gameState.turn % 40 // Full cycle every 40 turns
+    const cycle = safeGS.turn % 40 // Full cycle every 40 turns
     if (cycle < 10) return 'time-dawn'
     if (cycle < 20) return 'time-day'
     if (cycle < 30) return 'time-dusk'
     return 'time-night'
-  }, [gameState.turn])
+  }, [safeGS.turn])
 
   // Achievement notification handler
   const [processedAchievements, setProcessedAchievements] = useState<Set<string>>(new Set())
-  const pendingAchievements = achievementUnlocks.filter(a => !processedAchievements.has(a.id))
+  const pendingAchievements = (achievementUnlocks ?? []).filter(a => !processedAchievements.has(a.id))
 
   // ── TOAST NOTIFICATION SYSTEM ─────────────────────────────────────────
   const [toasts, setToasts] = React.useState<{ id: string; title: string; desc: string; icon: string }[]>([])
@@ -273,7 +196,7 @@ export default function MythworldEngine() {
   React.useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       // Only handle keys when game is active and waiting for input
-      if (!gameState.waitingForHuman && !gameState.isProcessing && !gameState.ended) return
+      if (!safeGS.waitingForHuman && !safeGS.isProcessing && !safeGS.ended) return
 
       // Don't trigger if user is typing in an input
       if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') return
@@ -281,9 +204,9 @@ export default function MythworldEngine() {
       const key = e.key.toUpperCase()
 
       // Number keys 1-9 select PC options
-      if (key >= '1' && key <= '9' && gameState.waitingForHuman) {
+      if (key >= '1' && key <= '9' && safeGS.waitingForHuman) {
         const idx = parseInt(key) - 1
-        if (idx < gameState.humanOptions.length) {
+        if (idx < safeGS.humanOptions.length) {
           e.preventDefault()
           selectOption(idx)
           return
@@ -291,9 +214,9 @@ export default function MythworldEngine() {
       }
 
       // Letter keys A-C select companion options
-      if (['A', 'B', 'C'].includes(key) && gameState.waitingForHuman && gameState.companionOptions.length > 0) {
+      if (['A', 'B', 'C'].includes(key) && safeGS.waitingForHuman && safeGS.companionOptions.length > 0) {
         const idx = key.charCodeAt(0) - 65 // A=0, B=1, C=2
-        if (idx < gameState.companionOptions.length) {
+        if (idx < safeGS.companionOptions.length) {
           e.preventDefault()
           selectCompanionOption(idx)
           return
@@ -303,9 +226,9 @@ export default function MythworldEngine() {
       // Enter confirms choice or advances turn
       if (key === 'ENTER') {
         e.preventDefault()
-        if (gameState.pendingHumanChoice !== null) {
+        if (safeGS.pendingHumanChoice !== null) {
           confirmChoice()
-        } else if (!gameState.waitingForHuman && !gameState.isProcessing) {
+        } else if (!safeGS.waitingForHuman && !safeGS.isProcessing) {
           advanceTurn()
         }
         return
@@ -314,7 +237,7 @@ export default function MythworldEngine() {
 
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [gameState.waitingForHuman, gameState.isProcessing, gameState.ended, gameState.humanOptions, gameState.companionOptions, gameState.pendingHumanChoice, gameState.pendingCompanionChoice, selectOption, selectCompanionOption, confirmChoice, advanceTurn])
+  }, [safeGS.waitingForHuman, safeGS.isProcessing, safeGS.ended, safeGS.humanOptions, safeGS.companionOptions, safeGS.pendingHumanChoice, safeGS.pendingCompanionChoice, selectOption, selectCompanionOption, confirmChoice, advanceTurn])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER — Phase Routing
