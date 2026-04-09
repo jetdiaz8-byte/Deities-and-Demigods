@@ -21,7 +21,6 @@ const MODEL_TOKEN_LIMITS: Record<string, number> = {
 const FALLBACK_MODELS = ['gemma-4-31b-it', 'gemini-2.5-flash-lite']
 
 export const runtime = 'edge'
-export const maxDuration = 30
 const TOTAL_ROUTE_BUDGET_MS = 25000
 const PER_MODEL_TIMEOUT_MS = 9000
 

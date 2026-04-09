@@ -31,6 +31,10 @@ export interface GameSidebarProps {
   tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
   onOpenQuestJournal?: () => void
   conversationHistory?: { role: string; content: string }[]
+  comicMode: boolean
+  setComicMode: (enabled: boolean) => void
+  comicArtStyle: 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor'
+  setComicArtStyle: (style: 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor') => void
 }
 
 export function GameSidebar({
@@ -49,6 +53,10 @@ export function GameSidebar({
   tokenUsage,
   onOpenQuestJournal,
   conversationHistory,
+  comicMode,
+  setComicMode,
+  comicArtStyle,
+  setComicArtStyle,
 }: GameSidebarProps) {
   return (
     <>
@@ -69,6 +77,28 @@ export function GameSidebar({
         
         {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto pb-24 scroll-parchment">
+        <div className="border-b border-[#2e2008] p-3">
+          <div className="text-[11px] text-[#c9a84c] uppercase tracking-wider mb-2" style={{ fontFamily: 'Cinzel, serif' }}>Settings</div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-[#a08060]">Comic Panels</span>
+            <button
+              onClick={() => setComicMode(!comicMode)}
+              className={`px-2 py-1 text-[10px] rounded border ${comicMode ? 'bg-[#1f2a1a] text-[#60c080] border-[#2f5a3a]' : 'bg-[#1a1510] text-[#8a7040] border-[#3a3020]'}`}
+            >
+              {comicMode ? 'ON' : 'OFF'}
+            </button>
+          </div>
+          <select
+            value={comicArtStyle}
+            onChange={e => setComicArtStyle(e.target.value as 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor')}
+            className="w-full bg-[#110d07] border border-[#2e2008] text-[#e8d9b0] text-xs rounded px-2 py-1.5"
+          >
+            <option value="larry-elmore">Larry Elmore</option>
+            <option value="classic-comic">Classic Comic</option>
+            <option value="manga">Manga</option>
+            <option value="watercolor">Watercolor</option>
+          </select>
+        </div>
         {gameState.storySummary && (
           <div className="border-b border-[#2e2008] p-3 flex-shrink-0">
             <NarrativeSection 
@@ -164,6 +194,28 @@ export function GameSidebar({
             tokenUsage={tokenUsage}
             conversationHistory={conversationHistory}
           />
+          <div className="border-t border-[#2e2008] p-3">
+            <div className="text-[11px] text-[#c9a84c] uppercase tracking-wider mb-2" style={{ fontFamily: 'Cinzel, serif' }}>Settings</div>
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-[#a08060]">Comic Panels</span>
+              <button
+                onClick={() => setComicMode(!comicMode)}
+                className={`px-2 py-1 text-[10px] rounded border ${comicMode ? 'bg-[#1f2a1a] text-[#60c080] border-[#2f5a3a]' : 'bg-[#1a1510] text-[#8a7040] border-[#3a3020]'}`}
+              >
+                {comicMode ? 'ON' : 'OFF'}
+              </button>
+            </div>
+            <select
+              value={comicArtStyle}
+              onChange={e => setComicArtStyle(e.target.value as 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor')}
+              className="w-full bg-[#110d07] border border-[#2e2008] text-[#e8d9b0] text-xs rounded px-2 py-1.5"
+            >
+              <option value="larry-elmore">Larry Elmore</option>
+              <option value="classic-comic">Classic Comic</option>
+              <option value="manga">Manga</option>
+              <option value="watercolor">Watercolor</option>
+            </select>
+          </div>
         </SheetContent>
       </Sheet>
     </>

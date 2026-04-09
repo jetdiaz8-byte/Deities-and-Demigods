@@ -4,15 +4,25 @@ import { NextRequest, NextResponse } from 'next/server'
 // LM Studio exposes: POST http://localhost:1234/v1/chat/completions
 // This route translates our Gemini-format requests into OpenAI format
 
-export const maxDuration = 120 // LM Studio local inference can be slow
+export const runtime = 'edge'
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS })
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { systemPrompt, userMessage, temperature, maxOutputTokens, lmStudioUrl, model } = body
+    const { systemPrompt, userMessage, messages, temperature, maxOutputTokens, max_tokens, lmStudioUrl, model } = body
 
-    if (!userMessage) {
-      return NextResponse.json({ error: 'Missing required field: userMessage' }, { status: 400 })
+    if (!userMessage && (!Array.isArray(messages) || messages.length === 0)) {
+      return NextResponse.json({ error: 'Missing required field: userMessage or messages' }, { status: 400, headers: CORS_HEADERS })
     }
 
     // Default to localhost:1234 (LM Studio default)
@@ -20,17 +30,24 @@ export async function POST(request: NextRequest) {
     const endpoint = `${baseUrl}/v1/chat/completions`
 
     // Build OpenAI-compatible messages array
-    const messages: Array<{ role: string; content: string }> = []
-
-    if (systemPrompt) {
-      messages.push({ role: 'system', content: systemPrompt })
+    const lmMessages: Array<{ role: string; content: string }> = []
+    if (Array.isArray(messages) && messages.length > 0) {
+      for (const m of messages) {
+        if (!m || typeof m.content !== 'string') continue
+        const role = m.role === 'system' || m.role === 'assistant' ? m.role : 'user'
+        lmMessages.push({ role, content: m.content })
+      }
+    } else {
+      if (systemPrompt) {
+        lmMessages.push({ role: 'system', content: systemPrompt })
+      }
+      lmMessages.push({ role: 'user', content: userMessage })
     }
-    messages.push({ role: 'user', content: userMessage })
 
     const requestBody: Record<string, unknown> = {
-      messages,
+      messages: lmMessages,
       temperature: temperature ?? 0.9,
-      max_tokens: maxOutputTokens ?? 6144,
+      max_tokens: max_tokens ?? maxOutputTokens ?? 6144,
       stream: false,
     }
 
@@ -55,13 +72,13 @@ export async function POST(request: NextRequest) {
       if (response.status === 0 || errorText.includes('ECONNREFUSED') || errorText.includes('fetch failed')) {
         return NextResponse.json(
           { error: 'Cannot connect to LM Studio. Make sure it is running and the Local Server is started (default: http://localhost:1234)' },
-          { status: 502 },
+          { status: 502, headers: CORS_HEADERS },
         )
       }
 
       return NextResponse.json(
         { error: `LM Studio error ${response.status}: ${errorText.slice(0, 200)}` },
-        { status: response.status },
+        { status: response.status, headers: CORS_HEADERS },
       )
     }
 
@@ -88,9 +105,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       data: geminiCompatibleResponse,
+      text: content,
       modelUsed,
       fallbackUsed: false,
-    })
+    }, { headers: CORS_HEADERS })
 
   } catch (error) {
     console.error('[LM Studio Proxy] Unexpected error:', error)
@@ -100,13 +118,13 @@ export async function POST(request: NextRequest) {
     if (message.includes('ECONNREFUSED') || message.includes('fetch failed') || message.includes('connect')) {
       return NextResponse.json(
         { error: 'Cannot connect to LM Studio. Make sure it is running and the Local Server is started.' },
-        { status: 502 },
+        { status: 502, headers: CORS_HEADERS },
       )
     }
 
     return NextResponse.json(
       { error: `Server error: ${message}` },
-      { status: 500 },
+      { status: 500, headers: CORS_HEADERS },
     )
   }
 }
@@ -127,7 +145,7 @@ export async function GET(request: NextRequest) {
         connected: false,
         error: `LM Studio returned ${response.status}`,
         url: baseUrl,
-      }, { status: 200 })
+      }, { status: 200, headers: CORS_HEADERS })
     }
 
     const data = await response.json()
@@ -140,7 +158,7 @@ export async function GET(request: NextRequest) {
       url: baseUrl,
       models,
       modelCount: models.length,
-    })
+    }, { headers: CORS_HEADERS })
 
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -150,6 +168,6 @@ export async function GET(request: NextRequest) {
         ? 'Cannot connect to LM Studio. Make sure it is running and the Local Server is started.'
         : message,
       url: request.nextUrl.searchParams.get('url') || 'http://localhost:1234',
-    }, { status: 200 })
+    }, { status: 200, headers: CORS_HEADERS })
   }
 }

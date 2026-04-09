@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       + '<text x="200" y="165" text-anchor="middle" fill="#5a5856" font-size="10" font-family="Georgia">'
       + encodeURIComponent(prompt.slice(0, 60)).replace(/%20/g, ' ').slice(0, 60) + '</text>'
       + '</svg>';
-    const imageUrl = 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64');
+    const imageUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
     return NextResponse.json({ imageUrl, placeholder: true });
   } catch (error) {
     return NextResponse.json(

@@ -13,6 +13,7 @@ import { GameHeader } from '@/components/game/GameHeader'
 import { LoreGlossaryProvider } from '@/components/game/LoreGlossaryCard'
 import { EquipmentTooltipProvider } from '@/components/game/EquipmentTooltip'
 import { SceneIllustration } from '@/components/game/SceneIllustration'
+import ComicPanel from '@/components/game/ComicPanel'
 import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
 import { GameDialogs } from '@/components/game/GameDialogs'
@@ -38,6 +39,9 @@ export default function MythworldEngine() {
     engineMode, setEngineMode,
     lmStudioUrl, setLmStudioUrl,
     lmStudioModel, setLmStudioModel,
+    comicMode, setComicMode,
+    comicPanels,
+    comicArtStyle, setComicArtStyle,
     gamePhase, setGamePhase,
     availableHeroes,
     selectedParty, setSelectedParty,
@@ -406,6 +410,11 @@ export default function MythworldEngine() {
                 }
                 return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} />
               })}
+              {comicMode && comicPanels.length > 0 && (
+                <div className="mt-4">
+                  <ComicPanel panels={comicPanels} artStyle={comicArtStyle} />
+                </div>
+              )}
             </div>
 
             {/* Test of Faith Prompt */}
@@ -509,6 +518,10 @@ export default function MythworldEngine() {
             tokenUsage={tokenUsage}
             onOpenQuestJournal={() => setShowQuestJournal(true)}
             conversationHistory={conversationHistory}
+            comicMode={comicMode}
+            setComicMode={setComicMode}
+            comicArtStyle={comicArtStyle}
+            setComicArtStyle={setComicArtStyle}
           />
         </div>
 

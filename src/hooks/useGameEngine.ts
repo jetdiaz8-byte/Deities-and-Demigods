@@ -17,6 +17,7 @@ import { rollAntagonist, getAntagonistById, getAntagonistRival, generateBanishme
 import { toast } from '@/hooks/use-toast'
 import type { CharacterPortrait } from '@/components/game/PortraitModal'
 import { soundEvents } from '@/lib/soundEvents'
+import { generateComicPanels, generatePanelImage, type ComicPanelData } from '@/lib/comicPanelGenerator'
 import {
   createAchievementTracker,
   checkAchievements,
@@ -80,11 +81,18 @@ export function useGameEngine() {
   const [engineMode, setEngineMode] = useState<'gemini' | 'lmstudio' | 'dual'>(() => (safeLocalStorageGetItem('mw_engineMode') as 'gemini' | 'lmstudio' | 'dual') || 'gemini')
   const [lmStudioUrl, setLmStudioUrl] = useState(() => safeLocalStorageGetItem('mw_lmStudioUrl') || 'http://localhost:1234')
   const [lmStudioModel, setLmStudioModel] = useState(() => safeLocalStorageGetItem('mw_lmStudioModel') || 'default')
+  const [comicMode, setComicMode] = useState<boolean>(() => safeLocalStorageGetItem('mw_comicMode') === 'true')
+  const [comicPanels, setComicPanels] = useState<ComicPanelData[]>([])
+  const [comicArtStyle, setComicArtStyle] = useState<'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor'>(
+    () => (safeLocalStorageGetItem('mw_comicArtStyle') as 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor') || 'larry-elmore'
+  )
 
   // Persist dual-engine settings to localStorage
   useEffect(() => { safeLocalStorageSetItem('mw_engineMode', engineMode) }, [engineMode])
   useEffect(() => { safeLocalStorageSetItem('mw_lmStudioUrl', lmStudioUrl) }, [lmStudioUrl])
   useEffect(() => { safeLocalStorageSetItem('mw_lmStudioModel', lmStudioModel) }, [lmStudioModel])
+  useEffect(() => { safeLocalStorageSetItem('mw_comicMode', comicMode ? 'true' : 'false') }, [comicMode])
+  useEffect(() => { safeLocalStorageSetItem('mw_comicArtStyle', comicArtStyle) }, [comicArtStyle])
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
@@ -752,6 +760,7 @@ export function useGameEngine() {
   // ── START NEW CAMPAIGN ─────────────────────────────────────────────────
   const startNewCampaign = async () => {
     clearEntityCache()
+    setComicPanels([])
     await fetchAvailableHeroes()
     setGamePhase('party_select')
   }
@@ -2806,6 +2815,25 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const displayedText = paragraphs.slice(0, 12).join(' ')
     setDisplayedNarrative(displayedText)
     renderedNarrationRef.current = displayedText
+    if (comicMode) {
+      try {
+        const isCombatScene =
+          (gs.activeNPCs || []).some(n => n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS') ||
+          ((res.dice_rolls || []).length > 0) ||
+          ((res.damage_dealt || []).length > 0)
+        const seededPanels = await generateComicPanels(displayedText || narr, isCombatScene, { artStyle: comicArtStyle, maxPanels: 4 })
+        setComicPanels(seededPanels)
+        const renderedPanels = await Promise.all(
+          seededPanels.map(panel => generatePanelImage(panel, displayedText || narr, comicArtStyle)),
+        )
+        setComicPanels(renderedPanels)
+      } catch (comicErr) {
+        console.warn('Comic panel generation failed:', comicErr)
+        setComicPanels([])
+      }
+    } else if (comicPanels.length) {
+      setComicPanels([])
+    }
 
     // ═══════════════════════════════════════════════════════════════════════════
     // OUTCOME TIER BANNER — PbtA visual feedback
@@ -4080,6 +4108,9 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     engineMode, setEngineMode,
     lmStudioUrl, setLmStudioUrl,
     lmStudioModel, setLmStudioModel,
+    comicMode, setComicMode,
+    comicPanels, setComicPanels,
+    comicArtStyle, setComicArtStyle,
     gamePhase, setGamePhase,
     availableHeroes, setAvailableHeroes,
     selectedParty, setSelectedParty,
