@@ -38,12 +38,35 @@ export default function MythworldEngine() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
+  // ── LOCAL BRIDGE STATE ─────────────────────────────────────────────────
+  // These allow the intro-screen inputs (API key, LM Studio URL, etc.) to
+  // work even before useGameEngine() has finished initialising.  When the
+  // engine becomes ready we flush the local values into the real hook.
+  const [_localKey, _setLocalKey]           = useState('')
+  const [_localLmUrl, _setLocalLmUrl]       = useState('http://localhost:1234')
+  const [_localLmModel, _setLocalLmModel]   = useState('default')
+  const [_localEngine, _setLocalEngine]     = useState<'gemini' | 'lmstudio' | 'dual'>('gemini')
+  const [_localProvider, _setLocalProvider] = useState<'gemini' | 'lmstudio'>('gemini')
+
   // useGameEngine() may return undefined during SSR or if browser APIs fail.
   // We MUST provide a structurally-complete fallback so that every hook and
   // useMemo below (useSceneMusic, atmosphereClass, timeOfDay, …) always
   // receives a valid gameState object — never undefined.
   const gameEngineResult = useGameEngine()
   const _engineReady = mounted && gameEngineResult?.gameState
+
+  // Once the engine is live, push any user-typed local values into the hook
+  // so the rest of the app picks them up.
+  useEffect(() => {
+    if (!_engineReady) return
+    if (_localKey)                  gameEngineResult.setGeminiKey(_localKey)
+    if (_localLmUrl !== 'http://localhost:1234')  gameEngineResult.setLmStudioUrl(_localLmUrl)
+    if (_localLmModel !== 'default') gameEngineResult.setLmStudioModel(_localLmModel)
+    if (_localEngine !== 'gemini')   gameEngineResult.setEngineMode(_localEngine)
+    if (_localProvider !== 'gemini') gameEngineResult.setAiProvider(_localProvider)
+  // Only run once when engine transitions to ready
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [_engineReady])
   const {
     gameState, setGameState,
     geminiKey, setGeminiKey,
@@ -108,11 +131,11 @@ export default function MythworldEngine() {
   } = _engineReady ? gameEngineResult : {
     gameState: createInitialState(),
     setGameState: () => {},
-    geminiKey: '', setGeminiKey: () => {},
-    aiProvider: 'gemini' as const, setAiProvider: () => {},
-    engineMode: 'gemini' as const, setEngineMode: () => {},
-    lmStudioUrl: 'http://localhost:1234', setLmStudioUrl: () => {},
-    lmStudioModel: 'default', setLmStudioModel: () => {},
+    geminiKey: _localKey, setGeminiKey: _setLocalKey,
+    aiProvider: _localProvider as 'gemini' | 'lmstudio', setAiProvider: _setLocalProvider as any,
+    engineMode: _localEngine as 'gemini' | 'lmstudio' | 'dual', setEngineMode: _setLocalEngine as any,
+    lmStudioUrl: _localLmUrl, setLmStudioUrl: _setLocalLmUrl,
+    lmStudioModel: _localLmModel, setLmStudioModel: _setLocalLmModel,
     comicMode: false, setComicMode: () => {},
     comicPanels: [],
     comicArtStyle: 'larry-elmore' as const, setComicArtStyle: () => {},
