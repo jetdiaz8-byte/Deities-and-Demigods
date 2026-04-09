@@ -21,8 +21,9 @@ const MODEL_TOKEN_LIMITS: Record<string, number> = {
 const FALLBACK_MODELS = ['gemma-4-31b-it', 'gemini-2.5-flash-lite']
 
 export const runtime = 'edge'
-const TOTAL_ROUTE_BUDGET_MS = 25000
-const PER_MODEL_TIMEOUT_MS = 22000
+// Keep total runtime below Vercel Edge timeout while allowing all fallback tiers to run.
+const TOTAL_ROUTE_BUDGET_MS = 28000
+const PER_MODEL_TIMEOUT_MS = 9000
 
 // Build the request body for Gemini API
 function buildRequestBody(
@@ -217,8 +218,8 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // ── Primary failed — check if it's a retriable error (503 or 429) ──
-    const isRetriable = primary.status === 503 || primary.status === 429
+    // ── Primary failed — check if it's a retriable error (503/429/504) ──
+    const isRetriable = primary.status === 503 || primary.status === 429 || primary.status === 504
 
     if (!isRetriable) {
       // Non-retriable error (400, 401, 403, etc.) — return immediately
@@ -263,8 +264,8 @@ export async function POST(request: NextRequest) {
         })
       }
 
-      // Only continue fallback chain on 503/429 — other errors are terminal
-      if (fallback.status !== 503 && fallback.status !== 429) {
+      // Continue fallback chain on retriable overload/timeout statuses.
+      if (fallback.status !== 503 && fallback.status !== 429 && fallback.status !== 504) {
         console.error(`[Gemini Proxy] ❌ ${fallbackModel} — ${fallback.status} (terminal): ${fallback.error}`)
         return NextResponse.json(
           { error: fallback.error },
@@ -278,7 +279,7 @@ export async function POST(request: NextRequest) {
     // ── All models failed ──
     console.error(`[Gemini Proxy] ❌ All models exhausted. Last error from ${FALLBACK_MODELS[FALLBACK_MODELS.length - 1]}`)
     return NextResponse.json(
-      { error: `All models unavailable (503/429). Tried: ${model}, ${FALLBACK_MODELS.join(', ')}` },
+      { error: `All models unavailable (503/429/504). Tried: ${model}, ${FALLBACK_MODELS.join(', ')}` },
       { status: 503 },
     )
 
