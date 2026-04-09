@@ -1,7 +1,18 @@
 import { NextResponse } from 'next/server'
-export const runtime = 'edge'
+
 export async function GET() {
-  const key = process.env.OPENROUTER_API_KEY || ''
-  if (!key) return NextResponse.json({ error: 'No key' }, { status: 500 })
-  return NextResponse.json({ key })
+  try {
+    const key = process.env.OPENROUTER_API_KEY || ''
+
+    if (!key) {
+      console.warn('/api/get-key: OPENROUTER_API_KEY is empty or not set')
+      return NextResponse.json({ key: '' })
+    }
+
+    return NextResponse.json({ key })
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : String(e)
+    console.error('/api/get-key CRASH:', msg, e)
+    return NextResponse.json({ key: '', error: msg })
+  }
 }
