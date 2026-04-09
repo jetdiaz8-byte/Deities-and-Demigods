@@ -20,7 +20,10 @@ const MODEL_TOKEN_LIMITS: Record<string, number> = {
 // Fallback models tried server-side when primary returns 503
 const FALLBACK_MODELS = ['gemma-4-31b-it', 'gemini-2.5-flash-lite']
 
-export const maxDuration = 60
+export const runtime = 'edge'
+export const maxDuration = 30
+const TOTAL_ROUTE_BUDGET_MS = 25000
+const PER_MODEL_TIMEOUT_MS = 9000
 
 // Build the request body for Gemini API
 function buildRequestBody(
@@ -51,6 +54,7 @@ async function tryModel(
   userMessage: string,
   temperature: number | undefined,
   maxOutputTokens: number,
+  timeoutMs: number,
 ): Promise<{
   ok: boolean
   data?: unknown
@@ -63,6 +67,8 @@ async function tryModel(
   const cappedTokens = Math.min(maxOutputTokens, tokenLimit)
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
     const response = await fetch(endpoint, {
@@ -71,7 +77,9 @@ async function tryModel(
       body: JSON.stringify(
         buildRequestBody(systemPrompt, userMessage, temperature, cappedTokens),
       ),
+      signal: controller.signal,
     })
+    clearTimeout(timeout)
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error')
@@ -97,10 +105,14 @@ async function tryModel(
     return { ok: true, data, modelUsed: model }
 
   } catch (err) {
+    clearTimeout(timeout)
+    const isAbort = err instanceof Error && err.name === 'AbortError'
     return {
       ok: false,
-      error: `Network error: ${err instanceof Error ? err.message : String(err)}`,
-      status: 502,
+      error: isAbort
+        ? `Upstream timeout after ${timeoutMs}ms`
+        : `Network error: ${err instanceof Error ? err.message : String(err)}`,
+      status: isAbort ? 504 : 502,
       modelUsed: model,
     }
   }
@@ -127,9 +139,18 @@ export async function POST(request: NextRequest) {
     }
 
     const requestedTokens = maxOutputTokens ?? 6144
+    const startedAt = Date.now()
+    const remainingBudget = () => TOTAL_ROUTE_BUDGET_MS - (Date.now() - startedAt)
+    const perCallTimeout = () => Math.max(1500, Math.min(PER_MODEL_TIMEOUT_MS, remainingBudget() - 500))
 
     // ── Try primary model ──
-    const primary = await tryModel(model, systemPrompt, userMessage, temperature, requestedTokens)
+    if (remainingBudget() <= 1000) {
+      return NextResponse.json(
+        { error: 'upstream_timeout: route budget exhausted before primary request' },
+        { status: 503 },
+      )
+    }
+    const primary = await tryModel(model, systemPrompt, userMessage, temperature, requestedTokens, perCallTimeout())
 
     if (primary.ok) {
       console.log(`[Gemini Proxy] ✅ ${model} — success`)
@@ -156,10 +177,24 @@ export async function POST(request: NextRequest) {
     console.warn(`[Gemini Proxy] ⚠️ ${model} returned ${primary.status}, trying fallback models...`)
 
     for (const fallbackModel of FALLBACK_MODELS) {
+      if (remainingBudget() <= 1000) {
+        console.error('[Gemini Proxy] ⏱️ Route budget exhausted before fallback completed')
+        return NextResponse.json(
+          { error: 'upstream_timeout: route budget exhausted during fallback chain' },
+          { status: 503 },
+        )
+      }
       // Don't retry the same model that just failed
       if (fallbackModel === model) continue
 
-      const fallback = await tryModel(fallbackModel, systemPrompt, userMessage, temperature, requestedTokens)
+      const fallback = await tryModel(
+        fallbackModel,
+        systemPrompt,
+        userMessage,
+        temperature,
+        requestedTokens,
+        perCallTimeout(),
+      )
 
       if (fallback.ok) {
         console.log(`[Gemini Proxy] ✅ ${fallbackModel} — fallback success (primary ${model} returned ${primary.status})`)
