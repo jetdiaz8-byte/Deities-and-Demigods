@@ -38,7 +38,12 @@ export default function MythworldEngine() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => { setMounted(true) }, [])
 
-  const gameEngineResult = useGameEngine() ?? {}
+  // useGameEngine() may return undefined during SSR or if browser APIs fail.
+  // We MUST provide a structurally-complete fallback so that every hook and
+  // useMemo below (useSceneMusic, atmosphereClass, timeOfDay, …) always
+  // receives a valid gameState object — never undefined.
+  const gameEngineResult = useGameEngine()
+  const _engineReady = mounted && gameEngineResult?.gameState
   const {
     gameState, setGameState,
     geminiKey, setGeminiKey,
@@ -100,7 +105,7 @@ export default function MythworldEngine() {
     achievementUnlocks,
     showAchievementsDialog,
     setShowAchievementsDialog,
-  } = mounted ? gameEngineResult : {
+  } = _engineReady ? gameEngineResult : {
     gameState: createInitialState(),
     setGameState: () => {},
     geminiKey: '', setGeminiKey: () => {},
