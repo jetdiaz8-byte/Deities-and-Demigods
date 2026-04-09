@@ -1,7 +1,11 @@
 'use client'
 
-import React, { useState, useMemo, useRef, useEffect } from 'react'
 import dynamic from 'next/dynamic'
+const DynamicPage = dynamic(() => import('./page'), { ssr: false })
+export default DynamicPage
+
+import React, { useState, useMemo, useRef, useEffect } from 'react'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
