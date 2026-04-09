@@ -46,6 +46,61 @@ function buildRequestBody(
   return body
 }
 
+type GeminiStreamChunk = {
+  candidates?: Array<{
+    content?: { parts?: Array<{ text?: string }> }
+    finishReason?: string
+  }>
+  usageMetadata?: unknown
+}
+
+async function readGeminiSseResponse(response: Response): Promise<GeminiStreamChunk> {
+  const reader = response.body?.getReader()
+  if (!reader) throw new Error('Empty Gemini stream body')
+
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let combinedText = ''
+  let finishReason: string | undefined
+  let usageMetadata: unknown
+
+  const processLine = (line: string) => {
+    const trimmed = line.trim()
+    if (!trimmed.startsWith('data:')) return
+    const payload = trimmed.slice(5).trim()
+    if (!payload || payload === '[DONE]') return
+    try {
+      const parsed = JSON.parse(payload) as GeminiStreamChunk
+      const partText = parsed.candidates?.[0]?.content?.parts?.[0]?.text
+      if (partText) combinedText += partText
+      if (parsed.candidates?.[0]?.finishReason) finishReason = parsed.candidates[0].finishReason
+      if (parsed.usageMetadata) usageMetadata = parsed.usageMetadata
+    } catch {
+      // Ignore malformed intermediate events, keep consuming stream.
+    }
+  }
+
+  while (true) {
+    const { value, done } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() ?? ''
+    for (const line of lines) processLine(line)
+  }
+  if (buffer.trim()) processLine(buffer)
+
+  return {
+    candidates: [
+      {
+        content: { parts: [{ text: combinedText }] },
+        finishReason: finishReason || 'STOP',
+      },
+    ],
+    usageMetadata,
+  }
+}
+
 // Try a single model — returns { ok, data?, error?, status?, modelUsed? }
 async function tryModel(
   model: string,
@@ -65,7 +120,7 @@ async function tryModel(
   // Cap output tokens to the model's max
   const cappedTokens = Math.min(maxOutputTokens, tokenLimit)
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
 
@@ -90,12 +145,12 @@ async function tryModel(
       }
     }
 
-    const data = await response.json()
+    const data = await readGeminiSseResponse(response)
 
-    if (data.error) {
+    if (!data?.candidates?.[0]?.content?.parts?.[0]?.text) {
       return {
         ok: false,
-        error: data.error.message || 'Gemini API error',
+        error: 'Gemini API error: empty streamed response',
         status: 500,
         modelUsed: model,
       }
