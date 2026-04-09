@@ -22,7 +22,7 @@ const FALLBACK_MODELS = ['gemma-4-31b-it', 'gemini-2.5-flash-lite']
 
 export const runtime = 'edge'
 const TOTAL_ROUTE_BUDGET_MS = 25000
-const PER_MODEL_TIMEOUT_MS = 9000
+const PER_MODEL_TIMEOUT_MS = 22000
 
 // Build the request body for Gemini API
 function buildRequestBody(
@@ -71,8 +71,10 @@ async function readGeminiSseResponse(response: Response): Promise<GeminiStreamCh
     if (!payload || payload === '[DONE]') return
     try {
       const parsed = JSON.parse(payload) as GeminiStreamChunk
-      const partText = parsed.candidates?.[0]?.content?.parts?.[0]?.text
-      if (partText) combinedText += partText
+      const parts = parsed.candidates?.[0]?.content?.parts || []
+      for (const part of parts) {
+        if (typeof part?.text === 'string') combinedText += part.text
+      }
       if (parsed.candidates?.[0]?.finishReason) finishReason = parsed.candidates[0].finishReason
       if (parsed.usageMetadata) usageMetadata = parsed.usageMetadata
     } catch {
@@ -84,7 +86,7 @@ async function readGeminiSseResponse(response: Response): Promise<GeminiStreamCh
     const { value, done } = await reader.read()
     if (done) break
     buffer += decoder.decode(value, { stream: true })
-    const lines = buffer.split('\n')
+    const lines = buffer.split(/\r?\n/)
     buffer = lines.pop() ?? ''
     for (const line of lines) processLine(line)
   }
