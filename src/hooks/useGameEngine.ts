@@ -1199,60 +1199,71 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ── API CALLS ──────────────────────────────────────────────────────────
   const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    // Server-side proxy handles retries + 3-tier fallback (Flash -> Gemma 4 -> Flash-Lite)
+    const key = serverKey || geminiKey
+    if (!key) return getNarrationPreservationFallback(gs, 'no_api_key')
+    const endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + key
+    const MAX_RETRIES = 4
+    const BASE_DELAY = 6000
+    const RATE_LIMIT_DELAY = 60000
     const maxTokens = isFirstTurn ? 20000 : 6144
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
     const totalInput = systemPrompt + userMsg
 
-    try {
-      setStatusMessage('Calling Gemini...')
-      const r = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: GEMINI_MODEL,
-          systemPrompt,
-          userMessage: toAscii(userMsg),
-          temperature: 0.9,
-          maxOutputTokens: maxTokens,
-        }),
-      })
-
-      if (!r.ok) {
-        const e = await r.text()
-        console.error('Gemini proxy error ' + r.status + ':', e.slice(0, 200))
-        if (r.status === 503) return getNarrationPreservationFallback(gs, 'service_unavailable')
-        if (r.status === 429) return getNarrationPreservationFallback(gs, 'quota_exceeded')
-        return getNarrationPreservationFallback(gs, 'proxy_' + r.status)
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      if (attempt > 0) {
+        const waitSec = Math.round((BASE_DELAY * Math.pow(2, attempt - 1)) / 1000)
+        setStatusMessage('Retrying in ' + waitSec + 's (attempt ' + (attempt + 1) + '/' + MAX_RETRIES + ')...')
+        await new Promise(r => setTimeout(r, BASE_DELAY * Math.pow(2, attempt - 1)))
       }
-
-      const proxyData = await r.json()
-      if (proxyData.fallbackUsed) {
-        console.warn('Gemini fallback used: ' + proxyData.modelUsed)
+      try {
+        setStatusMessage('Calling Gemini...')
+        const r = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: 'user', parts: [{ text: toAscii(userMsg) }] }],
+            generationConfig: { temperature: 0.9, maxOutputTokens: maxTokens }
+          }),
+        })
+        if (r.status === 429) {
+          console.warn('Gemini quota exceeded (429)')
+          if (attempt === MAX_RETRIES - 1) return getNarrationPreservationFallback(gs, 'quota_exceeded')
+          const wait = RATE_LIMIT_DELAY + (attempt * 15000)
+          setStatusMessage('Rate limited - waiting ' + Math.round(wait / 1000) + 's...')
+          await new Promise(r => setTimeout(r, wait))
+          continue
+        }
+        if (r.status === 503) {
+          console.warn('Gemini service unavailable (503)')
+          if (attempt === MAX_RETRIES - 1) return getNarrationPreservationFallback(gs, 'service_unavailable')
+          const wait = RATE_LIMIT_DELAY + (attempt * 15000)
+          setStatusMessage('Gemini overloaded - waiting ' + Math.round(wait / 1000) + 's...')
+          await new Promise(r => setTimeout(r, wait))
+          continue
+        }
+        if (!r.ok) {
+          const e = await r.text()
+          console.error('Gemini error ' + r.status + ':', e.slice(0, 200))
+          throw new Error('Gemini ' + r.status + ': ' + e.slice(0, 150))
+        }
+        const data = await r.json()
+        if (data.error) { console.error('Gemini API error:', data.error); throw new Error(data.error.message) }
+        const candidate = (data.candidates || [])[0]
+        if (candidate?.finishReason === 'MAX_TOKENS') console.warn('Gemini response TRUNCATED.')
+        const parts = candidate?.content?.parts || []
+        let raw = ''
+        for (const part of parts) { if (part.text && part.text.trim().length > 10) raw += part.text }
+        console.log('Gemini response: ' + raw.length + ' chars, ' + (isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn))
+        updateTokenUsage(totalInput, raw)
+        return parseDMResponse(raw, gs)
+      } catch (e) {
+        console.error('Gemini fetch error (attempt ' + (attempt + 1) + '):', e)
+        if (attempt < MAX_RETRIES - 1 && String(e).includes('fetch')) continue
+        if (attempt === MAX_RETRIES - 1) return getNarrationPreservationFallback(gs, String(e))
       }
-
-      const data = proxyData.data
-      const candidate = (data.candidates || [])[0]
-      const finishReason = candidate?.finishReason
-      if (finishReason === 'MAX_TOKENS') {
-        console.warn('Gemini response TRUNCATED (finishReason: MAX_TOKENS).')
-      }
-
-      const parts = candidate?.content?.parts || []
-      let raw = ''
-      for (const part of parts) {
-        if (part.text && part.text.trim().length > 10) raw += part.text
-      }
-
-      console.log('Gemini response: ' + raw.length + ' chars, model: ' + proxyData.modelUsed)
-      updateTokenUsage(totalInput, raw)
-      return parseDMResponse(raw, gs)
-
-    } catch (e) {
-      console.error('Gemini proxy fetch error:', e)
-      return getNarrationPreservationFallback(gs, String(e))
     }
-  }
+    return getNarrationPreservationFallback(gs, 'unrecoverable_failure')
 
   const parseDMResponse = (raw: string, gs: GameState): DMResponse => {
     let splitPos = raw.lastIndexOf('\n{')
