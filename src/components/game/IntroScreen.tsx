@@ -188,7 +188,7 @@ export function IntroScreen({
   }, [nextCharacter?.id, nextCharacter?.category])
 
   return (
-    <div className="min-h-screen bg-[#060403] flex flex-col items-center justify-center p-4 overflow-hidden relative">
+    <div className="h-screen w-full bg-[#060403] flex flex-col items-center justify-center p-4 overflow-hidden relative">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap');
 
@@ -274,7 +274,7 @@ export function IntroScreen({
       ))}
 
       {/* MAIN CONTENT - centered, z-10, with side padding for vertical marquees */}
-      <div className="relative z-10 w-full max-w-2xl mx-auto">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto">
         {/* Title */}
         <div className="text-center mb-4">
           <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
@@ -311,8 +311,8 @@ export function IntroScreen({
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start mt-3">
-          <div className="md:col-span-3">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(420px,1fr)_minmax(350px,520px)] gap-10 md:gap-12 items-center mt-3 w-full">
+          <div className="justify-self-center md:justify-self-start">
             <div className="text-center mb-2 text-[10px] text-[#9a8860]" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}>
               CHARACTER CARD SHOWCASE · {portraitCount} portraits
             </div>
@@ -356,7 +356,7 @@ export function IntroScreen({
             )}
           </div>
 
-          <div className="md:col-span-2">
+          <div className="w-full md:min-w-[350px]">
         {/* Compact Main Card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.2, duration: 0.5 }}>

@@ -26,17 +26,36 @@ const getBorderColor = (alignment?: string) => {
   return ALIGNMENT_BORDER[alignment.toLowerCase()] || '#808080'
 }
 
-const truncateLore = (text: string, max = 100) => {
-  if (!text || !text.trim()) return 'No records exist of this being.'
-  return text.length > max ? `${text.slice(0, max - 1)}...` : text
+const getDivineRankClass = (divineRank?: string): string => {
+  const rank = divineRank?.toLowerCase() ?? ''
+  if (rank.includes('greater')) return 'character-card--greater-god'
+  if (rank.includes('lesser')) return 'character-card--lesser-god'
+  if (rank.includes('demigod')) return 'character-card--demigod'
+  if (rank.includes('monster')) return 'character-card--monster'
+  if (rank.includes('hero')) return 'character-card--hero'
+  return 'character-card--hero'
+}
+
+const getFullLore = (character: Character) => {
+  const candidates = [
+    character.personality || '',
+    character.phase1 || '',
+    character.phase2 || '',
+    character.phase3 || '',
+    character.domain || '',
+    character.symbol || '',
+  ].map(v => v.trim()).filter(Boolean)
+  if (!candidates.length) return 'No records exist of this being.'
+  return candidates.sort((a, b) => b.length - a.length)[0]
 }
 
 export function CharacterCard({ character, compact = false }: CharacterCardProps) {
   const [imageError, setImageError] = React.useState(false)
   const borderColor = getBorderColor(character.align)
+  const rankClass = getDivineRankClass(character.divineRank)
   const portrait = getPortraitPath(character)
-  const abilities = (character.abilities || []).slice(0, 3)
-  const lore = truncateLore(character.personality || '')
+  const abilities = (character.abilities || []).length ? character.abilities : ['Unknown']
+  const lore = getFullLore(character)
 
   if (compact) {
     return (
@@ -60,7 +79,7 @@ export function CharacterCard({ character, compact = false }: CharacterCardProps
   }
 
   return (
-    <article className="character-card" style={{ borderColor }}>
+    <article className={`character-card ${rankClass}`} style={{ borderColor }}>
       <div className="character-card__portrait">
         {!imageError ? (
           <img
@@ -88,7 +107,7 @@ export function CharacterCard({ character, compact = false }: CharacterCardProps
         </div>
 
         <ul className="character-card__abilities">
-          {(abilities.length ? abilities : ['Unknown']).map((ability, i) => (
+          {abilities.map((ability, i) => (
             <li key={`${character.id}-ability-${i}`}>{ability}</li>
           ))}
         </ul>
