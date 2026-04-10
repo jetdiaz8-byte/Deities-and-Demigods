@@ -15,6 +15,9 @@ import { LoreGlossaryProvider } from '@/components/game/LoreGlossaryCard'
 import { EquipmentTooltipProvider } from '@/components/game/EquipmentTooltip'
 import { SceneIllustration } from '@/components/game/SceneIllustration'
 import PartyBar from '@/components/game/PartyBar'
+import CharacterCard from '@/components/game/CharacterCard'
+import { ALL_CHARACTERS } from '@/lib/characterData'
+import type { Character } from '@/lib/characterTypes'
 const ComicPanel = dynamic(() => import('@/components/game/ComicPanel'), { ssr: false })
 import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
@@ -117,6 +120,22 @@ export default function MythworldEngine() {
 
   // Quest Journal modal state
   const [showQuestJournal, setShowQuestJournal] = React.useState(false)
+  const [galleryModalOpen, setGalleryModalOpen] = React.useState(false)
+  const allGalleryCharacters = useMemo(() => {
+    const validCategories = new Set(['greater-gods', 'demigods', 'heroes', 'krynn', 'lesser-gods', 'monsters'])
+    const dedupe = new Set<string>()
+    return ALL_CHARACTERS
+      .filter(c => validCategories.has(c.category))
+      .filter(c => {
+        const key = `${c.category}:${c.id}`
+        if (dedupe.has(key)) return false
+        dedupe.add(key)
+        return true
+      })
+  }, [])
+  const [galleryQueue, setGalleryQueue] = useState<Character[]>([])
+  const [galleryIndex, setGalleryIndex] = useState(0)
+  const [galleryPlaying, setGalleryPlaying] = useState(true)
 
   // Deterministic ember positions prevent server/client hydration mismatch.
   const emberPositions = useMemo(() =>
@@ -180,6 +199,41 @@ export default function MythworldEngine() {
       .filter(Boolean)
       .map(s => (/[.!?]$/.test(s) ? s : `${s}.`))
   }, [lastDMNarrative])
+  const shuffleCharacters = React.useCallback((items: Character[]) => {
+    const copy = [...items]
+    for (let i = copy.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[copy[i], copy[j]] = [copy[j], copy[i]]
+    }
+    return copy
+  }, [])
+  useEffect(() => {
+    if (!allGalleryCharacters.length) return
+    const t = window.setTimeout(() => {
+      setGalleryQueue(shuffleCharacters(allGalleryCharacters))
+      setGalleryIndex(0)
+    }, 0)
+    return () => window.clearTimeout(t)
+  }, [allGalleryCharacters, shuffleCharacters])
+  useEffect(() => {
+    if (!galleryPlaying || !galleryQueue.length) return
+    const t = window.setInterval(() => {
+      setGalleryIndex(prev => {
+        const next = prev + 1
+        if (next < galleryQueue.length) return next
+        setGalleryQueue(shuffleCharacters(allGalleryCharacters))
+        return 0
+      })
+    }, 5000)
+    return () => window.clearInterval(t)
+  }, [galleryPlaying, galleryQueue.length, shuffleCharacters, allGalleryCharacters])
+  const galleryCharacter = galleryQueue[galleryIndex] || allGalleryCharacters[0] || null
+  const galleryNext = React.useCallback(() => {
+    setGalleryIndex(prev => (galleryQueue.length ? (prev + 1) % galleryQueue.length : 0))
+  }, [galleryQueue.length])
+  const galleryPrev = React.useCallback(() => {
+    setGalleryIndex(prev => (galleryQueue.length ? (prev - 1 + galleryQueue.length) % galleryQueue.length : 0))
+  }, [galleryQueue.length])
 
   // ── TOAST NOTIFICATION SYSTEM ─────────────────────────────────────────
   const [toasts, setToasts] = React.useState<{ id: string; title: string; desc: string; icon: string }[]>([])
@@ -601,6 +655,11 @@ export default function MythworldEngine() {
             comicArtStyle={comicArtStyle}
             setComicArtStyle={setComicArtStyle}
             dmSystemPrompt={buildDMSystem(gameState, true, false)}
+            galleryCharacter={galleryCharacter as any}
+            galleryPlaying={galleryPlaying}
+            onGalleryTogglePlay={() => setGalleryPlaying(v => !v)}
+            onGalleryNext={galleryNext}
+            onGalleryPrev={galleryPrev}
           />
         </div>
 
@@ -687,6 +746,14 @@ export default function MythworldEngine() {
           >
             <Download className="w-4 h-4 mr-1" /> Export
           </Button>
+          <Button
+            onClick={() => setGalleryModalOpen(true)}
+            variant="outline"
+            size="sm"
+            className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
+          >
+            🎴 Gallery
+          </Button>
 
           {/* API key is now server-side — no client input needed */}
         </div>
@@ -740,6 +807,19 @@ export default function MythworldEngine() {
           onOpenChange={setShowQuestJournal}
           gameState={gameState}
         />
+        {galleryModalOpen && galleryCharacter && (
+          <div className="gallery-modal" onClick={() => setGalleryModalOpen(false)}>
+            <div onClick={(e) => e.stopPropagation()} className="relative max-w-[360px] w-[92vw]">
+              <button className="party-card-expand__close" onClick={() => setGalleryModalOpen(false)}>X</button>
+              <CharacterCard character={galleryCharacter as any} />
+              <div className="gallery-controls">
+                <button onClick={galleryPrev}>‹</button>
+                <button onClick={() => setGalleryPlaying(v => !v)}>{galleryPlaying ? 'Pause' : 'Play'}</button>
+                <button onClick={galleryNext}>›</button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* All Dialogs */}
         <GameDialogs

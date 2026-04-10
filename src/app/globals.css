@@ -490,6 +490,32 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .party-card-expand.open { transform: translateX(-50%) translateY(0); opacity: 1; }
 .party-card-expand__panel { position: relative; max-height: calc(100vh - 200px); overflow-y: auto; }
 .party-card-expand__close { position: absolute; right: 8px; top: 8px; z-index: 3; border: 1px solid #7a5f20; background: rgba(10,8,6,.8); color: #f0c860; border-radius: 6px; padding: 2px 8px; }
+.gallery-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gallery-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 16px;
+}
+.gallery-controls button {
+  background: rgba(255, 215, 0, 0.15);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: #FFD700;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'MedievalSharp', sans-serif;
+  min-width: 44px;
+  min-height: 44px;
+}
 
 .character-card--greater-god {
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 215, 0, 0.3), 0 0 45px rgba(255, 215, 0, 0.1);

@@ -1273,7 +1273,7 @@ ${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
 8. Occasionally drop items into "item_drops" array for the party inventory.
 9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. Provide 3-4 action OPTIONS for the current PC, then WAIT for the human player to choose. NEVER auto-resolve PC actions.
 10. **PERSISTENT MEMORY** - Remember ALL previous events, decisions, and their consequences. Reference past events when narrating.
-10b. If the party includes additional members beyond the PC and companion, describe their autonomous actions based on personality and situation, like God of War companions.
+10b. If the party includes additional members beyond the PC and companion, describe their autonomous actions based on their personality and the situation, like God of War companions. They act independently and their actions flow naturally within the narration.
 10a. **STORY PACING — THIS IS CRITICAL**:
     - Act I (Turns 1-7): PURE EXPLORATION. NO enemies. NO combat. Build the world.
       - Describe environments: ancient temples, dark forests, forgotten cities, divine realms
@@ -1526,6 +1526,23 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   }
 
   const parseDMResponse = (raw: string, gs: GameState): DMResponse => {
+    const extractDiceRollsFromRaw = (input: string) => {
+      const rolls: Array<{ roller: string; die: string; roll: number; dc: number; success: boolean; notes?: string }> = []
+      const lines = (input || '').split('\n')
+      for (const line of lines) {
+        const m = line.match(/(d\d+)\s*[=:]\s*(\d+)(?:\s*\+\s*(\d+))?(?:\s*=\s*(\d+))?/i)
+        if (!m) continue
+        const die = m[1].toLowerCase()
+        const roll = Number(m[2] || 0)
+        const mod = Number(m[3] || 0)
+        const total = Number(m[4] || (roll + mod))
+        const dcMatch = line.match(/dc\s*(\d+)/i)
+        const dc = Number(dcMatch?.[1] || 0)
+        const success = /success|succeeds|passed/i.test(line) || (dc > 0 ? total >= dc : true)
+        rolls.push({ roller: 'Narrative', die, roll: total, dc, success, notes: line.trim() })
+      }
+      return rolls
+    }
     let splitPos = raw.lastIndexOf('\n{')
     let keyIdx = raw.indexOf('"story_summary"')
     if (keyIdx === -1) keyIdx = raw.indexOf('"dm_narration"')
@@ -1551,12 +1568,13 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       console.warn('⚠️ No JSON in Gemini response, using narrative-preservation fallback')
       // If we have pre-JSON prose, use it instead of losing everything to template
       if (preJsonNarrativeRef.current && preJsonNarrativeRef.current.length > 30) {
+        const extracted = extractDiceRollsFromRaw(raw)
         return {
           dm_narration: preJsonNarrativeRef.current.slice(0, 2000),
           story_summary: gs.storySummary || 'The adventure continues...',
           journey_so_far: gs.journeySoFar || '',
           npc_encounters: [],
-          dice_rolls: [],
+          dice_rolls: extracted,
           damage_dealt: [],
           injury_events: [],
           state_updates: [],
@@ -1575,6 +1593,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       if (!parsed || typeof parsed !== 'object' || !parsed.dm_narration) {
         console.warn('⚠️ Parsed JSON missing dm_narration, using template fallback')
         return getNarrationPreservationFallback(gs, 'Missing dm_narration field')
+      }
+      if (!Array.isArray(parsed.dice_rolls) || parsed.dice_rolls.length === 0) {
+        parsed.dice_rolls = extractDiceRollsFromRaw(raw)
       }
       return parsed
     } catch {
@@ -1639,6 +1660,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         try {
           const parsed = JSON.parse(repaired)
           if (parsed && typeof parsed === 'object' && parsed.dm_narration) {
+            if (!Array.isArray((parsed as any).dice_rolls) || (parsed as any).dice_rolls.length === 0) {
+              ;(parsed as any).dice_rolls = extractDiceRollsFromRaw(raw)
+            }
             console.warn(`⚠️ JSON truncation repaired — trimmed mid-string, added ${missingBraces} braces, ${missingBrackets} brackets`)
             return parsed
           }
@@ -1651,7 +1675,12 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     if (firstBrace >= 0 && lastBrace >= firstBrace) {
       try {
         const parsed = JSON.parse(s.substring(firstBrace, lastBrace + 1))
-        if (parsed && typeof parsed === 'object' && parsed.dm_narration) return parsed
+        if (parsed && typeof parsed === 'object' && parsed.dm_narration) {
+          if (!Array.isArray((parsed as any).dice_rolls) || (parsed as any).dice_rolls.length === 0) {
+            ;(parsed as any).dice_rolls = extractDiceRollsFromRaw(raw)
+          }
+          return parsed
+        }
       } catch { }
     }
 
@@ -1662,13 +1691,14 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     const savedNarrative = preJsonNarrativeRef.current
     if (savedNarrative && savedNarrative.length > 30) {
       console.warn('📝 Using narrative-preservation fallback (JSON lost, prose intact)')
+      const extracted = extractDiceRollsFromRaw(raw)
       // Return a safe DMResponse that keeps game state stable while showing the prose
       return {
         dm_narration: savedNarrative.slice(0, 2000),
         story_summary: gs.storySummary || 'The adventure continues...',
         journey_so_far: gs.journeySoFar || '',
         npc_encounters: [],
-        dice_rolls: [],
+        dice_rolls: extracted,
         damage_dealt: [],
         injury_events: [],
         state_updates: [],

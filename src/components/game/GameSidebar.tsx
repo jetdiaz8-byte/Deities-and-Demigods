@@ -8,12 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { BookOpen, ScrollText, Star, Crown, Skull, Sparkles, CheckCircle, Swords } from 'lucide-react'
 import { NarrativeSection } from '@/components/game/GameComponents'
+import CharacterCard from '@/components/game/CharacterCard'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
 import { RegionIndicator } from '@/components/game/RegionIndicator'
 import { SidebarDiceArea } from '@/components/game/SidebarDiceArea'
 import { hpCls, aCol, getEntityPortrait, getAbilityBonus } from '@/lib/gameHelpers'
 import { getProphecyById } from '@/lib/prophecyData'
 import type { GameState, SaveSlot } from '@/lib/gameTypes'
+import type { Character } from '@/lib/characterTypes'
 
 export interface GameSidebarProps {
   gameState: GameState
@@ -36,6 +38,11 @@ export interface GameSidebarProps {
   comicArtStyle: 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor'
   setComicArtStyle: (style: 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor') => void
   dmSystemPrompt?: string
+  galleryCharacter?: Character | null
+  galleryPlaying?: boolean
+  onGalleryTogglePlay?: () => void
+  onGalleryNext?: () => void
+  onGalleryPrev?: () => void
 }
 
 export function GameSidebar({
@@ -59,6 +66,11 @@ export function GameSidebar({
   comicArtStyle,
   setComicArtStyle,
   dmSystemPrompt,
+  galleryCharacter,
+  galleryPlaying,
+  onGalleryTogglePlay,
+  onGalleryNext,
+  onGalleryPrev,
 }: GameSidebarProps) {
   return (
     <>
@@ -126,6 +138,11 @@ export function GameSidebar({
           tokenUsage={tokenUsage}
           conversationHistory={conversationHistory}
           dmSystemPrompt={dmSystemPrompt}
+          galleryCharacter={galleryCharacter}
+          galleryPlaying={galleryPlaying}
+          onGalleryTogglePlay={onGalleryTogglePlay}
+          onGalleryNext={onGalleryNext}
+          onGalleryPrev={onGalleryPrev}
         />
         </div>
       </div>
@@ -191,6 +208,11 @@ export function GameSidebar({
             setPortraitModalOpen={setPortraitModalOpen}
             tokenUsage={tokenUsage}
             conversationHistory={conversationHistory}
+            galleryCharacter={galleryCharacter}
+            galleryPlaying={galleryPlaying}
+            onGalleryTogglePlay={onGalleryTogglePlay}
+            onGalleryNext={onGalleryNext}
+            onGalleryPrev={onGalleryPrev}
           />
           <div className="border-t border-[#2e2008] p-3">
             <div className="text-[11px] text-[#c9a84c] uppercase tracking-wider mb-2" style={{ fontFamily: 'Cinzel, serif' }}>Settings</div>
@@ -224,7 +246,7 @@ export function GameSidebar({
 // DESKTOP TABS — Full detail view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, dmSystemPrompt }: {
+function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, dmSystemPrompt, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev }: {
   gameState: GameState
   activeTab: string
   setActiveTab: (tab: string) => void
@@ -237,6 +259,11 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
   tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
   conversationHistory?: { role: string; content: string }[]
   dmSystemPrompt?: string
+  galleryCharacter?: Character | null
+  galleryPlaying?: boolean
+  onGalleryTogglePlay?: () => void
+  onGalleryNext?: () => void
+  onGalleryPrev?: () => void
 }) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
@@ -246,20 +273,32 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
         <TabsTrigger value="quests" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Quests</TabsTrigger>
         <TabsTrigger value="prophecies" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">📜</TabsTrigger>
         <TabsTrigger value="logs" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Logs</TabsTrigger>
+        <TabsTrigger value="gallery" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Gallery</TabsTrigger>
         <TabsTrigger value="dm" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">DM</TabsTrigger>
       </TabsList>
 
       {/* PCs Tab */}
       <TabsContent value="pcs" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
-        {gameState.pcs.map(pc => (
+        {gameState.pcs.map(pc => {
+          const mapped = {
+            id: pc.id,
+            name: pc.name,
+            category: pc.category || (pc.type === 'monster' ? 'monsters' : 'heroes'),
+            title: pc.title || pc.epithet || 'Adventurer',
+            pantheon: pc.pantheon || 'Unknown',
+            align: pc.align || 'Neutral',
+            hp: pc.hp,
+            AC: pc.AC,
+            MR: pc.MR,
+            abilities: pc.abilities || [],
+            personality: pc.personality || '',
+            divineRank: pc.type === 'greater_god' ? 'Greater God' : pc.type === 'lesser_god' ? 'Lesser God' : pc.type === 'demigod' ? 'Demigod' : pc.type === 'monster' ? 'Monster' : 'Hero',
+          }
+          return (
           <React.Fragment key={pc.id}>
-            <PCDetailCard
-              pc={pc}
-              isHumanPC={pc.id === gameState.humanPCId}
-              expanded={expandedPC === pc.id}
-              injuries={gameState.injuries[pc.id] || []}
-              onToggle={() => setExpandedPC(expandedPC === pc.id ? null : pc.id)}
-            />
+            <div className="mb-3">
+              <CharacterCard character={mapped as any} />
+            </div>
             {pc.id === gameState.companionId && gameState.companionMood && (
               <div className="mb-3 px-3 py-1.5 rounded-lg text-[10px]" style={{
                 background: 'rgba(100,140,200,0.1)',
@@ -273,7 +312,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
               </div>
             )}
           </React.Fragment>
-        ))}
+        )})}
 
         {/* Combat Status — Active Enemies */}
         {gameState.activeNPCs.filter(n => !n.dead).length > 0 && (
@@ -541,9 +580,30 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
 
       <TabsContent value="dm" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
         <h3 className="text-[#c9a84c] mb-2 text-base" style={{ fontFamily: 'Cinzel, serif' }}>DM Notes</h3>
+        <div className="text-xs text-[#d8ccb8] mb-2 whitespace-pre-wrap leading-relaxed p-3 rounded border border-[#5a4018] bg-[rgba(42,35,24,0.75)]">
+          Turn: {gameState.turn} · Act: {gameState.act}{'\n'}
+          Shard: {gameState.shardEntry?.name || 'None'} · Pantheon: {gameState.shardEntry?.pantheon || 'Unknown'}{'\n'}
+          Party: {(gameState.pcs || []).map(p => p.name).join(', ')}{'\n'}
+          Active Quests: {(gameState.quests || []).filter(q => q.status === 'active').map(q => q.title).join(', ') || 'None'}
+        </div>
         <div className="text-xs text-[#d8ccb8] whitespace-pre-wrap leading-relaxed p-3 rounded border border-[#5a4018] bg-[rgba(42,35,24,0.75)] max-h-[60vh] overflow-y-auto scroll-parchment">
           {dmSystemPrompt || 'No DM prompt available.'}
         </div>
+      </TabsContent>
+
+      <TabsContent value="gallery" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
+        {galleryCharacter ? (
+          <>
+            <CharacterCard character={galleryCharacter as any} />
+            <div className="gallery-controls">
+              <button onClick={onGalleryPrev}>‹</button>
+              <button onClick={onGalleryTogglePlay}>{galleryPlaying ? 'Pause' : 'Play'}</button>
+              <button onClick={onGalleryNext}>›</button>
+            </div>
+          </>
+        ) : (
+          <div className="text-xs text-[#9a8860]">No gallery character loaded.</div>
+        )}
       </TabsContent>
     </Tabs>
   )
@@ -553,7 +613,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
 // MOBILE TABS — Compact view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory }: {
+function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev }: {
   gameState: GameState
   activeTab: string
   setActiveTab: (tab: string) => void
@@ -563,6 +623,11 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
   setPortraitModalOpen: (open: boolean) => void
   tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
   conversationHistory?: { role: string; content: string }[]
+  galleryCharacter?: Character | null
+  galleryPlaying?: boolean
+  onGalleryTogglePlay?: () => void
+  onGalleryNext?: () => void
+  onGalleryPrev?: () => void
 }) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
@@ -572,6 +637,7 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
         <TabsTrigger value="quests" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Quests</TabsTrigger>
         <TabsTrigger value="prophecies" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">📜</TabsTrigger>
         <TabsTrigger value="logs" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Logs</TabsTrigger>
+        <TabsTrigger value="gallery" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">🎴</TabsTrigger>
       </TabsList>
 
       <TabsContent value="pcs" className="p-3 m-0">
@@ -855,6 +921,21 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
               ))}
             </div>
           </div>
+        )}
+      </TabsContent>
+
+      <TabsContent value="gallery" className="p-3 m-0">
+        {galleryCharacter ? (
+          <>
+            <CharacterCard character={galleryCharacter as any} />
+            <div className="gallery-controls">
+              <button onClick={onGalleryPrev}>‹</button>
+              <button onClick={onGalleryTogglePlay}>{galleryPlaying ? 'Pause' : 'Play'}</button>
+              <button onClick={onGalleryNext}>›</button>
+            </div>
+          </>
+        ) : (
+          <div className="text-xs text-[#9a8860]">No gallery character loaded.</div>
         )}
       </TabsContent>
     </Tabs>
