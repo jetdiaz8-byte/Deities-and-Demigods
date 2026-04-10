@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -55,6 +55,7 @@ export function IntroScreen({
   const [cardQueue, setCardQueue] = useState<Character[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [cardFading, setCardFading] = useState(false)
+  const [cycleResetTick, setCycleResetTick] = useState(0)
   const [cardModalOpen, setCardModalOpen] = useState(false)
   const touchStartYRef = React.useRef<number | null>(null)
 
@@ -81,27 +82,31 @@ export function IntroScreen({
   }
 
   // Auto-check LM Studio connection when engine mode uses LM Studio
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (engineMode === 'lmstudio' || engineMode === 'dual') {
-      checkLmConnection()
+      const t = window.setTimeout(() => {
+        checkLmConnection()
+      }, 0)
+      return () => window.clearTimeout(t)
     }
   }, [engineMode, lmStudioUrl])
 
   // Build ember particles client-side only to avoid SSR hydration mismatch.
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
-    setParticles(
-      Array.from({ length: 25 }).map((_, i) => ({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        size: `${2 + Math.random() * 4}px`,
-        duration: `${6 + Math.random() * 10}s`,
-        delay: `${Math.random() * 8}s`,
-        opacity: 0.2 + Math.random() * 0.5,
-        drift: `${(Math.random() - 0.5) * 40}px`,
-      })),
-    )
+    const t = window.setTimeout(() => {
+      setParticles(
+        Array.from({ length: 25 }).map((_, i) => ({
+          id: i,
+          left: `${Math.random() * 100}%`,
+          size: `${2 + Math.random() * 4}px`,
+          duration: `${6 + Math.random() * 10}s`,
+          delay: `${Math.random() * 8}s`,
+          opacity: 0.2 + Math.random() * 0.5,
+          drift: `${(Math.random() - 0.5) * 40}px`,
+        })),
+      )
+    }, 0)
+    return () => window.clearTimeout(t)
   }, [])
 
   const titleText = 'DEITIES & DEMIGODS'
@@ -141,30 +146,36 @@ export function IntroScreen({
     return shuffled
   }
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (!allCharacters.length) return
-    const shuffled = shuffleCharacters(allCharacters)
-    setCardQueue(shuffled)
-    setActiveIndex(0)
+    const t = window.setTimeout(() => {
+      const shuffled = shuffleCharacters(allCharacters)
+      setCardQueue(shuffled)
+      setActiveIndex(0)
+    }, 0)
+    return () => window.clearTimeout(t)
   }, [allCharacters.length])
+
+  const advanceShowcaseCard = useCallback(() => {
+    setCardFading(true)
+    window.setTimeout(() => {
+      setActiveIndex(prev => {
+        const next = prev + 1
+        if (next < cardQueue.length) return next
+        setCardQueue(shuffleCharacters(allCharacters))
+        return 0
+      })
+      setCardFading(false)
+    }, 500)
+  }, [cardQueue.length, allCharacters])
 
   useEffect(() => {
     if (!cardQueue.length) return
     const timer = setInterval(() => {
-      setCardFading(true)
-      window.setTimeout(() => {
-        setActiveIndex(prev => {
-          const next = prev + 1
-          if (next < cardQueue.length) return next
-          setCardQueue(shuffleCharacters(allCharacters))
-          return 0
-        })
-        setCardFading(false)
-      }, 500)
+      advanceShowcaseCard()
     }, 5000)
     return () => clearInterval(timer)
-  }, [cardQueue, allCharacters])
+  }, [cardQueue.length, cycleResetTick, advanceShowcaseCard])
 
   const activeCharacter = cardQueue[activeIndex] || allCharacters[0] || null
   const nextCharacter = cardQueue[(activeIndex + 1) % Math.max(1, cardQueue.length)] || null
@@ -311,6 +322,17 @@ export function IntroScreen({
                   <div className={cardFading ? 'card-fade-exit' : 'card-fade-enter'}>
                     <CharacterCard character={activeCharacter} />
                   </div>
+                  <div className="flex justify-end mt-2">
+                    <button
+                      className="loading-card-overlay__next"
+                      onClick={() => {
+                        advanceShowcaseCard()
+                        setCycleResetTick(v => v + 1)
+                      }}
+                    >
+                      Next ›
+                    </button>
+                  </div>
                 </div>
                 <div className="md:hidden">
                   <button
@@ -319,6 +341,15 @@ export function IntroScreen({
                     onTouchStart={() => setCardModalOpen(true)}
                   >
                     <CharacterCard character={activeCharacter} compact />
+                  </button>
+                  <button
+                    className="loading-card-overlay__next w-full mt-2"
+                    onClick={() => {
+                      advanceShowcaseCard()
+                      setCycleResetTick(v => v + 1)
+                    }}
+                  >
+                    Next ›
                   </button>
                 </div>
               </>

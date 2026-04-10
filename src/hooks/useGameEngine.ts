@@ -149,6 +149,7 @@ export function useGameEngine() {
   const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([])
   const [browserVoiceName, setBrowserVoiceName] = useState<string>('')
   const [currentSpeechSentenceIndex, setCurrentSpeechSentenceIndex] = useState<number | null>(null)
+  const [streamHasStarted, setStreamHasStarted] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   // Browser voice ref for cancel support
@@ -1356,6 +1357,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ── API CALLS ──────────────────────────────────────────────────────────
   const callOpenRouterDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
+    setStreamHasStarted(false)
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
     const totalInput = systemPrompt + userMsg
 
@@ -1419,6 +1421,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         }
         let text = ''
         const contentType = r.headers.get('content-type') || ''
+        let didSignalStreamStart = false
         if (contentType.includes('text/event-stream') && r.body) {
           const reader = r.body.getReader()
           const decoder = new TextDecoder('utf-8')
@@ -1444,6 +1447,10 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
                   ?? payload?.choices?.[0]?.message?.content
                   ?? ''
                 if (delta) {
+                  if (!didSignalStreamStart) {
+                    didSignalStreamStart = true
+                    setStreamHasStarted(true)
+                  }
                   text += delta
                   // Progressive narration in UI while stream arrives.
                   setDisplayedNarrative(text)
@@ -4385,6 +4392,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     ttsSpeed, setTtsSpeed,
     narratorMode, setNarratorMode,
     currentSpeechSentenceIndex,
+    streamHasStarted,
     isSpeaking, setIsSpeaking,
     audioCache, setAudioCache,
     displayedNarrative, setDisplayedNarrative,

@@ -14,6 +14,7 @@ import { GameHeader } from '@/components/game/GameHeader'
 import { LoreGlossaryProvider } from '@/components/game/LoreGlossaryCard'
 import { EquipmentTooltipProvider } from '@/components/game/EquipmentTooltip'
 import { SceneIllustration } from '@/components/game/SceneIllustration'
+import LoadingCardOverlay from '@/components/game/LoadingCardOverlay'
 const ComicPanel = dynamic(() => import('@/components/game/ComicPanel'), { ssr: false })
 import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
@@ -73,6 +74,7 @@ export default function MythworldEngine() {
     isSpeaking,
     narratorMode, setNarratorMode,
     currentSpeechSentenceIndex,
+    streamHasStarted,
     tokenUsage,
     conversationHistory,
     narrRef,
@@ -114,6 +116,11 @@ export default function MythworldEngine() {
 
   // Quest Journal modal state
   const [showQuestJournal, setShowQuestJournal] = React.useState(false)
+  const [loadingOverlayMounted, setLoadingOverlayMounted] = React.useState(false)
+  const [loadingOverlayClosing, setLoadingOverlayClosing] = React.useState(false)
+  const overlayArmedRef = useRef(false)
+  const overlayDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const overlayCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Deterministic ember positions prevent server/client hydration mismatch.
   const emberPositions = useMemo(() =>
@@ -179,6 +186,40 @@ export default function MythworldEngine() {
   }, [lastDMNarrative])
   const autoNarratedTurnRef = useRef<number>(-1)
 
+  const startLoadingOverlay = React.useCallback(() => {
+    overlayArmedRef.current = true
+    if (overlayDelayTimerRef.current) clearTimeout(overlayDelayTimerRef.current)
+    if (overlayCloseTimerRef.current) clearTimeout(overlayCloseTimerRef.current)
+    setLoadingOverlayClosing(false)
+    setLoadingOverlayMounted(false)
+    overlayDelayTimerRef.current = setTimeout(() => {
+      if (overlayArmedRef.current) {
+        setLoadingOverlayMounted(true)
+      }
+    }, 3000)
+  }, [])
+
+  const stopLoadingOverlay = React.useCallback((immediate = false) => {
+    overlayArmedRef.current = false
+    if (overlayDelayTimerRef.current) {
+      clearTimeout(overlayDelayTimerRef.current)
+      overlayDelayTimerRef.current = null
+    }
+    if (!loadingOverlayMounted) return
+    if (immediate) {
+      if (overlayCloseTimerRef.current) clearTimeout(overlayCloseTimerRef.current)
+      setLoadingOverlayClosing(false)
+      setLoadingOverlayMounted(false)
+      return
+    }
+    setLoadingOverlayClosing(true)
+    if (overlayCloseTimerRef.current) clearTimeout(overlayCloseTimerRef.current)
+    overlayCloseTimerRef.current = setTimeout(() => {
+      setLoadingOverlayMounted(false)
+      setLoadingOverlayClosing(false)
+    }, 500)
+  }, [loadingOverlayMounted])
+
   // ── TOAST NOTIFICATION SYSTEM ─────────────────────────────────────────
   const [toasts, setToasts] = React.useState<{ id: string; title: string; desc: string; icon: string }[]>([])
 
@@ -198,6 +239,36 @@ export default function MythworldEngine() {
     }
     lastAchievementCount.current = achievementUnlocks?.length ?? 0
   }, [achievementUnlocks, showToast])
+
+  useEffect(() => {
+    if (!streamHasStarted) return
+    const t = setTimeout(() => stopLoadingOverlay(), 0)
+    return () => clearTimeout(t)
+  }, [streamHasStarted, stopLoadingOverlay])
+
+  useEffect(() => {
+    if (gameState?.isProcessing) return
+    const t = setTimeout(() => stopLoadingOverlay(), 0)
+    return () => clearTimeout(t)
+  }, [gameState?.isProcessing, stopLoadingOverlay])
+
+  useEffect(() => {
+    return () => {
+      if (overlayDelayTimerRef.current) clearTimeout(overlayDelayTimerRef.current)
+      if (overlayCloseTimerRef.current) clearTimeout(overlayCloseTimerRef.current)
+    }
+  }, [])
+
+  const handleConfirmChoice = React.useCallback(() => {
+    startLoadingOverlay()
+    confirmChoice()
+  }, [startLoadingOverlay, confirmChoice])
+
+  const handleAdvanceTurn = React.useCallback(() => {
+    unlockTTS()
+    startLoadingOverlay()
+    advanceTurn()
+  }, [unlockTTS, startLoadingOverlay, advanceTurn])
 
   // Fallback auto-TTS trigger (keeps narration audio working if upstream turn hook path misses it).
   useEffect(() => {
@@ -263,9 +334,9 @@ export default function MythworldEngine() {
       if (key === 'ENTER') {
         e.preventDefault()
         if (gameState?.pendingHumanChoice !== null && gameState?.pendingHumanChoice !== undefined) {
-          confirmChoice()
+          handleConfirmChoice()
         } else if (!gameState?.waitingForHuman && !gameState?.isProcessing) {
-          advanceTurn()
+          handleAdvanceTurn()
         }
         return
       }
@@ -273,7 +344,7 @@ export default function MythworldEngine() {
 
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [gameState?.waitingForHuman, gameState?.isProcessing, gameState?.ended, gameState?.humanOptions, gameState?.companionOptions, gameState?.pendingHumanChoice, gameState?.pendingCompanionChoice, selectOption, selectCompanionOption, confirmChoice, advanceTurn])
+  }, [gameState?.waitingForHuman, gameState?.isProcessing, gameState?.ended, gameState?.humanOptions, gameState?.companionOptions, gameState?.pendingHumanChoice, gameState?.pendingCompanionChoice, selectOption, selectCompanionOption, handleConfirmChoice, handleAdvanceTurn])
 
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER — Phase Routing
@@ -582,7 +653,7 @@ export default function MythworldEngine() {
               gameState={gameState}
               selectOption={selectOption}
               selectCompanionOption={selectCompanionOption}
-              confirmChoice={confirmChoice}
+              confirmChoice={handleConfirmChoice}
               setShardDialogOpen={setShardDialogOpen}
               lastTurnReadyTime={lastTurnReadyTime}
             />
@@ -637,10 +708,7 @@ export default function MythworldEngine() {
           </button>
 
           <Button
-            onClick={() => {
-              unlockTTS()
-              advanceTurn()
-            }}
+            onClick={handleAdvanceTurn}
             disabled={!!gameState?.ended || !!gameState?.waitingForHuman || !!gameState?.isProcessing}
             className="bg-gradient-to-b from-[#362200] to-[#1e1100] hover:from-[#502f00] hover:to-[#301a00] text-[#f0c860] border border-[#7a5f20] min-h-[44px]"
             style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.12em' }}
@@ -750,6 +818,13 @@ export default function MythworldEngine() {
           onOpenChange={setShowQuestJournal}
           gameState={gameState}
         />
+
+        {loadingOverlayMounted && (
+          <LoadingCardOverlay
+            closing={loadingOverlayClosing}
+            onSkip={() => stopLoadingOverlay(true)}
+          />
+        )}
 
         {/* All Dialogs */}
         <GameDialogs
