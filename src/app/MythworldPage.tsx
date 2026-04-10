@@ -14,7 +14,7 @@ import { GameHeader } from '@/components/game/GameHeader'
 import { LoreGlossaryProvider } from '@/components/game/LoreGlossaryCard'
 import { EquipmentTooltipProvider } from '@/components/game/EquipmentTooltip'
 import { SceneIllustration } from '@/components/game/SceneIllustration'
-import LoadingCardOverlay from '@/components/game/LoadingCardOverlay'
+import PartyBar from '@/components/game/PartyBar'
 const ComicPanel = dynamic(() => import('@/components/game/ComicPanel'), { ssr: false })
 import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
@@ -74,7 +74,6 @@ export default function MythworldEngine() {
     isSpeaking,
     narratorMode, setNarratorMode,
     currentSpeechSentenceIndex,
-    streamHasStarted,
     tokenUsage,
     conversationHistory,
     narrRef,
@@ -96,6 +95,7 @@ export default function MythworldEngine() {
     invokeShard,
     handleUseItem,
     resolveTestOfFaith,
+    buildDMSystem,
     // Combat Flash
     combatFlashType,
     // Achievement System
@@ -117,11 +117,6 @@ export default function MythworldEngine() {
 
   // Quest Journal modal state
   const [showQuestJournal, setShowQuestJournal] = React.useState(false)
-  const [loadingOverlayMounted, setLoadingOverlayMounted] = React.useState(false)
-  const [loadingOverlayClosing, setLoadingOverlayClosing] = React.useState(false)
-  const overlayArmedRef = useRef(false)
-  const overlayDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const overlayCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Deterministic ember positions prevent server/client hydration mismatch.
   const emberPositions = useMemo(() =>
@@ -185,44 +180,6 @@ export default function MythworldEngine() {
       .filter(Boolean)
       .map(s => (/[.!?]$/.test(s) ? s : `${s}.`))
   }, [lastDMNarrative])
-  const autoNarratedTurnRef = useRef<number>(-1)
-
-  const startLoadingOverlay = React.useCallback(() => {
-    overlayArmedRef.current = true
-    console.log('Loading overlay: 3s timer started')
-    if (overlayDelayTimerRef.current) clearTimeout(overlayDelayTimerRef.current)
-    if (overlayCloseTimerRef.current) clearTimeout(overlayCloseTimerRef.current)
-    setLoadingOverlayClosing(false)
-    setLoadingOverlayMounted(false)
-    overlayDelayTimerRef.current = setTimeout(() => {
-      if (overlayArmedRef.current) {
-        console.log('Loading overlay: mounting')
-        setLoadingOverlayMounted(true)
-      }
-    }, 3000)
-  }, [])
-
-  const stopLoadingOverlay = React.useCallback((immediate = false) => {
-    console.log('Loading overlay: hiding')
-    overlayArmedRef.current = false
-    if (overlayDelayTimerRef.current) {
-      clearTimeout(overlayDelayTimerRef.current)
-      overlayDelayTimerRef.current = null
-    }
-    if (!loadingOverlayMounted) return
-    if (immediate) {
-      if (overlayCloseTimerRef.current) clearTimeout(overlayCloseTimerRef.current)
-      setLoadingOverlayClosing(false)
-      setLoadingOverlayMounted(false)
-      return
-    }
-    setLoadingOverlayClosing(true)
-    if (overlayCloseTimerRef.current) clearTimeout(overlayCloseTimerRef.current)
-    overlayCloseTimerRef.current = setTimeout(() => {
-      setLoadingOverlayMounted(false)
-      setLoadingOverlayClosing(false)
-    }, 500)
-  }, [loadingOverlayMounted])
 
   // ── TOAST NOTIFICATION SYSTEM ─────────────────────────────────────────
   const [toasts, setToasts] = React.useState<{ id: string; title: string; desc: string; icon: string }[]>([])
@@ -244,35 +201,16 @@ export default function MythworldEngine() {
     lastAchievementCount.current = achievementUnlocks?.length ?? 0
   }, [achievementUnlocks, showToast])
 
-  useEffect(() => {
-    if (!streamHasStarted) return
-    const t = setTimeout(() => stopLoadingOverlay(), 0)
-    return () => clearTimeout(t)
-  }, [streamHasStarted, stopLoadingOverlay])
-
-  useEffect(() => {
-    if (gameState?.isProcessing) return
-    const t = setTimeout(() => stopLoadingOverlay(), 0)
-    return () => clearTimeout(t)
-  }, [gameState?.isProcessing, stopLoadingOverlay])
-
-  useEffect(() => {
-    return () => {
-      if (overlayDelayTimerRef.current) clearTimeout(overlayDelayTimerRef.current)
-      if (overlayCloseTimerRef.current) clearTimeout(overlayCloseTimerRef.current)
-    }
-  }, [])
-
   const handleConfirmChoice = React.useCallback(() => {
-    startLoadingOverlay()
+    triggerPendingTTSFromUserGesture()
     confirmChoice()
-  }, [startLoadingOverlay, confirmChoice])
+  }, [triggerPendingTTSFromUserGesture, confirmChoice])
 
   const handleAdvanceTurn = React.useCallback(() => {
     unlockTTS()
-    startLoadingOverlay()
+    triggerPendingTTSFromUserGesture()
     advanceTurn()
-  }, [unlockTTS, startLoadingOverlay, advanceTurn])
+  }, [unlockTTS, triggerPendingTTSFromUserGesture, advanceTurn])
 
 
   // ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────────
@@ -662,8 +600,15 @@ export default function MythworldEngine() {
             setComicMode={setComicMode}
             comicArtStyle={comicArtStyle}
             setComicArtStyle={setComicArtStyle}
+            dmSystemPrompt={buildDMSystem(gameState, true, false)}
           />
         </div>
+
+        <PartyBar
+          members={gameState?.pcs ?? []}
+          activeId={gameState?.humanPCId}
+          isProcessing={!!gameState?.isProcessing}
+        />
 
         {/* Bottom Bar */}
         <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap relative z-[41] md:mr-80 safe-bottom mythworld-bottom-bar">
@@ -795,13 +740,6 @@ export default function MythworldEngine() {
           onOpenChange={setShowQuestJournal}
           gameState={gameState}
         />
-
-        {loadingOverlayMounted && (
-          <LoadingCardOverlay
-            closing={loadingOverlayClosing}
-            onSkip={() => stopLoadingOverlay(true)}
-          />
-        )}
 
         {/* All Dialogs */}
         <GameDialogs

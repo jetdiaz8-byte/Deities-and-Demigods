@@ -150,7 +150,6 @@ export function useGameEngine() {
   const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([])
   const [browserVoiceName, setBrowserVoiceName] = useState<string>('')
   const [currentSpeechSentenceIndex, setCurrentSpeechSentenceIndex] = useState<number | null>(null)
-  const [streamHasStarted, setStreamHasStarted] = useState(false)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   // Browser voice ref for cancel support
@@ -521,6 +520,19 @@ export function useGameEngine() {
       if (bucket) chunked.push(bucket)
     }
     return chunked.length ? chunked : [cleaned.slice(0, 150)]
+  }
+
+  const cleanNarrationForDisplay = (text: string): string => {
+    let cleaned = toAscii(text || '')
+    cleaned = cleaned.replace(/```[\s\S]*?```/g, ' ')
+    cleaned = cleaned.replace(/\{[\s\S]*?\}/g, ' ')
+    cleaned = cleaned.replace(/\[[\s\S]*?\]/g, ' ')
+    cleaned = cleaned.replace(/^\s*#{1,6}\s.*$/gm, ' ')
+    cleaned = cleaned.replace(/\b(?:DC|modifier|outcome|dice rolls?)\b[^.]*\./gi, ' ')
+    cleaned = cleaned.replace(/<[^>]+>/g, ' ')
+    cleaned = cleaned.replace(/\s+/g, ' ').trim()
+    const firstPara = cleaned.split(/\n\n+/)[0]?.trim() || cleaned
+    return firstPara
   }
 
   const abortSpeakRef = useRef(false)
@@ -1235,15 +1247,15 @@ CRITICAL RULES:
 1. DDG rulebook ONLY. Never invent stats.
 2. NPC actions governed strictly by alignment+personality.
 3. NARRATION STYLE — NEIL GAIMAN:
-   - OPENING SCENE (Turn 0): Write 4-6 paragraphs of RICH, ATMOSPHERIC prose (600-1000 words)
-   - REGULAR TURNS (Turn 1+): Write exactly ONE paragraph (60-120 words). No exceptions.
+   - OPENING SCENE (Turn 0): Write an immersive opening narration (1500-2000 words)
+   - REGULAR TURNS (Turn 1+): Write exactly ONE paragraph (200-400 words). No exceptions.
    - CRITICAL: NEVER repeat or rephrase narration from previous turns. Every turn must contain ENTIRELY NEW prose that advances the story.
    - Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
    - Use specific sensory language: the taste of copper, the weight of shadows
    - ONE paragraph must contain: what happened, character reaction, and a hook/tension
    - Include dialogue naturally within the paragraph — keep it to 1-2 lines max
    - For REST/SLEEP/CAMP actions: write 2-3 sentences max. Brief, reflective, atmospheric.
-   - For COMBAT actions: can stretch to 2 short paragraphs (max 150 words) for dramatic impact.
+   - For COMBAT actions: keep one paragraph and maintain literary pacing.
    - Reference past events when relevant
 4. Permadeath. No stat/alignment changes mid-game.
 5. PCs=Heroes/Demigods (including Krynn). NPCs=Lesser/Greater Gods (including Krynn gods).
@@ -1261,6 +1273,7 @@ ${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
 8. Occasionally drop items into "item_drops" array for the party inventory.
 9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. Provide 3-4 action OPTIONS for the current PC, then WAIT for the human player to choose. NEVER auto-resolve PC actions.
 10. **PERSISTENT MEMORY** - Remember ALL previous events, decisions, and their consequences. Reference past events when narrating.
+10b. If the party includes additional members beyond the PC and companion, describe their autonomous actions based on personality and situation, like God of War companions.
 10a. **STORY PACING — THIS IS CRITICAL**:
     - Act I (Turns 1-7): PURE EXPLORATION. NO enemies. NO combat. Build the world.
       - Describe environments: ancient temples, dark forests, forgotten cities, divine realms
@@ -1397,7 +1410,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ── API CALLS ──────────────────────────────────────────────────────────
   const callOpenRouterDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    setStreamHasStarted(false)
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
     const totalInput = systemPrompt + userMsg
 
@@ -1419,7 +1431,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: toAscii(userMsg) },
         ]
-        const turnAwareMaxTokens = gs.turn <= 0 ? 2048 : 4096
+        const turnAwareMaxTokens = gs.turn <= 0 ? 4096 : 1024
         const r = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -1461,7 +1473,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         }
         let text = ''
         const contentType = r.headers.get('content-type') || ''
-        let didSignalStreamStart = false
         if (contentType.includes('text/event-stream') && r.body) {
           const reader = r.body.getReader()
           const decoder = new TextDecoder('utf-8')
@@ -1487,10 +1498,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
                   ?? payload?.choices?.[0]?.message?.content
                   ?? ''
                 if (delta) {
-                  if (!didSignalStreamStart) {
-                    didSignalStreamStart = true
-                    setStreamHasStarted(true)
-                  }
                   text += delta
                   // Progressive narration in UI while stream arrives.
                   setDisplayedNarrative(text)
@@ -2672,7 +2679,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ── RUN TURN ───────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════
-  // DUAL-ENGINE DM SYSTEM v2.13.0
+  // DUAL-ENGINE DM SYSTEM v2.14.0
   //   LM Studio  → mechanics (dice, rules, state changes)
   //   Gemini     → creative narration (prose, dialogue, atmosphere)
   //   Dual mode  → both in parallel, merge best of each
@@ -3078,14 +3085,9 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     if (preJsonNarr.length > 0 && jsonNarr.length > 0) {
       console.log(`📝 Narration — pre-JSON prose: ${preJsonNarr.length} chars, JSON dm_narration: ${jsonNarr.length} chars, using: ${narr === preJsonNarr ? 'pre-JSON' : 'JSON'}`)
     }
-    narr = toAscii(narr)
-    // P8 FIX: Strip raw HTML artifacts that Gemini may leak into prose (e.g., <div class="dialogue-text">)
-    // This runs BEFORE our own dialogue-styling regex, so ALL tags here are Gemini artifacts
-    narr = narr.replace(/<[^>]+>/g, '')
-    const paragraphs = narr.split(/\n\n+/).map(p => p.replace(/\n/g, ' ').trim()).filter(p => p.length > 5)
-    
-    // Store the exact displayed narrative for TTS - MUST match what's rendered
-    const displayedText = paragraphs.slice(0, 12).join(' ')
+    narr = cleanNarrationForDisplay(narr)
+    const paragraphs = [narr].filter(Boolean)
+    const displayedText = paragraphs[0] || ''
     setDisplayedNarrative(displayedText)
     renderedNarrationRef.current = displayedText
     if (comicMode) {
@@ -4416,7 +4418,6 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     ttsSpeed, setTtsSpeed,
     narratorMode, setNarratorMode,
     currentSpeechSentenceIndex,
-    streamHasStarted,
     isSpeaking, setIsSpeaking,
     audioCache, setAudioCache,
     displayedNarrative, setDisplayedNarrative,

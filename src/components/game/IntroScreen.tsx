@@ -38,15 +38,6 @@ export function IntroScreen({
   saveSlots,
   setShowLoadDialog,
 }: IntroScreenProps) {
-  const [particles, setParticles] = useState<Array<{
-    id: number
-    left: string
-    size: string
-    duration: string
-    delay: string
-    opacity: number
-    drift: string
-  }>>([])
 
   // LM Studio connection check
   const [lmConnected, setLmConnected] = useState<boolean | null>(null)
@@ -90,24 +81,6 @@ export function IntroScreen({
       return () => window.clearTimeout(t)
     }
   }, [engineMode, lmStudioUrl])
-
-  // Build ember particles client-side only to avoid SSR hydration mismatch.
-  useEffect(() => {
-    const t = window.setTimeout(() => {
-      setParticles(
-        Array.from({ length: 25 }).map((_, i) => ({
-          id: i,
-          left: `${Math.random() * 100}%`,
-          size: `${2 + Math.random() * 4}px`,
-          duration: `${6 + Math.random() * 10}s`,
-          delay: `${Math.random() * 8}s`,
-          opacity: 0.2 + Math.random() * 0.5,
-          drift: `${(Math.random() - 0.5) * 40}px`,
-        })),
-      )
-    }, 0)
-    return () => window.clearTimeout(t)
-  }, [])
 
   const titleText = 'DEITIES & DEMIGODS'
   const titleLetters = titleText.split('')
@@ -188,7 +161,16 @@ export function IntroScreen({
   }, [nextCharacter?.id, nextCharacter?.category])
 
   return (
-    <div className="h-screen w-full bg-[#060403] flex flex-col items-center justify-center p-4 overflow-hidden relative">
+    <div
+      className="h-screen w-full flex flex-col items-center justify-center p-4 overflow-hidden relative"
+      style={{
+        backgroundImage:
+          "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 40%, rgba(10,8,16,0.9) 100%), url('https://image.pollinations.ai/prompt/epic%20dark%20fantasy%20battle%20scene%20gods%20demigods%20heroes%20dragons%20monsters%20clashing%20on%20a%20celestial%20battlefield%20dramatic%20lightning%20cosmic%20sky%20oil%20painting%20style%20D%26D%20illustration%20by%20Larry%20Elmore%20and%20Boris%20Vallejo%20ultra%20detailed%20cinematic?width=1920&height=1080&nologo=true&seed=42')",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center top',
+        backgroundAttachment: 'fixed',
+      }}
+    >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&display=swap');
 
@@ -264,15 +246,6 @@ export function IntroScreen({
       <div className="parallax-layer-fog" />
       <div className="parallax-layer-runes" />
 
-      {/* Ember particles */}
-      {particles.map(p => (
-        <div key={p.id} className="intro-ember" style={{
-          left: p.left, width: p.size, height: p.size,
-          '--ember-duration': p.duration, '--ember-delay': p.delay,
-          '--ember-opacity': p.opacity, '--ember-drift': p.drift,
-        } as React.CSSProperties} />
-      ))}
-
       {/* MAIN CONTENT - centered, z-10, with side padding for vertical marquees */}
       <div className="relative z-10 w-full max-w-[1400px] mx-auto">
         {/* Title */}
@@ -312,19 +285,19 @@ export function IntroScreen({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[minmax(420px,1fr)_minmax(350px,520px)] gap-10 md:gap-12 items-center mt-3 w-full">
-          <div className="justify-self-center md:justify-self-start">
+          <div className="justify-self-center md:justify-self-start intro-showcase-area">
             <div className="text-center mb-2 text-[10px] text-[#9a8860]" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}>
               CHARACTER CARD SHOWCASE · {portraitCount} portraits
             </div>
             {activeCharacter && (
               <>
                 <div className="hidden md:block">
-                  <div className={cardFading ? 'card-fade-exit' : 'card-fade-enter'}>
+                  <div className={cardFading ? 'card-fade-exit intro-showcase-card' : 'card-fade-enter intro-showcase-card'}>
                     <CharacterCard character={activeCharacter} />
                   </div>
                   <div className="flex justify-end mt-2">
                     <button
-                      className="loading-card-overlay__next"
+                      className="intro-showcase__next"
                       onClick={() => {
                         advanceShowcaseCard()
                         setCycleResetTick(v => v + 1)
@@ -343,7 +316,7 @@ export function IntroScreen({
                     <CharacterCard character={activeCharacter} compact />
                   </button>
                   <button
-                    className="loading-card-overlay__next w-full mt-2"
+                    className="intro-showcase__next w-full mt-2"
                     onClick={() => {
                       advanceShowcaseCard()
                       setCycleResetTick(v => v + 1)

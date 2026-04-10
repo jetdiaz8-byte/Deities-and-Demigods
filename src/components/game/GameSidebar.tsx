@@ -35,6 +35,7 @@ export interface GameSidebarProps {
   setComicMode: (enabled: boolean) => void
   comicArtStyle: 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor'
   setComicArtStyle: (style: 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor') => void
+  dmSystemPrompt?: string
 }
 
 export function GameSidebar({
@@ -57,6 +58,7 @@ export function GameSidebar({
   setComicMode,
   comicArtStyle,
   setComicArtStyle,
+  dmSystemPrompt,
 }: GameSidebarProps) {
   return (
     <>
@@ -123,6 +125,7 @@ export function GameSidebar({
           setPortraitModalOpen={setPortraitModalOpen}
           tokenUsage={tokenUsage}
           conversationHistory={conversationHistory}
+          dmSystemPrompt={dmSystemPrompt}
         />
         </div>
       </div>
@@ -221,7 +224,7 @@ export function GameSidebar({
 // DESKTOP TABS — Full detail view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory }: {
+function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, dmSystemPrompt }: {
   gameState: GameState
   activeTab: string
   setActiveTab: (tab: string) => void
@@ -233,6 +236,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
   setPortraitModalOpen: (open: boolean) => void
   tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
   conversationHistory?: { role: string; content: string }[]
+  dmSystemPrompt?: string
 }) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
@@ -242,6 +246,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
         <TabsTrigger value="quests" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Quests</TabsTrigger>
         <TabsTrigger value="prophecies" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">📜</TabsTrigger>
         <TabsTrigger value="logs" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Logs</TabsTrigger>
+        <TabsTrigger value="dm" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">DM</TabsTrigger>
       </TabsList>
 
       {/* PCs Tab */}
@@ -532,6 +537,13 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
         <p>• <strong>Inventory</strong>: Collect and use items</p>
         <p>• <strong>Quest Tracking</strong>: Follow objectives</p>
         <p>• <strong>Save/Load</strong>: Multiple save slots</p>
+      </TabsContent>
+
+      <TabsContent value="dm" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
+        <h3 className="text-[#c9a84c] mb-2 text-base" style={{ fontFamily: 'Cinzel, serif' }}>DM Notes</h3>
+        <div className="text-xs text-[#d8ccb8] whitespace-pre-wrap leading-relaxed p-3 rounded border border-[#5a4018] bg-[rgba(42,35,24,0.75)] max-h-[60vh] overflow-y-auto scroll-parchment">
+          {dmSystemPrompt || 'No DM prompt available.'}
+        </div>
       </TabsContent>
     </Tabs>
   )
