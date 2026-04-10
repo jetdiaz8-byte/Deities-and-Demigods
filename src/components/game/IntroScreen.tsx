@@ -26,6 +26,7 @@ export interface IntroScreenProps {
   startNewCampaign: () => void
   saveSlots: { id: string; name: string; timestamp: number; turn: number; act: string; partyNames: string[] }[]
   setShowLoadDialog: (open: boolean) => void
+  quickeningState?: any
 }
 
 export function IntroScreen({
@@ -37,6 +38,7 @@ export function IntroScreen({
   startNewCampaign,
   saveSlots,
   setShowLoadDialog,
+  quickeningState,
 }: IntroScreenProps) {
 
   // LM Studio connection check
@@ -311,8 +313,14 @@ export function IntroScreen({
             {activeCharacter && (
               <>
                 <div className="hidden md:block">
-                  <div className={cardFading ? 'card-fade-exit intro-showcase-card' : 'card-fade-enter intro-showcase-card'}>
+                  <div className={cardFading ? 'card-fade-exit intro-showcase-card' : 'card-fade-enter intro-showcase-card'} style={(() => {
+                    const history = quickeningState?.absorptionHistory || []
+                    if (history.some((r: any) => r.deityId === activeCharacter?.id)) return { borderColor: '#5a1a1a', filter: 'grayscale(0.5)' }
+                    if (quickeningState?.activeEcho?.deityId === activeCharacter?.id) return { borderColor: '#d4a843', boxShadow: '0 0 15px rgba(212,168,67,0.6)' }
+                    return undefined
+                  })()}>
                     <CharacterCard character={activeCharacter} />
+                    {((quickeningState?.absorptionHistory || []).some((r: any) => r.deityId === activeCharacter?.id)) && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: 16, zIndex: 6 }}>☠</span>}
                   </div>
                   <div className="flex justify-end mt-2">
                     <button

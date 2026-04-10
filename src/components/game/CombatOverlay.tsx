@@ -49,6 +49,7 @@ export default function CombatOverlay({
   onFlee: () => void
   onAction: (text: string) => void
   onContinue: () => void
+  currentPower?: any
 }) {
   const latest = combatState.log[combatState.log.length - 1]
   const current = combatState.turnOrder[combatState.currentTurnIndex]
@@ -121,6 +122,7 @@ export default function CombatOverlay({
         <button className="combat-action-btn" onClick={() => onAction('I take a defensive stance.')}>🛡 Defend</button>
         <button className="combat-action-btn" onClick={() => onAction('I cast a spell.')}>🔮 Cast Spell</button>
         <button className="combat-action-btn" onClick={() => onAction('I focus on healing.')}>🩺 Heal</button>
+        <button className="combat-action-btn divine-power-btn" onClick={() => onAction(`I unleash ${currentPower?.powerName || 'divine power'}!`)} disabled={!currentPower}>✨ {currentPower ? `Divine Power (${currentPower.attunement}%)` : 'No Power'}</button>
         <button className="combat-action-btn" onClick={onFlee} disabled={combatState.phase !== 'player_turn'}>🏃 Flee</button>
       </div>
     </div>

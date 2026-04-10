@@ -17,6 +17,7 @@ import { SceneIllustration } from '@/components/game/SceneIllustration'
 import PartyBar from '@/components/game/PartyBar'
 import CharacterCard from '@/components/game/CharacterCard'
 import CombatOverlay from '@/components/game/CombatOverlay'
+import QuickeningOverlay from '@/components/game/QuickeningOverlay'
 import AlignmentMeter from '@/components/game/AlignmentMeter'
 import NPCRelationsPanel from '@/components/game/NPCRelationsPanel'
 import { ALL_CHARACTERS } from '@/lib/characterData'
@@ -108,6 +109,9 @@ export default function MythworldEngine() {
     setCombatOverlayMinimized,
     questJournal,
     consequenceState,
+    quickeningState,
+    handlePowerChosen,
+    dismissQuickening,
     rippleEcho,
     // Combat Flash
     combatFlashType,
@@ -127,6 +131,7 @@ export default function MythworldEngine() {
   // Typing mode toggle for narrative reveal
   const [typingMode, setTypingMode] = React.useState(false)
   const [showFullNarration, setShowFullNarration] = React.useState(false)
+  const [graveyardExpanded, setGraveyardExpanded] = React.useState<string | null>(null)
 
   // Quest Journal modal state
   const [showQuestJournal, setShowQuestJournal] = React.useState(false)
@@ -371,6 +376,7 @@ export default function MythworldEngine() {
         startNewCampaign={startNewCampaign}
         saveSlots={saveSlots}
         setShowLoadDialog={setShowLoadDialog}
+        quickeningState={quickeningState}
       />
     )
   }
@@ -698,6 +704,7 @@ export default function MythworldEngine() {
             questJournal={questJournal}
             consequenceState={consequenceState}
             onTravelToLocation={(name: string) => submitQuickAction(`I travel to ${name}`)}
+            quickeningState={quickeningState}
           />
         </div>
 
@@ -716,6 +723,18 @@ export default function MythworldEngine() {
               setCombatState((prev: any) => ({ ...prev, isActive: false, victory: null }))
               setCombatOverlayMinimized(false)
             }}
+            currentPower={quickeningState?.currentPower}
+          />
+        )}
+        {/* Quickening Overlay */}
+        {quickeningState?.pendingQuickening && (
+          <QuickeningOverlay
+            pendingQuickening={quickeningState.pendingQuickening}
+            currentPower={quickeningState.currentPower}
+            activeEcho={quickeningState.activeEcho}
+            onPowerChosen={handlePowerChosen}
+            onDismiss={dismissQuickening}
+            legendTitle={quickeningState.currentLegendTitle}
           />
         )}
         {combatState?.isActive && combatOverlayMinimized && (
@@ -740,6 +759,22 @@ export default function MythworldEngine() {
               <span key={loc.id} className={`mini-map-dot ${loc.isCurrentlyAt ? 'current' : ''}`} style={{ left: `${loc.x}%`, top: `${loc.y}%` }} />
             ))}
           </button>
+        )}
+
+        {/* Echo Indicator */}
+        {quickeningState?.activeEcho && (
+          <div className={`echo-indicator ${quickeningState.activeEcho.isConflicted ? 'conflicted' : ''}`} title={`${quickeningState.activeEcho.deityName} — ${quickeningState.activeEcho.influenceDirection} influence`}>
+            {quickeningState.activeEcho.portrait ? (
+              <img src={quickeningState.activeEcho.portrait} alt={quickeningState.activeEcho.deityName} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+            ) : (
+              <span style={{ fontSize: 16 }}>{quickeningState.activeEcho.deityName.charAt(0)}</span>
+            )}
+            <div className="echo-indicator-tooltip">
+              <div style={{ fontWeight: 'bold', color: '#d4a843' }}>{quickeningState.activeEcho.deityName}</div>
+              <div>{quickeningState.activeEcho.influenceDirection} influence</div>
+              {quickeningState.activeEcho.isConflicted && <div style={{ color: '#cc4444' }}>CONFLICTED ({quickeningState.activeEcho.conflictTurnsRemaining} turns)</div>}
+            </div>
+          </div>
         )}
 
         {/* Bottom Bar */}

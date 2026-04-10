@@ -146,6 +146,75 @@ interface ConsequenceState {
   totalChoicesMade: number
 }
 
+// ── QUICKENING SYSTEM TYPES ──────────────────────────────────────────────
+interface AbsorbedPower {
+  deityId: string
+  deityName: string
+  portrait: string
+  powerName: string
+  powerDescription: string
+  powerType: 'offensive' | 'defensive' | 'utility' | 'support'
+  attunement: number
+  turnAbsorbed: number
+  gambleResult: 'clean' | 'resistant' | 'rejection' | 'overload'
+  pantheon: string
+}
+
+interface ActiveEcho {
+  deityId: string
+  deityName: string
+  portrait: string
+  personality: string
+  influenceDirection: 'good' | 'evil' | 'chaotic' | 'lawful' | 'neutral'
+  influenceStrength: number
+  turnAbsorbed: number
+  isConflicted: boolean
+  conflictTurnsRemaining: number
+  farewellQuote: string
+}
+
+interface AbsorptionRecord {
+  turn: number
+  deityId: string
+  deityName: string
+  portrait: string
+  pantheon: string
+  divineRank: number
+  powerAbsorbed: string
+  powerLost: string
+  previousEchoName: string
+  gambleResult: 'clean' | 'resistant' | 'rejection' | 'overload'
+  echoFarewell: string
+}
+
+interface PowerOption {
+  name: string
+  description: string
+  type: 'offensive' | 'defensive' | 'utility' | 'support'
+  source: string
+}
+
+interface PendingQuickening {
+  turn: number
+  fallenId: string
+  fallenName: string
+  portrait: string
+  pantheon: string
+  divineRank: number
+  powerOptions: PowerOption[]
+  phase: 'offer' | 'absorbing' | 'complete'
+}
+
+interface QuickeningState {
+  currentPower: AbsorbedPower | null
+  activeEcho: ActiveEcho | null
+  absorptionHistory: AbsorptionRecord[]
+  totalDeityKills: number
+  totalMonstersAbsorbed: number
+  currentLegendTitle: string
+  pendingQuickening: PendingQuickening | null
+}
+
 export function useGameEngine() {
 
   const deepClone = <T,>(value: T): T => {
@@ -269,6 +338,39 @@ export function useGameEngine() {
   useEffect(() => {
     safeLocalStorageSetItem('mythworld_consequence_state', JSON.stringify(consequenceState))
   }, [consequenceState])
+
+  // Quickening persistence
+  useEffect(() => {
+    try {
+      const saved = safeLocalStorageGetItem('mythworld_quickening')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (parsed && typeof parsed === 'object') {
+          setQuickeningState(prev => ({
+            currentPower: parsed.currentPower || null,
+            activeEcho: parsed.activeEcho || null,
+            absorptionHistory: parsed.absorptionHistory || [],
+            totalDeityKills: parsed.totalDeityKills || 0,
+            totalMonstersAbsorbed: parsed.totalMonstersAbsorbed || 0,
+            currentLegendTitle: parsed.absorptionHistory ? computeLegendTitle(parsed.absorptionHistory) : prev.currentLegendTitle,
+            pendingQuickening: null, // Never restore pending quickening
+          }))
+        }
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    try {
+      safeLocalStorageSetItem('mythworld_quickening', JSON.stringify({
+        currentPower: quickeningState.currentPower,
+        activeEcho: quickeningState.activeEcho,
+        absorptionHistory: quickeningState.absorptionHistory,
+        totalDeityKills: quickeningState.totalDeityKills,
+        totalMonstersAbsorbed: quickeningState.totalMonstersAbsorbed,
+      }))
+    } catch {}
+  }, [quickeningState.currentPower, quickeningState.activeEcho, quickeningState.absorptionHistory, quickeningState.totalDeityKills, quickeningState.totalMonstersAbsorbed])
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
@@ -399,6 +501,101 @@ export function useGameEngine() {
     totalChoicesMade: 0,
   })
   const [rippleEcho, setRippleEcho] = useState<string | null>(null)
+
+  // Quickening System State
+  const [quickeningState, setQuickeningState] = useState<QuickeningState>({
+    currentPower: null,
+    activeEcho: null,
+    absorptionHistory: [],
+    totalDeityKills: 0,
+    totalMonstersAbsorbed: 0,
+    currentLegendTitle: 'Mortal',
+    pendingQuickening: null,
+  })
+
+  // Quickening helper functions
+  const computeLegendTitle = (history: AbsorptionRecord[]): string => {
+    const kills = history.length
+    if (kills === 0) return 'Mortal'
+    if (kills === 1) return 'God-Slayer'
+    if (kills === 2) return 'Divine Hunter'
+    if (kills === 3) return "Pantheon's Bane"
+    if (kills === 4) return 'The Quickening'
+    if (kills >= 5 && kills <= 7) return 'Ascendant'
+    if (kills >= 8 && kills <= 9) return 'Demiurge'
+    if (kills >= 10) return 'God of God-Killers'
+    return 'Mortal'
+  }
+
+  const shouldTriggerQuickening = (characterId: string): boolean => {
+    try {
+      const { ALL_CHARACTERS } = require('@/lib/characterData')
+      const char = ALL_CHARACTERS.find((c: any) => c.id === characterId)
+      if (!char) return false
+      const rank = (char.divineRank || '').toLowerCase()
+      if (rank.includes('greater') || rank.includes('lesser') || rank.includes('demigod')) return true
+      if (char.phase1 || char.phase2 || char.phase3) return true
+      return false
+    } catch { return false }
+  }
+
+  const getPowerOptions = (characterId: string): PowerOption[] => {
+    try {
+      const { ALL_CHARACTERS } = require('@/lib/characterData')
+      const char = ALL_CHARACTERS.find((c: any) => c.id === characterId)
+      if (!char) return []
+      const options: PowerOption[] = []
+      const offensiveKeywords = /attack|strike|bolt|breath|slash|fire|ice|lightning|smite|blast|thunder/i
+      const defensiveKeywords = /shield|ward|protect|armor|resist|barrier|fortif/i
+      const utilityKeywords = /sight|teleport|invis|fly|sense|stealth|phase|gate|travel/i
+      const supportKeywords = /heal|bless|boost|inspire|restore|cure|sanctuary/i
+
+      const guessType = (name: string): 'offensive' | 'defensive' | 'utility' | 'support' => {
+        if (offensiveKeywords.test(name)) return 'offensive'
+        if (defensiveKeywords.test(name)) return 'defensive'
+        if (utilityKeywords.test(name)) return 'utility'
+        if (supportKeywords.test(name)) return 'support'
+        return 'offensive'
+      }
+
+      if (char.abilities && char.abilities.length > 0) {
+        for (const ability of char.abilities.slice(0, 5)) {
+          options.push({
+            name: ability,
+            description: `A power drawn from ${char.name}'s essence: ${ability}`,
+            type: guessType(ability),
+            source: ability,
+          })
+        }
+      }
+      if (char.phase1) {
+        options.push({ name: 'Phase 1 Attack', description: char.phase1.slice(0, 120), type: 'offensive', source: 'Phase 1' })
+      }
+      if (char.phase2) {
+        options.push({ name: 'Phase 2 Power', description: char.phase2.slice(0, 120), type: guessType(char.phase2), source: 'Phase 2' })
+      }
+      if (char.phase3) {
+        options.push({ name: 'Phase 3 Ultimate', description: char.phase3.slice(0, 120), type: 'offensive', source: 'Phase 3' })
+      }
+      // Return 2-3 most interesting options
+      return options.slice(0, 3)
+    } catch { return [] }
+  }
+
+  const handlePowerChosen = (option: PowerOption) => {
+    if (!quickeningState.pendingQuickening) return
+    const pending = quickeningState.pendingQuickening
+    setQuickeningState(prev => ({
+      ...prev,
+      pendingQuickening: { ...pending, phase: 'absorbing' },
+    }))
+    confirmChoice(`I absorb the power: ${option.name}. The divine essence of ${pending.fallenName} flows into me.`)
+  }
+
+  const dismissQuickening = () => {
+    setQuickeningState(prev => ({ ...prev, pendingQuickening: null }))
+  }
+
   const combatQuietTurnsRef = useRef(0)
   const triggerCombatFlash = (type: 'damage' | 'heal' | 'crit') => {
     setCombatFlashType(type)
@@ -916,6 +1113,110 @@ export function useGameEngine() {
       return r
     })
     return { cleanText, consequenceData: next, rippleNarration }
+  }
+
+  const parseQuickeningData = (text: string, currentTurn: number): { cleanText: string; quickeningUpdate: Partial<QuickeningState> } => {
+    let cleanText = text
+    let quickeningUpdate: Partial<QuickeningState> = {}
+
+    // Parse quickening_data (power offer)
+    const offerMatch = text.match(/<quickening_data>([\s\S]*?)<\/quickening_data>/i)
+    if (offerMatch) {
+      cleanText = cleanText.replace(offerMatch[0], '').trim()
+      try {
+        const parsed = JSON.parse(offerMatch[1])
+        const portrait = `/portraits/${parsed.fallen_pantheon?.toLowerCase().replace(/\s+/g, '-') || 'greater-gods'}/${parsed.fallen_id?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}.png`
+        quickeningUpdate.pendingQuickening = {
+          turn: currentTurn,
+          fallenId: parsed.fallen_id || 'unknown',
+          fallenName: parsed.fallen_name || 'Unknown',
+          portrait,
+          pantheon: parsed.pantheon || 'Unknown',
+          divineRank: parsed.divine_rank || 1,
+          powerOptions: (parsed.power_options || []).map((p: any) => ({
+            name: p.name || 'Unknown Power',
+            description: p.description || '',
+            type: p.type || 'offensive',
+            source: p.source || '',
+          })),
+          phase: 'offer',
+        }
+      } catch (e) {
+        console.error('Failed to parse quickening_data:', e)
+      }
+    }
+
+    // Parse quickening_result (absorption result)
+    const resultMatch = text.match(/<quickening_result>([\s\S]*?)<\/quickening_result>/i)
+    if (resultMatch) {
+      cleanText = cleanText.replace(resultMatch[0], '').trim()
+      try {
+        const parsed = JSON.parse(resultMatch[1])
+        const prev = quickeningState
+        const gambleResult = parsed.gamble_result || 'clean'
+        const attunementStart = parsed.attunement_start || (gambleResult === 'resistant' ? 50 : 70)
+
+        const newPower: AbsorbedPower | null = gambleResult !== 'rejection' ? {
+          deityId: prev.pendingQuickening?.fallenId || 'unknown',
+          deityName: prev.pendingQuickening?.fallenName || 'Unknown',
+          portrait: prev.pendingQuickening?.portrait || '',
+          powerName: parsed.chosen_power || 'Unknown',
+          powerDescription: '',
+          powerType: 'offensive',
+          attunement: attunementStart,
+          turnAbsorbed: currentTurn,
+          gambleResult,
+          pantheon: prev.pendingQuickening?.pantheon || 'Unknown',
+        } : null
+
+        const newEcho: ActiveEcho | null = gambleResult !== 'rejection' ? {
+          deityId: prev.pendingQuickening?.fallenId || 'unknown',
+          deityName: prev.pendingQuickening?.fallenName || 'Unknown',
+          portrait: prev.pendingQuickening?.portrait || '',
+          personality: parsed.echo_personality || 'A lingering presence',
+          influenceDirection: parsed.echo_influence || 'neutral',
+          influenceStrength: parsed.echo_influence_strength || 10,
+          turnAbsorbed: currentTurn,
+          isConflicted: gambleResult === 'overload',
+          conflictTurnsRemaining: gambleResult === 'overload' ? (3 + Math.floor(Math.random() * 3)) : 0,
+          farewellQuote: parsed.farewell_quote || '',
+        } : null
+
+        const record: AbsorptionRecord = {
+          turn: currentTurn,
+          deityId: prev.pendingQuickening?.fallenId || 'unknown',
+          deityName: prev.pendingQuickening?.fallenName || 'Unknown',
+          portrait: prev.pendingQuickening?.portrait || '',
+          pantheon: prev.pendingQuickening?.pantheon || 'Unknown',
+          divineRank: prev.pendingQuickening?.divineRank || 0,
+          powerAbsorbed: gambleResult !== 'rejection' ? (parsed.chosen_power || '') : '(rejection - no power)',
+          powerLost: prev.currentPower?.powerName || 'none',
+          previousEchoName: prev.activeEcho?.deityName || 'none',
+          gambleResult,
+          echoFarewell: parsed.farewell_quote || '',
+        }
+
+        const newHistory = [...prev.absorptionHistory, record]
+        const deityKills = prev.totalDeityKills + ((prev.pendingQuickening?.divineRank || 0) >= 1 ? 1 : 0)
+        const monsterKills = prev.totalMonstersAbsorbed + ((prev.pendingQuickening?.divineRank || 0) < 1 ? 1 : 0)
+        const legendTitle = computeLegendTitle(newHistory)
+
+        quickeningUpdate = {
+          currentPower: newPower,
+          activeEcho: newEcho,
+          absorptionHistory: newHistory,
+          totalDeityKills: deityKills,
+          totalMonstersAbsorbed: monsterKills,
+          currentLegendTitle: legendTitle,
+          pendingQuickening: null,
+        }
+      } catch (e) {
+        console.error('Failed to parse quickening_result:', e)
+        quickeningUpdate = { pendingQuickening: null }
+      }
+    }
+
+    return { cleanText, quickeningUpdate }
   }
 
   const abortSpeakRef = useRef(false)
@@ -1804,7 +2105,31 @@ TOP NPC RELATIONS:
 ${consequenceState.npcRelations.slice(0, 5).map(r => `${r.npcName}: affinity ${r.affinity}, trust ${r.trust}, status ${r.status}`).join(' | ') || 'None'}
 RECENT CHOICES:
 ${consequenceState.choices.slice(0, 3).map(c => `T${c.turn}: ${c.chosen}`).join(' | ') || 'None'}
-`}
+${!isFirstTurn ? `QUICKENING STATE:
+Current Power: ${quickeningState.currentPower ? `${quickeningState.currentPower.powerName} (from ${quickeningState.currentPower.deityName}, attunement ${quickeningState.currentPower.attunement}%)` : 'None'}
+Active Echo: ${quickeningState.activeEcho ? `${quickeningState.activeEcho.deityName} (${quickeningState.activeEcho.influenceDirection}${quickeningState.activeEcho.isConflicted ? ', CONFLICTED' : ''})` : 'None'}
+Legend Title: ${quickeningState.currentLegendTitle}
+Total Deity Kills: ${quickeningState.totalDeityKills} | Total Absorbed: ${quickeningState.totalMonstersAbsorbed}
+Absorption History: ${quickeningState.absorptionHistory.map(r => `${r.deityName}(${r.gambleResult})`).join(', ') || 'None'}
+
+QUICKENING SYSTEM — POWER ABSORPTION:
+When the player kills a deity or major monster that qualifies for the Quickening, you MUST include a quickening_data block:
+<quickening_data>{"fallen_id": "character-id", "fallen_name": "Character Name", "pantheon": "Pantheon Name", "divine_rank": N, "power_options": [{"name": "Power Name", "description": "What this power does", "type": "offensive|defensive|utility|support", "source": "ability or phase"}]}</quickening_data>
+
+When the player chooses a power and absorption completes, include:
+<quickening_result>{"chosen_power": "Power Name", "gamble_result": "clean|resistant|rejection|overload", "attunement_start": 70, "echo_personality": "Brief description", "echo_influence": "good|evil|chaotic|lawful|neutral", "echo_influence_strength": 10, "farewell_quote": "What the previous Echo said"}</quickening_result>
+
+QUICKENING RULES:
+- Triggers AUTOMATICALLY on qualifying kills (divine rank >= 1 or monster with attack phases)
+- Present 2-3 power options from fallen foe's abilities
+- Remind player what power they'll lose before they choose
+- Gamble: Clean (65%, 70% attunement), Resistant (20%, 50% attunement), Rejection (10%, nothing), Overload (5%, 100% + conflicted echo)
+- On REJECTION: narrate the tragedy, old power gone, nothing replaces it
+- ECHO: Narrate the echo's influence, use format: [The echo of {Name} {verb} through your thoughts: '{whispered words}']
+- Echo speaks every 3-4 turns max. Less is more.
+- ATTUNEMENT: Fresh power at 70% (clean) or 50% (resistant). Reaches 100% in 3-5 turns. Below 100% = unstable.
+- LEGEND TITLE: Use ${quickeningState.currentLegendTitle} when NPCs reference the player.
+` : ''}`}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
 {"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — 600-1000 words for opening scenes, 60-120 words for regular turns, ONE paragraph only. REST/SLEEP actions: 2-3 sentences max. COMBAT actions: up to 150 words. Do NOT exceed these limits.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
@@ -3520,7 +3845,8 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const combatParsed = parseCombatData(narr)
     const questParsed = parseQuestData(combatParsed.cleanText)
     const consequenceParsed = parseConsequenceData(questParsed.cleanText, gs.turn)
-    narr = consequenceParsed.cleanText
+    const quickeningParsed = parseQuickeningData(consequenceParsed.cleanText, gs.turn)
+    narr = quickeningParsed.cleanText
     if (Object.keys(combatParsed.combatData).length) {
       setCombatState(prev => ({ ...prev, ...combatParsed.combatData }))
       combatQuietTurnsRef.current = 0
@@ -3539,6 +3865,28 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     }
     if (consequenceParsed.rippleNarration) {
       setRippleEcho(consequenceParsed.rippleNarration)
+    }
+    if (Object.keys(quickeningParsed.quickeningUpdate).length) {
+      setQuickeningState(prev => ({ ...prev, ...quickeningParsed.quickeningUpdate }))
+    }
+
+    // Quickening attunement and conflict decrement
+    if (quickeningState.currentPower && quickeningState.currentPower.attunement < 100 && !quickeningParsed.quickeningUpdate.currentPower) {
+      const increment = quickeningState.currentPower.gambleResult === 'resistant' ? 10 : 10
+      setQuickeningState(prev => ({
+        ...prev,
+        currentPower: prev.currentPower ? { ...prev.currentPower, attunement: Math.min(100, prev.currentPower.attunement + increment) } : null,
+      }))
+    }
+    if (quickeningState.activeEcho?.isConflicted && quickeningState.activeEcho.conflictTurnsRemaining > 0 && !quickeningParsed.quickeningUpdate.activeEcho) {
+      setQuickeningState(prev => {
+        if (!prev.activeEcho) return prev
+        const newRemaining = prev.activeEcho.conflictTurnsRemaining - 1
+        if (newRemaining <= 0) {
+          return { ...prev, activeEcho: { ...prev.activeEcho, isConflicted: false, conflictTurnsRemaining: 0 } }
+        }
+        return { ...prev, activeEcho: { ...prev.activeEcho, conflictTurnsRemaining: newRemaining } }
+      })
     }
     narr = cleanNarrationForDisplay(narr)
     const paragraphs = [narr].filter(Boolean)
@@ -4886,6 +5234,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     questJournal, setQuestJournal,
     consequenceState, setConsequenceState,
     rippleEcho,
+    quickeningState, setQuickeningState,
     // ── REFS ───────────────────────────────────────────────────────────────
     narrRef,
     abortSpeakRef,
@@ -4910,6 +5259,12 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     parseCombatData,
     parseQuestData,
     parseConsequenceData,
+    parseQuickeningData,
+    handlePowerChosen,
+    dismissQuickening,
+    shouldTriggerQuickening,
+    getPowerOptions,
+    computeLegendTitle,
     // getTemplateFallback removed (deprecated)
     buildDefaultOptions,
     applyMechanics,

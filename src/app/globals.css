@@ -757,3 +757,145 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 @media (max-width: 768px) {
   .character-detail-panel { display: none; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   QUICKENING SYSTEM — v2.18.0
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Overlay */
+.quickening-overlay { position: fixed; inset: 0; z-index: 1050; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; }
+.quickening-bg { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(212,168,67,0.15) 0%, rgba(0,0,0,0.95) 70%); animation: quickeningPulse 4s ease-in-out infinite; }
+@keyframes quickeningPulse { 0%, 100% { background: radial-gradient(ellipse at center, rgba(212,168,67,0.15) 0%, rgba(0,0,0,0.95) 70%); } 50% { background: radial-gradient(ellipse at center, rgba(212,168,67,0.25) 0%, rgba(0,0,0,0.95) 70%); } }
+.quickening-center { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 700px; padding: 20px; }
+.quickening-close-btn { position: absolute; top: 16px; right: 20px; z-index: 10; background: none; border: 1px solid rgba(255,255,255,0.2); color: #c4b896; font-size: 18px; cursor: pointer; padding: 6px 12px; border-radius: 4px; transition: all 0.3s; }
+.quickening-close-btn:hover { border-color: #d4a843; color: #d4a843; }
+.quickening-title { font-family: 'MedievalSharp', cursive; font-size: 28px; color: #d4a843; text-shadow: 0 0 20px rgba(212,168,67,0.5), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.1em; margin-bottom: 8px; }
+
+/* Fallen deity section */
+.quickening-fallen { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 8px; }
+.quickening-fallen-name { font-family: 'Pirata One', cursive; font-size: 22px; color: #d4a843; text-shadow: 0 0 10px rgba(212,168,67,0.3); }
+.quickening-fallen-pantheon { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: #c4b896; }
+.quickening-transfer-text { font-family: 'MedievalSharp', cursive; font-size: 11px; color: #d4a843; text-transform: uppercase; letter-spacing: 0.15em; animation: quickeningPulse 2s ease-in-out infinite; }
+
+/* Portrait cracking */
+.portrait-cracking { position: relative; }
+.portrait-cracking::before { content: ''; position: absolute; inset: 0; background: conic-gradient(from 0deg, transparent 0deg, rgba(0,0,0,0.6) 15deg, transparent 30deg, transparent 90deg, rgba(0,0,0,0.5) 105deg, transparent 120deg, transparent 180deg, rgba(0,0,0,0.4) 195deg, transparent 210deg, transparent 270deg, rgba(0,0,0,0.6) 285deg, transparent 300deg); border-radius: 8px; z-index: 2; pointer-events: none; animation: crackSpread 2s ease-out forwards; }
+@keyframes crackSpread { 0% { opacity: 0; } 20% { opacity: 0.5; } 100% { opacity: 1; } }
+@keyframes portraitShatter { 0% { transform: scale(1); filter: brightness(1); } 30% { transform: scale(1.05); filter: brightness(2); } 60% { transform: scale(1.1); filter: brightness(3); } 100% { transform: scale(0); filter: brightness(5); opacity: 0; } }
+.portrait-shatter { animation: portraitShatter 1.5s ease-out forwards; }
+
+/* Warning box */
+.quickening-warning { background: rgba(150,0,0,0.15); border: 1px solid rgba(200,0,0,0.4); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; max-width: 500px; text-align: center; }
+.quickening-warning h4 { font-family: 'MedievalSharp', cursive; color: #cc4444; font-size: 14px; margin: 0 0 8px 0; }
+.quickening-warning p { font-family: 'Cormorant Garamond', serif; color: #cc8888; font-size: 13px; margin: 4px 0; }
+.quickening-warning .current-power-name { color: #d4a843; font-weight: bold; font-size: 14px; }
+.quickening-warning .current-echo-name { color: #9966cc; font-style: italic; }
+
+/* Power choice cards */
+.quickening-choose-title { font-family: 'MedievalSharp', cursive; color: #d4a843; font-size: 16px; margin-bottom: 4px; }
+.power-choice-cards-container { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.power-choice-card { background: rgba(26,20,16,0.85); border: 2px solid #3c2415; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.3s; max-width: 200px; min-width: 160px; display: flex; flex-direction: column; gap: 6px; }
+.power-choice-card:hover { border-color: #d4a843; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(212,168,67,0.2); }
+.power-choice-name { font-family: 'MedievalSharp', cursive; color: #d4a843; font-size: 16px; margin-bottom: 4px; }
+.power-choice-desc { font-family: 'Cormorant Garamond', serif; color: #c4b896; font-size: 13px; line-height: 1.4; }
+.power-choice-type { font-size: 11px; color: #888; margin-bottom: 4px; }
+.power-choice-source { font-size: 10px; color: #666; font-style: italic; margin-bottom: 8px; }
+.absorb-btn { font-family: 'MedievalSharp', cursive; font-size: 14px; padding: 8px 20px; background: transparent; border: 2px solid #d4a843; color: #d4a843; border-radius: 6px; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: auto; }
+.absorb-btn:hover { background: rgba(212,168,67,0.15); transform: scale(1.02); }
+
+/* Absorbing text */
+.absorbing-text { font-family: 'Pirata One', cursive; color: #d4a843; font-size: 24px; text-shadow: 0 0 20px rgba(212,168,67,0.5); animation: absorbFadeIn 1s ease; }
+@keyframes absorbFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+/* Echo whisper in narration */
+.echo-whisper { margin: 10px 0; padding: 10px 14px; border-radius: 6px; border-left: 3px solid; animation: echoFadeIn 0.8s ease; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px; line-height: 1.5; }
+.echo-whisper.good { background: rgba(212,168,67,0.08); border-color: #d4a843; color: #c4a040; }
+.echo-whisper.evil { background: rgba(150,0,0,0.08); border-color: #cc4444; color: #cc6666; }
+.echo-whisper.chaotic { background: rgba(100,60,150,0.08); border-color: #9966cc; color: #aa88cc; }
+.echo-whisper.lawful { background: rgba(60,80,150,0.08); border-color: #4466aa; color: #6688cc; }
+.echo-whisper.neutral { background: rgba(100,100,100,0.08); border-color: #888; color: #aaa; }
+.echo-whisper.conflicted { animation: conflictedFlicker 2s ease-in-out infinite; }
+@keyframes conflictedFlicker { 0%, 49% { border-color: #d4a843; } 50%, 100% { border-color: #cc4444; } }
+@keyframes echoFadeIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+
+/* Echo indicator (floating near party bar) */
+.echo-indicator { position: fixed; bottom: 80px; left: 80px; width: 36px; height: 36px; border-radius: 50%; border: 2px solid #d4a843; overflow: hidden; z-index: 100; cursor: pointer; transition: all 0.3s; }
+.echo-indicator:hover { border-color: gold; transform: scale(1.1); }
+.echo-indicator img { width: 100%; height: 100%; object-fit: cover; }
+.echo-indicator.conflicted { animation: conflictedBorder 2s ease-in-out infinite; }
+@keyframes conflictedBorder { 0%, 49% { border-color: #d4a843; } 50%, 100% { border-color: #cc4444; } }
+.echo-indicator-tooltip { position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.9); border: 1px solid #3c2415; border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #c4b896; white-space: nowrap; pointer-events: none; }
+
+/* Graveyard sidebar tab */
+.graveyard-header { padding: 12px; border-bottom: 1px solid #5a1a1a; }
+.graveyard-header h3 { font-family: 'MedievalSharp', cursive; color: #8b2222; font-size: 16px; margin: 0 0 8px 0; }
+.graveyard-stats { font-size: 12px; color: #c4b896; display: flex; gap: 16px; }
+.graveyard-legend { font-size: 13px; color: #d4a843; margin-top: 4px; }
+.pantheon-progress { padding: 8px 12px; border-bottom: 1px solid rgba(60,36,21,0.3); }
+.pantheon-progress-name { font-size: 12px; color: #c4b896; margin-bottom: 4px; }
+.pantheon-progress-bar { width: 100%; height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden; }
+.pantheon-progress-fill { height: 100%; background: #8b2222; border-radius: 3px; transition: width 0.5s ease; }
+.pantheon-progress-fill.extinguished { background: #d4a843; animation: extinguishedGlow 2s ease-in-out infinite; }
+@keyframes extinguishedGlow { 0%, 100% { box-shadow: 0 0 4px #d4a843; } 50% { box-shadow: 0 0 12px #d4a843; } }
+.pantheon-extinguished-banner { text-align: center; font-family: 'MedievalSharp', cursive; color: #d4a843; font-size: 13px; padding: 8px; margin: 8px 12px; border: 1px solid rgba(212,168,67,0.3); border-radius: 4px; animation: extinguishedGlow 2s ease-in-out infinite; }
+.graveyard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; }
+.graveyard-card { text-align: center; cursor: pointer; transition: all 0.3s; }
+.graveyard-card:hover { transform: scale(1.05); }
+.graveyard-card-portrait { width: 60px; height: 80px; border-radius: 4px; object-fit: cover; position: relative; margin: 0 auto 4px; filter: grayscale(0.8); }
+.graveyard-card-name { font-size: 11px; color: #c4b896; margin-bottom: 2px; }
+.graveyard-card-turn { font-size: 9px; color: #888; }
+.graveyard-card-power { font-size: 10px; color: #d4a843; margin-top: 2px; }
+.graveyard-empty { text-align: center; padding: 40px 20px; }
+.graveyard-empty-icon { font-size: 48px; color: #555; margin-bottom: 12px; }
+.graveyard-empty-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; color: #888; margin-bottom: 8px; }
+.graveyard-empty-hint { font-size: 11px; color: #555; }
+.graveyard-expanded { padding: 12px; background: rgba(60,36,21,0.2); border-radius: 8px; margin: 8px 12px; }
+.graveyard-expanded-portrait { width: 100px; height: 130px; border-radius: 6px; object-fit: cover; margin: 0 auto 10px; display: block; filter: grayscale(0.8); }
+.graveyard-expanded-name { font-family: 'MedievalSharp', cursive; color: #e8d5b7; font-size: 16px; text-align: center; margin-bottom: 4px; }
+.graveyard-expanded-pantheon { font-size: 12px; color: #888; text-align: center; margin-bottom: 10px; }
+.graveyard-expanded-detail { font-size: 12px; color: #c4b896; padding: 4px 0; border-bottom: 1px solid rgba(60,36,21,0.2); }
+.graveyard-expanded-farewell { font-style: italic; color: #9966cc; font-size: 12px; margin-top: 8px; padding: 8px; background: rgba(100,60,150,0.1); border-radius: 4px; }
+
+/* Fallen intro screen cards */
+.card-fallen { position: relative; }
+.card-fallen::after { content: 'FALLEN'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Pirata One', cursive; font-size: 28px; color: rgba(200,0,0,0.25); text-transform: uppercase; transform: rotate(-30deg); pointer-events: none; z-index: 5; }
+.card-fallen .card-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.55); border-radius: inherit; z-index: 3; pointer-events: none; }
+.card-fallen .card-skull-badge { position: absolute; top: 6px; right: 6px; font-size: 16px; z-index: 6; }
+.card-fallen { border-color: #5a1a1a !important; filter: grayscale(0.5); }
+.card-echo { border-color: #d4a843 !important; animation: cardEchoPulse 3s ease-in-out infinite; }
+@keyframes cardEchoPulse { 0%, 100% { box-shadow: 0 0 5px rgba(212,168,67,0.3); } 50% { box-shadow: 0 0 15px rgba(212,168,67,0.6); } }
+
+/* Absorbed power on character card */
+.absorbed-power-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(212,168,67,0.3); }
+.absorbed-power-header { font-family: 'MedievalSharp', cursive; color: #d4a843; font-size: 13px; margin-bottom: 6px; }
+.absorbed-power-name { font-weight: bold; color: #e8d5b7; font-size: 14px; margin-bottom: 4px; }
+.absorbed-power-desc { font-size: 12px; color: #c4b896; line-height: 1.4; margin-bottom: 6px; }
+.absorbed-power-source { font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
+.absorbed-power-source img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; }
+.attunement-bar { width: 100px; height: 6px; background: #1a1a1a; border-radius: 3px; overflow: hidden; margin-bottom: 2px; }
+.attunement-fill { height: 100%; background: linear-gradient(90deg, #c4a000, #d4a843); border-radius: 3px; transition: width 0.5s ease; }
+.attunement-text { font-size: 10px; color: #888; }
+.attunement-text.full { color: #4caf50; }
+.echo-section { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(60,36,21,0.3); }
+.echo-section-name { display: flex; align-items: center; gap: 6px; }
+.echo-section-name img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 2px solid #d4a843; }
+.echo-personality { font-size: 11px; color: #aaa; font-style: italic; margin-top: 4px; }
+.echo-conflicted-badge { font-size: 10px; color: #cc4444; font-weight: bold; animation: conflictedFlicker 2s ease-in-out infinite; }
+
+/* Divine Power combat button */
+.divine-power-btn { font-family: 'MedievalSharp', cursive; font-size: 12px; padding: 6px 12px; background: rgba(212,168,67,0.1); border: 1px solid #d4a843; color: #d4a843; border-radius: 4px; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+.divine-power-btn:hover { background: rgba(212,168,67,0.25); }
+.divine-power-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .graveyard-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .power-choice-card { max-width: 160px; padding: 12px; }
+  .power-choice-name { font-size: 14px; }
+  .echo-indicator { bottom: 70px; left: 60px; width: 30px; height: 30px; }
+}
+@media (max-width: 480px) {
+  .graveyard-grid { grid-template-columns: 1fr; }
+  .quickening-warning { margin: 0 8px 16px 8px; }
+  .power-choice-cards-container { flex-direction: column; align-items: center; }
+}

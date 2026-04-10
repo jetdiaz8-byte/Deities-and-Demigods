@@ -46,6 +46,7 @@ export interface GameSidebarProps {
   questJournal?: any
   consequenceState?: any
   onTravelToLocation?: (name: string) => void
+  quickeningState?: any
 }
 
 export function GameSidebar({
@@ -77,6 +78,7 @@ export function GameSidebar({
   questJournal,
   consequenceState,
   onTravelToLocation,
+  quickeningState,
 }: GameSidebarProps) {
   return (
     <>
@@ -152,6 +154,7 @@ export function GameSidebar({
           questJournal={questJournal}
           consequenceState={consequenceState}
           onTravelToLocation={onTravelToLocation}
+          quickeningState={quickeningState}
         />
         </div>
       </div>
@@ -225,6 +228,7 @@ export function GameSidebar({
             questJournal={questJournal}
             consequenceState={consequenceState}
             onTravelToLocation={onTravelToLocation}
+            quickeningState={quickeningState}
           />
           <div className="border-t border-[#2e2008] p-3">
             <div className="text-[11px] text-[#c9a84c] uppercase tracking-wider mb-2" style={{ fontFamily: 'Cinzel, serif' }}>Settings</div>
@@ -258,7 +262,7 @@ export function GameSidebar({
 // DESKTOP TABS — Full detail view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, dmSystemPrompt, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev, questJournal, consequenceState, onTravelToLocation }: {
+function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, dmSystemPrompt, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev, questJournal, consequenceState, onTravelToLocation, quickeningState }: {
   gameState: GameState
   activeTab: string
   setActiveTab: (tab: string) => void
@@ -279,6 +283,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
   questJournal?: any
   consequenceState?: any
   onTravelToLocation?: (name: string) => void
+  quickeningState?: any
 }) {
   const [questFilter, setQuestFilter] = React.useState<'all' | 'active' | 'completed' | 'failed'>('all')
   const [expandedChoiceHistory, setExpandedChoiceHistory] = React.useState(false)
@@ -291,6 +296,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
         <TabsTrigger value="quests" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Quests</TabsTrigger>
         <TabsTrigger value="map" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Map</TabsTrigger>
         <TabsTrigger value="soul" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Soul</TabsTrigger>
+        <TabsTrigger value="graveyard" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Graveyard</TabsTrigger>
         <TabsTrigger value="prophecies" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">📜</TabsTrigger>
         <TabsTrigger value="logs" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Logs</TabsTrigger>
         <TabsTrigger value="gallery" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Gallery</TabsTrigger>
@@ -481,6 +487,43 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
             {(consequenceState?.choices || []).map((c: any, idx: number) => (
               <div key={idx} className="choice-entry"><div className="turn-num">Turn {c.turn}</div><div>{c.situation}</div><div className="chosen-text">{c.chosen}</div><div className="alt-text">{(c.alternatives || []).join(' · ')}</div><div className={c.rippleTriggered ? 'ripple-done' : 'ripple-pending'}>{c.rippleTriggered ? 'Ripple resolved' : `Ripple pending (turn ${c.rippleTurn || '?'})`}</div></div>
             ))}
+          </div>
+        )}
+      </TabsContent>
+
+      {/* Graveyard Tab */}
+      <TabsContent value="graveyard" className="flex-1 overflow-y-auto p-0 m-0 min-h-0">
+        <div className="graveyard-header">
+          <h3>The Graveyard</h3>
+          <div className="graveyard-stats">
+            <span>Fallen: {quickeningState?.absorptionHistory?.length || 0}</span>
+            <span>Deities: {quickeningState?.totalDeityKills || 0}</span>
+            <span>Monsters: {quickeningState?.totalMonstersAbsorbed || 0}</span>
+          </div>
+          <div className="graveyard-legend">Your Legend: {quickeningState?.currentLegendTitle || 'Mortal'}</div>
+        </div>
+        {(quickeningState?.absorptionHistory?.length || 0) > 0 ? (
+          <>
+            <div className="graveyard-grid">
+              {(quickeningState?.absorptionHistory || []).map((record: any, idx: number) => (
+                <div key={`${record.deityId}-${idx}`} className="graveyard-card">
+                  {record.portrait ? (
+                    <img src={record.portrait} alt={record.deityName} className="graveyard-card-portrait" onError={(e: any) => { e.target.style.display = 'none' }} />
+                  ) : (
+                    <div className="graveyard-card-portrait" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a1a', color: '#555', fontSize: 24 }}>{record.deityName?.charAt(0) || '?'}</div>
+                  )}
+                  <div className="graveyard-card-name">{record.deityName}</div>
+                  <div className="graveyard-card-turn">Turn {record.turn}</div>
+                  <div className="graveyard-card-power">{record.powerAbsorbed}</div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="graveyard-empty">
+            <div className="graveyard-empty-icon">💀</div>
+            <div className="graveyard-empty-text">The graveyard is empty. The gods still reign.</div>
+            <div className="graveyard-empty-hint">Slay a deity to begin the Quickening.</div>
           </div>
         )}
       </TabsContent>
@@ -691,7 +734,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
 // MOBILE TABS — Compact view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev, questJournal, consequenceState, onTravelToLocation }: {
+function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev, questJournal, consequenceState, onTravelToLocation, quickeningState }: {
   gameState: GameState
   activeTab: string
   setActiveTab: (tab: string) => void
