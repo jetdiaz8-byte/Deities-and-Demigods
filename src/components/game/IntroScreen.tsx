@@ -8,7 +8,9 @@ import { Badge } from '@/components/ui/badge'
 import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2, Monitor, Cloud, RefreshCw, Zap } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { version } from '../../../package.json'
-import { ALL_CHARACTERS, getPortraitPath } from '@/lib/characterData'
+import { ALL_CHARACTERS } from '@/lib/characterData'
+import type { Character } from '@/lib/characterTypes'
+import CharacterCard from '@/components/game/CharacterCard'
 
 export interface IntroScreenProps {
   geminiKey: string
@@ -50,7 +52,11 @@ export function IntroScreen({
   const [lmConnected, setLmConnected] = useState<boolean | null>(null)
   const [lmModels, setLmModels] = useState<{ id: string }[]>([])
   const [lmChecking, setLmChecking] = useState(false)
-  const [activeMarqueeName, setActiveMarqueeName] = useState<string | null>(null)
+  const [cardQueue, setCardQueue] = useState<Character[]>([])
+  const [activeIndex, setActiveIndex] = useState(0)
+  const [cardFading, setCardFading] = useState(false)
+  const [cardModalOpen, setCardModalOpen] = useState(false)
+  const touchStartYRef = React.useRef<number | null>(null)
 
   const checkLmConnection = async () => {
     setLmChecking(true)
@@ -75,14 +81,15 @@ export function IntroScreen({
   }
 
   // Auto-check LM Studio connection when engine mode uses LM Studio
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     if (engineMode === 'lmstudio' || engineMode === 'dual') {
       checkLmConnection()
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [engineMode, lmStudioUrl])
 
   // Build ember particles client-side only to avoid SSR hydration mismatch.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => {
     setParticles(
       Array.from({ length: 25 }).map((_, i) => ({
@@ -113,17 +120,9 @@ export function IntroScreen({
     { icon: <Volume2 className="w-4 h-4" />, label: 'Voice', desc: 'AI TTS' },
   ]
 
-  const allPortraitItems = useMemo(() => {
+  const allCharacters = useMemo(() => {
     const validCategories = new Set(['greater-gods', 'demigods', 'heroes', 'krynn', 'lesser-gods', 'monsters'])
-    const items = ALL_CHARACTERS
-      .filter(c => validCategories.has(c.category))
-      .map(c => ({
-        id: c.id,
-        name: c.name,
-        category: c.category,
-        portraitPath: getPortraitPath(c),
-      }))
-    // Deduplicate by category/id for safe marquee rendering.
+    const items = ALL_CHARACTERS.filter(c => validCategories.has(c.category))
     const seen = new Set<string>()
     return items.filter(item => {
       const key = `${item.category}:${item.id}`
@@ -133,25 +132,49 @@ export function IntroScreen({
     })
   }, [])
 
-  const [poolStart, setPoolStart] = useState(0)
-  const visibleCount = 20
-  const rotateCount = 5
-  const portraitCount = allPortraitItems.length
-  const displayedItems = useMemo(() => {
-    if (!allPortraitItems.length) return []
-    const out = []
-    for (let i = 0; i < visibleCount; i++) {
-      out.push(allPortraitItems[(poolStart + i) % allPortraitItems.length])
+  const shuffleCharacters = (items: Character[]): Character[] => {
+    const shuffled = [...items]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
     }
-    return out
-  }, [allPortraitItems, poolStart])
+    return shuffled
+  }
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => {
+    if (!allCharacters.length) return
+    const shuffled = shuffleCharacters(allCharacters)
+    setCardQueue(shuffled)
+    setActiveIndex(0)
+  }, [allCharacters.length])
 
   useEffect(() => {
+    if (!cardQueue.length) return
     const timer = setInterval(() => {
-      setPoolStart(prev => (prev + rotateCount) % Math.max(1, allPortraitItems.length))
-    }, 12000)
+      setCardFading(true)
+      window.setTimeout(() => {
+        setActiveIndex(prev => {
+          const next = prev + 1
+          if (next < cardQueue.length) return next
+          setCardQueue(shuffleCharacters(allCharacters))
+          return 0
+        })
+        setCardFading(false)
+      }, 500)
+    }, 5000)
     return () => clearInterval(timer)
-  }, [allPortraitItems.length])
+  }, [cardQueue, allCharacters])
+
+  const activeCharacter = cardQueue[activeIndex] || allCharacters[0] || null
+  const nextCharacter = cardQueue[(activeIndex + 1) % Math.max(1, cardQueue.length)] || null
+  const portraitCount = allCharacters.length
+
+  useEffect(() => {
+    if (!nextCharacter || typeof window === 'undefined') return
+    const preload = new Image()
+    preload.src = `/portraits/${nextCharacter.category}/${nextCharacter.id}.png`
+  }, [nextCharacter?.id, nextCharacter?.category])
 
   return (
     <div className="min-h-screen bg-[#060403] flex flex-col items-center justify-center p-4 overflow-hidden relative">
@@ -208,18 +231,6 @@ export function IntroScreen({
           animation: btn-shimmer 4s linear infinite, btn-glow-pulse 2.5s ease-in-out infinite;
         }
 
-        @keyframes intro-bg-fade {
-          0%, 20% { opacity: 1; } 25%, 95% { opacity: 0; } 100% { opacity: 1; }
-        }
-        .intro-bg-slide {
-          position: fixed; inset: 0; z-index: 0;
-          background-size: cover; background-position: center;
-          opacity: 0; animation: intro-bg-fade 28s infinite;
-        }
-        .intro-bg-slide:nth-child(1) { animation-delay: 0s; }
-        .intro-bg-slide:nth-child(2) { animation-delay: 7s; }
-        .intro-bg-slide:nth-child(3) { animation-delay: 14s; }
-        .intro-bg-slide:nth-child(4) { animation-delay: 21s; }
         .intro-bg-overlay {
           position: fixed; inset: 0; z-index: 1;
           background:
@@ -227,154 +238,13 @@ export function IntroScreen({
             linear-gradient(to bottom, rgba(6,4,3,0.5) 0%, rgba(6,4,3,0.3) 40%, rgba(6,4,3,0.6) 100%);
         }
 
-        /* === HORIZONTAL MARQUEE (top/bottom) === */
-        @keyframes marquee-h {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .mq-h {
-          position: fixed; left: 0; right: 0; z-index: 2;
-          display: flex; align-items: center; overflow: hidden; pointer-events: auto;
-        }
-        .mq-h--top {
-          top: 0; height: 146px;
-          background: linear-gradient(to bottom, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 50%, transparent 100%);
-        }
-        .mq-h--bot {
-          bottom: 0; height: 146px;
-          background: linear-gradient(to top, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 50%, transparent 100%);
-        }
-        .mq-h--bot .mq-h__track { animation-direction: reverse; }
-        .mq-h__track {
-          display: flex; align-items: center; gap: 10px;
-          padding: 14px 0; animation: marquee-h 200s linear infinite; width: max-content;
-        }
-        .mq-h__item {
-          width: 72px; height: 126px; border-radius: 6px; object-fit: contain;
-          border: 1.5px solid rgba(212,175,55,0.35); opacity: 0.65; flex-shrink: 0;
-          background: #0d0906; box-shadow: 0 3px 12px rgba(0,0,0,0.5);
-        }
-
-        /* === VERTICAL MARQUEE (left/right) === */
-        @keyframes marquee-v-down {
-          0% { transform: translateY(0); }
-          100% { transform: translateY(-50%); }
-        }
-        @keyframes marquee-v-up {
-          0% { transform: translateY(-50%); }
-          100% { transform: translateY(0); }
-        }
-        .mq-v {
-          position: fixed; top: 0; bottom: 0; z-index: 2;
-          display: flex; flex-direction: column; align-items: center;
-          overflow: hidden; pointer-events: auto;
-        }
-        .marquee-item-wrap { position: relative; }
-        .name-overlay {
-          position: absolute;
-          left: 50%;
-          bottom: -18px;
-          transform: translateX(-50%);
-          white-space: nowrap;
-          font-size: 10px;
-          color: #f0c860;
-          background: rgba(6,4,3,0.85);
-          border: 1px solid rgba(212,175,55,0.35);
-          border-radius: 4px;
-          padding: 2px 6px;
-          opacity: 0;
-          transition: opacity .2s ease;
-          pointer-events: none;
-          text-transform: capitalize;
-        }
-        .marquee-item-wrap:hover .name-overlay { opacity: 1; }
-        @keyframes start-marquee-scroll {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .start-marquee-shell {
-          overflow: hidden;
-          border: 1px solid rgba(212,175,55,0.35);
-          border-radius: 10px;
-          background: linear-gradient(180deg, rgba(14,10,6,0.86), rgba(8,6,4,0.8));
-          box-shadow: inset 0 0 0 1px rgba(255,215,128,0.12);
-          margin: 10px 0 14px;
-        }
-        .start-marquee-track {
-          display: flex;
-          width: max-content;
-          gap: 8px;
-          padding: 8px;
-          animation: start-marquee-scroll 55s linear infinite;
-        }
-        .start-marquee-item {
-          position: relative;
-          width: 68px;
-          height: 68px;
-          border-radius: 10px;
-          overflow: hidden;
-          border: 1px solid rgba(212,175,55,0.35);
-          box-shadow: 0 0 10px rgba(212,175,55,0.15);
-          flex-shrink: 0;
-          background: #0d0906;
-        }
-        .start-marquee-item img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          transition: transform .25s ease;
-        }
-        .start-marquee-item:hover img { transform: scale(1.06); }
-        .start-marquee-item .name-overlay {
-          bottom: 4px;
-          left: 50%;
-          transform: translateX(-50%);
-          font-size: 10px;
-          color: #fff;
-          background: rgba(0,0,0,0.72);
-          border: 1px solid rgba(255,255,255,0.18);
-          border-radius: 6px;
-          padding: 2px 6px;
-          text-transform: none;
-          max-width: 120px;
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-        .mq-v--left {
-          left: 0; width: 84px;
-          background: linear-gradient(to right, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 40%, transparent 100%);
-        }
-        .mq-v--right {
-          right: 0; width: 84px;
-          background: linear-gradient(to left, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 40%, transparent 100%);
-        }
-        .mq-v--left .mq-v__track { animation: marquee-v-down 250s linear infinite; }
-        .mq-v--right .mq-v__track { animation: marquee-v-up 250s linear infinite; }
-        .mq-v__track {
-          display: flex; flex-direction: column; gap: 10px;
-          padding: 14px 0; width: max-content;
-        }
-        .mq-v__item {
-          width: 72px; height: 126px; border-radius: 6px; object-fit: contain;
-          border: 1.5px solid rgba(212,175,55,0.35); opacity: 0.6; flex-shrink: 0;
-          background: #0d0906; box-shadow: 0 3px 12px rgba(0,0,0,0.5);
-        }
-
         @media (prefers-reduced-motion: reduce) {
           .intro-ember, .parallax-layer-fog, .parallax-layer-runes,
-          .btn-begin-legend, .intro-bg-slide,
-          .mq-h__track, .mq-v__track { animation: none !important; }
+          .btn-begin-legend { animation: none !important; }
           .intro-ember { display: none; }
-          .intro-bg-slide { opacity: 0; }
-          .intro-bg-slide:nth-child(1) { opacity: 1; }
         }
       `}</style>
 
-      {/* Background crossfade */}
-      <div className="intro-bg-slide" style={{ backgroundImage: 'url(/images/intro/dragon.png)' }} />
-      <div className="intro-bg-slide" style={{ backgroundImage: 'url(/images/intro/hero.png)' }} />
-      <div className="intro-bg-slide" style={{ backgroundImage: 'url(/images/intro/god.png)' }} />
-      <div className="intro-bg-slide" style={{ backgroundImage: 'url(/images/intro/monster.png)' }} />
       <div className="intro-bg-overlay" />
 
 
@@ -430,35 +300,32 @@ export function IntroScreen({
           </motion.p>
         </div>
 
-        {/* Portrait marquee (codex-backed) */}
-        <div className="start-marquee-shell">
-          <div className="px-2 pt-1 text-[10px] text-[#9a8860] text-center" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}>
-            CHARACTER SHOWCASE · {portraitCount} portraits
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start mt-3">
+          <div className="md:col-span-3">
+            <div className="text-center mb-2 text-[10px] text-[#9a8860]" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}>
+              CHARACTER CARD SHOWCASE · {portraitCount} portraits
+            </div>
+            {activeCharacter && (
+              <>
+                <div className="hidden md:block">
+                  <div className={cardFading ? 'card-fade-exit' : 'card-fade-enter'}>
+                    <CharacterCard character={activeCharacter} />
+                  </div>
+                </div>
+                <div className="md:hidden">
+                  <button
+                    className="w-full"
+                    onClick={() => setCardModalOpen(true)}
+                    onTouchStart={() => setCardModalOpen(true)}
+                  >
+                    <CharacterCard character={activeCharacter} compact />
+                  </button>
+                </div>
+              </>
+            )}
           </div>
-          <div className="start-marquee-track">
-            {[...displayedItems, ...displayedItems].map((item, i) => (
-              <div
-                key={`${item.category}-${item.id}-${i}`}
-                className="start-marquee-item marquee-item-wrap"
-                onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `${item.id}-${i}` ? null : `${item.id}-${i}`)}
-                onClick={() => setActiveMarqueeName(activeMarqueeName === `${item.id}-${i}` ? null : `${item.id}-${i}`)}
-              >
-                <img
-                  src={item.portraitPath}
-                  alt={item.name}
-                  width={68}
-                  height={68}
-                  loading="lazy"
-                  fetchPriority={i < 20 ? 'high' : 'auto'}
-                />
-                <span className="name-overlay" style={{ opacity: activeMarqueeName === `${item.id}-${i}` ? 1 : undefined }}>
-                  {item.name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
 
+          <div className="md:col-span-2">
         {/* Compact Main Card */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.2, duration: 0.5 }}>
@@ -493,7 +360,7 @@ export function IntroScreen({
                         : 'text-[#5a4d30] border border-[#2e2008] hover:text-[#8a7a50]'
                     }`}
                     style={{ fontFamily: 'Cinzel, serif' }}>
-                    <Cloud className="w-3 h-3" /> Gemini
+                    <Cloud className="w-3 h-3" /> Cloud AI
                   </button>
                   <button
                     onClick={() => { setEngineMode('dual'); setAiProvider('lmstudio'); }}
@@ -503,7 +370,7 @@ export function IntroScreen({
                         : 'text-[#5a4d30] border border-[#2e2008] hover:text-[#8a7a50]'
                     }`}
                     style={{ fontFamily: 'Cinzel, serif' }}>
-                    <Zap className="w-3 h-3" /> Dual
+                    <Zap className="w-3 h-3" /> Hybrid
                   </button>
                   <button
                     onClick={() => { setEngineMode('lmstudio'); setAiProvider('lmstudio'); }}
@@ -581,7 +448,7 @@ export function IntroScreen({
                 {engineMode === 'gemini'
                   ? 'Server proxy mode \u00b7 OpenRouter key optional'
                   : engineMode === 'dual'
-                    ? 'Dual Engine \u00b7 Mechanics locally + narration via cloud'
+                    ? 'Hybrid Engine \u00b7 Mechanics locally + narration via cloud AI'
                     : 'Local LLM \u00b7 No API key needed \u00b7 Runs on your machine'}
               </p>
 
@@ -629,7 +496,27 @@ export function IntroScreen({
             </CardContent>
           </Card>
         </motion.div>
+          </div>
+        </div>
       </div>
+
+      {cardModalOpen && activeCharacter && (
+        <div
+          className="card-modal"
+          onClick={() => setCardModalOpen(false)}
+          onTouchStart={(e) => { touchStartYRef.current = e.touches[0]?.clientY ?? null }}
+          onTouchEnd={(e) => {
+            const startY = touchStartYRef.current
+            const endY = e.changedTouches[0]?.clientY ?? startY ?? 0
+            if (startY !== null && endY - startY > 50) setCardModalOpen(false)
+          }}
+        >
+          <div className="card-modal__panel" onClick={(e) => e.stopPropagation()}>
+            <button className="card-modal__close" onClick={() => setCardModalOpen(false)}>X</button>
+            <CharacterCard character={activeCharacter} />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

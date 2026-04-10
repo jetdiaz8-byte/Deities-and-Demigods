@@ -40,16 +40,25 @@ export function buildPanelCaption(narration: string, index: number, total: numbe
 }
 
 export function buildImagePrompt(narration: string, caption: string, artStyle: string): string {
-  const stylePrompt = STYLE_PROMPTS[artStyle] || STYLE_PROMPTS['larry-elmore'];
-  const source = `${caption || ''} ${narration || ''}`.toLowerCase();
-  let sceneSeed = 'fantasy landscape with dramatic sky';
-  if (/\bocean|sea|ship|harbor|wave|cliff|coast\b/.test(source)) sceneSeed = 'stormy ocean, ship, sea cliff';
-  else if (/\bforest|grove|woods|tree|ruin|runes\b/.test(source)) sceneSeed = 'enchanted forest, ancient ruins';
-  else if (/\bdungeon|catacomb|crypt|torch|corridor|cavern\b/.test(source)) sceneSeed = 'dungeon stone corridors, torchlight';
-  else if (/\bcity|town|market|street|castle gate|village\b/.test(source)) sceneSeed = 'medieval town marketplace';
-  else if (/\bcombat|battle|attack|blood|duel|war\b/.test(source)) sceneSeed = 'battlefield with dramatic action';
-  const combined = (caption || narration).slice(0, 140);
-  return `dark fantasy ${sceneSeed}, ${combined}, dramatic lighting, oil painting style, D&D illustration, atmospheric, no text`;
+  const stylePrompt = STYLE_PROMPTS[artStyle] || STYLE_PROMPTS['larry-elmore']
+  const source = `${caption || ''} ${narration || ''}`.toLowerCase()
+  let sceneSeed = 'fantasy landscape, dramatic sky, mysterious atmosphere'
+  if (/\bocean|water|sea|ship|harbor|wave|cliff|coast\b/.test(source)) sceneSeed = 'ship, waves, sea cliff, stormy horizon'
+  else if (/\bforest|trees|woods|grove|ruin|runes\b/.test(source)) sceneSeed = 'enchanted forest, ancient ruins, glowing runes'
+  else if (/\bdungeon|cave|underground|catacomb|crypt|torch|corridor\b/.test(source)) sceneSeed = 'stone corridors, torches, shadows'
+  else if (/\bcity|town|village|market|street|tavern\b/.test(source)) sceneSeed = 'medieval town, marketplace, tavern'
+  else if (/\bcombat|fight|battle|attack|duel|war\b/.test(source)) sceneSeed = 'battlefield, dramatic action, weapons'
+  else if (/\btower|castle|fortress|keep|citadel\b/.test(source)) sceneSeed = 'medieval fortress, spires, banners'
+  const candidates = (caption || narration)
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean)
+    .filter(w => w.length > 4)
+    .filter(w => !['there', 'their', 'about', 'after', 'before', 'which', 'while', 'where'].includes(w))
+  const unique = Array.from(new Set(candidates)).slice(0, 5)
+  const keywords = unique.length ? unique.join(', ') : sceneSeed
+  return `dark fantasy ${keywords}, ${sceneSeed}, dramatic lighting, oil painting style, D&D illustration, atmospheric, ${stylePrompt}, no text`
 }
 
 export async function generateComicPanels(
@@ -78,7 +87,8 @@ export async function generateComicPanels(
 export async function generatePanelImage(
   panel: ComicPanelData,
   narration: string,
-  artStyle: string
+  artStyle: string,
+  turnNumber: number
 ): Promise<ComicPanelData> {
   const placeholderImage = (() => {
     const safeCaption = (panel.caption || 'Scene illustration loading...').replace(/[<>&]/g, '').slice(0, 80)
@@ -99,7 +109,7 @@ export async function generatePanelImage(
 
   const prompt = buildImagePrompt(narration, panel.caption, artStyle);
   try {
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true`
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true&seed=${turnNumber}`
     return { ...panel, imageUrl: url || placeholderImage, isGenerating: false };
   } catch {
     return { ...panel, imageUrl: placeholderImage, isGenerating: false, error: 'network-error' };

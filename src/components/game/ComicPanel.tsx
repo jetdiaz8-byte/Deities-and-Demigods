@@ -18,6 +18,7 @@ interface ComicPanelProps {
 
 export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicPanelProps) {
   const [expanded, setExpanded] = React.useState<ComicPanelData | null>(null)
+  const [imageErrors, setImageErrors] = React.useState<Record<string, boolean>>({})
   if (!panels || panels.length === 0) return null;
 
   const gridClass = panels.length <= 2
@@ -47,8 +48,15 @@ export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicP
             <div className="absolute inset-0 flex items-center justify-center p-2 bg-[var(--bg-secondary)]">
               <span className="text-[0.625rem] text-[var(--text-muted)] text-center">✦</span>
             </div>
-          ) : panel.imageUrl ? (
-            <img src={panel.imageUrl} alt={panel.caption} loading="lazy" className="cursor-zoom-in" onClick={() => setExpanded(panel)} />
+          ) : panel.imageUrl && !imageErrors[panel.id] ? (
+            <img
+              src={panel.imageUrl}
+              alt={panel.caption}
+              loading="lazy"
+              className="cursor-zoom-in"
+              onClick={() => setExpanded(panel)}
+              onError={() => setImageErrors(prev => ({ ...prev, [panel.id]: true }))}
+            />
           ) : (
             <div
               className="absolute inset-0 flex flex-col items-center justify-center text-center px-3"
@@ -57,7 +65,7 @@ export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicP
                   'radial-gradient(circle at 20% 20%, rgba(212,175,55,0.2), transparent 45%), linear-gradient(160deg, #1a1510, #0d0a08)',
               }}
             >
-              <span className="text-[0.7rem] text-[var(--text-secondary)]">Scene illustration loading...</span>
+              <span className="text-[0.7rem] text-[var(--text-secondary)]">Scene illustration</span>
               <span className="text-[0.58rem] text-[var(--text-muted)] mt-1">Fallback art is shown if generation is unavailable</span>
             </div>
           )}

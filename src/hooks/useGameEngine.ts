@@ -493,7 +493,32 @@ export function useGameEngine() {
       .map(s => s.trim())
       .filter(Boolean)
       .map(s => (/[.!?]$/.test(s) ? s : `${s}.`))
-    return split.length ? split : [cleaned]
+    const chunked: string[] = []
+    for (const sentence of (split.length ? split : [cleaned])) {
+      if (sentence.length <= 150) {
+        chunked.push(sentence)
+        continue
+      }
+      const parts = sentence
+        .split(/(?<=[,;—-])\s+/)
+        .map(p => p.trim())
+        .filter(Boolean)
+      let bucket = ''
+      for (const part of parts) {
+        if (!bucket.length) {
+          bucket = part
+          continue
+        }
+        if (`${bucket} ${part}`.length <= 150) {
+          bucket = `${bucket} ${part}`
+        } else {
+          chunked.push(bucket)
+          bucket = part
+        }
+      }
+      if (bucket) chunked.push(bucket)
+    }
+    return chunked.length ? chunked : [cleaned.slice(0, 150)]
   }
 
   const abortSpeakRef = useRef(false)
@@ -512,6 +537,10 @@ export function useGameEngine() {
         return
       }
 
+      if (!ttsUnlockedRef.current) {
+        reject(new Error('TTS requires a user interaction first'))
+        return
+      }
       // Cancel any ongoing speech
       window.speechSynthesis.cancel()
       // Chrome/Safari can drop speech if speak() happens immediately after cancel().
@@ -525,6 +554,7 @@ export function useGameEngine() {
       const sentences = splitTextIntoSentences(text)
       let idx = 0
       let watchdogTimer: ReturnType<typeof setInterval> | null = null
+      let silenceTimer: ReturnType<typeof setTimeout> | null = null
 
         const speakNext = () => {
           if (abortSpeakRef.current || idx >= sentences.length) {
@@ -533,6 +563,10 @@ export function useGameEngine() {
             if (watchdogTimer) {
               clearInterval(watchdogTimer)
               watchdogTimer = null
+            }
+            if (silenceTimer) {
+              clearTimeout(silenceTimer)
+              silenceTimer = null
             }
             resolve()
             return
@@ -557,20 +591,30 @@ export function useGameEngine() {
           utterance.onstart = () => {
             setCurrentSpeechSentenceIndex(sentenceIndex)
             if (watchdogTimer) clearInterval(watchdogTimer)
-            // Chrome workaround: nudge speech engine every ~12s.
+            if (silenceTimer) clearTimeout(silenceTimer)
+            // Chrome workaround: nudge speech engine every ~10s.
             watchdogTimer = setInterval(() => {
               try {
-                if (!abortSpeakRef.current) {
+                if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
                   window.speechSynthesis.pause()
-                  window.setTimeout(() => window.speechSynthesis.resume(), 50)
+                  window.setTimeout(() => window.speechSynthesis.resume(), 100)
                 }
               } catch {
                 // ignore watchdog errors
               }
-            }, 12000)
+            }, 10000)
+            silenceTimer = setTimeout(() => {
+              if (!abortSpeakRef.current) {
+                speakNext()
+              }
+            }, 2000)
           }
 
           utterance.onend = () => {
+            if (silenceTimer) {
+              clearTimeout(silenceTimer)
+              silenceTimer = null
+            }
             if (watchdogTimer) {
               clearInterval(watchdogTimer)
               watchdogTimer = null
@@ -579,17 +623,18 @@ export function useGameEngine() {
             window.setTimeout(speakNext, 80)
           }
           utterance.onerror = (e) => {
-            browserUtteranceRef.current = null
-            setCurrentSpeechSentenceIndex(null)
+            console.warn('Browser speech chunk error:', e.error)
+            if (silenceTimer) {
+              clearTimeout(silenceTimer)
+              silenceTimer = null
+            }
             if (watchdogTimer) {
               clearInterval(watchdogTimer)
               watchdogTimer = null
             }
-            if (abortSpeakRef.current || e.error === 'canceled' || e.error === 'interrupted') {
-              resolve()
-              return
-            }
-            reject(new Error(`Browser speech error: ${e.error}`))
+            if (abortSpeakRef.current) return resolve()
+            // Skip failed chunk and keep queue alive.
+            window.setTimeout(speakNext, 40)
           }
           window.speechSynthesis.speak(utterance)
         }
@@ -2580,7 +2625,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ── RUN TURN ───────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════
-  // DUAL-ENGINE DM SYSTEM v2.12.1
+  // DUAL-ENGINE DM SYSTEM v2.13.0
   //   LM Studio  → mechanics (dice, rules, state changes)
   //   Gemini     → creative narration (prose, dialogue, atmosphere)
   //   Dual mode  → both in parallel, merge best of each
@@ -3018,7 +3063,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         }
         setComicPanels(seededPanels)
         const renderedPanels = await Promise.all(
-          seededPanels.map(panel => generatePanelImage(panel, displayedText || narr, comicArtStyle)),
+          seededPanels.map(panel => generatePanelImage(panel, displayedText || narr, comicArtStyle, gs.turn)),
         )
         setComicPanels(renderedPanels)
         const firstImage = renderedPanels.find(p => p.imageUrl)?.imageUrl
@@ -3174,7 +3219,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         const col = encColors[n.encounter_type] || '#9a8860'
         html += `<div style="margin:.4rem 0;padding:8px 12px;border-left:3px solid ${col};font-size:1.05rem;line-height:1.7;background:#181208">
           <span style="font-family:Cinzel,serif;font-size:.8rem;padding:3px 8px;border-radius:3px;background:rgba(0,0,0,.4);color:${col};border:1px solid ${col};margin-right:8px">${n.encounter_type}</span>
-          <strong class="npc-name" data-name="${toAscii(n.npc_name || '')}" style="font-family:Cinzel,serif;font-size:1rem">${toAscii(n.npc_name || '')}</strong>
+          <strong class="npc-name" data-name="${toAscii(n.npc_name || '')}">${toAscii(n.npc_name || '')}</strong>
           ${n.pantheon ? `<span style="font-size:.9rem;color:#5a4d30">[${toAscii(n.pantheon)}]</span>` : ''}
           <span style="color:#9a8860">— ${toAscii(n.behavior || '')}</span>
         </div>`
@@ -3212,7 +3257,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       const hpClass = hpCls(pc.hp, pc.maxHp)
       const injuries = gs.injuries[pc.id] || []
       html += `<div style="font-size:1rem;padding:8px 12px;background:#181208;border-left:2px solid ${pc.id === gs.humanPCId ? '#c9a84c' : '#5a4018'};border-radius:0 2px 2px 0">
-        <div class="character-name" data-name="${toAscii(pc.name)}" style="font-family:Cinzel,serif;font-size:1.05rem">${pc.name}${pc.id === gs.humanPCId ? ' [YOU]' : ''}</div>
+        <div class="character-name" data-name="${toAscii(pc.name)}">${pc.name}${pc.id === gs.humanPCId ? ' [YOU]' : ''}</div>
         <div style="color:${hpClass === 'dead' ? '#444' : hpClass === 'crit' ? '#cc2020' : hpClass === 'hurt' ? '#e08040' : '#9a8860'};font-size:1rem;margin-top:3px">
           ${pc.dead ? '✝ SLAIN' : `${pc.hp}/${pc.maxHp} HP`}
         </div>

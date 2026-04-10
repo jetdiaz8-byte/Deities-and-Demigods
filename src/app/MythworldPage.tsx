@@ -168,6 +168,15 @@ export default function MythworldEngine() {
     [latestNarrativeHtml],
   )
   const shouldCollapseNarration = latestNarrativeText.length > 1200
+  const narrationSentences = useMemo(() => {
+    const src = (lastDMNarrative || '').replace(/\s+/g, ' ').trim()
+    if (!src) return []
+    return src
+      .split(/(?:\.\s+(?=[A-Z])|\.\n+)/g)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(s => (/[.!?]$/.test(s) ? s : `${s}.`))
+  }, [lastDMNarrative])
   const autoNarratedTurnRef = useRef<number>(-1)
 
   // ── TOAST NOTIFICATION SYSTEM ─────────────────────────────────────────
@@ -462,9 +471,21 @@ export default function MythworldEngine() {
                 return (
                   <div
                     key={idx}
-                    className={isLast ? `dm-narration-block bg-[#1a1a0e] text-[#e8dcc8] border border-[#5a4018] ${collapseClass} ${isSpeaking && currentSpeechSentenceIndex !== null ? 'narration-speaking' : ''}` : undefined}
-                    dangerouslySetInnerHTML={{ __html: item.html }}
-                  />
+                    className={isLast ? `dm-narration-block bg-[#1a1a0e] text-[#e8dcc8] border border-[#5a4018] ${collapseClass}` : undefined}
+                  >
+                    {isLast && narrationSentences.length > 0 ? (
+                      narrationSentences.map((sentence, i) => (
+                        <span
+                          key={`narr-sentence-${i}`}
+                          data-sentence-index={i}
+                          className={currentSpeechSentenceIndex === i ? 'narration-speaking' : ''}
+                          dangerouslySetInnerHTML={{ __html: sentence + ' ' }}
+                        />
+                      ))
+                    ) : (
+                      <span dangerouslySetInnerHTML={{ __html: item.html }} />
+                    )}
+                  </div>
                 )
               })}
               {shouldCollapseNarration && (
