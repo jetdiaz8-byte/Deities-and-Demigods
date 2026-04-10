@@ -153,6 +153,25 @@ export function IntroScreen({
   const activeCharacter = cardQueue[activeIndex] || allCharacters[0] || null
   const nextCharacter = cardQueue[(activeIndex + 1) % Math.max(1, cardQueue.length)] || null
   const portraitCount = allCharacters.length
+  const activeLore = ((activeCharacter as any)?.lore || activeCharacter?.personality || '').trim()
+  const activeStats = useMemo(() => {
+    if (!activeCharacter) return [] as Array<{ label: string; value: string }>
+    const pairs: Array<{ label: string; value: string | number | undefined }> = [
+      { label: 'HP', value: activeCharacter.hp },
+      { label: 'AC', value: activeCharacter.AC },
+      { label: 'MR', value: activeCharacter.MR },
+      { label: 'MOVE', value: activeCharacter.move },
+      { label: 'STR', value: activeCharacter.str },
+      { label: 'DEX', value: activeCharacter.dex },
+      { label: 'CON', value: activeCharacter.con },
+      { label: 'INT', value: activeCharacter.int },
+      { label: 'WIS', value: activeCharacter.wis },
+      { label: 'CHA', value: activeCharacter.cha },
+    ]
+    return pairs
+      .filter(p => p.value !== undefined && p.value !== null && String(p.value).trim() !== '' && String(p.value).trim() !== '0')
+      .map(p => ({ label: p.label, value: String(p.value) }))
+  }, [activeCharacter])
 
   useEffect(() => {
     if (!nextCharacter || typeof window === 'undefined') return
@@ -284,7 +303,7 @@ export function IntroScreen({
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(420px,1fr)_minmax(350px,520px)] gap-10 md:gap-12 items-center mt-3 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(360px,1fr)_minmax(280px,350px)_minmax(350px,520px)] gap-6 md:gap-8 items-start mt-3 w-full">
           <div className="justify-self-center md:justify-self-start intro-showcase-area">
             <div className="text-center mb-2 text-[10px] text-[#9a8860]" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}>
               CHARACTER CARD SHOWCASE · {portraitCount} portraits
@@ -328,6 +347,63 @@ export function IntroScreen({
               </>
             )}
           </div>
+
+          {activeCharacter && (
+            <div key={activeCharacter.id} className="hidden md:flex character-detail-panel detail-fade-in">
+              <div className="character-detail-badges">
+                {activeCharacter.level && <span className="character-detail-badge">LVL {activeCharacter.level}</span>}
+                {activeCharacter.divineRank && <span className="character-detail-badge divine">{activeCharacter.divineRank}</span>}
+              </div>
+              <div className="character-detail-section">
+                <div className="character-detail-header">Lore</div>
+                <div className="character-detail-lore">{activeLore}</div>
+              </div>
+              {!!activeStats.length && (
+                <div className="character-detail-section">
+                  <div className="character-detail-header">Stat Block</div>
+                  <div className="character-detail-stats">
+                    {activeStats.map(s => (
+                      <div key={s.label} className="character-detail-stat">
+                        <span className="label">{s.label}</span>
+                        <span className="value">{s.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(activeCharacter.phase1 || activeCharacter.phase2 || activeCharacter.phase3) ? (
+                <div className="character-detail-section">
+                  <div className="character-detail-header">Phases</div>
+                  {activeCharacter.phase1 && <div className="character-detail-phase"><span className="character-detail-phase-label">Phase 1:</span> {activeCharacter.phase1}</div>}
+                  {activeCharacter.phase2 && <div className="character-detail-phase"><span className="character-detail-phase-label">Phase 2:</span> {activeCharacter.phase2}</div>}
+                  {activeCharacter.phase3 && <div className="character-detail-phase"><span className="character-detail-phase-label">Phase 3:</span> {activeCharacter.phase3}</div>}
+                </div>
+              ) : (
+                !!activeCharacter.abilities?.length && (
+                  <div className="character-detail-section">
+                    <div className="character-detail-header">Abilities</div>
+                    <div className="character-detail-abilities">
+                      {activeCharacter.abilities.slice(0, 10).map(ability => (
+                        <span key={ability} className="character-detail-ability">{ability}</span>
+                      ))}
+                    </div>
+                  </div>
+                )
+              )}
+              {(activeCharacter.domain || activeCharacter.symbol) && (
+                <div className="character-detail-section">
+                  <div className="character-detail-header">Sigils</div>
+                  {activeCharacter.domain && <div className="character-detail-domain">Domain: {activeCharacter.domain}</div>}
+                  {activeCharacter.symbol && <div className="character-detail-domain">Symbol: {activeCharacter.symbol}</div>}
+                </div>
+              )}
+              {!!activeCharacter.personality && (
+                <div className="character-detail-personality">
+                  "{activeCharacter.personality}"
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="w-full md:min-w-[350px]">
         {/* Compact Main Card */}
