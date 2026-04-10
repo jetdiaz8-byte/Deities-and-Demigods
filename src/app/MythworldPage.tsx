@@ -249,6 +249,9 @@ export default function MythworldEngine() {
   const [toasts, setToasts] = React.useState<{ id: string; title: string; desc: string; icon: string }[]>([])
   const [relationNotifs, setRelationNotifs] = React.useState<Array<{ id: string; name: string; delta: number }>>([])
   const prevRelationsRef = React.useRef<Record<string, number>>({})
+  const [pathHintExpanded, setPathHintExpanded] = React.useState(false)
+  const latestChoice = consequenceState?.choices?.[0]
+  const showPathHint = !!latestChoice?.alternatives?.length && (gameState?.turn - (latestChoice?.turn || 0) <= 2)
 
   const showToast = React.useCallback((title: string, desc: string, icon: string = '\uD83C\uDFC6') => {
     const id = `toast-${Date.now()}`
@@ -723,8 +726,11 @@ export default function MythworldEngine() {
         <div className="hidden md:block fixed right-2 bottom-28 w-[280px] max-h-[45vh] overflow-y-auto bg-[rgba(10,8,16,0.88)] border border-[#3c2415] rounded-md z-[90]">
           <AlignmentMeter alignment={consequenceState.alignment as any} />
           <NPCRelationsPanel relations={consequenceState.npcRelations as any} />
-          {!!consequenceState.choices?.[0]?.alternatives?.length && (
-            <div className="path-not-taken">The road not taken: {consequenceState.choices[0].alternatives[0]}</div>
+          {showPathHint && (
+            <div className="path-not-taken" onClick={() => setPathHintExpanded(v => !v)}>
+              The road not taken: {latestChoice.alternatives[0]}
+              {pathHintExpanded && <div className="path-not-taken-expanded mt-1">{latestChoice.alternatives.join(' | ')}</div>}
+            </div>
           )}
           {rippleEcho && <div className="ripple-echo-box">Echoes of the Past: {rippleEcho}</div>}
         </div>

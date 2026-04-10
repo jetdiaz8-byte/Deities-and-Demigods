@@ -52,6 +52,17 @@ export default function CombatOverlay({
 }) {
   const latest = combatState.log[combatState.log.length - 1]
   const current = combatState.turnOrder[combatState.currentTurnIndex]
+  const allies = combatState.turnOrder.filter(c => c.isPlayer)
+  const enemies = combatState.turnOrder.filter(c => !c.isPlayer)
+  const statusIcon = (s: string) => {
+    const key = s.toLowerCase()
+    if (key.includes('burn')) return '🔥'
+    if (key.includes('poison')) return '💚'
+    if (key.includes('stun')) return '⚡'
+    if (key.includes('bless')) return '✨'
+    if (key.includes('shield')) return '🛡️'
+    return '•'
+  }
   return (
     <div className={`combat-overlay ${latest?.isCritical ? 'screen-shake' : ''}`}>
       <div className="combat-banner">
@@ -65,7 +76,9 @@ export default function CombatOverlay({
           return (
             <div key={c.id} className={`initiative-slot ${i === combatState.currentTurnIndex ? 'active' : ''} ${c.isPlayer ? 'is-player' : ''} ${c.isDead ? 'dead' : ''}`}>
               <div className="initiative-portrait">{c.portrait ? <img src={c.portrait} alt={c.name} className="initiative-portrait" /> : c.name.charAt(0)}</div>
+              {c.isDead && <span className="initiative-skull">☠</span>}
               <div className="initiative-name">{c.name}</div>
+              <div className="initiative-status">{(c.statusEffects || []).slice(0, 3).map(s => <span key={s}>{statusIcon(s)}</span>)}</div>
               <div className="hp-bar-container">
                 <div className={`hp-bar-fill ${hpClass}`} style={{ width: `${hpPct}%` }} />
                 <span className="hp-text">{Math.max(0, c.hp)}/{c.maxHp}</span>
@@ -79,6 +92,16 @@ export default function CombatOverlay({
           {latest.actor} {latest.action} -> {latest.target || 'target'} {latest.damage ? `for ${latest.damage} ${latest.damageType || ''}` : ''}
         </div>
       )}
+      <div className="combat-columns">
+        <div className="combat-column">
+          <h4>Allies</h4>
+          {allies.map(c => <div key={c.id} className={`combatant-row ${current?.id === c.id ? 'active' : ''}`}>{c.name} ({Math.max(0, c.hp)}/{c.maxHp})</div>)}
+        </div>
+        <div className="combat-column">
+          <h4>Enemies</h4>
+          {enemies.map(c => <div key={c.id} className={`combatant-row ${current?.id === c.id ? 'active' : ''}`}>{c.name} ({Math.max(0, c.hp)}/{c.maxHp})</div>)}
+        </div>
+      </div>
       <div className="combat-log">
         {combatState.log.slice(-10).map((e, idx) => (
           <div key={`${e.actor}-${idx}`} className="combat-log-entry">

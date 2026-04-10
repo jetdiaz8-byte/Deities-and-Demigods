@@ -282,6 +282,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
 }) {
   const [questFilter, setQuestFilter] = React.useState<'all' | 'active' | 'completed' | 'failed'>('all')
   const [expandedChoiceHistory, setExpandedChoiceHistory] = React.useState(false)
+  const [selectedMapPin, setSelectedMapPin] = React.useState<string | null>(null)
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
       <TabsList className="flex border-b border-[#2e2008] bg-transparent flex-shrink-0">
@@ -434,12 +435,32 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
       <TabsContent value="map" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
         <div className="world-map-container">
           <div className="world-map-grid" />
+          {(questJournal?.locations || []).flatMap((loc: any) => (loc.connections || []).map((toId: string) => {
+            const to = (questJournal?.locations || []).find((l: any) => l.id === toId)
+            if (!to) return null
+            const dx = (to.x || 0) - (loc.x || 0)
+            const dy = (to.y || 0) - (loc.y || 0)
+            const len = Math.sqrt(dx * dx + dy * dy)
+            const angle = Math.atan2(dy, dx) * (180 / Math.PI)
+            return <div key={`${loc.id}-${toId}`} className="map-connection-line" style={{ left: `${loc.x}%`, top: `${loc.y}%`, width: `${len}%`, transform: `rotate(${angle}deg)` }} />
+          }))}
           {(questJournal?.locations || []).map((loc: any) => (
-            <button key={loc.id} className={`map-pin ${loc.isCurrentlyAt ? 'current' : ''} ${loc.isDiscovered ? '' : 'undiscovered'}`} style={{ left: `${loc.x}%`, top: `${loc.y}%` }} onClick={() => loc.isDiscovered && !loc.isCurrentlyAt && onTravelToLocation?.(loc.name)}>
+            <button key={loc.id} className={`map-pin ${loc.isCurrentlyAt ? 'current' : ''} ${loc.isDiscovered ? '' : 'undiscovered'}`} style={{ left: `${loc.x}%`, top: `${loc.y}%` }} onClick={() => setSelectedMapPin(prev => prev === loc.id ? null : loc.id)}>
               <span className="map-pin-icon">{loc.icon || '📍'}</span>
               <span className="map-pin-name">{loc.name}</span>
             </button>
           ))}
+          {selectedMapPin && (() => {
+            const loc = (questJournal?.locations || []).find((l: any) => l.id === selectedMapPin)
+            if (!loc) return null
+            const canTravel = !loc.isCurrentlyAt && !!onTravelToLocation
+            return <div className="map-tooltip" style={{ left: `min(calc(${loc.x}% + 10px), calc(100% - 190px))`, top: `min(calc(${loc.y}% + 10px), calc(100% - 120px))` }}>
+              <div className="map-tooltip-name">{loc.icon || '📍'} {loc.name}</div>
+              <div className="map-tooltip-desc">{loc.description || 'Unknown region.'}</div>
+              <div className="map-tooltip-danger">{'☠'.repeat(Math.max(1, Number(loc.dangerLevel || 1)))}</div>
+              <button className="map-travel-btn" disabled={!canTravel} onClick={() => canTravel && onTravelToLocation?.(loc.name)}>Travel Here</button>
+            </div>
+          })()}
         </div>
       </TabsContent>
 
