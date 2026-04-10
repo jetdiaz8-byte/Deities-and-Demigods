@@ -72,6 +72,7 @@ export default function MythworldEngine() {
     browserVoices, browserVoiceName, setBrowserVoiceName,
     isSpeaking,
     narratorMode, setNarratorMode,
+    currentSpeechSentenceIndex,
     tokenUsage,
     conversationHistory,
     narrRef,
@@ -461,7 +462,7 @@ export default function MythworldEngine() {
                 return (
                   <div
                     key={idx}
-                    className={isLast ? `dm-narration-block bg-[#1a1a0e] text-[#e8dcc8] border border-[#5a4018] ${collapseClass}` : undefined}
+                    className={isLast ? `dm-narration-block bg-[#1a1a0e] text-[#e8dcc8] border border-[#5a4018] ${collapseClass} ${isSpeaking && currentSpeechSentenceIndex !== null ? 'narration-speaking' : ''}` : undefined}
                     dangerouslySetInnerHTML={{ __html: item.html }}
                   />
                 )

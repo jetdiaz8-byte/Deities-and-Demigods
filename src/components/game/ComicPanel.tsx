@@ -17,6 +17,7 @@ interface ComicPanelProps {
 }
 
 export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicPanelProps) {
+  const [expanded, setExpanded] = React.useState<ComicPanelData | null>(null)
   if (!panels || panels.length === 0) return null;
 
   const gridClass = panels.length <= 2
@@ -26,9 +27,13 @@ export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicP
       : 'comic-grid comic-grid-4';
 
   return (
+    <>
     <div className={gridClass}>
       {panels.map((panel) => (
-        <div key={panel.id} className="comic-panel">
+        <div key={panel.id} className="comic-panel border border-[#7a5f20] shadow-[0_0_0_1px_rgba(212,175,55,0.2)_inset]">
+          <div className="absolute top-0 left-0 right-0 z-10 px-2 py-1 text-[0.62rem] uppercase tracking-[0.12em] text-[#e4c873] bg-[linear-gradient(180deg,rgba(12,9,6,0.9),rgba(12,9,6,0.1))]">
+            Fantasy Scene
+          </div>
           {panel.isGenerating ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[var(--bg-secondary)]">
               <div className="spinner" />
@@ -43,7 +48,7 @@ export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicP
               <span className="text-[0.625rem] text-[var(--text-muted)] text-center">✦</span>
             </div>
           ) : panel.imageUrl ? (
-            <img src={panel.imageUrl} alt={panel.caption} loading="lazy" />
+            <img src={panel.imageUrl} alt={panel.caption} loading="lazy" className="cursor-zoom-in" onClick={() => setExpanded(panel)} />
           ) : (
             <div
               className="absolute inset-0 flex flex-col items-center justify-center text-center px-3"
@@ -65,5 +70,19 @@ export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicP
         </div>
       ))}
     </div>
+    {expanded && (
+      <div className="fixed inset-0 z-[220] bg-black/90 p-4 flex items-center justify-center" onClick={() => setExpanded(null)}>
+        <button
+          onClick={() => setExpanded(null)}
+          className="absolute top-4 right-4 px-3 py-1 rounded bg-black/60 border border-[#7a5f20] text-[#e4c873]"
+        >
+          Close
+        </button>
+        <div className="w-full max-w-5xl max-h-[92vh] overflow-hidden rounded-lg border border-[#7a5f20] bg-[#0e0a06]" onClick={(e) => e.stopPropagation()}>
+          <img src={expanded.imageUrl} alt={expanded.caption} className="w-full h-full object-contain" />
+        </div>
+      </div>
+    )}
+    </>
   );
 }

@@ -84,6 +84,7 @@ export function useGameEngine() {
   const [lmStudioModel, setLmStudioModel] = useState('default')
   const [comicMode, setComicMode] = useState<boolean>(false)
   const [comicPanels, setComicPanels] = useState<ComicPanelData[]>([])
+  const [sceneImageByTurn, setSceneImageByTurn] = useState<Record<number, string>>({})
   const [comicArtStyle, setComicArtStyle] = useState<'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor'>('larry-elmore')
   const [settingsHydrated, setSettingsHydrated] = useState(false)
 
@@ -147,6 +148,7 @@ export function useGameEngine() {
   // Available browser voices — populated on mount
   const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([])
   const [browserVoiceName, setBrowserVoiceName] = useState<string>('')
+  const [currentSpeechSentenceIndex, setCurrentSpeechSentenceIndex] = useState<number | null>(null)
 
   const audioRef = useRef<HTMLAudioElement | null>(null)
   // Browser voice ref for cancel support
@@ -265,17 +267,33 @@ export function useGameEngine() {
 
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
-    fetch('/api/get-key')
-      .then(async r => {
-        if (!r.ok) return null
-        return r.json().catch(() => null)
-      })
-      .then(d => {
-        if (d?.key && typeof d.key === 'string') setServerKey(d.key)
-      })
-      .catch(() => {})
+    const savedKey = safeLocalStorageGetItem('mythworld_openrouter_key')
+    if (savedKey) {
+      setOpenrouterKey(savedKey)
+      setServerKey(savedKey)
+    } else {
+      fetch('/api/get-key')
+        .then(async r => {
+          if (!r.ok) return null
+          return r.json().catch(() => null)
+        })
+        .then(d => {
+          if (d?.key && typeof d.key === 'string') {
+            setServerKey(d.key)
+            setOpenrouterKey(d.key)
+            safeLocalStorageSetItem('mythworld_openrouter_key', d.key)
+          }
+        })
+        .catch(() => {})
+    }
     loadSaveSlots()
   }, [])
+
+  useEffect(() => {
+    if (openrouterKey && openrouterKey.trim()) {
+      safeLocalStorageSetItem('mythworld_openrouter_key', openrouterKey.trim())
+    }
+  }, [openrouterKey])
 
   // Cleanup any pending audio fade interval on unmount
   useEffect(() => {
@@ -467,6 +485,17 @@ export function useGameEngine() {
     return chunks.length > 0 ? chunks : [text.slice(0, maxLength)]
   }
 
+  const splitTextIntoSentences = (text: string): string[] => {
+    const cleaned = text.replace(/\s+/g, ' ').trim()
+    if (!cleaned) return []
+    const split = cleaned
+      .split(/(?:\.\s+(?=[A-Z])|\.\n+)/g)
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(s => (/[.!?]$/.test(s) ? s : `${s}.`))
+    return split.length ? split : [cleaned]
+  }
+
   const abortSpeakRef = useRef(false)
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -493,16 +522,23 @@ export function useGameEngine() {
           return
         }
 
-        const chunks = splitTextIntoChunks(text, 280)
-        let idx = 0
+      const sentences = splitTextIntoSentences(text)
+      let idx = 0
+      let watchdogTimer: ReturnType<typeof setInterval> | null = null
 
         const speakNext = () => {
-          if (abortSpeakRef.current || idx >= chunks.length) {
+          if (abortSpeakRef.current || idx >= sentences.length) {
             browserUtteranceRef.current = null
+            setCurrentSpeechSentenceIndex(null)
+            if (watchdogTimer) {
+              clearInterval(watchdogTimer)
+              watchdogTimer = null
+            }
             resolve()
             return
           }
-          const chunk = chunks[idx]?.trim()
+          const chunk = sentences[idx]?.trim()
+          const sentenceIndex = idx
           idx += 1
           if (!chunk) {
             window.setTimeout(speakNext, 40)
@@ -518,13 +554,37 @@ export function useGameEngine() {
           utterance.rate = Math.max(0.5, Math.min(2, ttsSpeed))
           utterance.pitch = 0.9
           utterance.volume = 0.9
+          utterance.onstart = () => {
+            setCurrentSpeechSentenceIndex(sentenceIndex)
+            if (watchdogTimer) clearInterval(watchdogTimer)
+            // Chrome workaround: nudge speech engine every ~12s.
+            watchdogTimer = setInterval(() => {
+              try {
+                if (!abortSpeakRef.current) {
+                  window.speechSynthesis.pause()
+                  window.setTimeout(() => window.speechSynthesis.resume(), 50)
+                }
+              } catch {
+                // ignore watchdog errors
+              }
+            }, 12000)
+          }
 
           utterance.onend = () => {
+            if (watchdogTimer) {
+              clearInterval(watchdogTimer)
+              watchdogTimer = null
+            }
             // iOS Safari is more stable with a brief pause between utterances.
             window.setTimeout(speakNext, 80)
           }
           utterance.onerror = (e) => {
             browserUtteranceRef.current = null
+            setCurrentSpeechSentenceIndex(null)
+            if (watchdogTimer) {
+              clearInterval(watchdogTimer)
+              watchdogTimer = null
+            }
             if (abortSpeakRef.current || e.error === 'canceled' || e.error === 'interrupted') {
               resolve()
               return
@@ -626,6 +686,7 @@ export function useGameEngine() {
       setIsSpeaking(false)
       audioRef.current = null
       browserUtteranceRef.current = null
+      setCurrentSpeechSentenceIndex(null)
     }
   }
 
@@ -642,6 +703,7 @@ export function useGameEngine() {
       window.speechSynthesis.cancel()
     }
     browserUtteranceRef.current = null
+    setCurrentSpeechSentenceIndex(null)
     // Stop Edge TTS audio
     if (audioRef.current) {
       // Smart fade over 300ms
@@ -827,6 +889,7 @@ export function useGameEngine() {
   const startNewCampaign = async () => {
     clearEntityCache()
     setComicPanels([])
+    setSceneImageByTurn({})
     await fetchAvailableHeroes()
     setGamePhase('party_select')
   }
@@ -1269,6 +1332,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: toAscii(userMsg) },
         ]
+        const turnAwareMaxTokens = gs.turn <= 0 ? 2048 : 4096
         const r = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -1277,8 +1341,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           body: JSON.stringify({
             model,
             messages,
-            max_tokens: 8192,
+            max_tokens: turnAwareMaxTokens,
             temperature: 0.9,
+            stream: true,
           }),
         })
         if (r.status === 429) {
@@ -1307,8 +1372,47 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           const errMsg = errData?.error?.message || `HTTP ${r.status}`
           throw new Error(`OpenRouter ${r.status}: ${errMsg}`)
         }
-        const data = await r.json()
-        const text = data.choices?.[0]?.message?.content || ''
+        let text = ''
+        const contentType = r.headers.get('content-type') || ''
+        if (contentType.includes('text/event-stream') && r.body) {
+          const reader = r.body.getReader()
+          const decoder = new TextDecoder('utf-8')
+          let buffer = ''
+          let done = false
+          while (!done) {
+            const { value, done: readerDone } = await reader.read()
+            if (readerDone) break
+            buffer += decoder.decode(value, { stream: true })
+            const lines = buffer.split('\n')
+            buffer = lines.pop() || ''
+            for (const rawLine of lines) {
+              const line = rawLine.trim()
+              if (!line.startsWith('data:')) continue
+              const payloadText = line.replace(/^data:\s*/, '')
+              if (payloadText === '[DONE]') {
+                done = true
+                break
+              }
+              try {
+                const payload = JSON.parse(payloadText)
+                const delta = payload?.choices?.[0]?.delta?.content
+                  ?? payload?.choices?.[0]?.message?.content
+                  ?? ''
+                if (delta) {
+                  text += delta
+                  // Progressive narration in UI while stream arrives.
+                  setDisplayedNarrative(text)
+                  setLastDMNarrative(text)
+                }
+              } catch {
+                // ignore malformed SSE line
+              }
+            }
+          }
+        } else {
+          const data = await r.json()
+          text = data.choices?.[0]?.message?.content || ''
+        }
         if (!text || text.trim().length < 10) throw new Error('OpenRouter returned empty response')
         console.log('OpenRouter response: ' + text.length + ' chars, ' + (isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn))
         updateTokenUsage(totalInput, text)
@@ -2907,11 +3011,20 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
           ((res.dice_rolls || []).length > 0) ||
           ((res.damage_dealt || []).length > 0)
         const seededPanels = await generateComicPanels(displayedText || narr, isCombatScene, { artStyle: comicArtStyle, maxPanels: 4 })
+        const cachedTurnImage = sceneImageByTurn[gs.turn]
+        if (cachedTurnImage) {
+          setComicPanels(seededPanels.map(panel => ({ ...panel, imageUrl: cachedTurnImage, isGenerating: false, error: undefined })))
+          return
+        }
         setComicPanels(seededPanels)
         const renderedPanels = await Promise.all(
           seededPanels.map(panel => generatePanelImage(panel, displayedText || narr, comicArtStyle)),
         )
         setComicPanels(renderedPanels)
+        const firstImage = renderedPanels.find(p => p.imageUrl)?.imageUrl
+        if (firstImage) {
+          setSceneImageByTurn(prev => ({ ...prev, [gs.turn]: firstImage }))
+        }
       } catch (comicErr) {
         console.warn('Comic panel generation failed:', comicErr)
         setComicPanels([])
@@ -3061,7 +3174,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         const col = encColors[n.encounter_type] || '#9a8860'
         html += `<div style="margin:.4rem 0;padding:8px 12px;border-left:3px solid ${col};font-size:1.05rem;line-height:1.7;background:#181208">
           <span style="font-family:Cinzel,serif;font-size:.8rem;padding:3px 8px;border-radius:3px;background:rgba(0,0,0,.4);color:${col};border:1px solid ${col};margin-right:8px">${n.encounter_type}</span>
-          <strong style="font-family:Cinzel,serif;font-size:1rem;color:#c9a84c">${toAscii(n.npc_name || '')}</strong>
+          <strong class="npc-name" data-name="${toAscii(n.npc_name || '')}" style="font-family:Cinzel,serif;font-size:1rem">${toAscii(n.npc_name || '')}</strong>
           ${n.pantheon ? `<span style="font-size:.9rem;color:#5a4d30">[${toAscii(n.pantheon)}]</span>` : ''}
           <span style="color:#9a8860">— ${toAscii(n.behavior || '')}</span>
         </div>`
@@ -3099,7 +3212,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       const hpClass = hpCls(pc.hp, pc.maxHp)
       const injuries = gs.injuries[pc.id] || []
       html += `<div style="font-size:1rem;padding:8px 12px;background:#181208;border-left:2px solid ${pc.id === gs.humanPCId ? '#c9a84c' : '#5a4018'};border-radius:0 2px 2px 0">
-        <div style="font-family:Cinzel,serif;font-size:1.05rem;color:#c9a84c">${pc.name}${pc.id === gs.humanPCId ? ' [YOU]' : ''}</div>
+        <div class="character-name" data-name="${toAscii(pc.name)}" style="font-family:Cinzel,serif;font-size:1.05rem">${pc.name}${pc.id === gs.humanPCId ? ' [YOU]' : ''}</div>
         <div style="color:${hpClass === 'dead' ? '#444' : hpClass === 'crit' ? '#cc2020' : hpClass === 'hurt' ? '#e08040' : '#9a8860'};font-size:1rem;margin-top:3px">
           ${pc.dead ? '✝ SLAIN' : `${pc.hp}/${pc.maxHp} HP`}
         </div>
@@ -4226,6 +4339,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     browserVoices, browserVoiceName, setBrowserVoiceName,
     ttsSpeed, setTtsSpeed,
     narratorMode, setNarratorMode,
+    currentSpeechSentenceIndex,
     isSpeaking, setIsSpeaking,
     audioCache, setAudioCache,
     displayedNarrative, setDisplayedNarrative,

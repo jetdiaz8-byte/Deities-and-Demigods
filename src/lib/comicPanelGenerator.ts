@@ -41,8 +41,15 @@ export function buildPanelCaption(narration: string, index: number, total: numbe
 
 export function buildImagePrompt(narration: string, caption: string, artStyle: string): string {
   const stylePrompt = STYLE_PROMPTS[artStyle] || STYLE_PROMPTS['larry-elmore'];
-  const combined = (caption || narration).slice(0, 200);
-  return stylePrompt + ', ' + combined + ', no text, no speech bubbles in image, no UI elements';
+  const source = `${caption || ''} ${narration || ''}`.toLowerCase();
+  let sceneSeed = 'fantasy landscape with dramatic sky';
+  if (/\bocean|sea|ship|harbor|wave|cliff|coast\b/.test(source)) sceneSeed = 'stormy ocean, ship, sea cliff';
+  else if (/\bforest|grove|woods|tree|ruin|runes\b/.test(source)) sceneSeed = 'enchanted forest, ancient ruins';
+  else if (/\bdungeon|catacomb|crypt|torch|corridor|cavern\b/.test(source)) sceneSeed = 'dungeon stone corridors, torchlight';
+  else if (/\bcity|town|market|street|castle gate|village\b/.test(source)) sceneSeed = 'medieval town marketplace';
+  else if (/\bcombat|battle|attack|blood|duel|war\b/.test(source)) sceneSeed = 'battlefield with dramatic action';
+  const combined = (caption || narration).slice(0, 140);
+  return `dark fantasy ${sceneSeed}, ${combined}, dramatic lighting, oil painting style, D&D illustration, atmospheric, no text`;
 }
 
 export async function generateComicPanels(
@@ -92,14 +99,8 @@ export async function generatePanelImage(
 
   const prompt = buildImagePrompt(narration, panel.caption, artStyle);
   try {
-    const res = await fetch('/api/generate-image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, artStyle }),
-    });
-    if (!res.ok) return { ...panel, imageUrl: placeholderImage, isGenerating: false, error: 'generate-failed' };
-    const data = await res.json();
-    return { ...panel, imageUrl: data?.imageUrl || placeholderImage, isGenerating: false };
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true`
+    return { ...panel, imageUrl: url || placeholderImage, isGenerating: false };
   } catch {
     return { ...panel, imageUrl: placeholderImage, isGenerating: false, error: 'network-error' };
   }

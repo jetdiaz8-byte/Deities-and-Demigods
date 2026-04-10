@@ -49,6 +49,8 @@ export function IntroScreen({
   const [lmConnected, setLmConnected] = useState<boolean | null>(null)
   const [lmModels, setLmModels] = useState<{ id: string }[]>([])
   const [lmChecking, setLmChecking] = useState(false)
+  const [marqueeOffset, setMarqueeOffset] = useState(0)
+  const [activeMarqueeName, setActiveMarqueeName] = useState<string | null>(null)
 
   const checkLmConnection = async () => {
     setLmChecking(true)
@@ -134,11 +136,24 @@ export function IntroScreen({
     return shuffled
   }, [])
 
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMarqueeOffset(prev => (prev + 8) % Math.max(1, marqueePortraits.length))
+    }, 12000)
+    return () => clearInterval(timer)
+  }, [marqueePortraits.length])
+
+  const rotatedMarquee = useMemo(() => {
+    if (!marqueePortraits.length) return []
+    return [...marqueePortraits.slice(marqueeOffset), ...marqueePortraits.slice(0, marqueeOffset)]
+  }, [marqueePortraits, marqueeOffset])
+
+  const extractPortraitName = (src: string) => src.split('/').pop()?.replace('.png', '').replace(/_/g, ' ') || 'Unknown'
   // Split into 4 strips for all 4 edges
-  const topStrip = useMemo(() => marqueePortraits.filter((_, i) => i % 4 === 0), [marqueePortraits])
-  const bottomStrip = useMemo(() => marqueePortraits.filter((_, i) => i % 4 === 1), [marqueePortraits])
-  const leftStrip = useMemo(() => marqueePortraits.filter((_, i) => i % 4 === 2), [marqueePortraits])
-  const rightStrip = useMemo(() => marqueePortraits.filter((_, i) => i % 4 === 3), [marqueePortraits])
+  const topStrip = useMemo(() => rotatedMarquee.filter((_, i) => i % 4 === 0), [rotatedMarquee])
+  const bottomStrip = useMemo(() => rotatedMarquee.filter((_, i) => i % 4 === 1), [rotatedMarquee])
+  const leftStrip = useMemo(() => rotatedMarquee.filter((_, i) => i % 4 === 2), [rotatedMarquee])
+  const rightStrip = useMemo(() => rotatedMarquee.filter((_, i) => i % 4 === 3), [rotatedMarquee])
 
   return (
     <div className="min-h-screen bg-[#060403] flex flex-col items-center justify-center p-4 overflow-hidden relative">
@@ -221,7 +236,7 @@ export function IntroScreen({
         }
         .mq-h {
           position: fixed; left: 0; right: 0; z-index: 2;
-          display: flex; align-items: center; overflow: hidden; pointer-events: none;
+          display: flex; align-items: center; overflow: hidden; pointer-events: auto;
         }
         .mq-h--top {
           top: 0; height: 146px;
@@ -254,8 +269,27 @@ export function IntroScreen({
         .mq-v {
           position: fixed; top: 0; bottom: 0; z-index: 2;
           display: flex; flex-direction: column; align-items: center;
-          overflow: hidden; pointer-events: none;
+          overflow: hidden; pointer-events: auto;
         }
+        .marquee-item-wrap { position: relative; }
+        .name-overlay {
+          position: absolute;
+          left: 50%;
+          bottom: -18px;
+          transform: translateX(-50%);
+          white-space: nowrap;
+          font-size: 10px;
+          color: #f0c860;
+          background: rgba(6,4,3,0.85);
+          border: 1px solid rgba(212,175,55,0.35);
+          border-radius: 4px;
+          padding: 2px 6px;
+          opacity: 0;
+          transition: opacity .2s ease;
+          pointer-events: none;
+          text-transform: capitalize;
+        }
+        .marquee-item-wrap:hover .name-overlay { opacity: 1; }
         .mq-v--left {
           left: 0; width: 84px;
           background: linear-gradient(to right, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 40%, transparent 100%);
@@ -297,7 +331,10 @@ export function IntroScreen({
       <div className="mq-h mq-h--top" aria-hidden="true">
         <div className="mq-h__track">
           {[...topStrip, ...topStrip].map((src, i) => (
-            <img key={`t-${i}`} src={src} alt="" className="mq-h__item" loading="lazy" />
+            <div key={`t-${i}`} className="marquee-item-wrap" onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `t-${i}` ? null : `t-${i}`)}>
+              <img src={src} alt={extractPortraitName(src)} className="mq-h__item" loading="lazy" />
+              <span className="name-overlay" style={{ opacity: activeMarqueeName === `t-${i}` ? 1 : undefined }}>{extractPortraitName(src)}</span>
+            </div>
           ))}
         </div>
       </div>
@@ -306,7 +343,10 @@ export function IntroScreen({
       <div className="mq-h mq-h--bot" aria-hidden="true">
         <div className="mq-h__track">
           {[...bottomStrip, ...bottomStrip].map((src, i) => (
-            <img key={`b-${i}`} src={src} alt="" className="mq-h__item" loading="lazy" />
+            <div key={`b-${i}`} className="marquee-item-wrap" onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `b-${i}` ? null : `b-${i}`)}>
+              <img src={src} alt={extractPortraitName(src)} className="mq-h__item" loading="lazy" />
+              <span className="name-overlay" style={{ opacity: activeMarqueeName === `b-${i}` ? 1 : undefined }}>{extractPortraitName(src)}</span>
+            </div>
           ))}
         </div>
       </div>
@@ -315,7 +355,10 @@ export function IntroScreen({
       <div className="mq-v mq-v--left" aria-hidden="true">
         <div className="mq-v__track">
           {[...leftStrip, ...leftStrip].map((src, i) => (
-            <img key={`l-${i}`} src={src} alt="" className="mq-v__item" loading="lazy" />
+            <div key={`l-${i}`} className="marquee-item-wrap" onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `l-${i}` ? null : `l-${i}`)}>
+              <img src={src} alt={extractPortraitName(src)} className="mq-v__item" loading="lazy" />
+              <span className="name-overlay" style={{ opacity: activeMarqueeName === `l-${i}` ? 1 : undefined }}>{extractPortraitName(src)}</span>
+            </div>
           ))}
         </div>
       </div>
@@ -324,7 +367,10 @@ export function IntroScreen({
       <div className="mq-v mq-v--right" aria-hidden="true">
         <div className="mq-v__track">
           {[...rightStrip, ...rightStrip].map((src, i) => (
-            <img key={`r-${i}`} src={src} alt="" className="mq-v__item" loading="lazy" />
+            <div key={`r-${i}`} className="marquee-item-wrap" onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `r-${i}` ? null : `r-${i}`)}>
+              <img src={src} alt={extractPortraitName(src)} className="mq-v__item" loading="lazy" />
+              <span className="name-overlay" style={{ opacity: activeMarqueeName === `r-${i}` ? 1 : undefined }}>{extractPortraitName(src)}</span>
+            </div>
           ))}
         </div>
       </div>

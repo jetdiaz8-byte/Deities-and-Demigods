@@ -23,11 +23,13 @@ export async function POST(request: Request) {
       model = OPENROUTER_MODEL,
       max_tokens,
       temperature,
+      stream = false,
     }: {
       messages?: OpenRouterMessage[]
       model?: string
       max_tokens?: number
       temperature?: number
+      stream?: boolean
     } = body ?? {}
 
     const requestedModel = OPENROUTER_FALLBACK_MODELS.includes(model) ? model : OPENROUTER_MODEL
@@ -47,8 +49,29 @@ export async function POST(request: Request) {
         messages,
         max_tokens: maxTokens,
         temperature: temperature ?? 0.9,
+        stream,
       }),
     })
+
+    if (stream) {
+      if (!res.ok) {
+        const text = await res.text().catch(() => '')
+        return new Response(text || JSON.stringify({ error: 'Stream request failed' }), {
+          status: res.status,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
+      }
+      return new Response(res.body, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-cache, no-transform',
+          Connection: 'keep-alive',
+        },
+      })
+    }
 
     const data = await res.json()
 
