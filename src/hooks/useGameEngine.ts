@@ -31,6 +31,121 @@ import {
   type AchievementTracker,
 } from '@/lib/achievements'
 
+interface CombatantTurn {
+  id: string
+  name: string
+  portrait: string
+  initiative: number
+  hp: number
+  maxHp: number
+  ac: number
+  isPlayer: boolean
+  statusEffects: string[]
+  isDead: boolean
+}
+
+interface CombatLogEntry {
+  round: number
+  actor: string
+  action: string
+  target?: string
+  damage?: number
+  damageType?: string
+  isCritical: boolean
+  result: 'hit' | 'miss' | 'save' | 'death' | 'heal' | 'flee'
+  narration: string
+}
+
+interface CombatState {
+  isActive: boolean
+  round: number
+  turnOrder: CombatantTurn[]
+  currentTurnIndex: number
+  phase: 'initiative' | 'player_turn' | 'enemy_turn' | 'resolution'
+  log: CombatLogEntry[]
+  victory: 'players' | 'enemies' | null
+}
+
+interface QuestObjective {
+  text: string
+  isCompleted: boolean
+  isOptional: boolean
+}
+
+interface QuestEntry {
+  id: string
+  title: string
+  description: string
+  type: 'main' | 'side' | 'faction' | 'personal'
+  status: 'active' | 'completed' | 'failed' | 'discovered'
+  objectives: QuestObjective[]
+  location?: string
+  reward?: string
+  givenBy?: string
+  turnGiven: number
+  turnCompleted?: number
+}
+
+interface WorldLocation {
+  id: string
+  name: string
+  description: string
+  type: 'city' | 'dungeon' | 'wilderness' | 'temple' | 'portal' | 'other'
+  isDiscovered: boolean
+  isCurrentlyAt: boolean
+  x: number
+  y: number
+  connections: string[]
+  questIds: string[]
+  turnDiscovered: number
+  dangerLevel: 1 | 2 | 3 | 4 | 5
+  icon: string
+}
+
+interface QuestJournalState {
+  quests: QuestEntry[]
+  locations: WorldLocation[]
+  totalQuestsCompleted: number
+  totalLocationsDiscovered: number
+}
+
+interface MoralAlignment {
+  axis_law_chaos: number
+  axis_good_evil: number
+  dominant: string
+  title: string
+}
+
+interface NPCRelation {
+  npcId: string
+  npcName: string
+  affinity: number
+  trust: number
+  status: 'stranger' | 'acquaintance' | 'friend' | 'ally' | 'rival' | 'enemy' | 'nemesis'
+  lastInteraction: number
+  history: { turn: number; action: string; affinityChange: number; trustChange: number }[]
+}
+
+interface ChoiceMoment {
+  turn: number
+  situation: string
+  chosen: string
+  alternatives: string[]
+  immediateConsequence: string
+  alignmentShift?: { law_chaos: number; good_evil: number }
+  rippleTriggered: boolean
+  rippleTurn?: number
+  rippleDescription?: string
+}
+
+interface ConsequenceState {
+  alignment: MoralAlignment
+  npcRelations: NPCRelation[]
+  choices: ChoiceMoment[]
+  pendingRipples: ChoiceMoment[]
+  totalChoicesMade: number
+}
+
 export function useGameEngine() {
 
   const deepClone = <T,>(value: T): T => {
@@ -110,6 +225,50 @@ export function useGameEngine() {
   useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_lmStudioModel', lmStudioModel) }, [lmStudioModel, settingsHydrated])
   useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_comicMode', comicMode ? 'true' : 'false') }, [comicMode, settingsHydrated])
   useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_comicArtStyle', comicArtStyle) }, [comicArtStyle, settingsHydrated])
+  useEffect(() => {
+    const raw = safeLocalStorageGetItem('mythworld_combat_state')
+    if (!raw) return
+    try {
+      const parsed = JSON.parse(raw) as CombatState
+      setCombatState({ ...parsed, isActive: false, victory: null })
+    } catch {
+      // ignore invalid persisted data
+    }
+  }, [])
+  useEffect(() => {
+    safeLocalStorageSetItem('mythworld_combat_state', JSON.stringify(combatState))
+  }, [combatState])
+
+  useEffect(() => {
+    const raw = safeLocalStorageGetItem('mythworld_quest_journal')
+    if (!raw) return
+    try {
+      setQuestJournal(JSON.parse(raw) as QuestJournalState)
+    } catch {
+      // ignore invalid persisted data
+    }
+  }, [])
+  useEffect(() => {
+    safeLocalStorageSetItem('mythworld_quest_journal', JSON.stringify(questJournal))
+  }, [questJournal])
+
+  useEffect(() => {
+    const raw = safeLocalStorageGetItem('mythworld_consequence_state')
+    if (!raw) return
+    try {
+      const parsed = JSON.parse(raw) as ConsequenceState
+      const recomputed = computeAlignment(parsed.alignment.axis_law_chaos, parsed.alignment.axis_good_evil)
+      setConsequenceState({
+        ...parsed,
+        alignment: { ...parsed.alignment, ...recomputed },
+      })
+    } catch {
+      // ignore invalid persisted data
+    }
+  }, [])
+  useEffect(() => {
+    safeLocalStorageSetItem('mythworld_consequence_state', JSON.stringify(consequenceState))
+  }, [consequenceState])
   const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
   const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
   const [selectedParty, setSelectedParty] = useState<string[]>([])
@@ -216,6 +375,31 @@ export function useGameEngine() {
   
   // Combat Flash Type — exported for page.tsx overlay
   const [combatFlashType, setCombatFlashType] = useState<'damage' | 'heal' | 'crit' | ''>('')
+  const [combatState, setCombatState] = useState<CombatState>({
+    isActive: false,
+    round: 0,
+    turnOrder: [],
+    currentTurnIndex: 0,
+    phase: 'initiative',
+    log: [],
+    victory: null,
+  })
+  const [combatOverlayMinimized, setCombatOverlayMinimized] = useState(false)
+  const [questJournal, setQuestJournal] = useState<QuestJournalState>({
+    quests: [],
+    locations: [],
+    totalQuestsCompleted: 0,
+    totalLocationsDiscovered: 0,
+  })
+  const [consequenceState, setConsequenceState] = useState<ConsequenceState>({
+    alignment: { axis_law_chaos: 0, axis_good_evil: 0, dominant: 'True Neutral', title: 'Undecided Soul' },
+    npcRelations: [],
+    choices: [],
+    pendingRipples: [],
+    totalChoicesMade: 0,
+  })
+  const [rippleEcho, setRippleEcho] = useState<string | null>(null)
+  const combatQuietTurnsRef = useRef(0)
   const triggerCombatFlash = (type: 'damage' | 'heal' | 'crit') => {
     setCombatFlashType(type)
     setTimeout(() => setCombatFlashType(''), 500)
@@ -533,6 +717,205 @@ export function useGameEngine() {
     cleaned = cleaned.replace(/\s+/g, ' ').trim()
     const firstPara = cleaned.split(/\n\n+/)[0]?.trim() || cleaned
     return firstPara
+  }
+
+  const computeAlignment = (lc: number, ge: number): { dominant: string; title: string } => {
+    const lawChaos = lc >= 30 ? 'Lawful' : lc <= -30 ? 'Chaotic' : 'Neutral'
+    const goodEvil = ge >= 30 ? 'Good' : ge <= -30 ? 'Evil' : 'Neutral'
+    const dominant = lawChaos === 'Neutral' && goodEvil === 'Neutral' ? 'True Neutral' : `${lawChaos} ${goodEvil}`
+    const magnitude = Math.abs(lc) + Math.abs(ge)
+    let title = 'Undecided Soul'
+    if (magnitude > 150) title = ge >= 0 ? 'Exalted Paragon' : 'Dread Tyrant'
+    else if (magnitude > 100) title = ge >= 0 ? 'Righteous Champion' : 'Dark Overlord'
+    else if (magnitude > 50) title = ge >= 0 ? 'Noble Hero' : 'Rising Villain'
+    else if (magnitude > 20) title = 'Fated Wanderer'
+    return { dominant, title }
+  }
+
+  const computeNPCStatus = (affinity: number): NPCRelation['status'] => {
+    if (affinity >= 80) return 'ally'
+    if (affinity >= 50) return 'friend'
+    if (affinity >= 25) return 'acquaintance'
+    if (affinity >= 5) return 'acquaintance'
+    if (affinity <= -80) return 'nemesis'
+    if (affinity <= -50) return 'enemy'
+    if (affinity <= -25) return 'rival'
+    return 'stranger'
+  }
+
+  const parseCombatData = (text: string): { cleanText: string; combatData: Partial<CombatState> } => {
+    const m = text.match(/<combat_data>([\s\S]*?)<\/combat_data>/i)
+    if (!m) {
+      const combatKeywords = /\b(attack|slash|spell|hit|damage|hp|initiative|round|strike|blast)\b/i.test(text)
+      return { cleanText: text, combatData: combatKeywords ? { isActive: combatState.isActive || true } : {} }
+    }
+    let parsed: any = null
+    try { parsed = JSON.parse(m[1]) } catch { parsed = null }
+    const cleanText = text.replace(m[0], '').trim()
+    if (!parsed) return { cleanText, combatData: {} }
+    const turnOrder: CombatantTurn[] = (parsed.turn_order || []).map((c: any) => ({
+      id: c.id || c.portrait || c.name?.toLowerCase().replace(/\s+/g, '-') || generateId(),
+      name: c.name || 'Unknown',
+      portrait: c.portrait ? `/portraits/heroes/${c.portrait}.png` : '',
+      initiative: Number(c.initiative || 0),
+      hp: Number(c.hp || 0),
+      maxHp: Number(c.max_hp || c.maxHp || 1),
+      ac: Number(c.ac || 10),
+      isPlayer: !!c.is_player,
+      statusEffects: Array.isArray(c.status) ? c.status : [],
+      isDead: Number(c.hp || 0) <= 0,
+    }))
+    const log: CombatLogEntry[] = (parsed.log || []).map((l: any) => ({
+      round: Number(parsed.round || combatState.round || 1),
+      actor: l.actor || 'Unknown',
+      action: l.action || 'acts',
+      target: l.target,
+      damage: typeof l.damage === 'number' ? l.damage : undefined,
+      damageType: l.damage_type,
+      isCritical: !!l.critical,
+      result: l.result || 'hit',
+      narration: l.narration || `${l.actor || 'Someone'} ${l.action || 'acts'}`,
+    }))
+    return {
+      cleanText,
+      combatData: {
+        isActive: true,
+        round: Number(parsed.round || combatState.round || 1),
+        turnOrder,
+        currentTurnIndex: Number(parsed.current_turn || 0),
+        phase: parsed.phase || 'resolution',
+        log: [...combatState.log, ...log].slice(-80),
+        victory: parsed.victory ?? null,
+      },
+    }
+  }
+
+  const parseQuestData = (text: string): { cleanText: string; questData: Partial<QuestJournalState> } => {
+    const m = text.match(/<quest_data>([\s\S]*?)<\/quest_data>/i)
+    if (!m) return { cleanText: text, questData: {} }
+    let parsed: any = null
+    try { parsed = JSON.parse(m[1]) } catch { parsed = null }
+    const cleanText = text.replace(m[0], '').trim()
+    if (!parsed) return { cleanText, questData: {} }
+    const quests = [...questJournal.quests]
+    const locations = [...questJournal.locations]
+    let totalQuestsCompleted = questJournal.totalQuestsCompleted
+    let totalLocationsDiscovered = questJournal.totalLocationsDiscovered
+    for (const q of (parsed.quests || [])) {
+      const idx = quests.findIndex(x => x.id === q.id)
+      const normalized: QuestEntry = {
+        id: q.id,
+        title: q.title,
+        description: q.description,
+        type: q.type || 'side',
+        status: q.status || 'active',
+        objectives: (q.objectives || []).map((o: any) => ({ text: o.text, isCompleted: !!(o.completed ?? o.isCompleted), isOptional: !!(o.optional ?? o.isOptional) })),
+        location: q.location,
+        reward: q.reward,
+        givenBy: q.givenBy,
+        turnGiven: gameState.turn,
+      }
+      if (idx === -1) quests.push(normalized)
+      else quests[idx] = { ...quests[idx], ...normalized }
+      if (normalized.status === 'completed' && idx > -1 && quests[idx].status !== 'completed') totalQuestsCompleted += 1
+    }
+    for (const l of (parsed.locations || [])) {
+      const idx = locations.findIndex(x => x.id === l.id)
+      const normalized: WorldLocation = {
+        id: l.id,
+        name: l.name,
+        description: l.description,
+        type: l.type || 'other',
+        isDiscovered: !!l.discovered,
+        isCurrentlyAt: !!l.current,
+        x: Number(l.x ?? 50),
+        y: Number(l.y ?? 50),
+        connections: l.connections || [],
+        questIds: l.questIds || [],
+        turnDiscovered: gameState.turn,
+        dangerLevel: Number(l.danger_level || 1) as 1 | 2 | 3 | 4 | 5,
+        icon: l.icon || '📍',
+      }
+      if (normalized.isCurrentlyAt) {
+        for (let i = 0; i < locations.length; i++) locations[i] = { ...locations[i], isCurrentlyAt: false }
+      }
+      if (idx === -1) {
+        locations.push(normalized)
+        totalLocationsDiscovered += 1
+      } else {
+        locations[idx] = { ...locations[idx], ...normalized }
+      }
+    }
+    return { cleanText, questData: { quests, locations, totalQuestsCompleted, totalLocationsDiscovered } }
+  }
+
+  const parseConsequenceData = (text: string, currentTurn: number): { cleanText: string; consequenceData: Partial<ConsequenceState>; rippleNarration?: string } => {
+    const m = text.match(/<consequence_data>([\s\S]*?)<\/consequence_data>/i)
+    if (!m) return { cleanText: text, consequenceData: {} }
+    let parsed: any = null
+    try { parsed = JSON.parse(m[1]) } catch { parsed = null }
+    const cleanText = text.replace(m[0], '').trim()
+    if (!parsed) return { cleanText, consequenceData: {} }
+    const next: ConsequenceState = deepClone(consequenceState)
+    if (parsed.alignment_shift) {
+      next.alignment.axis_law_chaos = Math.max(-100, Math.min(100, next.alignment.axis_law_chaos + Number(parsed.alignment_shift.law_chaos || 0)))
+      next.alignment.axis_good_evil = Math.max(-100, Math.min(100, next.alignment.axis_good_evil + Number(parsed.alignment_shift.good_evil || 0)))
+      const computed = computeAlignment(next.alignment.axis_law_chaos, next.alignment.axis_good_evil)
+      next.alignment = { ...next.alignment, ...computed }
+    }
+    for (const r of (parsed.npc_relations || [])) {
+      const idx = next.npcRelations.findIndex(n => n.npcName.toLowerCase() === String(r.name || '').toLowerCase())
+      if (idx === -1) {
+        const affinity = Number(r.affinity_change || 0)
+        next.npcRelations.push({
+          npcId: String(r.name || generateId()).toLowerCase().replace(/\s+/g, '-'),
+          npcName: r.name || 'Unknown NPC',
+          affinity,
+          trust: Math.max(0, Math.min(100, 25 + Number(r.trust_change || 0))),
+          status: computeNPCStatus(affinity),
+          lastInteraction: currentTurn,
+          history: [{ turn: currentTurn, action: r.reason || 'Interaction', affinityChange: affinity, trustChange: Number(r.trust_change || 0) }],
+        })
+      } else {
+        const old = next.npcRelations[idx]
+        const affinity = Math.max(-100, Math.min(100, old.affinity + Number(r.affinity_change || 0)))
+        const trust = Math.max(0, Math.min(100, old.trust + Number(r.trust_change || 0)))
+        next.npcRelations[idx] = {
+          ...old,
+          affinity,
+          trust,
+          status: computeNPCStatus(affinity),
+          lastInteraction: currentTurn,
+          history: [...old.history, { turn: currentTurn, action: r.reason || 'Interaction', affinityChange: Number(r.affinity_change || 0), trustChange: Number(r.trust_change || 0) }].slice(-30),
+        }
+      }
+    }
+    if (parsed.choice) {
+      const rippleTurn = currentTurn + 5 + Math.floor(Math.random() * 5)
+      const choice: ChoiceMoment = {
+        turn: currentTurn,
+        situation: parsed.choice.situation || 'Unknown situation',
+        chosen: parsed.choice.chosen || 'Unknown choice',
+        alternatives: Array.isArray(parsed.choice.alternatives) ? parsed.choice.alternatives : [],
+        immediateConsequence: parsed.choice.immediate_consequence || '',
+        alignmentShift: parsed.alignment_shift ? { law_chaos: Number(parsed.alignment_shift.law_chaos || 0), good_evil: Number(parsed.alignment_shift.good_evil || 0) } : undefined,
+        rippleTriggered: false,
+        rippleTurn,
+        rippleDescription: parsed.choice.ripple_description || `${parsed.choice.chosen || 'This choice'} changes the path ahead.`,
+      }
+      next.choices = [choice, ...next.choices].slice(0, 120)
+      next.pendingRipples = [...next.pendingRipples, choice].slice(-60)
+      next.totalChoicesMade += 1
+    }
+    let rippleNarration: string | undefined
+    next.pendingRipples = next.pendingRipples.map(r => {
+      if (!r.rippleTriggered && r.rippleTurn && r.rippleTurn <= currentTurn) {
+        rippleNarration = r.rippleDescription || `Echoes of turn ${r.turn} ripple through the present.`
+        return { ...r, rippleTriggered: true }
+      }
+      return r
+    })
+    return { cleanText, consequenceData: next, rippleNarration }
   }
 
   const abortSpeakRef = useRef(false)
@@ -1274,6 +1657,19 @@ ${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
 9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. Provide 3-4 action OPTIONS for the current PC, then WAIT for the human player to choose. NEVER auto-resolve PC actions.
 10. **PERSISTENT MEMORY** - Remember ALL previous events, decisions, and their consequences. Reference past events when narrating.
 10b. If the party includes additional members beyond the PC and companion, describe their autonomous actions based on their personality and the situation, like God of War companions. They act independently and their actions flow naturally within the narration.
+10c. COMBAT NARRATION FORMAT:
+   - When combat occurs, append a <combat_data> JSON block after prose.
+   - Include: round, turn_order, current_turn, log, phase, victory.
+   - Include initiative + hp/max_hp/ac for all combatants and update each round.
+   - Use "portrait" as character slug for player combatants, empty for generic enemies.
+10d. QUEST & WORLD TRACKING:
+   - When quests or travel state changes, append a <quest_data> JSON block.
+   - Include ONLY changed quests/locations this turn.
+   - Locations must include x/y (0-100), connections, danger_level, and current/discovered flags.
+10e. CHOICE & CONSEQUENCE TRACKING:
+   - For meaningful moral choices/NPC relationship shifts, append <consequence_data> JSON.
+   - Include alignment_shift, npc_relations deltas, and choice with alternatives.
+   - Trigger ripple callbacks 5-10 turns later for major choices.
 10a. **STORY PACING — THIS IS CRITICAL**:
     - Act I (Turns 1-7): PURE EXPLORATION. NO enemies. NO combat. Build the world.
       - Describe environments: ancient temples, dark forests, forgotten cities, divine realms
@@ -1402,6 +1798,12 @@ ANTAGONIST: ${gs.act === ACTS.THREE ? `${ant?.name} | ${ant?.align} | HP:${gs.an
 ${gs.antagonistBanished ? `⚠️ BANISHMENT EVENT: ${ant?.name || 'The Antagonist'} was BANISHED to another plane on Turn ${gs.antagonistBanishTurn}. They will return in Act III.\n- During Acts I-II: The antagonist is ABSENT. Narrate the world without their direct threat, but hint at their return.\n- A forbidden name is known: ${gs.antagonistRival?.name || 'Unknown'} (${gs.antagonistRival?.title || ''}) — ${gs.antagonistRival?.ability || ''}.\n- This ${gs.antagonistRival?.name || 'force'} is the antagonist's mythological ARCHRIVAL and can be SUMMONED in Act III to aid the party.\n- When Act III begins, the antagonist returns from exile at full power, enraged.\n- Build tension around the banishment: the world feels wrong, the shard pulses with the rival's name.` : ''}
 PARTY (ALL HUMAN-CONTROLLED):
 ${partyState}
+ALIGNMENT STATE:
+${consequenceState.alignment.dominant} (${consequenceState.alignment.title}) | Law/Chaos ${consequenceState.alignment.axis_law_chaos} | Good/Evil ${consequenceState.alignment.axis_good_evil}
+TOP NPC RELATIONS:
+${consequenceState.npcRelations.slice(0, 5).map(r => `${r.npcName}: affinity ${r.affinity}, trust ${r.trust}, status ${r.status}`).join(' | ') || 'None'}
+RECENT CHOICES:
+${consequenceState.choices.slice(0, 3).map(c => `T${c.turn}: ${c.chosen}`).join(' | ') || 'None'}
 `}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
@@ -3115,6 +3517,29 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     if (preJsonNarr.length > 0 && jsonNarr.length > 0) {
       console.log(`📝 Narration — pre-JSON prose: ${preJsonNarr.length} chars, JSON dm_narration: ${jsonNarr.length} chars, using: ${narr === preJsonNarr ? 'pre-JSON' : 'JSON'}`)
     }
+    const combatParsed = parseCombatData(narr)
+    const questParsed = parseQuestData(combatParsed.cleanText)
+    const consequenceParsed = parseConsequenceData(questParsed.cleanText, gs.turn)
+    narr = consequenceParsed.cleanText
+    if (Object.keys(combatParsed.combatData).length) {
+      setCombatState(prev => ({ ...prev, ...combatParsed.combatData }))
+      combatQuietTurnsRef.current = 0
+    } else if (combatState.isActive) {
+      const combatKeywords = /\b(attack|slash|spell|hit|damage|hp|initiative|round|strike|blast)\b/i.test(narr)
+      combatQuietTurnsRef.current = combatKeywords ? 0 : combatQuietTurnsRef.current + 1
+      if (combatQuietTurnsRef.current >= 2) {
+        setCombatState(prev => ({ ...prev, isActive: false, victory: null }))
+      }
+    }
+    if (Object.keys(questParsed.questData).length) {
+      setQuestJournal(prev => ({ ...prev, ...questParsed.questData }))
+    }
+    if (Object.keys(consequenceParsed.consequenceData).length) {
+      setConsequenceState(consequenceParsed.consequenceData as ConsequenceState)
+    }
+    if (consequenceParsed.rippleNarration) {
+      setRippleEcho(consequenceParsed.rippleNarration)
+    }
     narr = cleanNarrationForDisplay(narr)
     const paragraphs = [narr].filter(Boolean)
     const displayedText = paragraphs[0] || ''
@@ -3278,6 +3703,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
           : codexLinked.join('')
         }
       </div>
+      ${rippleEcho ? `<div class="ripple-echo-box">Echoes of the Past: ${toAscii(rippleEcho)}</div>` : ''}
     </div>`
 
     // NPC Encounters
@@ -3463,6 +3889,9 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     html += '</div>'
 
     appendNarrative(html)
+    if (rippleEcho) {
+      setTimeout(() => setRippleEcho(null), 5000)
+    }
   }
 
   const appendNarrative = (html: string) => {
@@ -4452,6 +4881,11 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     audioCache, setAudioCache,
     displayedNarrative, setDisplayedNarrative,
     tokenUsage, setTokenUsage,
+    combatState, setCombatState,
+    combatOverlayMinimized, setCombatOverlayMinimized,
+    questJournal, setQuestJournal,
+    consequenceState, setConsequenceState,
+    rippleEcho,
     // ── REFS ───────────────────────────────────────────────────────────────
     narrRef,
     abortSpeakRef,
@@ -4473,6 +4907,9 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     callOpenRouterDM,
     callGeminiDM: callOpenRouterDM,
     parseDMResponse,
+    parseCombatData,
+    parseQuestData,
+    parseConsequenceData,
     // getTemplateFallback removed (deprecated)
     buildDefaultOptions,
     applyMechanics,

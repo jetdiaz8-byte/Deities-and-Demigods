@@ -16,6 +16,9 @@ import { EquipmentTooltipProvider } from '@/components/game/EquipmentTooltip'
 import { SceneIllustration } from '@/components/game/SceneIllustration'
 import PartyBar from '@/components/game/PartyBar'
 import CharacterCard from '@/components/game/CharacterCard'
+import CombatOverlay from '@/components/game/CombatOverlay'
+import AlignmentMeter from '@/components/game/AlignmentMeter'
+import NPCRelationsPanel from '@/components/game/NPCRelationsPanel'
 import { ALL_CHARACTERS } from '@/lib/characterData'
 import type { Character } from '@/lib/characterTypes'
 const ComicPanel = dynamic(() => import('@/components/game/ComicPanel'), { ssr: false })
@@ -99,6 +102,13 @@ export default function MythworldEngine() {
     handleUseItem,
     resolveTestOfFaith,
     buildDMSystem,
+    combatState,
+    setCombatState,
+    combatOverlayMinimized,
+    setCombatOverlayMinimized,
+    questJournal,
+    consequenceState,
+    rippleEcho,
     // Combat Flash
     combatFlashType,
     // Achievement System
@@ -237,6 +247,8 @@ export default function MythworldEngine() {
 
   // ── TOAST NOTIFICATION SYSTEM ─────────────────────────────────────────
   const [toasts, setToasts] = React.useState<{ id: string; title: string; desc: string; icon: string }[]>([])
+  const [relationNotifs, setRelationNotifs] = React.useState<Array<{ id: string; name: string; delta: number }>>([])
+  const prevRelationsRef = React.useRef<Record<string, number>>({})
 
   const showToast = React.useCallback((title: string, desc: string, icon: string = '\uD83C\uDFC6') => {
     const id = `toast-${Date.now()}`
@@ -265,6 +277,26 @@ export default function MythworldEngine() {
     triggerPendingTTSFromUserGesture()
     advanceTurn()
   }, [unlockTTS, triggerPendingTTSFromUserGesture, advanceTurn])
+
+  useEffect(() => {
+    const prev = prevRelationsRef.current
+    const next: Record<string, number> = {}
+    for (const r of (consequenceState?.npcRelations || [])) {
+      next[r.npcId] = r.affinity
+      const old = prev[r.npcId]
+      if (typeof old === 'number' && old !== r.affinity) {
+        const delta = r.affinity - old
+        const id = `${r.npcId}-${Date.now()}`
+        setRelationNotifs(curr => [...curr, { id, name: r.npcName, delta }].slice(-5))
+        window.setTimeout(() => setRelationNotifs(curr => curr.filter(n => n.id !== id)), 3000)
+      }
+    }
+    prevRelationsRef.current = next
+  }, [consequenceState?.npcRelations])
+
+  const submitQuickAction = React.useCallback((text: string) => {
+    confirmChoice(text)
+  }, [confirmChoice])
 
 
   // ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────────
@@ -668,6 +700,38 @@ export default function MythworldEngine() {
           activeId={gameState?.humanPCId}
           isProcessing={!!gameState?.isProcessing}
         />
+        {combatState?.isActive && !combatOverlayMinimized && (
+          <CombatOverlay
+            combatState={combatState as any}
+            onClose={() => setCombatOverlayMinimized(true)}
+            onFlee={() => submitQuickAction('I attempt to flee from combat!')}
+            onAction={submitQuickAction}
+            onContinue={() => {
+              setCombatState((prev: any) => ({ ...prev, isActive: false, victory: null }))
+              setCombatOverlayMinimized(false)
+            }}
+          />
+        )}
+        {combatState?.isActive && combatOverlayMinimized && (
+          <button className="combat-indicator" onClick={() => setCombatOverlayMinimized(false)}>
+            <span>Combat R{combatState.round || 1}</span>
+          </button>
+        )}
+        <div className="hidden md:block fixed right-2 bottom-28 w-[280px] max-h-[45vh] overflow-y-auto bg-[rgba(10,8,16,0.88)] border border-[#3c2415] rounded-md z-[90]">
+          <AlignmentMeter alignment={consequenceState.alignment as any} />
+          <NPCRelationsPanel relations={consequenceState.npcRelations as any} />
+          {!!consequenceState.choices?.[0]?.alternatives?.length && (
+            <div className="path-not-taken">The road not taken: {consequenceState.choices[0].alternatives[0]}</div>
+          )}
+          {rippleEcho && <div className="ripple-echo-box">Echoes of the Past: {rippleEcho}</div>}
+        </div>
+        {(questJournal?.locations?.length || 0) >= 2 && (
+          <button className="mini-map" onClick={() => { setSidebarOpen(true); setActiveTab('map') }}>
+            {(questJournal.locations || []).map(loc => (
+              <span key={loc.id} className={`mini-map-dot ${loc.isCurrentlyAt ? 'current' : ''}`} style={{ left: `${loc.x}%`, top: `${loc.y}%` }} />
+            ))}
+          </button>
+        )}
 
         {/* Bottom Bar */}
         <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap relative z-[41] md:mr-80 safe-bottom mythworld-bottom-bar">
@@ -771,6 +835,13 @@ export default function MythworldEngine() {
                 <div className="font-title text-sm text-[#d4af37]">{toast.title}</div>
                 <div className="text-xs text-[#a08060] font-narrative">{toast.desc}</div>
               </div>
+            </div>
+          ))}
+        </div>
+        <div className="fixed right-4 top-20 z-[200] flex flex-col gap-2">
+          {relationNotifs.map(n => (
+            <div key={n.id} className={`relation-notification ${n.delta >= 0 ? 'positive' : 'negative'}`}>
+              <div>{n.name}'s opinion {n.delta >= 0 ? 'improved' : 'declined'} ({n.delta >= 0 ? '+' : ''}{n.delta})</div>
             </div>
           ))}
         </div>
