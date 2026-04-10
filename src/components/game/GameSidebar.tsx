@@ -43,6 +43,9 @@ export interface GameSidebarProps {
   onGalleryTogglePlay?: () => void
   onGalleryNext?: () => void
   onGalleryPrev?: () => void
+  questJournal?: any
+  consequenceState?: any
+  onTravelToLocation?: (name: string) => void
 }
 
 export function GameSidebar({
@@ -71,6 +74,9 @@ export function GameSidebar({
   onGalleryTogglePlay,
   onGalleryNext,
   onGalleryPrev,
+  questJournal,
+  consequenceState,
+  onTravelToLocation,
 }: GameSidebarProps) {
   return (
     <>
@@ -143,6 +149,9 @@ export function GameSidebar({
           onGalleryTogglePlay={onGalleryTogglePlay}
           onGalleryNext={onGalleryNext}
           onGalleryPrev={onGalleryPrev}
+          questJournal={questJournal}
+          consequenceState={consequenceState}
+          onTravelToLocation={onTravelToLocation}
         />
         </div>
       </div>
@@ -213,6 +222,9 @@ export function GameSidebar({
             onGalleryTogglePlay={onGalleryTogglePlay}
             onGalleryNext={onGalleryNext}
             onGalleryPrev={onGalleryPrev}
+            questJournal={questJournal}
+            consequenceState={consequenceState}
+            onTravelToLocation={onTravelToLocation}
           />
           <div className="border-t border-[#2e2008] p-3">
             <div className="text-[11px] text-[#c9a84c] uppercase tracking-wider mb-2" style={{ fontFamily: 'Cinzel, serif' }}>Settings</div>
@@ -246,7 +258,7 @@ export function GameSidebar({
 // DESKTOP TABS — Full detail view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, dmSystemPrompt, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev }: {
+function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, dmSystemPrompt, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev, questJournal, consequenceState, onTravelToLocation }: {
   gameState: GameState
   activeTab: string
   setActiveTab: (tab: string) => void
@@ -264,13 +276,20 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
   onGalleryTogglePlay?: () => void
   onGalleryNext?: () => void
   onGalleryPrev?: () => void
+  questJournal?: any
+  consequenceState?: any
+  onTravelToLocation?: (name: string) => void
 }) {
+  const [questFilter, setQuestFilter] = React.useState<'all' | 'active' | 'completed' | 'failed'>('all')
+  const [expandedChoiceHistory, setExpandedChoiceHistory] = React.useState(false)
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
       <TabsList className="flex border-b border-[#2e2008] bg-transparent flex-shrink-0">
         <TabsTrigger value="pcs" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">PCs</TabsTrigger>
         <TabsTrigger value="npcs" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">NPCs</TabsTrigger>
         <TabsTrigger value="quests" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Quests</TabsTrigger>
+        <TabsTrigger value="map" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Map</TabsTrigger>
+        <TabsTrigger value="soul" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Soul</TabsTrigger>
         <TabsTrigger value="prophecies" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">📜</TabsTrigger>
         <TabsTrigger value="logs" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Logs</TabsTrigger>
         <TabsTrigger value="gallery" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Gallery</TabsTrigger>
@@ -385,26 +404,64 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
       </TabsContent>
 
       {/* Quests Tab */}
-      <TabsContent value="quests" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
-        {gameState.quests.map(quest => (
-          <Card key={quest.id} className={`mb-3 ${quest.status === 'completed' ? 'opacity-50' : ''}`} style={{ borderColor: quest.type === 'main' ? '#c9a84c' : '#5a4018' }}>
-            <CardHeader className="p-4">
-              <div className="flex items-center gap-2">
-                {quest.type === 'main' ? <Star className="w-5 h-5 text-[#c9a84c]" /> : <ScrollText className="w-5 h-5 text-[#5a4018]" />}
-                <CardTitle className="text-lg text-[#c9a84c]" style={{ fontFamily: 'Cinzel, serif' }}>{quest.title}</CardTitle>
+      <TabsContent value="quests" className="flex-1 overflow-y-auto p-3 m-0 min-h-0 quest-journal">
+        <div className="quest-journal-header">
+          <h3>Quest Journal</h3>
+          <div className="quest-stats">Active: {(questJournal?.quests || []).filter((q: any) => q.status === 'active').length} | Done: {questJournal?.totalQuestsCompleted || 0} | Locations: {questJournal?.totalLocationsDiscovered || 0}</div>
+        </div>
+        <div className="quest-filter-bar">
+          {(['all', 'active', 'completed', 'failed'] as const).map(f => <button key={f} className={`quest-filter-btn ${questFilter === f ? 'active' : ''}`} onClick={() => setQuestFilter(f)}>{f[0].toUpperCase() + f.slice(1)}</button>)}
+        </div>
+        <div className="quest-list">
+          {(questJournal?.quests || [])
+            .filter((q: any) => questFilter === 'all' ? true : q.status === questFilter)
+            .sort((a: any, b: any) => (a.type === 'main' ? -1 : 1) - (b.type === 'main' ? -1 : 1) || ((a.turnGiven || 0) - (b.turnGiven || 0)))
+            .map((q: any) => {
+              const completed = (q.objectives || []).filter((o: any) => o.isCompleted).length
+              const total = Math.max(1, (q.objectives || []).length)
+              return <div key={q.id} className={`quest-card quest-${q.type} quest-${q.status}`}>
+                <div className="quest-card-title">{q.type === 'main' ? '⭐' : q.type === 'side' ? '📋' : q.type === 'faction' ? '⚔️' : '💎'} {q.title}</div>
+                <div className="quest-card-desc">{q.description}</div>
+                <div className="quest-card-meta">{q.givenBy ? `Given by: ${q.givenBy}` : ''} {q.location ? `• 📍 ${q.location}` : ''}</div>
+                {(q.objectives || []).map((o: any, i: number) => <div key={i} className={`quest-objective ${o.isCompleted ? 'completed' : ''} ${o.isOptional ? 'optional' : ''}`}><span className="quest-objective-check">{o.isCompleted ? '☑' : '☐'}</span>{o.text}{o.isOptional ? ' (optional)' : ''}</div>)}
+                <div className="quest-progress-bar"><div className="quest-progress-fill" style={{ width: `${Math.round((completed / total) * 100)}%` }} /></div>
+                {q.reward && <div className="quest-card-details"><span className="reward">Reward: {q.reward}</span></div>}
               </div>
-            </CardHeader>
-            <CardContent className="p-4 text-base space-y-2">
-              <p className="text-[#9a8860]">{quest.description}</p>
-              {quest.objectives.map((obj, idx) => (
-                <div key={idx} className={`flex items-center gap-2 text-sm ${obj.completed ? 'text-[#4a9060]' : 'text-[#5a4d30]'}`}>
-                  {obj.completed ? <CheckCircle className="w-4 h-4" /> : <div className="w-4 h-4 rounded-full border border-[#5a4d30]" />}
-                  {obj.text}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
+            })}
+        </div>
+      </TabsContent>
+
+      <TabsContent value="map" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
+        <div className="world-map-container">
+          <div className="world-map-grid" />
+          {(questJournal?.locations || []).map((loc: any) => (
+            <button key={loc.id} className={`map-pin ${loc.isCurrentlyAt ? 'current' : ''} ${loc.isDiscovered ? '' : 'undiscovered'}`} style={{ left: `${loc.x}%`, top: `${loc.y}%` }} onClick={() => loc.isDiscovered && !loc.isCurrentlyAt && onTravelToLocation?.(loc.name)}>
+              <span className="map-pin-icon">{loc.icon || '📍'}</span>
+              <span className="map-pin-name">{loc.name}</span>
+            </button>
+          ))}
+        </div>
+      </TabsContent>
+
+      <TabsContent value="soul" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
+        <div className="choice-stats">Choices: {consequenceState?.totalChoicesMade || 0} | Alignment: {consequenceState?.alignment?.dominant || 'True Neutral'}</div>
+        <div className="alignment-meter">
+          <div className="alignment-title">Your Path: {consequenceState?.alignment?.title || 'Undecided Soul'}</div>
+          <div className="text-xs text-[#a98d63]">Law/Chaos: {consequenceState?.alignment?.axis_law_chaos || 0} · Good/Evil: {consequenceState?.alignment?.axis_good_evil || 0}</div>
+        </div>
+        <div className="mt-2">
+          {(consequenceState?.npcRelations || []).slice().sort((a: any, b: any) => b.affinity - a.affinity).map((r: any) => (
+            <div key={r.npcId} className="npc-relation-card"><div className={`npc-relation-name ${r.affinity > 0 ? 'positive' : r.affinity < 0 ? 'negative' : 'neutral'}`}>{r.npcName}</div><div className={`npc-status-badge ${r.status}`}>{r.status}</div></div>
+          ))}
+        </div>
+        <button className="quest-filter-btn mt-2" onClick={() => setExpandedChoiceHistory(v => !v)}>Choices {expandedChoiceHistory ? '▾' : '▸'}</button>
+        {expandedChoiceHistory && (
+          <div>
+            {(consequenceState?.choices || []).map((c: any, idx: number) => (
+              <div key={idx} className="choice-entry"><div className="turn-num">Turn {c.turn}</div><div>{c.situation}</div><div className="chosen-text">{c.chosen}</div><div className="alt-text">{(c.alternatives || []).join(' · ')}</div><div className={c.rippleTriggered ? 'ripple-done' : 'ripple-pending'}>{c.rippleTriggered ? 'Ripple resolved' : `Ripple pending (turn ${c.rippleTurn || '?'})`}</div></div>
+            ))}
+          </div>
+        )}
       </TabsContent>
 
       {/* Prophecies Tab */}
@@ -613,7 +670,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
 // MOBILE TABS — Compact view
 // ═══════════════════════════════════════════════════════════════════════════
 
-function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev }: {
+function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev, questJournal, consequenceState, onTravelToLocation }: {
   gameState: GameState
   activeTab: string
   setActiveTab: (tab: string) => void
@@ -628,6 +685,9 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
   onGalleryTogglePlay?: () => void
   onGalleryNext?: () => void
   onGalleryPrev?: () => void
+  questJournal?: any
+  consequenceState?: any
+  onTravelToLocation?: (name: string) => void
 }) {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
@@ -635,6 +695,8 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
         <TabsTrigger value="pcs" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">PCs</TabsTrigger>
         <TabsTrigger value="npcs" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">NPCs</TabsTrigger>
         <TabsTrigger value="quests" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Quests</TabsTrigger>
+        <TabsTrigger value="map" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Map</TabsTrigger>
+        <TabsTrigger value="soul" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Soul</TabsTrigger>
         <TabsTrigger value="prophecies" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">📜</TabsTrigger>
         <TabsTrigger value="logs" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Logs</TabsTrigger>
         <TabsTrigger value="gallery" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">🎴</TabsTrigger>
@@ -809,6 +871,20 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
             </CardContent>
           </Card>
         ))}
+      </TabsContent>
+      <TabsContent value="map" className="p-3 m-0">
+        <div className="world-map-container">
+          {(questJournal?.locations || []).map((loc: any) => (
+            <button key={loc.id} className={`map-pin ${loc.isCurrentlyAt ? 'current' : ''}`} style={{ left: `${loc.x}%`, top: `${loc.y}%` }} onClick={() => !loc.isCurrentlyAt && onTravelToLocation?.(loc.name)}>
+              <span className="map-pin-icon">{loc.icon || '📍'}</span>
+              <span className="map-pin-name">{loc.name}</span>
+            </button>
+          ))}
+        </div>
+      </TabsContent>
+      <TabsContent value="soul" className="p-3 m-0">
+        <div className="choice-stats">Choices: {consequenceState?.totalChoicesMade || 0}</div>
+        {(consequenceState?.npcRelations || []).map((r: any) => <div key={r.npcId} className="npc-relation-card"><div className="npc-relation-name">{r.npcName}</div></div>)}
       </TabsContent>
       
       {/* Mobile Prophecies Tab */}

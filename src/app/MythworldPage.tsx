@@ -692,6 +692,9 @@ export default function MythworldEngine() {
             onGalleryTogglePlay={() => setGalleryPlaying(v => !v)}
             onGalleryNext={galleryNext}
             onGalleryPrev={galleryPrev}
+            questJournal={questJournal}
+            consequenceState={consequenceState}
+            onTravelToLocation={(name: string) => submitQuickAction(`I travel to ${name}`)}
           />
         </div>
 
