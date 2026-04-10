@@ -91,6 +91,7 @@ export default function MythworldEngine() {
     exportStory,
     speakNarrative,
     unlockTTS,
+    triggerPendingTTSFromUserGesture,
     stopSpeaking,
     invokeShard,
     handleUseItem,
@@ -188,18 +189,21 @@ export default function MythworldEngine() {
 
   const startLoadingOverlay = React.useCallback(() => {
     overlayArmedRef.current = true
+    console.log('Loading overlay: 3s timer started')
     if (overlayDelayTimerRef.current) clearTimeout(overlayDelayTimerRef.current)
     if (overlayCloseTimerRef.current) clearTimeout(overlayCloseTimerRef.current)
     setLoadingOverlayClosing(false)
     setLoadingOverlayMounted(false)
     overlayDelayTimerRef.current = setTimeout(() => {
       if (overlayArmedRef.current) {
+        console.log('Loading overlay: mounting')
         setLoadingOverlayMounted(true)
       }
     }, 3000)
   }, [])
 
   const stopLoadingOverlay = React.useCallback((immediate = false) => {
+    console.log('Loading overlay: hiding')
     overlayArmedRef.current = false
     if (overlayDelayTimerRef.current) {
       clearTimeout(overlayDelayTimerRef.current)
@@ -270,33 +274,6 @@ export default function MythworldEngine() {
     advanceTurn()
   }, [unlockTTS, startLoadingOverlay, advanceTurn])
 
-  // Fallback auto-TTS trigger (keeps narration audio working if upstream turn hook path misses it).
-  useEffect(() => {
-    if (narratorMode !== 'auto') return
-    if (!lastDMNarrative || gameState?.isProcessing || isSpeaking) return
-    if (typeof document !== 'undefined' && document.hidden) return
-    const turn = gameState?.turn ?? 0
-    if (autoNarratedTurnRef.current === turn) return
-    autoNarratedTurnRef.current = turn
-    const timer = setTimeout(() => {
-      speakNarrative()
-    }, 350)
-    return () => clearTimeout(timer)
-  }, [narratorMode, lastDMNarrative, gameState?.turn, gameState?.isProcessing, isSpeaking, speakNarrative])
-
-  // Retry auto-TTS when narrative text updates (not only on turn increments).
-  useEffect(() => {
-    if (narratorMode !== 'auto') return
-    if (!latestNarrativeText || gameState?.isProcessing || isSpeaking) return
-    if (typeof document !== 'undefined' && document.hidden) return
-    const turn = gameState?.turn ?? 0
-    if (autoNarratedTurnRef.current === turn) return
-    autoNarratedTurnRef.current = turn
-    const timer = setTimeout(() => {
-      speakNarrative()
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [narratorMode, latestNarrativeText, gameState?.turn, gameState?.isProcessing, isSpeaking, speakNarrative])
 
   // ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────────
   // 1-9: Select PC action | A/B/C: Select companion action | Enter: Confirm
@@ -392,7 +369,7 @@ export default function MythworldEngine() {
     <TooltipProvider>
       <EquipmentTooltipProvider>
       <LoreGlossaryProvider pcs={gameState?.pcs ?? []} activeNPCs={gameState?.activeNPCs ?? []} npcHistory={gameState?.npcHistory ?? []}>
-      <div className="min-h-screen bg-[#060403] flex flex-col" data-screen-root>
+      <div className="min-h-screen bg-[#060403] flex flex-col" data-screen-root onClickCapture={triggerPendingTTSFromUserGesture}>
         {/* Screen Effects */}
         <style>{`
           @keyframes screen-flash-red {
@@ -542,7 +519,7 @@ export default function MythworldEngine() {
                 return (
                   <div
                     key={idx}
-                    className={isLast ? `dm-narration-block bg-[#1a1a0e] text-[#e8dcc8] border border-[#5a4018] ${collapseClass}` : undefined}
+                    className={isLast ? `dm-narration-block scroll-parchment ${collapseClass}` : undefined}
                   >
                     {isLast && narrationSentences.length > 0 ? (
                       narrationSentences.map((sentence, i) => (
@@ -563,7 +540,7 @@ export default function MythworldEngine() {
                 <div className="mt-2 mb-3 text-center">
                   <button
                     onClick={() => setShowFullNarration(!showFullNarration)}
-                    className="min-h-[44px] px-4 py-2 text-xs rounded border border-[#5a4018] text-[#d4af37] bg-[rgba(20,14,8,0.7)] hover:bg-[rgba(32,22,12,0.8)] transition-all"
+                    className="min-h-[44px] px-4 py-2 text-xs rounded border text-[#5c3317] bg-[rgba(139,90,43,0.15)] border-[#b8956a] hover:bg-[rgba(139,90,43,0.25)] transition-all"
                     style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}
                   >
                     {showFullNarration ? 'Show less ▲' : 'Continue reading ▼'}
@@ -721,7 +698,7 @@ export default function MythworldEngine() {
           {/* API Status — shows active engine mode */}
           <div className="flex items-center gap-1">
             <div className={`w-2 h-2 rounded-full ${engineMode === 'dual' ? 'bg-[#a070f0]' : engineMode === 'gemini' ? 'bg-[#40c080]' : 'bg-[#60a0f0]'}`} />
-            <span className="text-[10px] text-[#5a4d30]">{engineMode === 'dual' ? 'Dual' : engineMode === 'gemini' ? 'Gem2.5' : 'Local'}</span>
+            <span className="text-[10px] text-[#5a4d30]">{engineMode === 'dual' ? 'Hybrid' : engineMode === 'gemini' ? 'Cloud' : 'Local'}</span>
           </div>
           <span className="text-[8px] text-[#3a3020] hidden md:inline">v{version}</span>
 

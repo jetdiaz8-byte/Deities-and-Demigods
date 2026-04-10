@@ -1,6 +1,7 @@
 export interface ComicPanelData {
   id: string;
   imageUrl?: string;
+  retryImageUrl?: string;
   caption: string;
   speechBubble?: string;
   isGenerating?: boolean;
@@ -19,11 +20,9 @@ const STYLE_PROMPTS: Record<string, string> = {
   'watercolor': 'in the style of watercolor painting, soft edges, muted fantasy palette, ethereal atmosphere',
 };
 
-export function determinePanelCount(narration: string, isCombat: boolean): number {
-  if (isCombat) return Math.min(4, 2 + Math.floor(Math.random() * 2));
-  if (narration.length > 800) return 3 + Math.floor(Math.random() * 2);
-  if (narration.length > 400) return 2 + Math.floor(Math.random() * 2);
-  return 2;
+export function determinePanelCount(_narration: string, _isCombat: boolean): number {
+  // One scene illustration per turn; previous turns are cached by turn id.
+  return 1;
 }
 
 export function extractSpeechBubble(narration: string): string {
@@ -39,26 +38,46 @@ export function buildPanelCaption(narration: string, index: number, total: numbe
   return segment.length > 100 ? segment.slice(0, 97) + '...' : segment;
 }
 
+export function extractSceneKeywords(narration: string): string[] {
+  const source = narration || ''
+  const lower = source.toLowerCase()
+  const locationWords = ['forest', 'mountain', 'ocean', 'tower', 'cave', 'city', 'village', 'dungeon', 'temple', 'castle', 'river', 'bridge', 'battlefield', 'tavern', 'market']
+  const moodWords = ['dark', 'stormy', 'moonlit', 'foggy', 'fiery', 'shadow', 'dawn', 'dusk', 'bloody', 'eerie', 'peaceful']
+  const objectWords = ['sword', 'staff', 'crystal', 'shard', 'dragon', 'throne', 'altar', 'gate', 'portal']
+
+  const keywords: string[] = []
+  const addIfFound = (word: string) => {
+    if (new RegExp(`\\b${word}\\b`, 'i').test(lower)) keywords.push(word)
+  }
+  locationWords.forEach(addIfFound)
+  moodWords.forEach(addIfFound)
+  objectWords.forEach(addIfFound)
+
+  // Named entities: capitalized words not likely sentence starters.
+  const entities = Array.from(source.matchAll(/\b([A-Z][a-z]{2,}(?:\s+[A-Z][a-z]{2,})?)\b/g))
+    .map(m => m[1])
+    .filter(v => !['The', 'And', 'But', 'Then', 'When', 'After', 'Before', 'With'].includes(v.split(' ')[0]))
+  for (const e of entities) {
+    keywords.push(e.toLowerCase())
+  }
+
+  const unique = Array.from(new Set(keywords)).slice(0, 8)
+  return unique.length ? unique : ['fantasy landscape', 'dramatic sky', 'mysterious atmosphere']
+}
+
 export function buildImagePrompt(narration: string, caption: string, artStyle: string): string {
   const stylePrompt = STYLE_PROMPTS[artStyle] || STYLE_PROMPTS['larry-elmore']
   const source = `${caption || ''} ${narration || ''}`.toLowerCase()
-  let sceneSeed = 'fantasy landscape, dramatic sky, mysterious atmosphere'
-  if (/\bocean|water|sea|ship|harbor|wave|cliff|coast\b/.test(source)) sceneSeed = 'ship, waves, sea cliff, stormy horizon'
-  else if (/\bforest|trees|woods|grove|ruin|runes\b/.test(source)) sceneSeed = 'enchanted forest, ancient ruins, glowing runes'
-  else if (/\bdungeon|cave|underground|catacomb|crypt|torch|corridor\b/.test(source)) sceneSeed = 'stone corridors, torches, shadows'
-  else if (/\bcity|town|village|market|street|tavern\b/.test(source)) sceneSeed = 'medieval town, marketplace, tavern'
-  else if (/\bcombat|fight|battle|attack|duel|war\b/.test(source)) sceneSeed = 'battlefield, dramatic action, weapons'
-  else if (/\btower|castle|fortress|keep|citadel\b/.test(source)) sceneSeed = 'medieval fortress, spires, banners'
-  const candidates = (caption || narration)
-    .toLowerCase()
-    .replace(/[^a-z\s]/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean)
-    .filter(w => w.length > 4)
-    .filter(w => !['there', 'their', 'about', 'after', 'before', 'which', 'while', 'where'].includes(w))
-  const unique = Array.from(new Set(candidates)).slice(0, 5)
-  const keywords = unique.length ? unique.join(', ') : sceneSeed
-  return `dark fantasy ${keywords}, ${sceneSeed}, dramatic lighting, oil painting style, D&D illustration, atmospheric, ${stylePrompt}, no text`
+  let mapped = 'fantasy landscape, dramatic sky, mysterious atmosphere'
+  if (/\bocean|water|sea\b/.test(source)) mapped = 'ship, waves, sea cliff, stormy horizon'
+  else if (/\bforest|trees|woods\b/.test(source)) mapped = 'enchanted forest, ancient ruins, glowing runes'
+  else if (/\bdungeon|cave|underground\b/.test(source)) mapped = 'stone corridors, torches, shadows'
+  else if (/\bcity|town|village\b/.test(source)) mapped = 'medieval town, marketplace, tavern'
+  else if (/\bcombat|fight|battle\b/.test(source)) mapped = 'battlefield, dramatic action, weapons'
+  else if (/\btower|castle|fortress\b/.test(source)) mapped = 'medieval fortress, spires, banners'
+
+  const keywords = extractSceneKeywords(caption || narration).slice(0, 8).join(', ')
+  return `dark fantasy illustration of ${keywords}, ${mapped}, dramatic lighting, oil painting style, D&D fantasy art, atmospheric, detailed, ${stylePrompt}`
 }
 
 export async function generateComicPanels(
@@ -66,7 +85,7 @@ export async function generateComicPanels(
   isCombat: boolean,
   options: ComicGeneratorOptions = {}
 ): Promise<ComicPanelData[]> {
-  const { artStyle = 'larry-elmore', maxPanels = 4 } = options;
+  const { artStyle = 'larry-elmore', maxPanels = 1 } = options;
   const panelCount = Math.min(determinePanelCount(narration, isCombat), maxPanels);
   const speechBubble = extractSpeechBubble(narration);
   const panels: ComicPanelData[] = [];
@@ -109,8 +128,9 @@ export async function generatePanelImage(
 
   const prompt = buildImagePrompt(narration, panel.caption, artStyle);
   try {
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true&seed=${turnNumber}`
-    return { ...panel, imageUrl: url || placeholderImage, isGenerating: false };
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=512&nologo=true&seed=${turnNumber}`
+    const retryUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=512&nologo=true&seed=${turnNumber + 100}`
+    return { ...panel, imageUrl: url || placeholderImage, retryImageUrl: retryUrl, isGenerating: false };
   } catch {
     return { ...panel, imageUrl: placeholderImage, isGenerating: false, error: 'network-error' };
   }

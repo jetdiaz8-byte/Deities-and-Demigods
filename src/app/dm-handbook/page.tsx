@@ -89,7 +89,7 @@ const AI_FLOW_STEPS = [
   { step: 1, label: 'Player selects action from generated options', icon: Activity, color: 'border-blue-500/50 bg-blue-900/20', textColor: 'text-blue-400' },
   { step: 2, label: 'Engine builds full game state snapshot', icon: Database, color: 'border-slate-500/50 bg-slate-700/30', textColor: 'text-slate-300' },
   { step: 3, label: 'System prompt constructed (9 data blocks)', icon: MessageSquare, color: 'border-purple-500/50 bg-purple-900/20', textColor: 'text-purple-400' },
-  { step: 4, label: 'Gemini 2.5 Flash generates response', icon: Brain, color: 'border-amber-500/50 bg-amber-900/20', textColor: 'text-amber-400' },
+  { step: 4, label: 'Cloud AI generates response', icon: Brain, color: 'border-amber-500/50 bg-amber-900/20', textColor: 'text-amber-400' },
   { step: 5, label: 'JSON extracted from response via regex', icon: FileWarning, color: 'border-cyan-500/50 bg-cyan-900/20', textColor: 'text-cyan-400' },
   { step: 6, label: 'applyMechanics: state updates parsed and applied', icon: RefreshCcw, color: 'border-emerald-500/50 bg-emerald-900/20', textColor: 'text-emerald-400' },
   { step: 7, label: 'Narration displayed, success rate recalculated, new options presented', icon: Eye, color: 'border-red-500/50 bg-red-900/20', textColor: 'text-red-400' },
@@ -136,7 +136,7 @@ export default function DMHandbookPage() {
           <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-2">The arcane machinery behind the AI Dungeon Master</p>
           <p className="text-sm text-gray-500">Deities &amp; Demigods Edition &mdash; How the engine thinks, decides, and narrates</p>
           <div className="flex justify-center mt-6 gap-3">
-            <Badge className="bg-red-900/50 border border-red-700/50 text-red-300 text-xs">Gemini 2.5 Flash</Badge>
+            <Badge className="bg-red-900/50 border border-red-700/50 text-red-300 text-xs">Cloud AI</Badge>
             <Badge className="bg-slate-800 border border-slate-600 text-gray-400 text-xs">TypeScript Engine</Badge>
           </div>
         </div>
@@ -193,9 +193,9 @@ export default function DMHandbookPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader><CardTitle className="text-white flex items-center gap-2"><Gem className="w-5 h-5 text-amber-400" />Gemini 2.5 Flash (Primary)</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-white flex items-center gap-2"><Gem className="w-5 h-5 text-amber-400" />Cloud AI (Primary)</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-gray-300">Powers the core narrative generation and full game state management. Every turn&apos;s prose, dice rolls, and state updates flow through Gemini.</p>
+                  <p className="text-sm text-gray-300">Powers the core narrative generation and full game state management. Every turn&apos;s prose, dice rolls, and state updates flow through Cloud AI.</p>
                   <div className="space-y-2 text-sm">
                     {[
                       { label: 'Opening Scene Tokens', value: '8,000 max' },
@@ -459,7 +459,7 @@ export default function DMHandbookPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-cyan-900/20 border border-cyan-700/50">
                     <h4 className="font-bold text-cyan-400 mb-2">How Skills Reach the AI Prompt</h4>
-                    <p className="text-xs text-gray-300">Skill proficiencies are included in the <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skills</code> and <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skillProficiencies</code> fields of the game state sent to the Gemini API every turn. The system prompt instructs the AI to use these when generating the 3 quick action choices. Skills are also displayed on the player&apos;s character card as badges for quick reference. For custom (free-text) actions, the DM infers the appropriate skill based on the player&apos;s description.</p>
+                    <p className="text-xs text-gray-300">Skill proficiencies are included in the <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skills</code> and <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skillProficiencies</code> fields of the game state sent to the Cloud API every turn. The system prompt instructs the AI to use these when generating the 3 quick action choices. Skills are also displayed on the player&apos;s character card as badges for quick reference. For custom (free-text) actions, the DM infers the appropriate skill based on the player&apos;s description.</p>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
                     <h4 className="font-bold text-white mb-2">Scope &amp; Exclusions</h4>

@@ -5,6 +5,7 @@ import React from 'react';
 interface ComicPanelData {
   id: string;
   imageUrl?: string;
+  retryImageUrl?: string;
   caption: string;
   speechBubble?: string;
   isGenerating?: boolean;
@@ -19,6 +20,8 @@ interface ComicPanelProps {
 export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicPanelProps) {
   const [expanded, setExpanded] = React.useState<ComicPanelData | null>(null)
   const [imageErrors, setImageErrors] = React.useState<Record<string, boolean>>({})
+  const [retryAttempted, setRetryAttempted] = React.useState<Record<string, boolean>>({})
+  const [loadingMap, setLoadingMap] = React.useState<Record<string, boolean>>({})
   if (!panels || panels.length === 0) return null;
 
   const gridClass = panels.length <= 2
@@ -49,14 +52,30 @@ export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicP
               <span className="text-[0.625rem] text-[var(--text-muted)] text-center">✦</span>
             </div>
           ) : panel.imageUrl && !imageErrors[panel.id] ? (
+            <div className="absolute inset-0">
+              {loadingMap[panel.id] !== false && (
+                <div className="absolute inset-0 flex items-center justify-center text-[0.68rem] text-[#c9a84c] bg-[rgba(10,8,6,0.35)] z-[2]">
+                  Generating scene...
+                </div>
+              )}
             <img
               src={panel.imageUrl}
               alt={panel.caption}
               loading="lazy"
               className="cursor-zoom-in"
               onClick={() => setExpanded(panel)}
-              onError={() => setImageErrors(prev => ({ ...prev, [panel.id]: true }))}
+              onLoad={() => setLoadingMap(prev => ({ ...prev, [panel.id]: false }))}
+              onError={(e) => {
+                const img = e.currentTarget
+                if (!retryAttempted[panel.id] && panel.retryImageUrl) {
+                  setRetryAttempted(prev => ({ ...prev, [panel.id]: true }))
+                  img.src = panel.retryImageUrl
+                  return
+                }
+                setImageErrors(prev => ({ ...prev, [panel.id]: true }))
+              }}
             />
+            </div>
           ) : (
             <div
               className="absolute inset-0 flex flex-col items-center justify-center text-center px-3"

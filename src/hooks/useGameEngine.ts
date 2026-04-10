@@ -143,6 +143,7 @@ export function useGameEngine() {
   const [ttsEngine, setTtsEngine] = useState<'browser' | 'neural'>('browser') // Primary engine
   const [ttsSpeed, setTtsSpeed] = useState(0.9)
   const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')
+  const [ttsPending, setTtsPending] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
   // Available browser voices — populated on mount
@@ -556,6 +557,7 @@ export function useGameEngine() {
       let idx = 0
       let watchdogTimer: ReturnType<typeof setInterval> | null = null
       let silenceTimer: ReturnType<typeof setTimeout> | null = null
+      let retryCountForChunk = 0
 
         const speakNext = () => {
           if (abortSpeakRef.current || idx >= sentences.length) {
@@ -575,6 +577,7 @@ export function useGameEngine() {
           const chunk = sentences[idx]?.trim()
           const sentenceIndex = idx
           idx += 1
+          retryCountForChunk = 0
           if (!chunk) {
             window.setTimeout(speakNext, 40)
             return
@@ -599,6 +602,10 @@ export function useGameEngine() {
                 if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
                   window.speechSynthesis.pause()
                   window.setTimeout(() => window.speechSynthesis.resume(), 100)
+                } else if (!window.speechSynthesis.speaking && !abortSpeakRef.current) {
+                  // Engine got stuck between chunks; restart current chunk once.
+                  window.speechSynthesis.cancel()
+                  window.setTimeout(() => window.speechSynthesis.speak(utterance), 200)
                 }
               } catch {
                 // ignore watchdog errors
@@ -606,7 +613,17 @@ export function useGameEngine() {
             }, 10000)
             silenceTimer = setTimeout(() => {
               if (!abortSpeakRef.current) {
-                speakNext()
+                if (retryCountForChunk < 1) {
+                  retryCountForChunk += 1
+                  try {
+                    window.speechSynthesis.cancel()
+                    window.setTimeout(() => window.speechSynthesis.speak(utterance), 200)
+                  } catch {
+                    speakNext()
+                  }
+                } else {
+                  speakNext()
+                }
               }
             }, 2000)
           }
@@ -634,7 +651,17 @@ export function useGameEngine() {
               watchdogTimer = null
             }
             if (abortSpeakRef.current) return resolve()
-            // Skip failed chunk and keep queue alive.
+            if (retryCountForChunk < 1) {
+              retryCountForChunk += 1
+              try {
+                window.speechSynthesis.cancel()
+                window.setTimeout(() => window.speechSynthesis.speak(utterance), 200)
+                return
+              } catch {
+                // continue to skip
+              }
+            }
+            // Skip failed chunk after single retry.
             window.setTimeout(speakNext, 40)
           }
           window.speechSynthesis.speak(utterance)
@@ -792,6 +819,7 @@ export function useGameEngine() {
     // This ensures TTS reads exactly what's shown on screen
     const textToSpeak = displayedNarrative || lastDMNarrative
     if (textToSpeak) {
+      setTtsPending(false)
       speakText(textToSpeak)
     }
   }
@@ -800,6 +828,18 @@ export function useGameEngine() {
   // before auto narration tries to run.
   const unlockTTS = () => {
     warmupBrowserTTS()
+  }
+
+  const triggerPendingTTSFromUserGesture = () => {
+    if (!ttsPending || narratorMode !== 'auto' || isSpeaking) return
+    warmupBrowserTTS()
+    setTtsPending(false)
+    const ttsText = renderedNarrationRef.current || displayedNarrative || lastDMNarrative
+    if (ttsText) {
+      window.setTimeout(() => {
+        if (!abortSpeakRef.current) speakText(ttsText)
+      }, 50)
+    }
   }
 
   // ── FETCH HEROES FOR PARTY SELECTION ───────────────────────────────────
@@ -2904,16 +2944,8 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       gs = await applyMechanics(res, gs)
       await renderResult(res, isFirst, gs)
 
-      // Auto-speak in auto mode — fire and forget, don't block gameplay
-      // Use renderedNarrationRef (sync) to match exactly what's displayed on screen
-      if (narratorMode === 'auto' && !document.hidden) {
-        setTimeout(() => {
-          if (!abortSpeakRef.current) {
-            const ttsText = renderedNarrationRef.current || res.dm_narration || ''
-            if (ttsText) speakText(ttsText)
-          }
-        }, 300)
-      }
+      // Mark narration ready for TTS; actual speak starts on NEXT user gesture.
+      if (narratorMode === 'auto' && !document.hidden) setTtsPending(true)
 
       gs.humanPCId = humanPCId
       gs.isProcessing = false
@@ -3062,7 +3094,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
           (gs.activeNPCs || []).some(n => n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS') ||
           ((res.dice_rolls || []).length > 0) ||
           ((res.damage_dealt || []).length > 0)
-        const seededPanels = await generateComicPanels(displayedText || narr, isCombatScene, { artStyle: comicArtStyle, maxPanels: 4 })
+        const seededPanels = await generateComicPanels(displayedText || narr, isCombatScene, { artStyle: comicArtStyle, maxPanels: 1 })
         const cachedTurnImage = sceneImageByTurn[gs.turn]
         if (cachedTurnImage) {
           setComicPanels(seededPanels.map(panel => ({ ...panel, imageUrl: cachedTurnImage, isGenerating: false, error: undefined })))
@@ -3974,16 +4006,8 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
 
       await renderResult(res, false, newGS)
 
-      // Auto-speak in auto mode — fire and forget, don't block gameplay
-      // Use renderedNarrationRef (sync) to match exactly what's displayed on screen
-      if (narratorMode === 'auto' && !document.hidden) {
-        setTimeout(() => {
-          if (!abortSpeakRef.current) {
-            const ttsText = renderedNarrationRef.current || res.dm_narration || ''
-            if (ttsText) speakText(ttsText)
-          }
-        }, 300)
-      }
+      // Mark narration ready for TTS; actual speak starts on NEXT user gesture.
+      if (narratorMode === 'auto' && !document.hidden) setTtsPending(true)
 
       // ── ACHIEVEMENT CHECK ───────────────────────────────────────────
       const damageThisTurn = (res.damage_dealt?.length || 0) > 0
@@ -4410,6 +4434,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     stopSpeaking,
     speakNarrative,
     unlockTTS,
+    triggerPendingTTSFromUserGesture,
     fetchAvailableHeroes,
     startNewCampaign,
     confirmPartySelection,

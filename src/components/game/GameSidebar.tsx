@@ -491,7 +491,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
           <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">Session Statistics</h4>
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="p-2 bg-[#1a1510] rounded">
-              <div className="text-[#7a5f20]">Gemini Tokens</div>
+              <div className="text-[#7a5f20]">Cloud Tokens</div>
               <div className="text-blue-400 font-bold">{tokenUsage.gemini.total.toLocaleString()}</div>
             </div>
           </div>
@@ -519,7 +519,7 @@ function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpand
 
       <TabsContent value="rules" className="flex-1 overflow-y-auto p-3 m-0 text-sm text-[#9a8860] leading-relaxed min-h-0">
         <h3 className="text-[#c9a84c] mb-2 text-base" style={{ fontFamily: 'Cinzel, serif' }}>HOW IT WORKS</h3>
-        <p><strong className="text-[#9a8860]">Gemini 2.5 Flash</strong> is your DM — narrates in Neil Gaiman style, controls all NPCs, enforces D&D 5e + DDG rules.</p>
+        <p><strong className="text-[#9a8860]">Cloud AI</strong> is your DM — narrates in Neil Gaiman style, controls all NPCs, enforces D&D 5e + DDG rules.</p>
         <p className="mt-2"><strong className="text-[#9a8860]">You</strong> control one PC per turn — the one the story determines is most relevant.</p>
 
         <h3 className="text-[#c9a84c] mt-4 mb-2 text-base" style={{ fontFamily: 'Cinzel, serif' }}>ALIGNMENT RULES</h3>
@@ -821,7 +821,7 @@ function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpand
           <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">Session Stats</h4>
           <div className="text-xs">
             <div className="p-2 bg-[#1a1510] rounded">
-              <div className="text-[#7a5f20]">Gemini</div>
+              <div className="text-[#7a5f20]">Cloud</div>
               <div className="text-blue-400 font-bold">{tokenUsage.gemini.total.toLocaleString()}</div>
             </div>
           </div>
