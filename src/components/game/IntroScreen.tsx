@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2, Monitor, Cloud, RefreshCw, Cpu, Zap } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2, Monitor, Cloud, RefreshCw, Zap } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { version } from '../../../package.json'
+import { ALL_CHARACTERS, getPortraitPath } from '@/lib/characterData'
 
 export interface IntroScreenProps {
   geminiKey: string
@@ -49,7 +50,6 @@ export function IntroScreen({
   const [lmConnected, setLmConnected] = useState<boolean | null>(null)
   const [lmModels, setLmModels] = useState<{ id: string }[]>([])
   const [lmChecking, setLmChecking] = useState(false)
-  const [marqueeOffset, setMarqueeOffset] = useState(0)
   const [activeMarqueeName, setActiveMarqueeName] = useState<string | null>(null)
 
   const checkLmConnection = async () => {
@@ -113,47 +113,45 @@ export function IntroScreen({
     { icon: <Volume2 className="w-4 h-4" />, label: 'Voice', desc: 'AI TTS' },
   ]
 
-  const marqueePortraits = useMemo(() => {
-    const idsByCategory: Record<string, string[]> = {
-      'greater-gods': ['aegir','ahto','amaterasu','anubis','aphrodite','apollo','ares','arioch','athena','balder','bast','bragi','branchala','brigit','chemosh','corellon','coyote','cthulhu','dagda','death_nehwon','diancecht','dionysus','elric','fenris','fistandantilus','fizban','freya','gilean','goibhnie','gruumsh','habbakuk','hades','hel','hephaestus','hera','hermes','huan_ti','huitzilopochtli','indra','isis','izanagi','jormungandr','khellendros','kos','lakshmi','loki','lord_soth','lu_yueh','lugh','lunitari','ma_yuan','malystryx','marduk','mielikki','mishakal','moradin','morrigan','nergal','nike','nin_hursag','nnuuurrrrc','nuitari','nyarlathotep','odin','osiris','paladine','pan','poseidon','ptah','quetzalcoatl','ra','ramman','reorx','rudra','sargonnas','sekolah','set','shiva','shoggoth','shub_niggurath','silvanus','sirrion','solinari','surtur','susanowo','takhisis','tezcatlipoca','thor','thoth','thrym','tlaloc','tobadzistsini','tou_mu','tyr','ukko','untamo','vishnu','votishal','zeboim','zeus'],
-      'heroes': ['arthur','bellerophon','caramon_majere','cthulhu','cuchulainn','derek_crownguard','elric','fafhrd','flint_fireforge','galahad','gareth','gawaine','gilgamesh','gilthanas','goldmoon','gray_mouser','heracles','heracles_hero','hiawatha','hunapu','hunapu_xbalanque','ilmarinen','jason','kitiara_uth_matar','kullervo','lamorak','lancelot','laurana','lemminkainen','merlin','moonglum','morgan_le_fay','movarl','odysseus','palomides','pellinore','perseus','qagwaaz','raiko','raistlin_majere_hero','riverwind','stoneribs','sturm_brightblade','tanis_half_elven','tasslehoff_burrfoot','theseus','tika_waylan','tristram','vainamoinen','yamamoto_date','yoshmye'],
-      'demigods': ['aarth','anubis','apshai','bast','beryllinthranox','chao_kung_ming','chih_chiang','chih_chiang_fyu_ya','cyan_bloodbane','derek_crownguard','fei_lien','fileet','fistandantilus','fizban','gods_of_lankhmar','haaashastaak','hachiman','huma_dragonbane','issek','issek_of_jug','ithaqua','kali','karttikeya','kiputytto','lakshmi','laogzed','lord_soth','loviatar','meerclar','nnuuurrrrc','no_cha','oh_kuni_nushi','raistlin_majere_demigod','ratri','spider_god','surma','susanowo','tvashtri','vaprak','votishal','wen_chung','yama'],
-      'krynn': ['beryllinthranox','branchala','caramon_majere','chemosh','cyan_bloodbane','derek_crownguard','draconians','fistandantilus','fizban','flint_fireforge','gilean','gilthanas','goldmoon','habbakuk','hiddukel','huma_dragonbane','khellendros','kitiara_uth_matar','laurana','lord_soth','lunitari','malystryx','mishakal','nuitari','paladine','raistlin_majere_demigod','raistlin_majere_hero','reorx','riverwind','sargonnas','shadow_wights','sirrion','solinari','sturm_brightblade','takhisis','tanis_half_elven','tasslehoff_burrfoot','tika_waylan','zeboim'],
-      'lesser-gods': ['aegir','artemis','bragi','brigit','coyote','demeter','diancecht','dionysus','druaga','girru','goibhnie','hephaestus','hiddukel','huan_ti','huitzilopochtli','ilmatar','ishtar','kali','lolth','lu_yueh','marduk_lesser','mielikki','morrigan','nergal','nike','nyarlathotep','pan','rat_god','raven','sekolah','shub_niggurath','surtur','thrym','tobadzistsini','tou_mu','untamo'],
-      'monsters': ['apep','blodug_hofi','byakhee','cerberus','dark_young','deep_ones','draconians','fenris','ghast','gug','jormungandr','mi_go','nightgaunt','primordial_one','shadow_wights','shoggoth','spawn_cthulhu','thunder_bird'],
-    }
-    const allPaths: string[] = []
-    for (const [cat, ids] of Object.entries(idsByCategory)) {
-      for (const id of ids) {
-        allPaths.push(`/portraits/${cat}/${id}.png`)
-      }
-    }
-    const shuffled = [...allPaths]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = (i * 7 + 13) % (i + 1)
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
-    }
-    return shuffled
+  const allPortraitItems = useMemo(() => {
+    const validCategories = new Set(['greater-gods', 'demigods', 'heroes', 'krynn', 'lesser-gods', 'monsters'])
+    const items = ALL_CHARACTERS
+      .filter(c => validCategories.has(c.category))
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        category: c.category,
+        portraitPath: getPortraitPath(c),
+      }))
+    // Deduplicate by category/id for safe marquee rendering.
+    const seen = new Set<string>()
+    return items.filter(item => {
+      const key = `${item.category}:${item.id}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
   }, [])
+
+  const [poolStart, setPoolStart] = useState(0)
+  const visibleCount = 20
+  const rotateCount = 5
+  const portraitCount = allPortraitItems.length
+  const displayedItems = useMemo(() => {
+    if (!allPortraitItems.length) return []
+    const out = []
+    for (let i = 0; i < visibleCount; i++) {
+      out.push(allPortraitItems[(poolStart + i) % allPortraitItems.length])
+    }
+    return out
+  }, [allPortraitItems, poolStart])
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setMarqueeOffset(prev => (prev + 8) % Math.max(1, marqueePortraits.length))
+      setPoolStart(prev => (prev + rotateCount) % Math.max(1, allPortraitItems.length))
     }, 12000)
     return () => clearInterval(timer)
-  }, [marqueePortraits.length])
-
-  const rotatedMarquee = useMemo(() => {
-    if (!marqueePortraits.length) return []
-    return [...marqueePortraits.slice(marqueeOffset), ...marqueePortraits.slice(0, marqueeOffset)]
-  }, [marqueePortraits, marqueeOffset])
-
-  const extractPortraitName = (src: string) => src.split('/').pop()?.replace('.png', '').replace(/_/g, ' ') || 'Unknown'
-  // Split into 4 strips for all 4 edges
-  const topStrip = useMemo(() => rotatedMarquee.filter((_, i) => i % 4 === 0), [rotatedMarquee])
-  const bottomStrip = useMemo(() => rotatedMarquee.filter((_, i) => i % 4 === 1), [rotatedMarquee])
-  const leftStrip = useMemo(() => rotatedMarquee.filter((_, i) => i % 4 === 2), [rotatedMarquee])
-  const rightStrip = useMemo(() => rotatedMarquee.filter((_, i) => i % 4 === 3), [rotatedMarquee])
+  }, [allPortraitItems.length])
 
   return (
     <div className="min-h-screen bg-[#060403] flex flex-col items-center justify-center p-4 overflow-hidden relative">
@@ -290,6 +288,58 @@ export function IntroScreen({
           text-transform: capitalize;
         }
         .marquee-item-wrap:hover .name-overlay { opacity: 1; }
+        @keyframes start-marquee-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .start-marquee-shell {
+          overflow: hidden;
+          border: 1px solid rgba(212,175,55,0.35);
+          border-radius: 10px;
+          background: linear-gradient(180deg, rgba(14,10,6,0.86), rgba(8,6,4,0.8));
+          box-shadow: inset 0 0 0 1px rgba(255,215,128,0.12);
+          margin: 10px 0 14px;
+        }
+        .start-marquee-track {
+          display: flex;
+          width: max-content;
+          gap: 8px;
+          padding: 8px;
+          animation: start-marquee-scroll 55s linear infinite;
+        }
+        .start-marquee-item {
+          position: relative;
+          width: 68px;
+          height: 68px;
+          border-radius: 10px;
+          overflow: hidden;
+          border: 1px solid rgba(212,175,55,0.35);
+          box-shadow: 0 0 10px rgba(212,175,55,0.15);
+          flex-shrink: 0;
+          background: #0d0906;
+        }
+        .start-marquee-item img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform .25s ease;
+        }
+        .start-marquee-item:hover img { transform: scale(1.06); }
+        .start-marquee-item .name-overlay {
+          bottom: 4px;
+          left: 50%;
+          transform: translateX(-50%);
+          font-size: 10px;
+          color: #fff;
+          background: rgba(0,0,0,0.72);
+          border: 1px solid rgba(255,255,255,0.18);
+          border-radius: 6px;
+          padding: 2px 6px;
+          text-transform: none;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
         .mq-v--left {
           left: 0; width: 84px;
           background: linear-gradient(to right, rgba(6,4,3,0.95) 0%, rgba(6,4,3,0.7) 40%, transparent 100%);
@@ -327,53 +377,6 @@ export function IntroScreen({
       <div className="intro-bg-slide" style={{ backgroundImage: 'url(/images/intro/monster.png)' }} />
       <div className="intro-bg-overlay" />
 
-      {/* TOP horizontal marquee (scrolls left) */}
-      <div className="mq-h mq-h--top" aria-hidden="true">
-        <div className="mq-h__track">
-          {[...topStrip, ...topStrip].map((src, i) => (
-            <div key={`t-${i}`} className="marquee-item-wrap" onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `t-${i}` ? null : `t-${i}`)}>
-              <img src={src} alt={extractPortraitName(src)} className="mq-h__item" loading="lazy" />
-              <span className="name-overlay" style={{ opacity: activeMarqueeName === `t-${i}` ? 1 : undefined }}>{extractPortraitName(src)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* BOTTOM horizontal marquee (scrolls right) */}
-      <div className="mq-h mq-h--bot" aria-hidden="true">
-        <div className="mq-h__track">
-          {[...bottomStrip, ...bottomStrip].map((src, i) => (
-            <div key={`b-${i}`} className="marquee-item-wrap" onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `b-${i}` ? null : `b-${i}`)}>
-              <img src={src} alt={extractPortraitName(src)} className="mq-h__item" loading="lazy" />
-              <span className="name-overlay" style={{ opacity: activeMarqueeName === `b-${i}` ? 1 : undefined }}>{extractPortraitName(src)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* LEFT vertical marquee (scrolls down) */}
-      <div className="mq-v mq-v--left" aria-hidden="true">
-        <div className="mq-v__track">
-          {[...leftStrip, ...leftStrip].map((src, i) => (
-            <div key={`l-${i}`} className="marquee-item-wrap" onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `l-${i}` ? null : `l-${i}`)}>
-              <img src={src} alt={extractPortraitName(src)} className="mq-v__item" loading="lazy" />
-              <span className="name-overlay" style={{ opacity: activeMarqueeName === `l-${i}` ? 1 : undefined }}>{extractPortraitName(src)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* RIGHT vertical marquee (scrolls up) */}
-      <div className="mq-v mq-v--right" aria-hidden="true">
-        <div className="mq-v__track">
-          {[...rightStrip, ...rightStrip].map((src, i) => (
-            <div key={`r-${i}`} className="marquee-item-wrap" onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `r-${i}` ? null : `r-${i}`)}>
-              <img src={src} alt={extractPortraitName(src)} className="mq-v__item" loading="lazy" />
-              <span className="name-overlay" style={{ opacity: activeMarqueeName === `r-${i}` ? 1 : undefined }}>{extractPortraitName(src)}</span>
-            </div>
-          ))}
-        </div>
-      </div>
 
       {/* Parallax layers */}
       <div className="parallax-layer-deep" />
@@ -390,7 +393,7 @@ export function IntroScreen({
       ))}
 
       {/* MAIN CONTENT - centered, z-10, with side padding for vertical marquees */}
-      <div className="relative z-10 w-full max-w-2xl mx-auto" style={{ padding: '0 50px' }}>
+      <div className="relative z-10 w-full max-w-2xl mx-auto">
         {/* Title */}
         <div className="text-center mb-4">
           <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }}
@@ -425,6 +428,35 @@ export function IntroScreen({
               letterSpacing: '.25em', textTransform: 'uppercase' }}>
             Mythworld Engine &middot; AI-Powered D&D
           </motion.p>
+        </div>
+
+        {/* Portrait marquee (codex-backed) */}
+        <div className="start-marquee-shell">
+          <div className="px-2 pt-1 text-[10px] text-[#9a8860] text-center" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}>
+            CHARACTER SHOWCASE · {portraitCount} portraits
+          </div>
+          <div className="start-marquee-track">
+            {[...displayedItems, ...displayedItems].map((item, i) => (
+              <div
+                key={`${item.category}-${item.id}-${i}`}
+                className="start-marquee-item marquee-item-wrap"
+                onTouchStart={() => setActiveMarqueeName(activeMarqueeName === `${item.id}-${i}` ? null : `${item.id}-${i}`)}
+                onClick={() => setActiveMarqueeName(activeMarqueeName === `${item.id}-${i}` ? null : `${item.id}-${i}`)}
+              >
+                <img
+                  src={item.portraitPath}
+                  alt={item.name}
+                  width={68}
+                  height={68}
+                  loading="lazy"
+                  fetchPriority={i < 20 ? 'high' : 'auto'}
+                />
+                <span className="name-overlay" style={{ opacity: activeMarqueeName === `${item.id}-${i}` ? 1 : undefined }}>
+                  {item.name}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Compact Main Card */}
