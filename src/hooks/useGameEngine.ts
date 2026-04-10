@@ -3111,7 +3111,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ── RUN TURN ───────────────────────────────────────────────────────────
   // ═══════════════════════════════════════════════════════════════════
-  // DUAL-ENGINE DM SYSTEM v2.14.0
+  // DUAL-ENGINE DM SYSTEM v2.17.0
   //   LM Studio  → mechanics (dice, rules, state changes)
   //   Gemini     → creative narration (prose, dialogue, atmosphere)
   //   Dual mode  → both in parallel, merge best of each
