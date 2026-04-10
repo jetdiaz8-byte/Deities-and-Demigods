@@ -89,7 +89,7 @@ export default function CombatOverlay({
       </div>
       {latest && (
         <div className={`damage-popup ${latest.result === 'heal' ? 'heal' : latest.isCritical ? 'critical' : latest.result === 'miss' ? 'miss' : 'damage'}`} style={{ position: 'relative', left: '50%', transform: 'translateX(-50%)' }}>
-          {latest.actor} {latest.action} -> {latest.target || 'target'} {latest.damage ? `for ${latest.damage} ${latest.damageType || ''}` : ''}
+          {latest.actor} {latest.action} → {latest.target || 'target'} {latest.damage ? `for ${latest.damage} ${latest.damageType || ''}` : ''}
         </div>
       )}
       <div className="combat-columns">
@@ -106,7 +106,7 @@ export default function CombatOverlay({
         {combatState.log.slice(-10).map((e, idx) => (
           <div key={`${e.actor}-${idx}`} className="combat-log-entry">
             <span>[R{e.round}] </span>
-            <span className={e.actor === current?.name ? 'actor-player' : 'actor-enemy'}>{e.actor}</span> {e.action} {e.target ? `-> ${e.target}` : ''} {typeof e.damage === 'number' ? `(${e.damage})` : ''}
+            <span className={e.actor === current?.name ? 'actor-player' : 'actor-enemy'}>{e.actor}</span> {e.action} {e.target ? `→ ${e.target}` : ''} {typeof e.damage === 'number' ? `(${e.damage})` : ''}
           </div>
         ))}
       </div>
