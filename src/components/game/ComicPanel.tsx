@@ -45,8 +45,15 @@ export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicP
           ) : panel.imageUrl ? (
             <img src={panel.imageUrl} alt={panel.caption} loading="lazy" />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-[var(--bg-secondary)]">
-              <span className="text-[0.625rem] text-[var(--text-muted)]">✦</span>
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center text-center px-3"
+              style={{
+                background:
+                  'radial-gradient(circle at 20% 20%, rgba(212,175,55,0.2), transparent 45%), linear-gradient(160deg, #1a1510, #0d0a08)',
+              }}
+            >
+              <span className="text-[0.7rem] text-[var(--text-secondary)]">Scene illustration loading...</span>
+              <span className="text-[0.58rem] text-[var(--text-muted)] mt-1">Fallback art is shown if generation is unavailable</span>
             </div>
           )}
           {panel.speechBubble && !panel.isGenerating && (

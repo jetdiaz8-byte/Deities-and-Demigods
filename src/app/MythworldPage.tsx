@@ -24,7 +24,7 @@ import { TestOfFaith } from '@/components/game/TestOfFaith'
 import { AchievementNotificationQueue } from '@/components/game/AchievementNotification'
 import { AchievementsDialog } from '@/components/game/AchievementsDialog'
 import { useGameEngine } from '@/hooks/useGameEngine'
-import { useGameAudio, useSceneMusic } from '@/hooks/useGameAudio'
+import { useGameAudio } from '@/hooks/useGameAudio'
 import { getUnlockedCount, getTotalCount, getAchievementDef } from '@/lib/achievements'
 import { version } from '../../package.json'
 
@@ -87,6 +87,7 @@ export default function MythworldEngine() {
     advanceTurn,
     exportStory,
     speakNarrative,
+    unlockTTS,
     stopSpeaking,
     invokeShard,
     handleUseItem,
@@ -102,7 +103,6 @@ export default function MythworldEngine() {
 
   // ── AUDIO ENGINE ─────────────────────────────────────────────────────
   const audio = useGameAudio()
-  const sceneMusic = useSceneMusic(gameState)
 
   // Combat flash overlay ref
   const flashRef = useRef<HTMLDivElement>(null)
@@ -405,8 +405,6 @@ export default function MythworldEngine() {
           achievementTotal={getTotalCount()}
           onOpenAchievements={() => setShowAchievementsDialog(true)}
           onOpenQuestJournal={() => setShowQuestJournal(true)}
-          detectedSceneTheme={sceneMusic.detectedTheme}
-          isAutoSceneMode={sceneMusic.isAutoMode}
         />
 
         {/* Dice Rolls Display */}
@@ -427,11 +425,11 @@ export default function MythworldEngine() {
         )}
 
         {/* Main Content Area with Fixed Sidebar */}
-        <div className="flex flex-1 relative">
+        <div className="flex flex-1 relative overflow-hidden mythworld-main-layout">
           {/* Narrative Panel */}
           <div
             ref={narrRef}
-            className={`flex-1 overflow-y-auto p-3 md:p-4 md:mr-80 scroll-smooth ${atmosphereClass}`}
+            className={`flex-1 min-w-0 overflow-y-auto p-2 sm:p-3 md:p-4 pb-6 md:pb-8 md:mr-80 scroll-smooth ${atmosphereClass}`}
             style={{
               background: gameState?.act === 'act1'
                 ? 'rgba(6,4,3,.98)'
@@ -497,7 +495,7 @@ export default function MythworldEngine() {
 
             {/* Smart Narrator Controls */}
             {lastDMNarrative && (
-              <div className="sticky bottom-0 left-0 right-0 z-20 mb-2 mt-4">
+              <div className="relative z-20 mb-2 mt-4">
                 <div className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg border border-[#2a2010]" style={{
                   background: 'linear-gradient(135deg, rgba(26,21,16,0.95), rgba(16,12,8,0.95))',
                   backdropFilter: 'blur(8px)',
@@ -507,7 +505,10 @@ export default function MythworldEngine() {
                     {(['auto', 'manual', 'off'] as const).map(mode => (
                       <button
                         key={mode}
-                        onClick={() => setNarratorMode(mode)}
+                        onClick={() => {
+                          unlockTTS()
+                          setNarratorMode(mode)
+                        }}
                         className={`min-h-[44px] min-w-[44px] flex items-center justify-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[8px] sm:text-[10px] font-title uppercase tracking-wider transition-all ${
                           narratorMode === mode
                             ? 'bg-[rgba(212,175,55,.15)] text-[#d4af37] border border-[#d4af37]'
@@ -595,7 +596,7 @@ export default function MythworldEngine() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap relative z-[41] md:mr-80 safe-bottom">
+        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap relative z-[41] md:mr-80 safe-bottom mythworld-bottom-bar">
           <Button
             onClick={() => setSidebarOpen(true)}
             variant="outline"
@@ -614,7 +615,10 @@ export default function MythworldEngine() {
           </button>
 
           <Button
-            onClick={advanceTurn}
+            onClick={() => {
+              unlockTTS()
+              advanceTurn()
+            }}
             disabled={!!gameState?.ended || !!gameState?.waitingForHuman || !!gameState?.isProcessing}
             className="bg-gradient-to-b from-[#362200] to-[#1e1100] hover:from-[#502f00] hover:to-[#301a00] text-[#f0c860] border border-[#7a5f20] min-h-[44px]"
             style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.12em' }}

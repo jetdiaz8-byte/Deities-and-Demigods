@@ -5,23 +5,23 @@
 import type { Injury, Item, AntagonistClue } from '@/lib/gameTypes'
 
 // ═══════════════════════════════════════════════════════════════════════════
-// AI MODEL CONFIGURATION — OpenRouter fallback chain
+// AI MODEL CONFIGURATION — OpenRouter fallback chain (free-tier models only)
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const OPENROUTER_MODEL = 'mistralai/mistral-large'
+export const OPENROUTER_MODEL = 'openai/gpt-oss-120b:free'
 
 export const OPENROUTER_MODEL_TOKEN_LIMITS: Record<string, number> = {
-  'mistralai/mistral-large': 65536,
-  'cohere/command-r-plus': 128000,
-  'deepseek/deepseek-chat-v3-0324:free': 65536,
-  'google/gemma-3-27b-it:free': 8192,
+  'openai/gpt-oss-120b:free': 131072,
+  'qwen/qwen3-next-80b-a3b-instruct:free': 262144,
+  'nvidia/nemotron-3-super-120b-a12b:free': 262144,
+  'meta-llama/llama-3.3-70b-instruct:free': 65536,
 }
 
 export const OPENROUTER_FALLBACK_MODELS = [
-  'mistralai/mistral-large',
-  'cohere/command-r-plus',
-  'deepseek/deepseek-chat-v3-0324:free',
-  'google/gemma-3-27b-it:free',
+  'openai/gpt-oss-120b:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'nvidia/nemotron-3-super-120b-a12b:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
 ]
 
 // ═══════════════════════════════════════════════════════════════════════════

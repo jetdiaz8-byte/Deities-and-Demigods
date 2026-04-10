@@ -443,8 +443,8 @@ export function IntroScreen({
 
                 {engineMode === 'gemini' ? (
                   <div className="flex gap-2 items-center">
-                    <span className="text-[#9a8860] text-[10px] uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Cinzel, serif' }}>Gemini Key</span>
-                    <Input type="password" placeholder="AIza..." value={geminiKey}
+                    <span className="text-[#9a8860] text-[10px] uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'Cinzel, serif' }}>OpenRouter Key</span>
+                    <Input type="password" placeholder="sk-or-v1-..." value={geminiKey}
                       onChange={e => setGeminiKey(e.target.value)}
                       className="flex-1 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] h-8 text-xs" />
                     <Badge className="bg-[#0a2820] text-[#40c0a0] border-[#208060] text-[10px]">AI</Badge>
@@ -501,7 +501,7 @@ export function IntroScreen({
 
               <p className="text-[#5a4d30] text-[10px] text-center mt-1 italic">
                 {engineMode === 'gemini'
-                  ? 'Server proxy mode \u00b7 Gemini key optional'
+                  ? 'Server proxy mode \u00b7 OpenRouter key optional'
                   : engineMode === 'dual'
                     ? 'Dual Engine \u00b7 Mechanics locally + narration via cloud'
                     : 'Local LLM \u00b7 No API key needed \u00b7 Runs on your machine'}

@@ -311,11 +311,10 @@ export function useGameAudio() {
     ambR.current = { oscs, lfo, noise, master }
   }, [getCtx, stopAmbient, mkReverb])
 
-  const transitionAmbient = useCallback((act: ActName) => {
-    if (!s.ambientEnabled) return; const ctx = getCtx(); if (!ctx) return
-    if (ambR.current.master) ambR.current.master.gain.linearRampToValueAtTime(.001, ctx.currentTime + 1.5)
-    setTimeout(() => startAmbient(act), 1600)
-  }, [s.ambientEnabled, startAmbient])
+  const transitionAmbient = useCallback((_act: ActName) => {
+    // Background music intentionally disabled to avoid speech focus conflicts.
+    stopAmbient()
+  }, [stopAmbient])
 
   useEffect(() => { if (ambR.current.master) { const v = volR.current*ambVolR.current; ambR.current.master.gain.linearRampToValueAtTime(v,(ctxR.current?.currentTime||0)+.5) } }, [s.volume, s.ambientVolume])
 
@@ -324,9 +323,9 @@ export function useGameAudio() {
       switch(e.type) {
         case 'dice_roll': playDiceRoll(e.success); break; case 'combat_hit': playCombatHit(e.critical); break; case 'combat_miss': { const _ctx = getCtx(); if (_ctx) mkNoise(_ctx,.2,4000,.12*volR.current*sfxVolR.current,0); break; }
         case 'injury': playInjury(); break; case 'level_up': playLevelUp(); break; case 'shard_pulse': playShardPulse(); break
-        case 'act_transition': playActTransition(e.act as ActName); transitionAmbient(e.act as ActName); break; case 'boss_phase': playBossPhase(e.phase); break
-        case 'victory': playVictory(); break; case 'death': playDeath(); break; case 'ambient_start': startAmbient(e.act as ActName); break
-        case 'ambient_stop': stopAmbient(); break; case 'ambient_transition': transitionAmbient(e.act as ActName); break
+        case 'act_transition': playActTransition(e.act as ActName); break; case 'boss_phase': playBossPhase(e.phase); break
+        case 'victory': playVictory(); break; case 'death': playDeath(); break; case 'ambient_start': break
+        case 'ambient_stop': stopAmbient(); break; case 'ambient_transition': break
       }
     }
     return soundEvents.subscribe(handler)
@@ -337,10 +336,14 @@ export function useGameAudio() {
   return {
     sfxEnabled: s.sfxEnabled, ambientEnabled: s.ambientEnabled, volume: s.volume, sfxVolume: s.sfxVolume, ambientVolume: s.ambientVolume,
     toggleSfx: useCallback(() => setS(p => ({...p, sfxEnabled: !p.sfxEnabled})), []),
-    toggleAmbient: useCallback(() => setS(p => { if (!p.ambientEnabled) stopAmbient(); return {...p, ambientEnabled: !p.ambientEnabled} }), [stopAmbient]),
+    toggleAmbient: useCallback(() => {
+      // Keep ambient always disabled; stop any stray background loops immediately.
+      stopAmbient()
+      setS(p => ({ ...p, ambientEnabled: false }))
+    }, [stopAmbient]),
     setVolume: useCallback((v: number) => setS(p => ({...p, volume: Math.max(0, Math.min(1, v))})), []),
     setSfxVolume: useCallback((v: number) => setS(p => ({...p, sfxVolume: Math.max(0, Math.min(1, v))})), []),
-    setAmbientVolume: useCallback((v: number) => setS(p => ({...p, ambientVolume: Math.max(0, Math.min(1, v))})), []),
+    setAmbientVolume: useCallback((_v: number) => setS(p => ({...p, ambientVolume: 0})), []),
     playDiceRoll, playCombatHit, playInjury, playLevelUp, playShardPulse, playActTransition, playBossPhase, playVictory, playDeath, startAmbient, stopAmbient, transitionAmbient,
   }
 }

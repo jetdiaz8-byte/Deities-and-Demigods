@@ -68,13 +68,8 @@ export function GameSidebar({
         }
       `}</style>
 
-      {/* Desktop Sidebar - top offset accounts for sticky header */}
-      <div className="fixed right-0 top-0 h-screen w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-40 hidden md:flex sidebar-parchment">
-        {/* Spacer for sticky header — pushes all content below the header */}
-        <div className="flex-shrink-0 h-[190px]" />
-        
-        {/* Story So Far - Below header, inside scrollable area */}
-        
+      {/* Desktop Sidebar */}
+      <div className="fixed right-0 top-[190px] h-[calc(100vh-190px)] w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-10 hidden md:flex sidebar-parchment">
         {/* Scrollable content area */}
         <div className="flex-1 overflow-y-auto pb-24 scroll-parchment">
         <div className="border-b border-[#2e2008] p-3">

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   BookOpen, ScrollText, Volume2, VolumeX, Menu, X, Clock,
-  Music, VolumeOff, Volume1, Swords, Trophy, Skull
+  VolumeOff, Volume1, Swords, Trophy, Skull
 } from 'lucide-react'
 import { HealthBar, NarrativeSection, TokenCounter } from '@/components/game/GameComponents'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
@@ -111,32 +111,19 @@ export function GameHeader({
   isAutoSceneMode,
 }: GameHeaderProps) {
   const [showAudioPanel, setShowAudioPanel] = useState(false)
-  const [showAmbientThemes, setShowAmbientThemes] = useState(false)
-  const [ambientTheme, setAmbientTheme] = useState('dungeon')
   const [antagonistRevealPlayed, setAntagonistRevealPlayed] = useState(false)
   const [sceneNotification, setSceneNotification] = useState<string | null>(null)
 
-  const themes = [
-    { id: 'tavern', label: '🍺 Tavern', color: '#c9a84c' },
-    { id: 'dungeon', label: '🏚️ Dungeon', color: '#8b6914' },
-    { id: 'forest', label: '🌲 Forest', color: '#4a9060' },
-    { id: 'battle', label: '⚔️ Battle', color: '#c04040' },
-    { id: 'temple', label: '⛪ Temple', color: '#a080d0' },
-    { id: 'ocean', label: '🌊 Ocean', color: '#4090c0' },
-  ]
-
-  // Show notification when auto-detected theme changes
+  // Show notification when auto-detected scene changes.
   const prevAutoThemeRef = React.useRef(detectedSceneTheme)
   React.useEffect(() => {
     if (isAutoSceneMode && detectedSceneTheme && detectedSceneTheme !== prevAutoThemeRef.current && prevAutoThemeRef.current) {
-      const themeLabel = themes.find(t => t.id === detectedSceneTheme)?.label || detectedSceneTheme
-      setSceneNotification(`🎵 Scene: ${themeLabel}`)
+      setSceneNotification(`🎬 Scene: ${detectedSceneTheme}`)
       const timer = setTimeout(() => setSceneNotification(null), 3000)
       return () => clearTimeout(timer)
     }
     prevAutoThemeRef.current = detectedSceneTheme
-  }, [detectedSceneTheme, isAutoSceneMode, themes])
-  const currentTheme = themes.find(t => t.id === ambientTheme) || themes[1]
+  }, [detectedSceneTheme, isAutoSceneMode])
   const revealed = gameState.act === ACTS.THREE
   React.useEffect(() => {
     if (revealed && !antagonistRevealPlayed) {
@@ -215,46 +202,6 @@ export function GameHeader({
             )}
           </button>
 
-          {/* Ambient Theme Selector */}
-          <div className="relative">
-            <button
-              onClick={() => ambientEnabled ? setShowAmbientThemes(prev => !prev) : toggleAmbient()}
-              className="p-2.5 md:p-1.5 rounded transition-all flex items-center gap-1 min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
-              title={ambientEnabled ? `Ambiance: ${currentTheme.label}` : 'Enable Ambient Music'}
-            >
-              {ambientEnabled ? (
-                <>
-                  <Music className="w-4 h-4" style={{ color: currentTheme.color }} />
-                  <span className="hidden lg:inline text-[10px] font-title" style={{ color: currentTheme.color }}>{currentTheme.label.split(' ')[1]}</span>
-                </>
-              ) : (
-                <VolumeOff className="w-4 h-4 text-gray-500" />
-              )}
-            </button>
-            {showAmbientThemes && (
-              <div className="absolute top-full mt-1 right-0 z-[60] p-2 bg-[#1a1510] border border-[#3a3020] rounded-lg shadow-xl shadow-black/60 min-w-[140px]">
-                <div className="text-[10px] uppercase tracking-wider text-[#8a7040] font-title mb-1 px-2">Ambiance</div>
-                {themes.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => { setAmbientTheme(t.id); setShowAmbientThemes(false) }}
-                    className={`w-full text-left px-2 py-1.5 rounded text-xs transition-all ${ambientTheme === t.id ? 'bg-[rgba(212,175,55,.1)] text-[#d4af37]' : 'text-[#a08060] hover:bg-[rgba(212,175,55,.05)] hover:text-[#c9a84c]'}`}
-                  >
-                    {t.label}
-                  </button>
-                ))}
-                <div className="mt-1 pt-1 border-t border-[#2a2010]">
-                  <button
-                    onClick={() => { toggleAmbient(); setShowAmbientThemes(false) }}
-                    className="w-full text-left px-2 py-1.5 rounded text-xs text-[#804040] hover:bg-[rgba(180,60,40,.1)] transition-all"
-                  >
-                    <VolumeOff className="w-3 h-3 inline mr-1" /> Disable
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Volume Slider Panel - Desktop only */}
           <div className="hidden md:flex items-center gap-1">
             <button
@@ -309,22 +256,6 @@ export function GameHeader({
                     />
                   </div>
 
-                  {/* Music Volume */}
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase tracking-wider text-[#8a7040] font-title">Music</span>
-                      <span className="text-[10px] text-[#c9a84c]">{Math.round(ambientVolume * 100)}%</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.05"
-                      value={ambientVolume}
-                      onChange={(e) => setAmbientVolume(parseFloat(e.target.value))}
-                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#2a2015] accent-[#d4af37]"
-                    />
-                  </div>
                 </div>
               </div>
             )}
@@ -449,17 +380,6 @@ export function GameHeader({
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-4 h-[2px] bg-gray-600 rotate-45 rounded-full" />
               </div>
-            )}
-          </button>
-          <button
-            onClick={toggleAmbient}
-            className="p-2.5 rounded transition-all min-h-[44px] min-w-[44px] flex items-center justify-center"
-            title={ambientEnabled ? `Disable: ${currentTheme.label}` : 'Enable Ambient Music'}
-          >
-            {ambientEnabled ? (
-              <Music className="w-4 h-4" style={{ color: currentTheme.color }} />
-            ) : (
-              <VolumeOff className="w-4 h-4 text-gray-500" />
             )}
           </button>
         </div>

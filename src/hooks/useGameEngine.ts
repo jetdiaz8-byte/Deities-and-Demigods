@@ -76,7 +76,7 @@ export function useGameEngine() {
   }
 
   const [gameState, setGameState] = useState<GameState>(createInitialState())
-  const [geminiKey, setGeminiKey] = useState('')
+  const [openrouterKey, setOpenrouterKey] = useState('')
   const [serverKey, setServerKey] = useState('')
   const [aiProvider, setAiProvider] = useState<'gemini' | 'lmstudio'>('gemini')
   const [engineMode, setEngineMode] = useState<'gemini' | 'lmstudio' | 'dual'>('gemini')
@@ -152,6 +152,24 @@ export function useGameEngine() {
   // Browser voice ref for cancel support
   const browserUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
   const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const ttsUnlockedRef = useRef(false)
+
+  // Must run in user gesture context for Chrome/Safari autoplay policies.
+  const warmupBrowserTTS = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    if (ttsUnlockedRef.current) return
+    try {
+      const warm = new SpeechSynthesisUtterance(' ')
+      warm.volume = 0
+      window.speechSynthesis.speak(warm)
+      window.setTimeout(() => {
+        window.speechSynthesis.cancel()
+      }, 30)
+      ttsUnlockedRef.current = true
+    } catch {
+      // Keep silent; user can retry via manual speak button.
+    }
+  }
 
   // ── BROWSER VOICE DETECTION ──────────────────────────────────────────
   useEffect(() => {
@@ -159,13 +177,6 @@ export function useGameEngine() {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'))
       setBrowserVoices(voices)
-      // Chrome warm-up: first speak() after load can be swallowed without this prime.
-      try {
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(''))
-        window.speechSynthesis.cancel()
-      } catch {
-        // ignore
-      }
       if (voices.length > 0) {
         const preferred = [
           'Google UK English Male', 'Microsoft George Online', 'Microsoft Mark Online',
@@ -465,7 +476,7 @@ export function useGameEngine() {
   // ═══════════════════════════════════════════════════════════════════════════
 
   // ── BROWSER TTS (Primary) ────────────────────────────────────────────
-  const speakWithBrowser = (text: string): Promise<void> => {
+  const speakWithBrowser = async (text: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (typeof window === 'undefined' || !window.speechSynthesis) {
         reject(new Error('Browser speech not supported'))
@@ -474,34 +485,56 @@ export function useGameEngine() {
 
       // Cancel any ongoing speech
       window.speechSynthesis.cancel()
-
-      const utterance = new SpeechSynthesisUtterance(text)
-      browserUtteranceRef.current = utterance
-
-      // Find the selected voice
-      const voice = browserVoices.find(v => v.name === browserVoiceName)
-      if (voice) utterance.voice = voice
-
-      // DM narration settings: slower rate, slightly lower pitch
-      utterance.rate = Math.max(0.5, Math.min(2, ttsSpeed))
-      utterance.pitch = 0.9  // Slightly deeper for DM gravitas
-      utterance.volume = 0.9
-
-      utterance.onend = () => {
-        browserUtteranceRef.current = null
-        if (abortSpeakRef.current) return
-        resolve()
-      }
-      utterance.onerror = (e) => {
-        browserUtteranceRef.current = null
-        if (abortSpeakRef.current || e.error === 'canceled') {
-          resolve() // Cancel is not an error
+      // Chrome/Safari can drop speech if speak() happens immediately after cancel().
+      // Queue speaking with a small delay.
+      window.setTimeout(() => {
+        if (abortSpeakRef.current) {
+          resolve()
           return
         }
-        reject(new Error(`Browser speech error: ${e.error}`))
-      }
 
-      window.speechSynthesis.speak(utterance)
+        const chunks = splitTextIntoChunks(text, 280)
+        let idx = 0
+
+        const speakNext = () => {
+          if (abortSpeakRef.current || idx >= chunks.length) {
+            browserUtteranceRef.current = null
+            resolve()
+            return
+          }
+          const chunk = chunks[idx]?.trim()
+          idx += 1
+          if (!chunk) {
+            window.setTimeout(speakNext, 40)
+            return
+          }
+          const utterance = new SpeechSynthesisUtterance(chunk)
+          browserUtteranceRef.current = utterance
+
+          const allVoices = window.speechSynthesis.getVoices()
+          const voice = allVoices.find(v => v.name === browserVoiceName) || browserVoices.find(v => v.name === browserVoiceName)
+          if (voice) utterance.voice = voice
+
+          utterance.rate = Math.max(0.5, Math.min(2, ttsSpeed))
+          utterance.pitch = 0.9
+          utterance.volume = 0.9
+
+          utterance.onend = () => {
+            // iOS Safari is more stable with a brief pause between utterances.
+            window.setTimeout(speakNext, 80)
+          }
+          utterance.onerror = (e) => {
+            browserUtteranceRef.current = null
+            if (abortSpeakRef.current || e.error === 'canceled' || e.error === 'interrupted') {
+              resolve()
+              return
+            }
+            reject(new Error(`Browser speech error: ${e.error}`))
+          }
+          window.speechSynthesis.speak(utterance)
+        }
+        speakNext()
+      }, 120)
     })
   }
 
@@ -645,12 +678,20 @@ export function useGameEngine() {
   }
 
   const speakNarrative = () => {
+    // Ensures first manual click unlocks Web Speech on Chrome/Safari.
+    warmupBrowserTTS()
     // Use the EXACT displayed narrative text for TTS sync
     // This ensures TTS reads exactly what's shown on screen
     const textToSpeak = displayedNarrative || lastDMNarrative
     if (textToSpeak) {
       speakText(textToSpeak)
     }
+  }
+
+  // Exposed for UI click handlers so browser speech is unlocked
+  // before auto narration tries to run.
+  const unlockTTS = () => {
+    warmupBrowserTTS()
   }
 
   // ── FETCH HEROES FOR PARTY SELECTION ───────────────────────────────────
@@ -1206,15 +1247,12 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
-  const callGeminiDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
-    const maxTokens = isFirstTurn ? 20000 : 6144
+  const callOpenRouterDM = async (userMsg: string, gs: GameState, isFirstTurn: boolean = false): Promise<DMResponse> => {
     const systemPrompt = buildDMSystem(gs, true, isFirstTurn)
     const totalInput = systemPrompt + userMsg
 
     setStatusMessage('Calling OpenRouter...')
-    const apiKey = serverKey || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
-    if (!apiKey) return getNarrationPreservationFallback(gs, 'no_api_key')
-    const endpoint = 'https://openrouter.ai/api/v1/chat/completions'
+    const endpoint = '/api/openrouter'
     const MAX_RETRIES = 4
     const BASE_DELAY = 6000
     const RATE_LIMIT_DELAY = 60000
@@ -1234,16 +1272,13 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         const r = await fetch(endpoint, {
           method: 'POST',
           headers: {
-            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://deities-and-demigods.vercel.app',
-            'X-Title': 'Deities & Demigods - Mythworld Engine',
           },
           body: JSON.stringify({
             model,
             messages,
-            max_tokens: maxTokens,
-            temperature: 0.85,
+            max_tokens: 8192,
+            temperature: 0.9,
           }),
         })
         if (r.status === 429) {
@@ -1341,7 +1376,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       return parsed
     } catch {
       // JSON parse failed — attempt truncation repair
-      // When Gemini hits MAX_TOKENS, the JSON is cut off mid-stream.
+      // When the model hits MAX_TOKENS, the JSON is cut off mid-stream.
       // Strategy: trim to last complete value, then close unclosed structures.
       let repaired = s
       // Step 1: If we're mid-string (odd number of unescaped quotes), truncate to last complete string
@@ -2449,7 +2484,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   const callLMStudioDM = async (
     userMsg: string, gs: GameState, isFirst: boolean = false,
-    opts?: { noGeminiFallback?: boolean }
+    opts?: { noOpenRouterFallback?: boolean }
   ): Promise<DMResponse> => {
     const systemPrompt = buildDMSystem(gs, true, isFirst)
     setStatusMessage('LM Studio processing...')
@@ -2465,9 +2500,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       })
       if (!r.ok) {
         const errText = await r.text().catch(() => 'Unknown')
-        if (r.status === 502 && !opts?.noGeminiFallback) {
-          setStatusMessage('LM Studio unavailable - Gemini fallback...')
-          return callGeminiDM(userMsg, gs, isFirst)
+        if (r.status === 502 && !opts?.noOpenRouterFallback) {
+          setStatusMessage('LM Studio unavailable - OpenRouter fallback...')
+          return callOpenRouterDM(userMsg, gs, isFirst)
         }
         throw new Error('LM Studio ' + r.status + ': ' + errText.slice(0, 200))
       }
@@ -2499,9 +2534,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       throw new Error('LM Studio: Could not parse response into game data')
     } catch (e) {
       console.error('[LM Studio] Error:', e)
-      if (!opts?.noGeminiFallback) {
-        setStatusMessage('LM Studio error - Gemini fallback...')
-        return callGeminiDM(userMsg, gs, isFirst)
+      if (!opts?.noOpenRouterFallback) {
+        setStatusMessage('LM Studio error - OpenRouter fallback...')
+        return callOpenRouterDM(userMsg, gs, isFirst)
       }
       return getNarrationPreservationFallback(gs, 'LM Studio: ' + String(e).slice(0, 100))
     }
@@ -2509,16 +2544,16 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
   // ─── DUAL MODE: both engines in parallel, merge results ───
   const callDualEngineDM = async (userMsg: string, gs: GameState, isFirst: boolean = false): Promise<DMResponse> => {
-    setStatusMessage('Dual Engine: LM Studio + Gemini...')
-    const [lmResult, geminiResult] = await Promise.allSettled([
-      callLMStudioDM(userMsg, gs, isFirst, { noGeminiFallback: true }),
-      callGeminiDM(userMsg, gs, isFirst),
+    setStatusMessage('Dual Engine: LM Studio + OpenRouter...')
+    const [lmResult, openrouterResult] = await Promise.allSettled([
+      callLMStudioDM(userMsg, gs, isFirst, { noOpenRouterFallback: true }),
+      callOpenRouterDM(userMsg, gs, isFirst),
     ])
     const lmOk = lmResult.status === 'fulfilled'
-    const geminiOk = geminiResult.status === 'fulfilled'
-    if (lmOk && geminiOk) {
+    const openrouterOk = openrouterResult.status === 'fulfilled'
+    if (lmOk && openrouterOk) {
       const lm = lmResult.value as DMResponse
-      const g = geminiResult.value as DMResponse
+      const g = openrouterResult.value as DMResponse
       const merged: DMResponse = {
         ...g,
         dice_rolls: lm.dice_rolls?.length ? lm.dice_rolls : g.dice_rolls,
@@ -2534,17 +2569,17 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       console.log('[Dual Engine] Merged:', { lm: (lm.dice_rolls?.length || 0) + 'd/' + (lm.state_updates?.length || 0) + 's', g: (g.dm_narration?.length || 0) + ' chars' })
       return merged
     }
-    if (geminiOk) {
-      console.warn('[Dual Engine] LM Studio failed, Gemini-only')
-      setStatusMessage('LM Studio unavailable - Gemini handling everything')
-      return geminiResult.value as DMResponse
+    if (openrouterOk) {
+      console.warn('[Dual Engine] LM Studio failed, OpenRouter-only')
+      setStatusMessage('LM Studio unavailable - OpenRouter handling everything')
+      return openrouterResult.value as DMResponse
     }
     if (lmOk) {
-      console.warn('[Dual Engine] Gemini failed, LM Studio-only')
-      setStatusMessage('Gemini unavailable - LM Studio handling everything')
+      console.warn('[Dual Engine] OpenRouter failed, LM Studio-only')
+      setStatusMessage('OpenRouter unavailable - LM Studio handling everything')
       return lmResult.value as DMResponse
     }
-    const err = geminiResult.reason instanceof Error ? geminiResult.reason.message : String(geminiResult.reason)
+    const err = openrouterResult.reason instanceof Error ? openrouterResult.reason.message : String(openrouterResult.reason)
     return getNarrationPreservationFallback(gs, 'Both engines failed: ' + err.slice(0, 80))
   }
 
@@ -2553,7 +2588,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     switch (engineMode) {
       case 'lmstudio': return callLMStudioDM(userMsg, gs, isFirst)
       case 'dual': return callDualEngineDM(userMsg, gs, isFirst)
-      default: return callGeminiDM(userMsg, gs, isFirst)
+      default: return callOpenRouterDM(userMsg, gs, isFirst)
     }
   }
 
@@ -3698,7 +3733,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       }
       gs.injuries = newInjuries
 
-      const res = await callGeminiDM(userMsg, gs, false)
+      const res = await callOpenRouterDM(userMsg, gs, false)
 
       gs.turn++
 
@@ -4153,7 +4188,8 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
   return {
     // ── STATE ──────────────────────────────────────────────────────────────
     gameState, setGameState,
-    geminiKey, setGeminiKey,
+    openrouterKey, setOpenrouterKey,
+    geminiKey: openrouterKey, setGeminiKey: setOpenrouterKey,
     aiProvider, setAiProvider,
     engineMode, setEngineMode,
     lmStudioUrl, setLmStudioUrl,
@@ -4206,11 +4242,13 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     speakText,
     stopSpeaking,
     speakNarrative,
+    unlockTTS,
     fetchAvailableHeroes,
     startNewCampaign,
     confirmPartySelection,
     buildDMSystem,
-    callGeminiDM,
+    callOpenRouterDM,
+    callGeminiDM: callOpenRouterDM,
     parseDMResponse,
     // getTemplateFallback removed (deprecated)
     buildDefaultOptions,

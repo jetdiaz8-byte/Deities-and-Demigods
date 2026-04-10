@@ -73,6 +73,23 @@ export async function generatePanelImage(
   narration: string,
   artStyle: string
 ): Promise<ComicPanelData> {
+  const placeholderImage = (() => {
+    const safeCaption = (panel.caption || 'Scene illustration loading...').replace(/[<>&]/g, '').slice(0, 80)
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#1a1510"/>
+          <stop offset="100%" stop-color="#0d0a08"/>
+        </linearGradient>
+      </defs>
+      <rect width="800" height="600" fill="url(#g)"/>
+      <circle cx="150" cy="120" r="120" fill="rgba(212,175,55,0.16)"/>
+      <text x="400" y="292" text-anchor="middle" fill="#c9a84c" font-size="28" font-family="Georgia">Scene illustration loading...</text>
+      <text x="400" y="330" text-anchor="middle" fill="#8a7a60" font-size="18" font-family="Georgia">${safeCaption}</text>
+    </svg>`
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)))
+  })()
+
   const prompt = buildImagePrompt(narration, panel.caption, artStyle);
   try {
     const res = await fetch('/api/generate-image', {
@@ -80,10 +97,10 @@ export async function generatePanelImage(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt, artStyle }),
     });
-    if (!res.ok) return { ...panel, isGenerating: false, error: 'generate-failed' };
+    if (!res.ok) return { ...panel, imageUrl: placeholderImage, isGenerating: false, error: 'generate-failed' };
     const data = await res.json();
-    return { ...panel, imageUrl: data.imageUrl, isGenerating: false };
+    return { ...panel, imageUrl: data?.imageUrl || placeholderImage, isGenerating: false };
   } catch {
-    return { ...panel, isGenerating: false, error: 'network-error' };
+    return { ...panel, imageUrl: placeholderImage, isGenerating: false, error: 'network-error' };
   }
 }

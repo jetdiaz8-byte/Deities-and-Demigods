@@ -134,19 +134,19 @@ export default function RulebookPage() {
             <Card className="bg-slate-800/50 border-slate-700">
               <CardHeader><CardTitle className="text-white flex items-center gap-2"><Key className="w-5 h-5 text-emerald-400" />What You Need to Play</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">Before you can play, you need a Gemini API key that powers the AI Dungeon Master. It is FREE with generous usage limits.</p>
+                <p className="text-gray-300">Before you can play, you need an OpenRouter API key that powers the AI Dungeon Master. It is FREE with generous usage limits.</p>
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                   <div className="p-4 rounded-lg bg-red-900/20 border border-red-700">
-                    <h4 className="font-bold text-red-400 mb-2 flex items-center gap-2"><Gem className="w-4 h-4" />Gemini API Key (REQUIRED)</h4>
+                    <h4 className="font-bold text-red-400 mb-2 flex items-center gap-2"><Gem className="w-4 h-4" />OpenRouter API Key (REQUIRED)</h4>
                     <p className="text-sm text-gray-400 mb-3">Powers the AI Dungeon Master that narrates the story and generates all game content</p>
                     <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
-                      <li>Visit <span className="text-emerald-400">aistudio.google.com</span></li>
-                      <li>Sign in with your Google account</li>
-                      <li>Click &quot;Get API Key&quot; in sidebar</li>
-                      <li>Click &quot;Create API Key&quot;</li>
-                      <li>Copy the key (starts with AIzaSy...)</li>
+                      <li>Visit <span className="text-emerald-400">openrouter.ai/keys</span></li>
+                      <li>Sign in or create an OpenRouter account</li>
+                      <li>Click &quot;Create Key&quot;</li>
+                      <li>Name the key for Mythworld (optional)</li>
+                      <li>Copy the key (starts with sk-or-v1-...)</li>
                     </ol>
-                    <div className="mt-3 text-xs text-gray-500">Free: 15 req/min, 1,500 req/day</div>
+                    <div className="mt-3 text-xs text-gray-500">Uses OpenRouter free-tier models configured in the app</div>
                   </div>
                 </div>
               </CardContent>
@@ -156,13 +156,13 @@ export default function RulebookPage() {
               <CardContent>
                 <ol className="text-gray-300 space-y-2 list-decimal list-inside">
                   <li>Open the Mythworld Engine app in your browser</li>
-                  <li>Enter your Gemini API key in the &quot;Gemini Key&quot; field</li>
+                  <li>Enter your OpenRouter API key in the &quot;OpenRouter Key&quot; field</li>
                   <li>Click <strong className="text-emerald-400">⚔ &quot;Begin Your Legend&quot; ⚔</strong></li>
                   <li>A pool of heroes and demigods is randomly selected for you</li>
                   <li>Select <strong>1 main PC</strong> as your hero — the DM auto-selects <strong>1 companion</strong> for you</li>
                   <li>A mysterious Shard is assigned, and the game begins!</li>
                 </ol>
-                <div className="mt-4 p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Note:</strong> Your API key is stored locally in your browser and is never sent anywhere except directly to Google.</div>
+                <div className="mt-4 p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Note:</strong> Your API key is stored locally in your browser and is only sent to OpenRouter via the app&apos;s API proxy.</div>
               </CardContent>
             </Card>
           </TabsContent>
