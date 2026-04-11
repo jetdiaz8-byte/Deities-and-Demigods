@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type {
   ProphecyState, Ability, Item, Quest, Injury, Entity, ShardEvent, DiceRoll, DamageDealt,
-  StateUpdate, DMResponse, GameOption, SaveSlot, GameState, AntagonistClue, SuccessRateFactors,
+  StateUpdate, DMResponse, GameOption, AIChoice, SaveSlot, GameState, AntagonistClue, SuccessRateFactors,
   GreaterGodData, ShardType, InjuryTemplate, PlayerSkills, Aspect
 } from '@/lib/gameTypes'
 import { ACTS, SKILL_ABILITY_MAP } from '@/lib/gameTypes'
@@ -1974,7 +1974,28 @@ ${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
     - Vary which PC is targeted — enemies are tactical
 ` : ''}
 8. Occasionally drop items into "item_drops" array for the party inventory.
-9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. Provide 3-4 action OPTIONS for the current PC, then WAIT for the human player to choose. NEVER auto-resolve PC actions.
+9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. NEVER auto-resolve PC actions.
+9a. **NARRATIVE-DRIVEN CHOICES** — CRITICAL: Your choices MUST be contextual, story-driven, and flow from the narration's final paragraph.
+    - The last paragraph of your narration MUST present a fork — 2-3 natural paths that feel like they emerge from the story.
+    - Generate "pc_choices" (3 options) and "companion_choices" (3 options) in the JSON response.
+    - Each choice MUST have:
+      • "narrative": A contextual, story-specific action label with emoji (max 80 chars). NOT generic templates.
+        BAD: "🔍 Investigate — Search the area for clues, hidden paths, or items of interest"
+        GOOD: "🔍 Examine the waymark carved into the hearthstone"
+        GOOD: "🚶 Follow the ley line north toward the Tower of Wayreth"
+        GOOD: "⚔️ Strike the death knight before it can raise its blade"
+      • "ability": The mechanical ability key for dice rolling:
+        - EXPLORATION: investigation, exploration, perception, arcana, divine_sense, stealth, acrobatics, history
+        - COMBAT: melee_attack, ranged_attack, defend, innate_power, or the PC's named ability
+        - SOCIAL: conversation, persuasion, intimidation, deception, performance
+      • "align_note": Brief mechanical note, e.g. "investigation check · +3 investigation"
+    - Companion choices follow the same pattern but use companion_ prefixed abilities:
+      - EXPLORATION: companion_scout, companion_discussion, companion_guard
+      - COMBAT: companion_attack, companion_defend, companion_assist, companion_ability:{name}
+      - SOCIAL: companion_conversation, companion_support, companion_observe
+    - Choices should NEVER be generic. They must reference specific objects, NPCs, locations, and tensions from YOUR narration.
+    - At least one PC choice should be "bold" (high risk/reward), one "careful" (safe/investigative), and one "creative" (uses ability or unexpected approach).
+    - Companion choices should reflect their personality and offer dialogue that references the current scene.
 10. **PERSISTENT MEMORY** - Remember ALL previous events, decisions, and their consequences. Reference past events when narrating.
 10b. If the party includes additional members beyond the PC and companion, describe their autonomous actions based on their personality and the situation, like God of War companions. They act independently and their actions flow naturally within the narration.
 10c. COMBAT NARRATION FORMAT:
@@ -2151,7 +2172,7 @@ QUICKENING RULES:
 ` : ''}`}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — 800-1200 words for opening scenes, 80-120 words for regular turns. HARD MAX 120 WORDS for regular turns. ONE paragraph only. REST/SLEEP: 2-3 sentences. COMBAT: up to 100 words. EXCEEDING THE WORD LIMIT IS A CRITICAL FAILURE.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — 800-1200 words for opening scenes, 80-120 words for regular turns. HARD MAX 120 WORDS for regular turns. ONE paragraph only. REST/SLEEP: 2-3 sentences. COMBAT: up to 100 words. EXCEEDING THE WORD LIMIT IS A CRITICAL FAILURE.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","pc_choices":[{"narrative":"string (CONTEXTUAL story-specific action with emoji, max 80 chars — NEVER generic like 'Search the area')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}],"companion_choices":[{"narrative":"string (CONTEXTUAL companion action with emoji, max 80 chars — reference current scene)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -2455,7 +2476,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     return getNarrationPreservationFallback(gs, 'Payload structure unrecoverable')
   }
 
-  const buildDefaultOptions = (pc: Entity): { pcOptions: GameOption[]; compOptions: GameOption[]; extraOptions: GameOption[] } => {
+  const buildDefaultOptions = (pc: Entity, aiChoices?: { pc_choices?: AIChoice[]; companion_choices?: AIChoice[] }): { pcOptions: GameOption[]; compOptions: GameOption[]; extraOptions: GameOption[] } => {
     const ab = pc.abilities.map(toAscii)
     const evil = pc.align.toLowerCase().includes('evil')
     
@@ -2465,6 +2486,17 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       const mod = getSkillModifier(pc, skillName as keyof PlayerSkills, gameState.skills)
       return `${mod >= 0 ? '+' : ''}${mod} ${skillName.replace(/_/g, ' ')}`
     }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // AI-GENERATED CHOICES — Use contextual choices from DM when available
+    // Falls back to hardcoded templates below if AI choices are missing/invalid
+    // ═══════════════════════════════════════════════════════════════════════════
+    const validAIChoices = aiChoices?.pc_choices?.length === 3 && aiChoices.pc_choices.every(
+      c => c.narrative?.length > 5 && c.ability?.length > 2
+    )
+    const validAICompChoices = aiChoices?.companion_choices?.length === 3 && aiChoices.companion_choices.every(
+      c => c.narrative?.length > 5 && c.ability?.length > 2
+    )
     
     // Get companion if available
     const companion = gameState.companionId ? gameState.pcs.find(p => p.id === gameState.companionId) : null
@@ -2484,7 +2516,18 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     // ═══════════════════════════════════════════════════════════════════════════
     const pcOptions: GameOption[] = []
     
-    if (inCombat) {
+    // ── USE AI-GENERATED CHOICES IF AVAILABLE ───────────────────────────
+    if (validAIChoices && aiChoices?.pc_choices) {
+      aiChoices.pc_choices.forEach((c, i) => {
+        pcOptions.push({
+          num: i + 1,
+          action: c.narrative,
+          ability: c.ability,
+          align_note: c.align_note,
+          source: 'pc'
+        })
+      })
+    } else if (inCombat) {
       // ── COMBAT MODE ──────────────────────────────────────────────
       // Tactical options when enemies are present (with stamina costs)
       const stam = gameState.stamina
@@ -2598,6 +2641,18 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     let compOptions: GameOption[] = []
     
     if (companion) {
+      // ── USE AI-GENERATED COMPANION CHOICES IF AVAILABLE ──────────────
+      if (validAICompChoices && aiChoices?.companion_choices) {
+        compOptions = aiChoices.companion_choices.map((c, i) => ({
+          num: i + 1,
+          action: c.narrative,
+          ability: c.ability,
+          align_note: c.align_note,
+          source: 'companion' as const,
+          companion_name: companion.name
+        }))
+      } else {
+      // ── HARDCODED COMPANION OPTIONS (fallback) ──────────────────────
       const compName = companion.name.split(' ')[0]
       const compAbility1 = cab.length > 0 ? cab[0].split('(')[0].trim() : ''
       const compAbility2 = cab.length > 1 ? cab[1].split('(')[0].trim() : ''
@@ -2623,11 +2678,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           { num: 3, action: compAbility2 ? `✨ ${compAbility2} — ${compName}'s secondary power` : `🛡️ Guard — ${compName} stands watch while you investigate`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_guard', align_note: compAbility2 ? 'secondary ability' : 'defensive stance', source: 'companion', companion_name: companion.name }
         ]
       }
+      } // end hardcoded companion fallback (else branch)
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
     // EXTRA OPTIONS: Rest, Potion, Skip, Archrival Summon
-    // ═══════════════════════════════════════════════════════════════════════════
     const extraOptions: GameOption[] = []
     
     // Rest option (outside combat) — recover HP and reduce injuries
@@ -3751,7 +3806,10 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       if (humanPC && !humanPC.dead) {
         setStatusMessage(`Generating options for ${humanPC.name}...`)
 
-        const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(humanPC)
+        const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(humanPC, {
+          pc_choices: res.pc_choices,
+          companion_choices: res.companion_choices
+        })
         gs.humanOptions = [...pcOptions, ...extraOptions]
         gs.companionOptions = compOptions
         gs.waitingForHuman = true
@@ -4928,7 +4986,10 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       const nextPC = newGS.pcs.find(p => p.id === newGS.humanPCId && !p.dead) || living[0]
       if (nextPC) {
         const sceneCtx = `Act ${newGS.act}, Turn ${newGS.turn}. SUMMARY: ${newGS.storySummary}\nRECENT: ` + newGS.log.slice(0, 3).map(l => l.msg).join(' | ')
-        const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(nextPC)
+        const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(nextPC, {
+          pc_choices: res.pc_choices,
+          companion_choices: res.companion_choices
+        })
         newGS.humanOptions = [...pcOptions, ...extraOptions]
         newGS.companionOptions = compOptions
         newGS.waitingForHuman = true

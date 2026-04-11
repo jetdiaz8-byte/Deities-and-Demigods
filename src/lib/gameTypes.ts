@@ -160,6 +160,8 @@ export interface DMResponse {
   renegade_delta?: number
   new_aspect?: string | null
   clue_revealed?: string // Short description of an antagonist clue revealed this turn
+  pc_choices?: { narrative: string; ability: string; align_note: string }[]
+  companion_choices?: { narrative: string; ability: string; align_note: string }[]
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -208,6 +210,12 @@ export interface Aspect {
   invokes: number           // Times successfully invoked
   fate_points_spent: number // Total FP spent on this aspect
   description?: string
+}
+
+export interface AIChoice {
+  narrative: string   // Contextual action label with emoji, e.g. "🔍 Investigate the waymark carved into the hearth"
+  ability: string    // Mechanical ability key: investigation/exploration/attack/defend/companion_scout/etc.
+  align_note: string // Brief mechanical description, e.g. "investigation check · +3 investigation"
 }
 
 export interface GameOption {
