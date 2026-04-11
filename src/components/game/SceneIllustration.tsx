@@ -83,8 +83,8 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
       return
     }
 
-    // Build a SHORT prompt — pollinations.ai 500s on long URLs
-    const prompt = `${sceneName}, dark fantasy illustration, oil painting, D&D art, dramatic lighting, atmospheric`
+    // Build a SHORT prompt — pollinations.ai 500s on long URLs or nologo param
+    const prompt = `${sceneName}, dark fantasy, oil painting, atmospheric`
 
     let cancelled = false
     fetchInProgressRef.current = true
@@ -94,25 +94,44 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
 
     const encodedPrompt = encodeURIComponent(prompt)
     const seed = turn * 137 + sceneName.length * 31
-    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=768&height=512&nologo=true&seed=${seed}`
+    // IMPORTANT: Do NOT use nologo=true — it causes 500 errors on pollinations.ai
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=768&height=512&seed=${seed}`
 
-    // Preload the image
-    const img = new window.Image()
-    img.crossOrigin = 'anonymous'
-    img.onload = () => {
+    // Retry logic — pollinations.ai rate-limits aggressively
+    let retries = 0
+    const maxRetries = 2
+    const tryLoad = () => {
       if (cancelled) return
-      cacheRef.current.set(turn, url)
-      setImageUrl(url)
-      setLoading(false)
-      setTimeout(() => setVisible(true), 100)
+      const img = new window.Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        if (cancelled) return
+        // Verify it's actually an image (not a JSON error response)
+        cacheRef.current.set(turn, url)
+        setImageUrl(url)
+        setLoading(false)
+        setTimeout(() => setVisible(true), 100)
+      }
+      img.onerror = () => {
+        if (cancelled) return
+        retries += 1
+        if (retries < maxRetries) {
+ // Retry with different seed after 3s delay
+          window.setTimeout(() => {
+            if (!cancelled) {
+              const retryUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=512&height=512&seed=${seed + retries * 1000}`
+              img.src = retryUrl
+            }
+          }, 3000)
+        } else {
+          failedTurnsRef.current.add(turn)
+          setLoading(false)
+          setError(true)
+        }
+      }
+      img.src = url
     }
-    img.onerror = () => {
-      if (cancelled) return
-      failedTurnsRef.current.add(turn)
-      setLoading(false)
-      setError(true)
-    }
-    img.src = url
+    tryLoad()
 
     return () => { cancelled = true; fetchInProgressRef.current = false }
   }, [isKey, turn, sceneName])
