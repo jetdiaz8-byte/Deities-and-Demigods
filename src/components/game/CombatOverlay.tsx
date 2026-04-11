@@ -43,6 +43,7 @@ export default function CombatOverlay({
   onFlee,
   onAction,
   onContinue,
+  currentPower,
 }: {
   combatState: CombatState
   onClose: () => void
