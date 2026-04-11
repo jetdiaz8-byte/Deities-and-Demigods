@@ -3871,12 +3871,14 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const jsonNarr = res.dm_narration || ''
     const preJsonNarr = preJsonNarrativeRef.current || ''
     let narr: string
-    // Always prefer JSON dm_narration (shorter, controlled)
-    // Only fall back to pre-JSON prose if JSON is suspiciously short (< 50 chars)
-    if (jsonNarr.length >= 50) {
-      narr = jsonNarr
+    if (isFirst) {
+      // OPENING: use pre-JSON prose (rich Gaiman prose with full scene-setting)
+      // but fall back to JSON if pre-JSON is empty
+      narr = preJsonNarr.length > 100 ? preJsonNarr : (jsonNarr || 'The DM gathers thoughts...')
     } else {
-      narr = preJsonNarr || jsonNarr || 'The DM gathers thoughts...'
+      // REGULAR turns: prefer JSON dm_narration (shorter, controlled)
+      // Only fall back to pre-JSON prose if JSON is suspiciously short (< 50 chars)
+      narr = jsonNarr.length >= 50 ? jsonNarr : (preJsonNarr || jsonNarr || 'The DM gathers thoughts...')
     }
     if (preJsonNarr.length > 0 && jsonNarr.length > 0) {
       console.log(`📝 Narration — pre-JSON prose: ${preJsonNarr.length} chars, JSON dm_narration: ${jsonNarr.length} chars, using: ${narr === preJsonNarr ? 'pre-JSON' : 'JSON'} (isFirst=${isFirst})`)
@@ -3887,12 +3889,14 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const quickeningParsed = parseQuickeningData(consequenceParsed.cleanText, gs.turn)
     narr = quickeningParsed.cleanText
 
-    // Truncate long narrations on ALL turns (max 250 words)
-    if (narr.length > 2000) {
+    // Truncate long narrations: 400 words for OPENING, 250 words for regular turns
+    const maxWords = isFirst ? 400 : 250
+    const maxChars = isFirst ? 3500 : 2000
+    if (narr.length > maxChars) {
       const words = narr.split(/\s+/)
-      if (words.length > 250) {
-        // Find a clean sentence boundary near 250 words
-        const truncated = words.slice(0, 250).join(' ')
+      if (words.length > maxWords) {
+        // Find a clean sentence boundary near maxWords
+        const truncated = words.slice(0, maxWords).join(' ')
         const lastPeriod = Math.max(
           truncated.lastIndexOf('.'),
           truncated.lastIndexOf('!'),
