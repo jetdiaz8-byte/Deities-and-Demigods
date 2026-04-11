@@ -37,7 +37,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
   const [visible, setVisible] = useState(false)
   const cacheRef = useRef<Map<number, string>>(new Map())
   const [prevAct, setPrevAct] = useState<string | null>(null)
-  const apiFailedRef = useRef(false) // Stop retrying after first API failure per session
+  const failedTurnsRef = useRef<Set<number>>(new Set()) // Track failed turns (allow retry next turn)
   const fetchInProgressRef = useRef(false) // Prevent concurrent fetches
 
   const isKey = useMemo(() => {
@@ -68,8 +68,8 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
   // Generate image for key moments
   useEffect(() => {
     if (!isKey) return
-    // Don't retry if the API has already failed this session
-    if (apiFailedRef.current) return
+    // Skip turns that have already failed (but allow new turns to try)
+    if (failedTurnsRef.current.has(turn)) return
     // Prevent concurrent fetches (e.g. React Strict Mode double-fire)
     if (fetchInProgressRef.current) return
 
@@ -83,8 +83,8 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
       return
     }
 
-    // Build prompt
-    const prompt = `Dark fantasy RPG scene illustration: ${sceneName}. Neil Gaiman style, atmospheric, cinematic lighting, oil painting quality, moody, mythical, detailed, 16:9 aspect ratio. No text or letters. Fantasy art style reminiscent of Frank Frazetta and Yoshitaka Amano.`
+    // Build a SHORT prompt — pollinations.ai 500s on long URLs
+    const prompt = `${sceneName}, dark fantasy illustration, oil painting, D&D art, dramatic lighting, atmospheric`
 
     let cancelled = false
     fetchInProgressRef.current = true
@@ -94,7 +94,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
 
     const encodedPrompt = encodeURIComponent(prompt)
     const seed = turn * 137 + sceneName.length * 31
-    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1344&height=768&seed=${seed}&nologo=true`
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=768&height=512&nologo=true&seed=${seed}`
 
     // Preload the image
     const img = new window.Image()
@@ -108,7 +108,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
     }
     img.onerror = () => {
       if (cancelled) return
-      apiFailedRef.current = true
+      failedTurnsRef.current.add(turn)
       setLoading(false)
       setError(true)
     }
