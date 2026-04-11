@@ -186,7 +186,7 @@ export function IntroScreen({
       className="h-screen w-full flex flex-col items-center justify-center p-4 overflow-hidden relative"
       style={{
         backgroundImage:
-          "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 40%, rgba(10,8,16,0.9) 100%), url('https://image.pollinations.ai/prompt/epic%20dark%20fantasy%20battle%20scene%20gods%20demigods%20heroes%20dragons%20monsters%20clashing%20on%20a%20celestial%20battlefield%20dramatic%20lightning%20cosmic%20sky%20oil%20painting%20style%20D%26D%20illustration%20by%20Larry%20Elmore%20and%20Boris%20Vallejo%20ultra%20detailed%20cinematic?width=1920&height=1080&nologo=true&seed=42')",
+          "linear-gradient(135deg, #0d0a15 0%, #1a1025 20%, #251830 40%, #1a0d1d 60%, #0d0812 80%, #050308 100%)",
         backgroundSize: 'cover',
         backgroundPosition: 'center top',
         backgroundAttachment: 'fixed',

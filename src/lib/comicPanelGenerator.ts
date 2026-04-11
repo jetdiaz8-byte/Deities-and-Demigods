@@ -126,12 +126,30 @@ export async function generatePanelImage(
     return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)))
   })()
 
-  const prompt = buildImagePrompt(narration, panel.caption, artStyle);
-  try {
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=512&nologo=true&seed=${turnNumber}`
-    const retryUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=768&height=512&nologo=true&seed=${turnNumber + 100}`
-    return { ...panel, imageUrl: url || placeholderImage, retryImageUrl: retryUrl, isGenerating: false };
-  } catch {
-    return { ...panel, imageUrl: placeholderImage, isGenerating: false, error: 'network-error' };
-  }
+  // NOTE: pollinations.ai is rate-limited (429) and unreliable.
+  // SceneIllustration.tsx now handles scene art via CSS atmospheric backgrounds.
+  // This function returns a styled SVG placeholder for comic-mode fallback.
+  const keywords = extractSceneKeywords(panel.caption || narration).slice(0, 4).join(', ')
+  const sceneLabel = (panel.caption || 'Scene').replace(/[<>&"']/g, '').slice(0, 60)
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+        <stop offset="0%" stop-color="#1a1520"/>
+        <stop offset="50%" stop-color="#12101a"/>
+        <stop offset="100%" stop-color="#0a0810"/>
+      </linearGradient>
+      <radialGradient id="glow" cx="50%" cy="40%" r="50%">
+        <stop offset="0%" stop-color="rgba(212,175,55,0.12)"/>
+        <stop offset="100%" stop-color="transparent"/>
+      </radialGradient>
+    </defs>
+    <rect width="800" height="600" fill="url(#bg)"/>
+    <rect width="800" height="600" fill="url(#glow)"/>
+    <rect x="40" y="40" width="720" height="520" rx="4" fill="none" stroke="rgba(212,175,55,0.15)" stroke-width="1"/>
+    <text x="400" y="260" text-anchor="middle" fill="rgba(212,175,55,0.5)" font-size="14" font-family="Georgia" letter-spacing="4">${keywords || 'fantasy scene'}</text>
+    <text x="400" y="300" text-anchor="middle" fill="rgba(200,190,170,0.4)" font-size="11" font-family="Georgia">${sceneLabel}</text>
+    <text x="400" y="540" text-anchor="middle" fill="rgba(140,120,90,0.3)" font-size="9" font-family="Georgia" letter-spacing="2">TURN ${turnNumber}</text>
+  </svg>`
+  const imageUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)))
+  return { ...panel, imageUrl, isGenerating: false };
 }
