@@ -203,9 +203,8 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
       >
         {/* ── Portrait area (16:9 cinematic frame) ──────────────────── */}
         <div
-          className="relative overflow-hidden cursor-pointer"
+          className="relative overflow-hidden"
           style={{ aspectRatio: '16/9' }}
-          onClick={() => setDetailOpen(true)}
         >
           {/* Portrait image — key forces remount on portrait change, resetting error state */}
           <PortraitImage key={portrait} portrait={portrait} charName={charName} fading={fading} />
@@ -296,8 +295,17 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
                   </div>
                 )}
               </div>
-              <div className="text-[9px] text-[#5a4d30] font-mono" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
-                Turn {turn}
+              <div className="flex items-center gap-2 pointer-events-auto">
+                <button
+                  onClick={() => setDetailOpen(true)}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] uppercase tracking-wider transition-all text-[#d4af37]/60 hover:text-[#d4af37] border border-[#d4af37]/20 hover:border-[#d4af37]/50 hover:bg-black/40"
+                  title="Inspect Character"
+                >
+                  &#128269; Details
+                </button>
+                <div className="text-[9px] text-[#5a4d30] font-mono" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
+                  Turn {turn}
+                </div>
               </div>
             </div>
           </div>
@@ -306,9 +314,6 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
           <div className="absolute top-0 left-0 w-1 h-full pointer-events-none" style={{
             background: `linear-gradient(to bottom, transparent, ${borderColor}88, transparent)`,
           }} />
-
-          {/* Tap hint (shows briefly on first render) */}
-          <TurnTapHint />
         </div>
 
         {/* Caption bar */}
@@ -335,7 +340,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
 
       {/* ── Character Detail Modal ─────────────────────────────────── */}
       <CharacterDetailModal
-        character={displayCharacter}
+        character={detailOpen ? displayCharacter : null}
         onClose={() => setDetailOpen(false)}
         onNext={() => { goNext() }}
         onPrev={() => { goPrev() }}
@@ -373,47 +378,5 @@ function PortraitImage({ portrait, charName, fading }: { portrait: string; charN
       onError={() => setImgError(true)}
       loading="eager"
     />
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// TAP HINT — Fades in/out once on mount
-// ═══════════════════════════════════════════════════════════════════════════
-
-function TurnTapHint() {
-  const [visible, setVisible] = useState(true)
-  const [opacity, setOpacity] = useState(0)
-
-  useEffect(() => {
-    // Show after a short delay
-    const showTimer = window.setTimeout(() => setOpacity(1), 1200)
-    // Hide after 3 seconds
-    const hideTimer = window.setTimeout(() => {
-      setOpacity(0)
-      window.setTimeout(() => setVisible(false), 600)
-    }, 4200)
-    return () => { window.clearTimeout(showTimer); window.clearTimeout(hideTimer) }
-  }, [])
-
-  if (!visible) return null
-
-  return (
-    <div
-      className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
-      style={{ opacity, transition: 'opacity 0.6s ease' }}
-    >
-      <div
-        className="px-3 py-1.5 rounded-full text-[10px] tracking-wider"
-        style={{
-          fontFamily: 'Cinzel, serif',
-          color: '#d4af37',
-          background: 'rgba(0,0,0,0.6)',
-          border: '1px solid rgba(212,175,55,0.3)',
-          backdropFilter: 'blur(4px)',
-        }}
-      >
-        Tap to inspect
-      </div>
-    </div>
   )
 }
