@@ -3871,17 +3871,12 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const jsonNarr = res.dm_narration || ''
     const preJsonNarr = preJsonNarrativeRef.current || ''
     let narr: string
-    if (isFirst) {
-      // Opening scene: prefer longer narration (full epic prose)
-      narr = (preJsonNarr.length > jsonNarr.length && preJsonNarr.length > 100)
-        ? preJsonNarr
-        : (jsonNarr || preJsonNarr || 'The DM gathers thoughts...')
+    // Always prefer JSON dm_narration (shorter, controlled)
+    // Only fall back to pre-JSON prose if JSON is suspiciously short (< 50 chars)
+    if (jsonNarr.length >= 50) {
+      narr = jsonNarr
     } else {
-      // Regular turns: prefer JSON dm_narration (shorter, controlled)
-      // Only use pre-JSON if JSON is suspiciously short (< 50 chars)
-      narr = (jsonNarr.length >= 50)
-        ? jsonNarr
-        : (preJsonNarr || jsonNarr || 'The DM gathers thoughts...')
+      narr = preJsonNarr || jsonNarr || 'The DM gathers thoughts...'
     }
     if (preJsonNarr.length > 0 && jsonNarr.length > 0) {
       console.log(`📝 Narration — pre-JSON prose: ${preJsonNarr.length} chars, JSON dm_narration: ${jsonNarr.length} chars, using: ${narr === preJsonNarr ? 'pre-JSON' : 'JSON'} (isFirst=${isFirst})`)
@@ -3892,8 +3887,8 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const quickeningParsed = parseQuickeningData(consequenceParsed.cleanText, gs.turn)
     narr = quickeningParsed.cleanText
 
-    // Truncate long narrations on regular turns (max 250 words)
-    if (!isFirst && narr.length > 2000) {
+    // Truncate long narrations on ALL turns (max 250 words)
+    if (narr.length > 2000) {
       const words = narr.split(/\s+/)
       if (words.length > 250) {
         // Find a clean sentence boundary near 250 words
