@@ -22,7 +22,6 @@ import AlignmentMeter from '@/components/game/AlignmentMeter'
 import NPCRelationsPanel from '@/components/game/NPCRelationsPanel'
 import { ALL_CHARACTERS } from '@/lib/characterData'
 import type { Character } from '@/lib/characterTypes'
-const ComicPanel = dynamic(() => import('@/components/game/ComicPanel'), { ssr: false })
 import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
 import { GameDialogs } from '@/components/game/GameDialogs'
@@ -35,6 +34,8 @@ import { useGameEngine } from '@/hooks/useGameEngine'
 import { useGameAudio } from '@/hooks/useGameAudio'
 import { getUnlockedCount, getTotalCount, getAchievementDef } from '@/lib/achievements'
 import { version } from '../../package.json'
+
+const ComicPanel = dynamic(() => import('@/components/game/ComicPanel'), { ssr: false })
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MYTHWORLD ENGINE — Loaded via next/dynamic ssr:false in page.tsx

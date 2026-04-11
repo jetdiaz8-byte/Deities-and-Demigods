@@ -14,6 +14,7 @@ import { getRandomHeroes } from '@/lib/fallbackEntities'
 import { KRYNN_HEROES, KRYNN_DEMIGODS } from '@/lib/krynnCharacters'
 import { PROPHECIES, rollProphecies, getProphecyById, Prophecy } from '@/lib/prophecyData'
 import { rollAntagonist, getAntagonistById, getAntagonistRival, generateBanishmentNarration, generateRivalSummonNarration, AntagonistCandidate, AntagonistRival } from '@/lib/antagonistPool'
+import { ALL_CHARACTERS } from '@/lib/characterData'
 import { toast } from '@/hooks/use-toast'
 import type { CharacterPortrait } from '@/components/game/PortraitModal'
 import { soundEvents } from '@/lib/soundEvents'
@@ -529,7 +530,6 @@ export function useGameEngine() {
 
   const shouldTriggerQuickening = (characterId: string): boolean => {
     try {
-      const { ALL_CHARACTERS } = require('@/lib/characterData')
       const char = ALL_CHARACTERS.find((c: any) => c.id === characterId)
       if (!char) return false
       const rank = (char.divineRank || '').toLowerCase()
@@ -541,7 +541,6 @@ export function useGameEngine() {
 
   const getPowerOptions = (characterId: string): PowerOption[] => {
     try {
-      const { ALL_CHARACTERS } = require('@/lib/characterData')
       const char = ALL_CHARACTERS.find((c: any) => c.id === characterId)
       if (!char) return []
       const options: PowerOption[] = []
