@@ -307,6 +307,7 @@ export function useGameEngine() {
   const [ttsSpeed, setTtsSpeed] = useState(0.9)
   const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')
   const [ttsPending, setTtsPending] = useState(false)
+  const ttsPendingRef = useRef(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
   // Available browser voices — populated on mount
@@ -1531,6 +1532,7 @@ export function useGameEngine() {
     // This ensures TTS reads exactly what's shown on screen
     const textToSpeak = displayedNarrative || lastDMNarrative
     if (textToSpeak) {
+      ttsPendingRef.current = false
       setTtsPending(false)
       speakText(textToSpeak)
     }
@@ -1545,6 +1547,7 @@ export function useGameEngine() {
   const triggerPendingTTSFromUserGesture = () => {
     if (!ttsPending || narratorMode !== 'auto' || isSpeaking) return
     warmupBrowserTTS()
+    ttsPendingRef.current = false
     setTtsPending(false)
     const ttsText = renderedNarrationRef.current || displayedNarrative || lastDMNarrative
     if (ttsText) {
@@ -1947,8 +1950,8 @@ CRITICAL RULES:
 1. DDG rulebook ONLY. Never invent stats.
 2. NPC actions governed strictly by alignment+personality.
 3. NARRATION STYLE — NEIL GAIMAN:
-   - OPENING SCENE (Turn 0): Write an immersive opening narration (1500-2000 words)
-   - REGULAR TURNS (Turn 1+): Write exactly ONE paragraph (200-400 words). No exceptions.
+   - OPENING SCENE (Turn 0): Write an immersive opening narration (1000-1500 words)
+   - REGULAR TURNS (Turn 1+): Write exactly ONE short paragraph (80-150 words). HARD LIMIT. NEVER exceed 150 words.
    - CRITICAL: NEVER repeat or rephrase narration from previous turns. Every turn must contain ENTIRELY NEW prose that advances the story.
    - Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
    - Use specific sensory language: the taste of copper, the weight of shadows
@@ -2148,7 +2151,7 @@ QUICKENING RULES:
 ` : ''}`}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — 600-1000 words for opening scenes, 60-120 words for regular turns, ONE paragraph only. REST/SLEEP actions: 2-3 sentences max. COMBAT actions: up to 150 words. Do NOT exceed these limits.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — 800-1200 words for opening scenes, 80-120 words for regular turns. HARD MAX 120 WORDS for regular turns. ONE paragraph only. REST/SLEEP: 2-3 sentences. COMBAT: up to 100 words. EXCEEDING THE WORD LIMIT IS A CRITICAL FAILURE.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)"}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -2174,7 +2177,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: toAscii(userMsg) },
         ]
-        const turnAwareMaxTokens = gs.turn <= 0 ? 4096 : 1024
+        const turnAwareMaxTokens = gs.turn <= 0 ? 4096 : 768
         const r = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -3696,7 +3699,7 @@ Recent: ${recentLog}
 Act: ${gs.act}
 ${gs.pendingShardSummon ? `${shard?.name} INVOKED — process summoning of "${gs.pendingShardSummon}" with d20 roll (DC10).\n` : ''}${pcIntroStr}${gs.act === ACTS.TWO ? 'Introduce 1-2 gods from the DDG roster this turn. Mix pantheons.\n' : ''}${gs.act === ACTS.THREE ? `BOSS FIGHT: ${ant?.name} Phase ${gs.antagonistPhase}. HP ${gs.antagonistHp}/${gs.antagonistMaxHp}.\n` : ''}${pacingGuide}
 NARRATIVE STYLE — NEIL GAIMAN:
-Write ONE paragraph of rich, atmospheric prose. Quality over quantity. Maximum 120 words.
+Write ONE SHORT paragraph. 80-120 words MAXIMUM. This is a hard limit. Do NOT write more than 120 words under any circumstances. Quality over quantity — every word must count.
 - DO NOT repeat or rephrase prose from previous turns. Each turn must advance the story with NEW narration.
 - ONE paragraph must cover: what happened, character reaction, and a hook or tension
 - Dialogue: 1-2 lines max, woven naturally into the paragraph
@@ -3725,7 +3728,22 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       await renderResult(res, isFirst, gs)
 
       // Mark narration ready for TTS; actual speak starts on NEXT user gesture.
-      if (narratorMode === 'auto' && !document.hidden) setTtsPending(true)
+      if (narratorMode === 'auto' && !document.hidden) {
+        ttsPendingRef.current = true
+        setTtsPending(true)
+        // Attempt immediate auto-speak — may work if within gesture timeout
+        const autoText = renderedNarrationRef.current || displayedNarrative || lastDMNarrative
+        if (autoText && !isSpeaking) {
+          warmupBrowserTTS()
+          window.setTimeout(() => {
+            if (!abortSpeakRef.current && ttsPendingRef.current) {
+              ttsPendingRef.current = false
+              setTtsPending(false)
+              speakText(autoText)
+            }
+          }, 200)
+        }
+      }
 
       gs.humanPCId = humanPCId
       gs.isProcessing = false
@@ -3848,21 +3866,48 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
 
     // Narrative
     // The pre-JSON prose (stored in ref, synchronous) is usually the FULL narration.
-    // The JSON dm_narration field is often a shorter summary. Prefer the longer version.
+    // The JSON dm_narration field is often a shorter summary.
     // Using ref instead of lastDMNarrative state to avoid stale React state across turns.
     const jsonNarr = res.dm_narration || ''
     const preJsonNarr = preJsonNarrativeRef.current || ''
-    let narr = (preJsonNarr.length > jsonNarr.length * 1.5 && preJsonNarr.length > 100)
-      ? preJsonNarr
-      : (jsonNarr || preJsonNarr || 'The DM gathers thoughts...')
+    let narr: string
+    if (isFirst) {
+      // Opening scene: prefer longer narration (full epic prose)
+      narr = (preJsonNarr.length > jsonNarr.length && preJsonNarr.length > 100)
+        ? preJsonNarr
+        : (jsonNarr || preJsonNarr || 'The DM gathers thoughts...')
+    } else {
+      // Regular turns: prefer JSON dm_narration (shorter, controlled)
+      // Only use pre-JSON if JSON is suspiciously short (< 50 chars)
+      narr = (jsonNarr.length >= 50)
+        ? jsonNarr
+        : (preJsonNarr || jsonNarr || 'The DM gathers thoughts...')
+    }
     if (preJsonNarr.length > 0 && jsonNarr.length > 0) {
-      console.log(`📝 Narration — pre-JSON prose: ${preJsonNarr.length} chars, JSON dm_narration: ${jsonNarr.length} chars, using: ${narr === preJsonNarr ? 'pre-JSON' : 'JSON'}`)
+      console.log(`📝 Narration — pre-JSON prose: ${preJsonNarr.length} chars, JSON dm_narration: ${jsonNarr.length} chars, using: ${narr === preJsonNarr ? 'pre-JSON' : 'JSON'} (isFirst=${isFirst})`)
     }
     const combatParsed = parseCombatData(narr)
     const questParsed = parseQuestData(combatParsed.cleanText)
     const consequenceParsed = parseConsequenceData(questParsed.cleanText, gs.turn)
     const quickeningParsed = parseQuickeningData(consequenceParsed.cleanText, gs.turn)
     narr = quickeningParsed.cleanText
+
+    // Truncate long narrations on regular turns (max 250 words)
+    if (!isFirst && narr.length > 2000) {
+      const words = narr.split(/\s+/)
+      if (words.length > 250) {
+        // Find a clean sentence boundary near 250 words
+        const truncated = words.slice(0, 250).join(' ')
+        const lastPeriod = Math.max(
+          truncated.lastIndexOf('.'),
+          truncated.lastIndexOf('!'),
+          truncated.lastIndexOf('?')
+        )
+        narr = lastPeriod > truncated.length * 0.7
+          ? truncated.slice(0, lastPeriod + 1)
+          : truncated + '...'
+      }
+    }
     if (Object.keys(combatParsed.combatData).length) {
       setCombatState(prev => ({ ...prev, ...combatParsed.combatData }))
       combatQuietTurnsRef.current = 0
@@ -4832,7 +4877,21 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       await renderResult(res, false, newGS)
 
       // Mark narration ready for TTS; actual speak starts on NEXT user gesture.
-      if (narratorMode === 'auto' && !document.hidden) setTtsPending(true)
+      if (narratorMode === 'auto' && !document.hidden) {
+        ttsPendingRef.current = true
+        setTtsPending(true)
+        const autoText = renderedNarrationRef.current || displayedNarrative || lastDMNarrative
+        if (autoText && !isSpeaking) {
+          warmupBrowserTTS()
+          window.setTimeout(() => {
+            if (!abortSpeakRef.current && ttsPendingRef.current) {
+              ttsPendingRef.current = false
+              setTtsPending(false)
+              speakText(autoText)
+            }
+          }, 200)
+        }
+      }
 
       // ── ACHIEVEMENT CHECK ───────────────────────────────────────────
       const damageThisTurn = (res.damage_dealt?.length || 0) > 0

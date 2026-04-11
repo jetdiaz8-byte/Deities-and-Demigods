@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
-import Image from 'next/image'
 
 interface SceneIllustrationProps {
   narration: string
@@ -42,9 +41,11 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
   const fetchInProgressRef = useRef(false) // Prevent concurrent fetches
 
   const isKey = useMemo(() => {
-    if (turn === 0 || !narration) return false
-    // Every 5th turn
-    if (turn > 0 && turn % 5 === 0) return true
+    if (!narration) return false
+    // Opening and first exploration
+    if (turn === 0 || turn === 1) return true
+    // Every 3rd turn (changed from 5 to generate more often)
+    if (turn > 1 && turn % 3 === 0) return true
     // Act transition
     if (prevAct && prevAct !== act) return true
     // Boss encounter
@@ -91,39 +92,27 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
     setError(false)
     setVisible(false)
 
-    fetch('/api/generate-image', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt, size: '1344x768' }),
-    })
-      .then(res => {
-        // If image gen is disabled (503 with disabled flag), bail immediately
-        if (res.status === 503 || !res.ok) {
-          apiFailedRef.current = true
-          setLoading(false)
-          setError(true)
-          return null
-        }
-        return res.json()
-      })
-      .then(data => {
-        if (cancelled || !data) return
-        const url = `data:image/png;base64,${data.base64}`
-        cacheRef.current.set(turn, url)
-        setImageUrl(url)
-        setLoading(false)
-        // Fade in after image loads
-        setTimeout(() => setVisible(true), 100)
-      })
-      .catch(() => {
-        if (cancelled) return
-        apiFailedRef.current = true // Mark API as failed for the rest of the session
-        setLoading(false)
-        setError(true)
-      })
-      .finally(() => {
-        if (!cancelled) fetchInProgressRef.current = false
-      })
+    const encodedPrompt = encodeURIComponent(prompt)
+    const seed = turn * 137 + sceneName.length * 31
+    const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1344&height=768&seed=${seed}&nologo=true`
+
+    // Preload the image
+    const img = new window.Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      if (cancelled) return
+      cacheRef.current.set(turn, url)
+      setImageUrl(url)
+      setLoading(false)
+      setTimeout(() => setVisible(true), 100)
+    }
+    img.onerror = () => {
+      if (cancelled) return
+      apiFailedRef.current = true
+      setLoading(false)
+      setError(true)
+    }
+    img.src = url
 
     return () => { cancelled = true; fetchInProgressRef.current = false }
   }, [isKey, turn, sceneName])
@@ -147,56 +136,42 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
         <span className="absolute bottom-0 right-0 text-[#5a4018] text-lg leading-none rotate-180" style={{ fontFamily: 'serif' }}>❧</span>
 
         {/* Image area */}
-        <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
+        <div>
           {loading && !error && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="w-full h-full flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, #1a1510 0%, #0d0a08 50%, #1a1510 100%)',
-                }}
-              >
-                <div className="text-center">
-                  <div className="text-2xl mb-2 animate-pulse">🎨</div>
-                  <div className="text-xs text-[#8a7040] font-title uppercase tracking-wider">
-                    Painting the scene...
-                  </div>
+            <div className="flex items-center justify-center" style={{ aspectRatio: '16/9' }}>
+              <div className="text-center">
+                <div className="text-2xl mb-2 animate-pulse">🎨</div>
+                <div className="text-xs text-[#8a7040] font-title uppercase tracking-wider">
+                  Painting the scene...
                 </div>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div
-                className="w-full h-full flex items-center justify-center"
-                style={{
-                  background: 'linear-gradient(135deg, #1a1510 0%, #0d0a08 50%, #1a1510 100%)',
-                }}
-              >
-                <div className="text-center">
-                  <div className="text-2xl mb-2 opacity-50">🖼️</div>
-                  <div className="text-xs text-[#5a4030] font-title uppercase tracking-wider">
-                    Scene vision lost to the mists
-                  </div>
+            <div className="flex items-center justify-center" style={{ aspectRatio: '16/9' }}>
+              <div className="text-center">
+                <div className="text-2xl mb-2 opacity-50">🖼️</div>
+                <div className="text-xs text-[#5a4030] font-title uppercase tracking-wider">
+                  Scene vision lost to the mists
                 </div>
               </div>
             </div>
           )}
 
           {imageUrl && (
-            <Image
+            <img
               src={imageUrl}
               alt={sceneName}
-              fill
-              className={`object-cover transition-opacity duration-1000 ${visible ? 'opacity-100' : 'opacity-0'}`}
-              unoptimized
+              className={`w-full object-cover transition-opacity duration-1000 ${visible ? 'opacity-100' : 'opacity-0'}`}
+              style={{ aspectRatio: '16/9' }}
+              loading="eager"
             />
           )}
 
           {/* Bottom gradient overlay */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
+            className="relative -mt-16 h-16 pointer-events-none z-10"
             style={{
               background: 'linear-gradient(to top, #0d0a08, transparent)',
             }}
