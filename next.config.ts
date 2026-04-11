@@ -11,8 +11,10 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   // External packages — don't bundle into serverless functions
   serverExternalPackages: ['z-ai-web-dev-sdk', 'sharp', 'ws'],
-  // Disable SWC minification to avoid Turbopack TDZ bug — uses terser instead
-  swcMinify: false,
+  // Fixed: removed swcMinify (unrecognized in Next.js 16 / Turbopack)
+  // TDZ bug was caused by useEffect hooks referencing useState variables
+  // declared later in the function body — Turbopack's ESM bundler
+  // mishandled the initialization order. Fixed by reordering declarations.
 };
 
 export default nextConfig;

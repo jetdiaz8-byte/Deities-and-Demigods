@@ -273,6 +273,136 @@ export function useGameEngine() {
   const [comicArtStyle, setComicArtStyle] = useState<'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor'>('larry-elmore')
   const [settingsHydrated, setSettingsHydrated] = useState(false)
 
+  const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
+  const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
+  const [selectedParty, setSelectedParty] = useState<string[]>([])
+  const [previewHero, setPreviewHero] = useState<Entity | null>(null)  // Hero preview panel
+  const [saveSlots, setSaveSlots] = useState<SaveSlot[]>([])
+  const [showSaveDialog, setShowSaveDialog] = useState(false)
+  const [showLoadDialog, setShowLoadDialog] = useState(false)
+  const [showInventoryDialog, setShowInventoryDialog] = useState(false)
+  const [showQuestDialog, setShowQuestDialog] = useState(false)
+  const [activeTab, setActiveTab] = useState('pcs')
+  const [expandedPC, setExpandedPC] = useState<string | null>(null) // For expandable PC cards
+  const [expandedNPC, setExpandedNPC] = useState<string | null>(null) // For expandable NPC cards
+  const [narrativeContent, setNarrativeContent] = useState<{ html: string }[]>([])
+  const [diceAnimation, setDiceAnimation] = useState<{ value: number; spinning: boolean } | null>(null)
+  const [shardDialogOpen, setShardDialogOpen] = useState(false)
+  const [shardSummonName, setShardSummonName] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('Awaiting the gods...')
+  const [lastDMNarrative, setLastDMNarrative] = useState('')
+
+  // Portrait Modal State
+  const [portraitModalOpen, setPortraitModalOpen] = useState(false)
+  const [selectedPortrait, setSelectedPortrait] = useState<CharacterPortrait | null>(null)
+  // Conversation History for persistent DM memory
+  const [conversationHistory, setConversationHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
+
+  // ── TTS STATE ────────────────────────────────────────────────────────
+  // Dual-engine TTS: browser (primary, zero server) + Edge TTS (neural fallback)
+  const [ttsEnabled, setTtsEnabled] = useState(false)
+  const [ttsVoice, setTtsVoice] = useState('guy') // Edge TTS neural voice key
+  const [ttsEngine, setTtsEngine] = useState<'browser' | 'neural'>('browser') // Primary engine
+  const [ttsSpeed, setTtsSpeed] = useState(0.9)
+  const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')
+  const [ttsPending, setTtsPending] = useState(false)
+  const [isSpeaking, setIsSpeaking] = useState(false)
+  const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
+  // Available browser voices — populated on mount
+  const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([])
+  const [browserVoiceName, setBrowserVoiceName] = useState<string>('')
+  const [currentSpeechSentenceIndex, setCurrentSpeechSentenceIndex] = useState<number | null>(null)
+
+  // Store the exact displayed narrative text for TTS
+  const [displayedNarrative, setDisplayedNarrative] = useState('')
+
+  // Timestamp when options became available — used for confirm button cooldown
+  const [lastTurnReadyTime, setLastTurnReadyTime] = useState<number>(0)
+
+  // Combat Flash Type — exported for page.tsx overlay
+  const [combatFlashType, setCombatFlashType] = useState<'damage' | 'heal' | 'crit' | ''>('')
+  const [combatState, setCombatState] = useState<CombatState>({
+    isActive: false,
+    round: 0,
+    turnOrder: [],
+    currentTurnIndex: 0,
+    phase: 'initiative',
+    log: [],
+    victory: null,
+  })
+  const [combatOverlayMinimized, setCombatOverlayMinimized] = useState(false)
+
+  const [questJournal, setQuestJournal] = useState<QuestJournalState>({
+    quests: [],
+    locations: [],
+    totalQuestsCompleted: 0,
+    totalLocationsDiscovered: 0,
+  })
+
+  const [consequenceState, setConsequenceState] = useState<ConsequenceState>({
+    alignment: { axis_law_chaos: 0, axis_good_evil: 0, dominant: 'True Neutral', title: 'Undecided Soul' },
+    npcRelations: [],
+    choices: [],
+    pendingRipples: [],
+    totalChoicesMade: 0,
+  })
+
+  const [rippleEcho, setRippleEcho] = useState<string | null>(null)
+
+  // Quickening System State
+  const [quickeningState, setQuickeningState] = useState<QuickeningState>({
+    currentPower: null,
+    activeEcho: null,
+    absorptionHistory: [],
+    totalDeityKills: 0,
+    totalMonstersAbsorbed: 0,
+    currentLegendTitle: 'Mortal',
+    pendingQuickening: null,
+  })
+
+  const [achievementUnlocks, setAchievementUnlocks] = useState<Array<{ id: string; turn: number }>>([])
+  const [showAchievementsDialog, setShowAchievementsDialog] = useState(false)
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // TOKEN OPTIMIZATION FEATURES
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // Token Tracking State
+  const [tokenUsage, setTokenUsage] = useState({
+    gemini: { input: 0, output: 0, total: 0 },
+    lastCall: { api: '', input: 0, output: 0 }
+  })
+
+  // Synchronous ref for pre-JSON prose — avoids stale React state in renderResult
+  const preJsonNarrativeRef = useRef('')
+
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Browser voice ref for cancel support
+  const browserUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const ttsUnlockedRef = useRef(false)
+
+  // Synchronous ref — TTS can read this immediately after renderResult sets it
+  const renderedNarrationRef = useRef('')
+
+  // Store player's chosen actions for display in turn history
+  const lastPlayerChoiceRef = useRef<{ pcName: string; pcAction: string; pcAbility: string; compName?: string; compAction?: string; isFreeText: boolean } | null>(null)
+
+  const combatQuietTurnsRef = useRef(0)
+
+  // Achievement System State
+  const achievementTrackerRef = useRef<AchievementTracker>(createAchievementTracker())
+
+  const prevGameStateRef = useRef<GameState | null>(null)
+
+  const narrRef = useRef<HTMLDivElement>(null)
+
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const abortSpeakRef = useRef(false)
+
   // Hydrate persisted settings after mount to avoid SSR/client mismatch.
   useEffect(() => {
     const savedMode = safeLocalStorageGetItem('mw_engineMode') as 'gemini' | 'lmstudio' | 'dual' | null
@@ -295,6 +425,7 @@ export function useGameEngine() {
   useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_lmStudioModel', lmStudioModel) }, [lmStudioModel, settingsHydrated])
   useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_comicMode', comicMode ? 'true' : 'false') }, [comicMode, settingsHydrated])
   useEffect(() => { if (settingsHydrated) safeLocalStorageSetItem('mw_comicArtStyle', comicArtStyle) }, [comicArtStyle, settingsHydrated])
+
   useEffect(() => {
     const raw = safeLocalStorageGetItem('mythworld_combat_state')
     if (!raw) return
@@ -372,69 +503,6 @@ export function useGameEngine() {
       }))
     } catch {}
   }, [quickeningState.currentPower, quickeningState.activeEcho, quickeningState.absorptionHistory, quickeningState.totalDeityKills, quickeningState.totalMonstersAbsorbed])
-  const [gamePhase, setGamePhase] = useState<'intro' | 'party_select' | 'playing'>('intro')
-  const [availableHeroes, setAvailableHeroes] = useState<Entity[]>([])
-  const [selectedParty, setSelectedParty] = useState<string[]>([])
-  const [previewHero, setPreviewHero] = useState<Entity | null>(null)  // Hero preview panel
-  const [saveSlots, setSaveSlots] = useState<SaveSlot[]>([])
-  const [showSaveDialog, setShowSaveDialog] = useState(false)
-  const [showLoadDialog, setShowLoadDialog] = useState(false)
-  const [showInventoryDialog, setShowInventoryDialog] = useState(false)
-  const [showQuestDialog, setShowQuestDialog] = useState(false)
-  const [activeTab, setActiveTab] = useState('pcs')
-  const [expandedPC, setExpandedPC] = useState<string | null>(null) // For expandable PC cards
-  const [expandedNPC, setExpandedNPC] = useState<string | null>(null) // For expandable NPC cards
-  const [narrativeContent, setNarrativeContent] = useState<{ html: string }[]>([])
-  const [diceAnimation, setDiceAnimation] = useState<{ value: number; spinning: boolean } | null>(null)
-  const [shardDialogOpen, setShardDialogOpen] = useState(false)
-  const [shardSummonName, setShardSummonName] = useState('')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [statusMessage, setStatusMessage] = useState('Awaiting the gods...')
-  const [lastDMNarrative, setLastDMNarrative] = useState('')
-  // Synchronous ref for pre-JSON prose — avoids stale React state in renderResult
-  const preJsonNarrativeRef = useRef('')
-  // Portrait Modal State
-  const [portraitModalOpen, setPortraitModalOpen] = useState(false)
-  const [selectedPortrait, setSelectedPortrait] = useState<CharacterPortrait | null>(null)
-  // Conversation History for persistent DM memory
-  const [conversationHistory, setConversationHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
-  // ── TTS STATE ────────────────────────────────────────────────────────
-  // Dual-engine TTS: browser (primary, zero server) + Edge TTS (neural fallback)
-  const [ttsEnabled, setTtsEnabled] = useState(false)
-  const [ttsVoice, setTtsVoice] = useState('guy') // Edge TTS neural voice key
-  const [ttsEngine, setTtsEngine] = useState<'browser' | 'neural'>('browser') // Primary engine
-  const [ttsSpeed, setTtsSpeed] = useState(0.9)
-  const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')
-  const [ttsPending, setTtsPending] = useState(false)
-  const [isSpeaking, setIsSpeaking] = useState(false)
-  const [audioCache, setAudioCache] = useState<Map<string, string>>(new Map())
-  // Available browser voices — populated on mount
-  const [browserVoices, setBrowserVoices] = useState<SpeechSynthesisVoice[]>([])
-  const [browserVoiceName, setBrowserVoiceName] = useState<string>('')
-  const [currentSpeechSentenceIndex, setCurrentSpeechSentenceIndex] = useState<number | null>(null)
-
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  // Browser voice ref for cancel support
-  const browserUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
-  const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const ttsUnlockedRef = useRef(false)
-
-  // Must run in user gesture context for Chrome/Safari autoplay policies.
-  const warmupBrowserTTS = () => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) return
-    if (ttsUnlockedRef.current) return
-    try {
-      const warm = new SpeechSynthesisUtterance(' ')
-      warm.volume = 0
-      window.speechSynthesis.speak(warm)
-      window.setTimeout(() => {
-        window.speechSynthesis.cancel()
-      }, 30)
-      ttsUnlockedRef.current = true
-    } catch {
-      // Keep silent; user can retry via manual speak button.
-    }
-  }
 
   // ── BROWSER VOICE DETECTION ──────────────────────────────────────────
   useEffect(() => {
@@ -467,52 +535,82 @@ export function useGameEngine() {
     return () => { window.speechSynthesis.removeEventListener('voiceschanged', loadVoices) }
   }, [])
 
-  // Store the exact displayed narrative text for TTS
-  const [displayedNarrative, setDisplayedNarrative] = useState('')
-  // Synchronous ref — TTS can read this immediately after renderResult sets it
-  const renderedNarrationRef = useRef('')
-  // Store player's chosen actions for display in turn history
-  const lastPlayerChoiceRef = useRef<{ pcName: string; pcAction: string; pcAbility: string; compName?: string; compAction?: string; isFreeText: boolean } | null>(null)
-  // Timestamp when options became available — used for confirm button cooldown
-  const [lastTurnReadyTime, setLastTurnReadyTime] = useState<number>(0)
-  
-  // Combat Flash Type — exported for page.tsx overlay
-  const [combatFlashType, setCombatFlashType] = useState<'damage' | 'heal' | 'crit' | ''>('')
-  const [combatState, setCombatState] = useState<CombatState>({
-    isActive: false,
-    round: 0,
-    turnOrder: [],
-    currentTurnIndex: 0,
-    phase: 'initiative',
-    log: [],
-    victory: null,
-  })
-  const [combatOverlayMinimized, setCombatOverlayMinimized] = useState(false)
-  const [questJournal, setQuestJournal] = useState<QuestJournalState>({
-    quests: [],
-    locations: [],
-    totalQuestsCompleted: 0,
-    totalLocationsDiscovered: 0,
-  })
-  const [consequenceState, setConsequenceState] = useState<ConsequenceState>({
-    alignment: { axis_law_chaos: 0, axis_good_evil: 0, dominant: 'True Neutral', title: 'Undecided Soul' },
-    npcRelations: [],
-    choices: [],
-    pendingRipples: [],
-    totalChoicesMade: 0,
-  })
-  const [rippleEcho, setRippleEcho] = useState<string | null>(null)
+  // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
+  useEffect(() => {
+    const savedKey = safeLocalStorageGetItem('mythworld_openrouter_key')
+    if (savedKey) {
+      setOpenrouterKey(savedKey)
+      setServerKey(savedKey)
+    } else {
+      fetch('/api/get-key')
+        .then(async r => {
+          if (!r.ok) return null
+          return r.json().catch(() => null)
+        })
+        .then(d => {
+          if (d?.key && typeof d.key === 'string') {
+            setServerKey(d.key)
+            setOpenrouterKey(d.key)
+            safeLocalStorageSetItem('mythworld_openrouter_key', d.key)
+          }
+        })
+        .catch(() => {})
+    }
+    loadSaveSlots()
+  }, [])
 
-  // Quickening System State
-  const [quickeningState, setQuickeningState] = useState<QuickeningState>({
-    currentPower: null,
-    activeEcho: null,
-    absorptionHistory: [],
-    totalDeityKills: 0,
-    totalMonstersAbsorbed: 0,
-    currentLegendTitle: 'Mortal',
-    pendingQuickening: null,
-  })
+  useEffect(() => {
+    if (openrouterKey && openrouterKey.trim()) {
+      safeLocalStorageSetItem('mythworld_openrouter_key', openrouterKey.trim())
+    }
+  }, [openrouterKey])
+
+  // Cleanup any pending audio fade interval on unmount
+  useEffect(() => {
+    return () => {
+      if (fadeIntervalRef.current) {
+        clearInterval(fadeIntervalRef.current)
+        fadeIntervalRef.current = null
+      }
+    }
+  }, [])
+
+  // ── AUTO SCROLL ────────────────────────────────────────────────────────
+  useEffect(() => {
+    // Clear any pending scroll to avoid stacking
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
+    // Delay scroll to ensure DOM has rendered new content
+    scrollTimeoutRef.current = setTimeout(() => {
+      // Try anchor-based scroll first (most reliable)
+      const anchor = document.getElementById('narrative-bottom')
+      if (anchor) {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'end' })
+        return
+      }
+      // Fallback to ref-based scroll
+      if (narrRef.current) {
+        narrRef.current.scrollTo({ top: narrRef.current.scrollHeight, behavior: 'smooth' })
+      }
+    }, 200)
+    return () => { if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current) }
+  }, [narrativeContent])
+
+  // Must run in user gesture context for Chrome/Safari autoplay policies.
+  const warmupBrowserTTS = () => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return
+    if (ttsUnlockedRef.current) return
+    try {
+      const warm = new SpeechSynthesisUtterance(' ')
+      warm.volume = 0
+      window.speechSynthesis.speak(warm)
+      window.setTimeout(() => {
+        window.speechSynthesis.cancel()
+      }, 30)
+      ttsUnlockedRef.current = true
+    } catch {
+      // Keep silent; user can retry via manual speak button.
+    }
+  }
 
   // Quickening helper functions
   const computeLegendTitle = (history: AbsorptionRecord[]): string => {
@@ -595,28 +693,11 @@ export function useGameEngine() {
     setQuickeningState(prev => ({ ...prev, pendingQuickening: null }))
   }
 
-  const combatQuietTurnsRef = useRef(0)
   const triggerCombatFlash = (type: 'damage' | 'heal' | 'crit') => {
     setCombatFlashType(type)
     setTimeout(() => setCombatFlashType(''), 500)
   }
 
-  // Achievement System State
-  const achievementTrackerRef = useRef<AchievementTracker>(createAchievementTracker())
-  const [achievementUnlocks, setAchievementUnlocks] = useState<Array<{ id: string; turn: number }>>([])
-  const [showAchievementsDialog, setShowAchievementsDialog] = useState(false)
-  const prevGameStateRef = useRef<GameState | null>(null)
-  
-  // ═══════════════════════════════════════════════════════════════════════════
-  // TOKEN OPTIMIZATION FEATURES
-  // ═══════════════════════════════════════════════════════════════════════════
-  
-  // Token Tracking State
-  const [tokenUsage, setTokenUsage] = useState({
-    gemini: { input: 0, output: 0, total: 0 },
-    lastCall: { api: '', input: 0, output: 0 }
-  })
-  
   // Token estimation helper (rough approximation: 1 token ≈ 4 characters)
   const estimateTokens = (text: string): number => {
     return Math.ceil(text.length / 4)
@@ -644,69 +725,6 @@ export function useGameEngine() {
     }))
   }
 
-  const narrRef = useRef<HTMLDivElement>(null)
-
-  // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
-  useEffect(() => {
-    const savedKey = safeLocalStorageGetItem('mythworld_openrouter_key')
-    if (savedKey) {
-      setOpenrouterKey(savedKey)
-      setServerKey(savedKey)
-    } else {
-      fetch('/api/get-key')
-        .then(async r => {
-          if (!r.ok) return null
-          return r.json().catch(() => null)
-        })
-        .then(d => {
-          if (d?.key && typeof d.key === 'string') {
-            setServerKey(d.key)
-            setOpenrouterKey(d.key)
-            safeLocalStorageSetItem('mythworld_openrouter_key', d.key)
-          }
-        })
-        .catch(() => {})
-    }
-    loadSaveSlots()
-  }, [])
-
-  useEffect(() => {
-    if (openrouterKey && openrouterKey.trim()) {
-      safeLocalStorageSetItem('mythworld_openrouter_key', openrouterKey.trim())
-    }
-  }, [openrouterKey])
-
-  // Cleanup any pending audio fade interval on unmount
-  useEffect(() => {
-    return () => {
-      if (fadeIntervalRef.current) {
-        clearInterval(fadeIntervalRef.current)
-        fadeIntervalRef.current = null
-      }
-    }
-  }, [])
-
-
-  // ── AUTO SCROLL ────────────────────────────────────────────────────────
-  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  useEffect(() => {
-    // Clear any pending scroll to avoid stacking
-    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current)
-    // Delay scroll to ensure DOM has rendered new content
-    scrollTimeoutRef.current = setTimeout(() => {
-      // Try anchor-based scroll first (most reliable)
-      const anchor = document.getElementById('narrative-bottom')
-      if (anchor) {
-        anchor.scrollIntoView({ behavior: 'smooth', block: 'end' })
-        return
-      }
-      // Fallback to ref-based scroll
-      if (narrRef.current) {
-        narrRef.current.scrollTo({ top: narrRef.current.scrollHeight, behavior: 'smooth' })
-      }
-    }, 200)
-    return () => { if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current) }
-  }, [narrativeContent])
 
   // ── SAVE/LOAD FUNCTIONS ────────────────────────────────────────────────
   const loadSaveSlots = () => {
@@ -1218,7 +1236,6 @@ export function useGameEngine() {
     return { cleanText, quickeningUpdate }
   }
 
-  const abortSpeakRef = useRef(false)
 
   // ═══════════════════════════════════════════════════════════════════════════
   // DUAL-ENGINE TTS SYSTEM
