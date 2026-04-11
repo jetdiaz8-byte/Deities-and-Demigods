@@ -1275,7 +1275,7 @@ export function useGameEngine() {
         const speakNext = () => {
           if (abortSpeakRef.current || idx >= sentences.length) {
             browserUtteranceRef.current = null
-            setCurrentSpeechSentenceIndex(null)
+            // TTS highlight removed
             if (watchdogTimer) {
               clearInterval(watchdogTimer)
               watchdogTimer = null
@@ -1306,7 +1306,7 @@ export function useGameEngine() {
           utterance.pitch = 0.9
           utterance.volume = 0.9
           utterance.onstart = () => {
-            setCurrentSpeechSentenceIndex(sentenceIndex)
+            // TTS highlight removed — Chrome SpeechSynthesis interrupts on ANY React re-render during speech
             if (watchdogTimer) clearInterval(watchdogTimer)
             if (silenceTimer) clearTimeout(silenceTimer)
             // Chrome workaround: nudge speech engine every ~10s.
@@ -1354,6 +1354,16 @@ export function useGameEngine() {
             window.setTimeout(speakNext, 80)
           }
           utterance.onerror = (e) => {
+            // Chrome frequently fires 'interrupted' on cancel()/pause()/resume() — not a real error
+            const errStr = (e.error || '').toLowerCase()
+            if (errStr.includes('interrupt') || errStr.includes('cancel')) {
+              // Silently skip — these are Chrome quirks, not failures
+              if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null }
+              if (watchdogTimer) { clearInterval(watchdogTimer); watchdogTimer = null }
+              if (abortSpeakRef.current) return resolve()
+              window.setTimeout(speakNext, 40)
+              return
+            }
             console.warn('Browser speech chunk error:', e.error)
             if (silenceTimer) {
               clearTimeout(silenceTimer)
@@ -2195,8 +2205,8 @@ Power: ${shard?.power || 'Unknown'}
 Charges: ${gs.shardCharges}/3 | Shield Used: ${(gs as any).shardShieldUsed ? 'YES' : 'no'}
 ${actCtx}
 Turn: ${gs.turn} | Act I Limit: ${gs.act1TurnLimit} | Act II Duration: ${gs.act2TurnLimit}
+${isFirstTurn ? `\n⚠️ TURN 0 — SHARD INTRODUCTION ONLY. NO characters, NO PCs, NO companions.\n` : ''}
 
-═══════════════════════════════════════════════════════════════════════════
 THE MAIN PC — CHOSEN BY THE SHARD
 ═══════════════════════════════════════════════════════════════════════════
 ${mainPC ? `${mainPC.name} [${mainPC.pantheon}] [${mainPC.align}] carries the prophecy directly through the shard.
@@ -2299,7 +2309,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: toAscii(userMsg) },
         ]
-        const turnAwareMaxTokens = gs.turn <= 0 ? 4096 : 768
+        const turnAwareMaxTokens = isFirstTurn ? 2048 : gs.turn <= 1 ? 4096 : 1536
         const r = await fetch(endpoint, {
           method: 'POST',
           headers: {
@@ -3731,6 +3741,10 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       // ~1500 chars max. Ends with a hook — something is about to happen.
       userMsg = `TURN 0 — THE SHARD AWAKENS (SHARD-ONLY INTRO).
 
+STOP. READ THIS FIRST. THIS IS TURN 0.
+You MUST write ONLY about the shard. NO characters. NO PCs. NO companions. NO dialogue. NO prophecy.
+If your dm_narration mentions any person, character, hero, or companion by name, YOU HAVE FAILED.
+
 ═══════════════════════════════════════════════════════════════════════════
 THE SHARD
 ═══════════════════════════════════════════════════════════════════════════
@@ -3743,25 +3757,27 @@ POWER: ${shard?.power || 'Unknown'}
 STRUCTURE (EXACTLY 2 PARAGRAPHS — NEIL GAIMAN STYLE)
 ═══════════════════════════════════════════════════════════════════════════
 
-PARAGRAPH 1 — THE SHARD REMEMBERS (1 paragraph, ~600 chars):
+PARAGRAPH 1 — THE SHARD REMEMBERS (~600 chars):
 Describe ${shard?.name} appearing in the world. Not as an object, but as an EVENT.
-The shard has been waiting for this moment across millennia. It remembers all its previous holders — their faces, their deaths, their failures. It remembers what it was before it broke from whatever greater whole it once belonged to. Use mythic, sensory language. Make the world feel ancient. The shard is a character — patient, hungry, certain.
+The shard has been waiting for this moment across millennia. It remembers all its previous holders.
+Use mythic, sensory language. Make the world feel ancient. The shard is a character — patient, hungry, certain.
 
-PARAGRAPH 2 — THE WORLD RESPONDS (1 paragraph, ~600 chars):
-The shard's arrival disrupts the world around it. Nature reacts — wind falls silent, animals flee, water turns still. Something ancient notices. Do NOT name the antagonist. Describe only its effect — a chill, a shadow that moves wrong, the silence of birds. The shard knows its enemy. It grows cold, or hot, or heavy.
+PARAGRAPH 2 — THE WORLD RESPONDS (~600 chars):
+The shard's arrival disrupts the world. Nature reacts. Something ancient notices.
+Do NOT name the antagonist. Describe only its effect — a chill, a shadow that moves wrong.
 End with a hook: someone is approaching. Someone the shard has been waiting for.
 
-DO NOT introduce the main PC or companion in this turn. They will appear in Turn 1.
-DO NOT name the antagonist. Only show its effect on the world.
-Write the prose first, then append the JSON state payload.
-HARD MAX: 1500 characters total for dm_narration.
+HARD LIMITS:
+- dm_narration: MAX 1500 characters. EXACTLY 2 paragraphs. SHARD ONLY.
+- NO person, hero, PC, companion, or named character may appear in your prose.
+- Failure to follow these rules is a CRITICAL ERROR.
 
 ═══════════════════════════════════════════════════════════════════════════
-JSON OUTPUT REQUIREMENTS
+JSON OUTPUT
 ═══════════════════════════════════════════════════════════════════════════
-Set human_pc_id to the first PC's ID (they will appear in Turn 1).
-Generate 3 pc_choices and 3 companion_choices for Turn 1 context.
-Write the narrative prose first. Then append the JSON state payload.`
+Set human_pc_id to the first PC's ID.
+Generate 3 pc_choices and 3 companion_choices for Turn 1.
+Write the prose first (short — 2 paragraphs ONLY). Then append JSON.`
     } else if (gs.turn === 0) {
       // v2.19.0: TURN 1 — FULL INTRO (PC discovers shard, companion bond, prophecy teased)
       const companion = gs.pcs.length > 1 ? gs.pcs[1] : undefined
@@ -3874,7 +3890,6 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         // Attempt immediate auto-speak — may work if within gesture timeout
         const autoText = renderedNarrationRef.current || displayedNarrative || lastDMNarrative
         if (autoText && !isSpeaking) {
-          warmupBrowserTTS()
           window.setTimeout(() => {
             if (!abortSpeakRef.current && ttsPendingRef.current) {
               ttsPendingRef.current = false
@@ -3891,9 +3906,15 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       if (humanPC && !humanPC.dead) {
         setStatusMessage(`Generating options for ${humanPC.name}...`)
 
+        const aiPCChoices = res.pc_choices
+        const aiCompChoices = res.companion_choices
+        console.log(`🎯 AI choices — pc_choices: ${aiPCChoices?.length || 0}, companion_choices: ${aiCompChoices?.length || 0}`)
+        if (aiPCChoices?.length) console.log('  pc_choices:', JSON.stringify(aiPCChoices).slice(0, 300))
+        if (aiCompChoices?.length) console.log('  companion_choices:', JSON.stringify(aiCompChoices).slice(0, 300))
+
         const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(humanPC, {
-          pc_choices: res.pc_choices,
-          companion_choices: res.companion_choices
+          pc_choices: aiPCChoices,
+          companion_choices: aiCompChoices
         })
         gs.humanOptions = [...pcOptions, ...extraOptions]
         gs.companionOptions = compOptions
@@ -5026,7 +5047,6 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
         setTtsPending(true)
         const autoText = renderedNarrationRef.current || displayedNarrative || lastDMNarrative
         if (autoText && !isSpeaking) {
-          warmupBrowserTTS()
           window.setTimeout(() => {
             if (!abortSpeakRef.current && ttsPendingRef.current) {
               ttsPendingRef.current = false

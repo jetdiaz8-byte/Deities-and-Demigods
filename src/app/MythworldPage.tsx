@@ -81,7 +81,6 @@ export default function MythworldEngine() {
     browserVoices, browserVoiceName, setBrowserVoiceName,
     isSpeaking,
     narratorMode, setNarratorMode,
-    currentSpeechSentenceIndex,
     tokenUsage,
     conversationHistory,
     narrRef,
@@ -128,10 +127,6 @@ export default function MythworldEngine() {
 
   // Combat flash overlay ref
   const flashRef = useRef<HTMLDivElement>(null)
-
-  // Speech highlight: tracks the narration block for measuring sentence positions
-  const narrationBlockRef = useRef<HTMLSpanElement>(null)
-  const highlightRef = useRef<HTMLDivElement>(null)
 
   // Typing mode toggle for narrative reveal
   const [typingMode, setTypingMode] = React.useState(false)
@@ -210,15 +205,6 @@ export default function MythworldEngine() {
     [latestNarrativeHtml],
   )
   const shouldCollapseNarration = latestNarrativeText.length > 1200
-  const narrationSentences = useMemo(() => {
-    const src = (lastDMNarrative || '').replace(/\s+/g, ' ').trim()
-    if (!src) return []
-    return src
-      .split(/(?:\.\s+(?=[A-Z])|\.\n+)/g)
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map(s => (/[.!?]$/.test(s) ? s : `${s}.`))
-  }, [lastDMNarrative])
   const shuffleCharacters = React.useCallback((items: Character[]) => {
     const copy = [...items]
     for (let i = copy.length - 1; i > 0; i--) {
@@ -254,47 +240,6 @@ export default function MythworldEngine() {
   const galleryPrev = React.useCallback(() => {
     setGalleryIndex(prev => (galleryQueue.length ? (prev - 1 + galleryQueue.length) % galleryQueue.length : 0))
   }, [galleryQueue.length])
-
-  // ── SPEECH HIGHLIGHT POSITIONING ────────────────────────────────────
-  // Positions a highlight indicator over the active sentence WITHOUT modifying
-  // the spoken DOM. Chrome's SpeechSynthesis interrupts if the elements it's
-  // reading get re-rendered (class swaps, DOM changes). Instead we measure
-  // the target sentence's position via getBoundingClientRect and move a
-  // separate overlay via direct DOM writes — no React state, no re-renders.
-  const updateHighlight = useCallback(() => {
-    const overlay = highlightRef.current
-    if (!overlay) return
-    if (currentSpeechSentenceIndex === null || currentSpeechSentenceIndex === undefined || !narrationBlockRef.current) {
-      overlay.style.display = 'none'
-      return
-    }
-    const target = narrationBlockRef.current.querySelector(`[data-sentence-index="${currentSpeechSentenceIndex}"]`) as HTMLElement | null
-    if (!target) {
-      overlay.style.display = 'none'
-      return
-    }
-    const block = narrationBlockRef.current.getBoundingClientRect()
-    const rect = target.getBoundingClientRect()
-    overlay.style.display = 'block'
-    overlay.style.left = `${rect.left - block.left}px`
-    overlay.style.top = `${rect.top - block.top}px`
-    overlay.style.width = `${rect.width}px`
-    overlay.style.height = `${rect.height}px`
-  }, [currentSpeechSentenceIndex])
-
-  useEffect(() => {
-    const frame = requestAnimationFrame(updateHighlight)
-    return () => cancelAnimationFrame(frame)
-  }, [updateHighlight])
-
-  // Also update on scroll within the narrative container
-  useEffect(() => {
-    if (currentSpeechSentenceIndex === null || currentSpeechSentenceIndex === undefined) return
-    const container = narrationBlockRef.current?.closest('.scroll-parchment')
-    if (!container) return
-    container.addEventListener('scroll', updateHighlight)
-    return () => container.removeEventListener('scroll', updateHighlight)
-  }, [currentSpeechSentenceIndex, updateHighlight])
 
   // ── TOAST NOTIFICATION SYSTEM ─────────────────────────────────────────
   const [toasts, setToasts] = React.useState<{ id: string; title: string; desc: string; icon: string }[]>([])
@@ -642,33 +587,8 @@ export default function MythworldEngine() {
                     className={isLast ? `dm-narration-block scroll-parchment ${collapseClass}` : undefined}
                     style={isLast ? { position: 'relative' } : undefined}
                   >
-                    {isLast && narrationSentences.length > 0 ? (
-                      <>
-                        <span ref={narrationBlockRef}>
-                          {narrationSentences.map((sentence, i) => (
-                            <span
-                              key={`narr-sentence-${i}`}
-                              data-sentence-index={i}
-                              dangerouslySetInnerHTML={{ __html: sentence + ' ' }}
-                            />
-                          ))}
-                        </span>
-                        {/* Speech highlight overlay — positioned via direct DOM, never re-renders spoken spans */}
-                        <div
-                          ref={highlightRef}
-                          style={{
-                            position: 'absolute',
-                            background: 'rgba(255, 215, 0, 0.12)',
-                            borderLeft: '3px solid #FFD700',
-                            paddingLeft: '6px',
-                            borderRadius: '2px',
-                            pointerEvents: 'none',
-                            transition: 'left 0.25s ease, top 0.25s ease, width 0.25s ease, height 0.25s ease',
-                            zIndex: 1,
-                            display: 'none',
-                          }}
-                        />
-                      </>
+                    {isLast ? (
+                      <span dangerouslySetInnerHTML={{ __html: item.html }} />
                     ) : (
                       <span dangerouslySetInnerHTML={{ __html: item.html }} />
                     )}
