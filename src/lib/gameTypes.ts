@@ -148,6 +148,7 @@ export interface DMResponse {
   state_updates?: StateUpdate[]
   new_active_npcs?: string[]
   shard_event?: ShardEvent
+  shard_insight_used?: boolean   // v2.19.0: DM confirms shard insight charge was spent
   next_pc_id?: string
   pc_agreement?: { [key: string]: string }
   boss_phase_trigger?: boolean
@@ -245,6 +246,10 @@ export interface GameState {
   shardSummoned: string[]
   shardDark: boolean
   pendingShardSummon: string | null
+  pendingShardQuestion: string | null     // v2.19.0: Player's question to the shard (Insight charge)
+  shardShieldUsed: boolean        // v2.19.0: Charge 2 spent (auto death-save)
+  shardInsightUsed: boolean       // v2.19.0: Charge 1 spent (ask the shard)
+  shardFinalWordUsed: boolean     // v2.19.0: Charge 3 spent (Act III climax)
   act: string
   turn: number
   log: { msg: string; type: string; turn: number }[]
@@ -384,8 +389,8 @@ export interface SuccessRateFactors {
   alignmentHarmony: number // How well party alignments work together
   storyAchievements: number // Quests completed, clues found
   antagonistType: 'greater_god' | 'monster' | null
-  shardCharges: number       // 0-2: Shard charges remaining (summons gods)
-  shardSummoned: number      // How many gods have been summoned via shard
+  shardCharges: number       // v2.19.0: 0-3: Shard charges (Insight, Shield, Final Word)
+  shardSummoned: number      // DEPRECATED — kept for save compatibility
   companionAffinity: number  // -100 to +100: Relationship with main PC
   injuryPenalty: number      // Sum of all active injury modifiers
 }

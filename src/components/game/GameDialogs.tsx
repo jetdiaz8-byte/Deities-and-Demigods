@@ -365,43 +365,59 @@ export function GameDialogs({
         </DialogContent>
       </Dialog>
 
-      {/* Shard Summon Dialog */}
+      {/* v2.19.0: Shard Insight Dialog — Ask the Tear */}
       <Dialog open={shardDialogOpen} onOpenChange={setShardDialogOpen}>
-        <DialogContent className="bg-[#110d07] border-[#5a4018]" style={{ borderColor: gameState.shardEntry?.color }}>
+        <DialogContent className="bg-[#0d0810] border-[#5a3898]" style={{ borderColor: gameState.shardEntry?.color || '#8060c0' }}>
           <DialogHeader>
-            <DialogTitle className="text-[#f0c860]" style={{ fontFamily: '"Cinzel Decorative", serif', color: gameState.shardEntry?.color }}>
-              <Sparkles className="w-5 h-5 inline mr-2" />
-              {gameState.shardEntry?.name}
+            <DialogTitle className="text-[#c0a0f0]" style={{ fontFamily: '"Cinzel Decorative", serif', color: gameState.shardEntry?.color || '#c080ff' }}>
+              🔮 Ask the Tear
             </DialogTitle>
-            <DialogDescription className="text-[#9a8860]">
-              {gameState.shardCharges} charge{gameState.shardCharges !== 1 ? 's' : ''} remaining
+            <DialogDescription className="text-[#7a6090]">
+              {gameState.shardInsightUsed
+                ? 'The Tear has spoken. It will not speak again.'
+                : gameState.shardCharges > 0
+                  ? `1 Insight charge available — ${gameState.shardCharges} total charge${gameState.shardCharges !== 1 ? 's' : ''} remain`
+                  : 'No charges remaining.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-[#9a8860] italic">{gameState.shardEntry?.origin}</p>
-            <div className="text-xs text-[#5a4d30]">
-              {gameState.shardCharges === 2
-                ? 'Spend 1 charge: summon a Lesser God. Spend 2 charges: summon a Greater God.'
-                : 'Last charge — summon one final entity.'}
-            </div>
-            {gameState.shardSummoned.length > 0 && (
-              <div className="text-xs text-[#5a4d30]">
-                Already summoned: {gameState.shardSummoned.join(', ')}
+            <p className="text-sm text-[#9080a0] italic">{gameState.shardEntry?.origin}</p>
+            <div className="text-xs text-[#6a5080] space-y-1">
+              <div className="flex items-center gap-2">
+                <span>{gameState.shardInsightUsed ? '⚫' : '🔮'}</span>
+                <span>Insight — Ask the shard a question about the world</span>
               </div>
+              <div className="flex items-center gap-2">
+                <span>{gameState.shardShieldUsed ? '⚫' : '🔮'}</span>
+                <span>Shield — Auto death-prevention (the shard protects its bearer)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span>{gameState.shardFinalWordUsed ? '⚫' : '🔮'}</span>
+                <span>Final Word — The shard&apos;s last prophecy (Act III)</span>
+              </div>
+            </div>
+            {!gameState.shardInsightUsed && gameState.shardCharges > 0 && (
+              <>
+                <Input
+                  placeholder="What do you ask the shard? (Leave empty for a general vision...)"
+                  value={shardSummonName}
+                  onChange={e => setShardSummonName(e.target.value)}
+                  className="bg-[#0a0612] border-[#4a2878] text-[#d0c0e8] placeholder:text-[#5a4070]"
+                  onKeyDown={e => e.key === 'Enter' && invokeShard()}
+                />
+                <p className="text-[10px] text-[#5a4070] italic">
+                  The shard remembers everything. It has seen worlds end. But it doesn&apos;t always tell you what you wanted to hear.
+                </p>
+              </>
             )}
-            <Input
-              placeholder="Enter the name of a god to summon..."
-              value={shardSummonName}
-              onChange={e => setShardSummonName(e.target.value)}
-              className="bg-[#181208] border-[#5a4018] text-[#e8d9b0]"
-              onKeyDown={e => e.key === 'Enter' && invokeShard()}
-            />
           </div>
           <DialogFooter>
-            <Button onClick={() => setShardDialogOpen(false)} variant="outline" className="border-[#5a4018] text-[#9a8860]">Cancel</Button>
-            <Button onClick={invokeShard} className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860]" style={{ borderColor: gameState.shardEntry?.color }}>
-              Invoke Shard
-            </Button>
+            <Button onClick={() => setShardDialogOpen(false)} variant="outline" className="border-[#4a2878] text-[#7a6090]">Close</Button>
+            {!gameState.shardInsightUsed && gameState.shardCharges > 0 && (
+              <Button onClick={invokeShard} className="bg-gradient-to-b from-[#3a1870] to-[#200a40] text-[#c0a0f0]" style={{ borderColor: gameState.shardEntry?.color || '#8060c0' }}>
+                🔮 Ask
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

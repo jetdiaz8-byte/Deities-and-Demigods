@@ -13,10 +13,14 @@ import { ITEM_TEMPLATES } from '@/lib/gameConstants'
 
 export const createInitialState = (): GameState => ({
   shardEntry: null,
-  shardCharges: 2,
+  shardCharges: 3,
   shardSummoned: [],
   shardDark: false,
   pendingShardSummon: null,
+  pendingShardQuestion: null,
+  shardShieldUsed: false,
+  shardInsightUsed: false,
+  shardFinalWordUsed: false,
   act: ACTS.ONE,
   turn: 0,
   log: [],

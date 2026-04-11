@@ -1777,8 +1777,8 @@ export function useGameEngine() {
       alignmentHarmony,
       storyAchievements: 0,
       antagonistType: antagonist.type,
-      shardCharges: 2,       // Start with 2 shard charges
-      shardSummoned: 0,      // No gods summoned yet
+      shardCharges: 3,       // v2.19.0: Start with 3 shard charges (Insight, Shield, Final Word)
+      shardSummoned: 0,      // DEPRECATED v2.19.0 — kept for success rate compatibility
       companionAffinity: 50,  // Starting affinity
       injuryPenalty: 0        // No injuries at start
     })
@@ -1950,16 +1950,25 @@ CRITICAL RULES:
 1. DDG rulebook ONLY. Never invent stats.
 2. NPC actions governed strictly by alignment+personality.
 3. NARRATION STYLE — NEIL GAIMAN:
-   - OPENING SCENE (Turn 0): Write an immersive opening narration (1000-1500 words)
-   - REGULAR TURNS (Turn 1+): Write exactly ONE short paragraph (80-150 words). HARD LIMIT. NEVER exceed 150 words.
-   - CRITICAL: NEVER repeat or rephrase narration from previous turns. Every turn must contain ENTIRELY NEW prose that advances the story.
+   - TURN 0 (SHARD INTRO): Write 2 paragraphs introducing ONLY the shard. Mystery, atmosphere, hook.
+     No PC, no companion, no prophecy dump. Just the shard's origin and nature. ~1500 chars max.
+     TTS-friendly: ~30-40 seconds of narration.
+   - TURN 1 (FULL INTRODUCTION): Write the complete introduction covering:
+     a) PC RELEVANCE — Who is this PC and why were they chosen? (2-3 sentences)
+     b) SHARD RELEVANCE — How does the shard connect to this specific PC? (2-3 sentences)
+     c) COMPANION REASON — Why is the companion here? Fate, debt, or shared purpose. (2-3 sentences)
+     d) PROPHECY — Tease the prophecy (one line, not full reveal — a riddle, not a Wikipedia article)
+     e) NEXT TURN INTRO — End with a hook: a fork in the road, a distant threat, a mystery. (1-2 sentences)
+     f) Include companion dialogue that reflects their personality
+     Total: ~3000-3500 chars. TTS-friendly: ~60-75 seconds.
+   - REGULAR TURNS (Turn 2+): Write exactly ONE paragraph (80-150 words). HARD LIMIT.
+     The paragraph MUST contain: what happened, character reaction, and a hook/tension for next turn.
+     Reference past events when relevant. Include 1-2 lines of dialogue max.
+   - CRITICAL: NEVER repeat or rephrase narration from previous turns. Every turn must be ENTIRELY NEW prose.
    - Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
    - Use specific sensory language: the taste of copper, the weight of shadows
-   - ONE paragraph must contain: what happened, character reaction, and a hook/tension
-   - Include dialogue naturally within the paragraph — keep it to 1-2 lines max
    - For REST/SLEEP/CAMP actions: write 2-3 sentences max. Brief, reflective, atmospheric.
    - For COMBAT actions: keep one paragraph and maintain literary pacing.
-   - Reference past events when relevant
 4. Permadeath. No stat/alignment changes mid-game.
 5. PCs=Heroes/Demigods (including Krynn). NPCs=Lesser/Greater Gods (including Krynn gods).
 6. Gods avoid direct combat. WIS>15=cannot be deceived. Ancient enmities override all.
@@ -2011,30 +2020,91 @@ ${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
    - For meaningful moral choices/NPC relationship shifts, append <consequence_data> JSON.
    - Include alignment_shift, npc_relations deltas, and choice with alternatives.
    - Trigger ripple callbacks 5-10 turns later for major choices.
-10a. **STORY PACING — THIS IS CRITICAL**:
-    - Act I (Turns 1-7): PURE EXPLORATION. NO enemies. NO combat. Build the world.
-      - Describe environments: ancient temples, dark forests, forgotten cities, divine realms
-      - Develop the main PC and companion through dialogue and shared experience
-      - The shard whispers, pulses, shows visions — build mystery around it
-      - Drop subtle antagonist clues through environmental details (shadows, omens, symbols)
-      - Introduce a MYSTERY or QUEST HOOK — something the PCs want to investigate
-      - Think Baldur's Gate exploration mode / Disco Elysium discovery
-    - Act I (Turns 8+): First encounter possible. Could be social, could turn hostile.
-      - Gradually introduce danger — a minor threat, not the antagonist
-      - An ancient guardian, a territorial creature, a rival adventurer
-    - Act II: Rising tension. Mix exploration, social encounters, and escalating combat.
-      - Introduce gods and demigods as NPCs with their own agendas
-      - Reveal more antagonist clues. Build dread.
-    - Act III: Boss fight. All-out confrontation with the antagonist.
+10a. **STORY PACING — TURn-BY-TURN STRUCTURE**:
+    THIS IS THE MOST CRITICAL RULE. FOLLOW IT EXACTLY.
+
+    **ACT I — THE GATHERING (Turns 0-21):**
+    - Turn 0: Shard introduction only. 2 paragraphs. Mystery and atmosphere.
+    - Turns 1-7: Exploration. PC and companion discover the world. Build mystery through:
+      - Environmental details (ancient temples, dark forests, forgotten cities)
+      - Shard reactions (whispers, pulses, visions of divine essence)
+      - Character development through dialogue and shared experience
+      - Companion bond deepening
+      - Subtle antagonist clues (shadows, omens, symbols — NOT the antagonist themselves)
+      - Introduce a MYSTERY or QUEST HOOK
+    - Turn 8-9: FIRST BLOOD — A minor threat (guardian spirit, territorial creature).
+      Proves the PC needs allies. First real danger. No party member joins yet.
+    - Turns 10-11: PARTY MEMBER 1 joins (rescued/found — debt of gratitude).
+      "You saved my life. I owe you a sword."
+    - Turns 12-13: PARTY MEMBER 2 joins (pursuing same objective — mutual interest).
+      "We seek the same thing. I'd rather not kill you for it."
+    - Turns 14-15: SHARD EVENT — Midpoint escalation. Quickening CONCEPT introduced
+      (shard shows visions of divine essence collision, the player feels the hunger).
+      No actual Quickening trigger yet. No new member.
+    - Turns 16-17: PARTY MEMBER 3 joins (shard-drawn — felt the Tear across planes).
+      "I felt it from across three planes. Don't ask me to explain."
+    - Turns 18-19: PARTY MEMBER 4 joins (enemy turned ally — defeated and shown mercy).
+      "You could have killed me. Why didn't you?" Loyalty born from choice.
+    - Turns 20-21: PARTY MEMBER 5 joins + ACT I→II TRIGGER.
+      New member brings antagonist knowledge: "I know what's coming. It's worse than you think."
+      The antagonist is GLIMPSED (shadow, symbol, feeling — not fought). Act II begins.
+
+    **PARTY FOREGROUND ROTATION:**
+    - Only 2-3 party members are narratively "active" each turn
+    - Others are present but quiet: "Movarl and Raistlin held the rear, their silence a wall."
+    - Rotate based on scene relevance and personality
+    - Player controls PC and Companion only via choice panel
+    - Other 5 members act autonomously based on personality (rule 10b)
+
+    **ACT II — RISING TENSION (Turns 22-35):**
+    - First ACTUAL Quickening trigger (on qualifying kill — divine rank ≥ 1)
+    - Gods appear as NPCs — some hostile, some potential allies
+    - GOD ALLY RECRUITMENT RULES:
+      * Not every god can be recruited — some hate mortals more than the antagonist
+      * Recruitment costs something: Fate Point, shard charge, or moral compromise (renegade)
+      * Party ally cap: 2-3 active in any encounter
+      * Some gods are genuinely irredeemable — choice is kill or flee, not negotiate
+      * Relationships are personality-driven, not player-choice-driven
+    - Enemy-as-friend dynamics: ancient enmities where lesser evils ally against greater
+    - Rising encounters. Tension builds toward revelation.
+
+    **ACT II→III TRIGGER:**
+    - Narrative trigger (not turn-count): antagonist's identity + location fully revealed
+    - The party knows WHO and WHERE. Act III begins.
+
+    **ACT III — THE FINAL TEST (4 phases):**
+    - Phase 0 — REVELATION: Antagonist's true identity + motivation revealed.
+      Maybe not evil. Maybe doing what the PC would do. Moral complexity.
+    - Phase 1 — PREPARATION: Final chance to recruit allies, make deals, gather power.
+      Gods befriended in Act II show up or don't based on player choices.
+    - Phase 2 — BOSS FIGHT: 3 sub-phases. Hard. Deadly. Permadeath possible.
+    - Phase 3 — THE QUESTION: The prophecy's final question. The fight ends not with
+      a killing blow but with a CHOICE: Restore the divine? Extinguish it? Become it?
+      Shard's Final Word (Charge 3) provides the critical lens for this decision.
+    
     - NEVER rush to combat. Let the story breathe. Players want to EXPLORE, not just fight.
-11. **THE SHARD IS CENTRAL** - The shard is the heart of this story:
-    - The shard CHOSE the main PC. This is not coincidence—it is destiny.
-    - Reference the shard's origin and nature constantly—it shapes everything
-    - The shard whispers to its bearer, shows visions, demands attention
-    - The shard's pantheon affinity affects which gods are drawn to the party
-    - When the main PC speaks, the shard may pulse, warm, or cool in response
-    - The shard knows the prophecy—it contained the prophecy before the PC was born
-    - The shard is NOT a tool. It is a character with its own agenda
+11. **THE SHARD — 3 CHARGES FOR THE ENTIRE GAME**:
+    The shard is NOT a tool. It is a character with its own agenda — patient, hungry for the prophecy to complete.
+    The shard has exactly 3 charges for the entire campaign:
+    
+    CHARGE 1 — SHARD INSIGHT (🔮): Player can spend this to ask the shard a question. The shard reveals
+    a hidden truth — a piece of lore, an antagonist clue, a prophecy fragment, a secret about an NPC.
+    The shard remembers everything. It has seen the world end before. But it doesn't always tell you
+    what you WANTED to hear. When Insight is used, describe what the shard whispers/shows.
+    
+    CHARGE 2 — SHARD SHIELD (automatically triggered): When the PC or companion would DIE (HP reaching 0),
+    the shard intervenes. Death is prevented. HP is set to 1. Describe how the shard manifests:
+    a flash of copper light, a barrier of frozen time, a scream from the future. The shard protects
+    its bearer not out of love, but because it NEEDS them alive for the prophecy. Self-preservation.
+    If shardShieldUsed is true, this charge has been spent.
+    
+    CHARGE 3 — SHARD'S FINAL WORD (Act III only): In the final confrontation, the shard speaks its
+    last prophecy — the critical revelation that shapes the player's endgame choice. Not the answer,
+    but a LENS through which to see the answer. This is the shard's purpose fulfilled.
+    
+    Display shard charges as: 🔮(3) 🔮🔮🔮 when all available, 🔮(2) 🔮🔮⚫ after Insight, etc.
+    The shard whispers, pulses, shows visions — but it does NOT deal damage, boost rolls, or summon gods.
+    It operates on its own agenda, not the player's convenience.
 12. **PROPHECY SYSTEM** - The main PC carries the prophecy directly:
     - The prophecy is bound to the SHARD, not just the PC
     - Reference the main PC's prophecy riddle constantly—it whispers through the shard
@@ -2061,10 +2131,14 @@ ${!isFirstTurn ? `14. **RNG PARTY SYSTEM** - During Act II, you may introduce ad
 16. **PbTA OUTCOME TIERS** — Every player action MUST have an outcome_tier:
     - "critical_success" (natural 20 or exceptional): Full success + bonus (extra damage, discover hidden thing, enemy fumbles)
     - "full_success" (roll 10+): The player gets what they want, cleanly
-    - "partial_success" (roll 7-9): Success at a cost — "Yes, but..." (take damage, use a resource, enemy gets advantage)
-    - "miss" (roll 6 or less): "No, and..." — things get worse (take damage, enemy acts, lose a resource)
+    - "partial_success" (roll 7-9): Success at a cost — "Yes, but..." The AI narrates what the cost is
+      (a wound, a lost resource, an enemy gaining advantage). Include damage in "damage_dealt" or "state_updates".
+    - "miss" (roll 6 or less): "No, and..." — things get worse. The AI narrates the failure's consequences.
+      Include any damage in "damage_dealt" or "state_updates". NEVER apply blind mechanical penalties.
+      All damage must be narratively justified.
     - ALWAYS include "outcome_tier" in the JSON response. This is MANDATORY.
     - NEVER make a turn boring. Even failure must be interesting and advance the story.
+    - v2.19.0: All damage is handled via damage_dealt/state_updates. No blind HP penalties on miss/partial.
 17. **PARAGON/RENEGADE POINTS** (Mass Effect):
     - Track moral choices: "paragon_delta" (+1 to +3) for diplomatic/honorable actions
     - "renegade_delta" (+1 to +3) for ruthless/pragmatic actions
@@ -2086,13 +2160,40 @@ ${!isFirstTurn ? `19. **STAMINA SYSTEM** (Dark Souls):
     - Stamina regenerates each turn by ${gs.staminaRegenRate}
 ` : ''}
 ${isFirstTurn ? '' : `${journeySection}${historySection}
+${gs.act === ACTS.ONE && gs.turn >= 8 ? `
+20. **PARTY ASSEMBLY** (Act I, Turns 8-21):
+    The DM introduces new party members during Act I. Each join has a UNIQUE reason:
+    - RESCUE: The party finds them in danger (captured, wounded, cursed)
+    - RIVALRY: They challenge the PC, lose, and join out of respect
+    - PROPHECY: The shard identifies them as essential to the quest
+    - MUTUAL ENEMY: They share an enemy with the party
+    - DEBT: They owe the PC or companion a life debt
+    - When introducing a new party member via npc_encounters, use encounter_type "ALLY"
+    - Give them a MINI-INTRODUCTION: 2-3 sentences of personality, motivation, reaction to the shard
+    - Max party size: 7 (PC + companion + 5 allies). If full, NPCs remain allies but don't join party.
+    - Auto foreground rotation: the engine decides which party member acts, not the player.
+` : ''}
+21. **ABILITY COST MODEL** (Hybrid — Free Once Per Encounter):
+    - Each PC/Companion ability is FREE the first time it's used in an encounter (combat or exploration scene)
+    - Second use costs 1 Fate Point. Third use costs 2 FP. Fourth and beyond: 2 FP each.
+    - The encounter resets when combat ends or a new scene begins (DM discretion)
+    - If the PC has 0 Fate Points and the ability costs FP, the action still works but at -2 penalty
+    - Label abilities in choices: [FREE] for first use, [1 FP] for second, [2 FP] for third+
+    - This prevents ability spam while rewarding tactical play
+${gs.act === ACTS.ONE && gs.turn >= 8 ? `
+22. **ACT I → II TRANSITION** (Turn-count floor + Narrative milestone):
+    - MINIMUM: Turn ${gs.act1TurnLimit} before Act II can begin
+    - NARRATIVE MILESTONE: At least one major clue about the antagonist revealed
+    - HYBRID: Both conditions must be met. The turn-count floor prevents rushing; the milestone ensures story readiness.
+    - When transitioning, narrate: the world shifts, the stakes escalate, gods begin to walk among mortals.
+` : ''}
 ═══════════════════════════════════════════════════════════════════════════
 THE SHARD — ${shard?.name} [${shard?.pantheon || 'Unknown'} Pantheon]
 ═══════════════════════════════════════════════════════════════════════════
 ${toAscii(shard?.origin || '')}
 Power: ${shard?.power || 'Unknown'}
-Charges: ${gs.shardCharges}/2 | Summoned: ${gs.shardSummoned.join(',') || 'none'}
-${gs.pendingShardSummon ? `PENDING: summon "${gs.pendingShardSummon}" with d20 roll DC10.\n` : ''}${actCtx}
+Charges: ${gs.shardCharges}/3 | Shield Used: ${(gs as any).shardShieldUsed ? 'YES' : 'no'}
+${actCtx}
 Turn: ${gs.turn} | Act I Limit: ${gs.act1TurnLimit} | Act II Duration: ${gs.act2TurnLimit}
 
 ═══════════════════════════════════════════════════════════════════════════
@@ -2172,7 +2273,7 @@ QUICKENING RULES:
 ` : ''}`}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — 800-1200 words for opening scenes, 80-120 words for regular turns. HARD MAX 120 WORDS for regular turns. ONE paragraph only. REST/SLEEP: 2-3 sentences. COMBAT: up to 100 words. EXCEEDING THE WORD LIMIT IS A CRITICAL FAILURE.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"shard_event":{"invoked":false,"invoker_pc_id":null,"intended_god":"string|null","roll":0,"success":false,"summoned_id":"string|null","summoned_name":"string|null","is_greater":false},"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","pc_choices":[{"narrative":"string (CONTEXTUAL story-specific action with emoji, max 80 chars — NEVER generic like 'Search the area')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}],"companion_choices":[{"narrative":"string (CONTEXTUAL companion action with emoji, max 80 chars — reference current scene)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — Turn 0 shard intro: ~600 chars max. Turn 1 full intro: 3000-3500 chars (4-5 paragraphs). Regular turns: 80-120 words HARD MAX, ONE paragraph only. REST/SLEEP: 2-3 sentences. COMBAT: up to 100 words. EXCEEDING THE WORD LIMIT IS A CRITICAL FAILURE.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","shard_insight_used":false,"pc_choices":[{"narrative":"string (CONTEXTUAL story-specific action with emoji, max 80 chars — NEVER generic like 'Search the area')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}],"companion_choices":[{"narrative":"string (CONTEXTUAL companion action with emoji, max 80 chars — reference current scene)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -2766,6 +2867,31 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   // When a PC dies, their prophecy transfers to the next living PC (companion first, then RNG pool)
 
   /** Check if a PC has Death Ward — if so, consume it and prevent death */
+  // v2.19.0 — Shard Shield: Auto-triggers when PC or companion would die. Saves them at 1 HP.
+  function tryConsumeShardShield(newGS: GameState, pcId: string, turn: number): { gs: GameState; shielded: boolean } {
+    if (newGS.shardShieldUsed) return { gs: newGS, shielded: false }
+    const pcIdx = newGS.pcs.findIndex(p => p.id === pcId)
+    if (pcIdx < 0) return { gs: newGS, shielded: false }
+    const pc = newGS.pcs[pcIdx]
+    // Only protect main PC or companion
+    if (pcId !== newGS.humanPCId && pcId !== newGS.companionId) return { gs: newGS, shielded: false }
+
+    const shieldedPc = { ...pc, hp: 1, dead: false }
+    const shieldMsg = `🔮 The ${newGS.shardEntry?.name || 'Shard'} erupts with copper light! A barrier of frozen time wraps around ${pc.name}, pulling them back from the threshold of death. They stand at 1 HP — the shard's self-preservation instinct spent. Shield charge consumed.`
+    soundEvents.emit({ type: 'shard_pulse' })
+    triggerScreenEffect('screen-effect-gold')
+    return {
+      gs: {
+        ...newGS,
+        shardShieldUsed: true,
+        shardCharges: Math.max(0, newGS.shardCharges - 1),
+        pcs: [...newGS.pcs.slice(0, pcIdx), shieldedPc, ...newGS.pcs.slice(pcIdx + 1)],
+        log: [...newGS.log, { msg: shieldMsg, type: 'shard_event', turn }],
+      },
+      shielded: true,
+    }
+  }
+
   function tryConsumeDeathWard(newGS: GameState, pcId: string, turn: number): { gs: GameState; warded: boolean } {
     const pcIdx = newGS.pcs.findIndex(p => p.id === pcId)
     if (pcIdx < 0) return { gs: newGS, warded: false }
@@ -2901,20 +3027,28 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
               // Mark this PC as HP-processed so state_updates won't double-deduct
               hpProcessedPcs.add(updatedPc.id)
               if (updatedPc.hp <= 0) {
-                // Check Death Ward before marking dead
-                const wardResult = tryConsumeDeathWard(
+                // v2.19.0: Check Shard Shield FIRST, then Death Ward
+                let shieldResult = tryConsumeShardShield(
                   { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
                   updatedPc.id, gs.turn
                 )
-                if (wardResult.warded) {
-                  newGS = wardResult.gs
+                if (shieldResult.shielded) {
+                  newGS = shieldResult.gs
                 } else {
-                  updatedPc.dead = true; updatedPc.hp = 0
-                  soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
-                  newGS = transferProphecyOnDeath(
+                  const wardResult = tryConsumeDeathWard(
                     { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
                     updatedPc.id, gs.turn
                   )
+                  if (wardResult.warded) {
+                    newGS = wardResult.gs
+                  } else {
+                    updatedPc.dead = true; updatedPc.hp = 0
+                    soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
+                    newGS = transferProphecyOnDeath(
+                      { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
+                      updatedPc.id, gs.turn
+                    )
+                  }
                 }
               }
               newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
@@ -2924,22 +3058,17 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       }
     }
 
-    // Shard event
-    if (res.shard_event?.invoked) {
+    // v2.19.0: Shard Insight charge processing
+    // When the player uses shard_insight_used (via the "Ask the Tear" button),
+    // the DM response handles the narrative. We just mark the charge as spent.
+    if (res.shard_insight_used && !newGS.shardInsightUsed) {
+      newGS.shardInsightUsed = true
+      newGS.shardCharges = Math.max(0, newGS.shardCharges - 1)
       soundEvents.emit({ type: 'shard_pulse' })
       triggerScreenEffect('screen-effect-gold')
-      newGS.pendingShardSummon = null
-      if (res.shard_event.success && res.shard_event.summoned_name) {
-        if (res.shard_event.is_greater) {
-          newGS.shardCharges = 0
-          newGS.shardDark = true
-        } else {
-          newGS.shardCharges = Math.max(0, newGS.shardCharges - 1)
-        }
-        newGS.shardSummoned = [...newGS.shardSummoned, res.shard_event.summoned_name]
-      }
-      if (newGS.shardCharges <= 0) newGS.shardDark = true
     }
+    // Clear pending shard question after processing
+    newGS.pendingShardQuestion = null
 
     // New NPCs
     if (res.new_active_npcs?.length) {
@@ -3349,7 +3478,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       storyAchievements: completedQuests + Math.floor(newGS.antagonistCluesRevealed.length / 2),
       antagonistType: newGS.antagonistType,
       shardCharges: newGS.shardCharges,
-      shardSummoned: newGS.shardSummoned.length,
+      shardSummoned: 0,  // v2.19.0: Summoning removed, no bonus from summoned gods
       companionAffinity: newGS.companionAffinity,
       injuryPenalty: totalInjuryPenalty
     })
@@ -3370,6 +3499,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     // ═══════════════════════════════════════════════════════════════════════════
     // PbtA OUTCOME TIER — Process outcome from DM response
     // ═══════════════════════════════════════════════════════════════════════════
+    // v2.19.0: Removed blind HP penalties (partial_success -1, miss -5 to random PC).
+    // The AI handles all damage through damage_dealt and state_updates with narrative context.
+    // Blind mechanical penalties disconnected damage from story — now all consequences are narrated.
     if (res.outcome_tier) {
       newGS.lastOutcomeTier = res.outcome_tier
       newGS.outcomeHistory = [...newGS.outcomeHistory, {
@@ -3377,67 +3509,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         tier: res.outcome_tier,
         description: res.dm_narration?.slice(0, 100) || ''
       }]
-
-      // Apply tier-specific mechanical effects
-      if (res.outcome_tier === 'partial_success') {
-        // Success at a cost: -1 HP to random living PC, or reduce a potion charge
-        const livingPCs = newGS.pcs.filter(p => !p.dead)
-        if (livingPCs.length > 0) {
-          const target = livingPCs[Math.floor(Math.random() * livingPCs.length)]
-          const targetIdx = newGS.pcs.findIndex(p => p.id === target.id)
-          if (targetIdx >= 0) {
-            const updatedPc = { ...newGS.pcs[targetIdx] }
-            updatedPc.hp = Math.max(0, updatedPc.hp - 1)
-            // P4.2 FIX: Check death for partial_success too
-            if (updatedPc.hp <= 0) {
-              const wardResult = tryConsumeDeathWard(
-                { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
-                updatedPc.id, gs.turn
-              )
-              if (wardResult.warded) {
-                newGS = wardResult.gs
-              } else {
-                updatedPc.dead = true; updatedPc.hp = 0
-                soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
-                newGS = transferProphecyOnDeath(
-                  { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
-                  updatedPc.id, gs.turn
-                )
-              }
-            }
-            newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
-          }
-        }
-      } else if (res.outcome_tier === 'miss') {
-        // Failure costs more: -5 HP to random PC
-        const livingPCs = newGS.pcs.filter(p => !p.dead)
-        if (livingPCs.length > 0) {
-          const target = livingPCs[Math.floor(Math.random() * livingPCs.length)]
-          const targetIdx = newGS.pcs.findIndex(p => p.id === target.id)
-          if (targetIdx >= 0) {
-            const updatedPc = { ...newGS.pcs[targetIdx] }
-            updatedPc.hp = Math.max(0, updatedPc.hp - 5) // P4.2 FIX: was Math.max(1, ...) — death was unreachable
-            if (updatedPc.hp <= 0) {
-              // P4.2 FIX: Full death chain with Death Ward + prophecy transfer
-              const wardResult = tryConsumeDeathWard(
-                { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
-                updatedPc.id, gs.turn
-              )
-              if (wardResult.warded) {
-                newGS = wardResult.gs
-              } else {
-                updatedPc.dead = true; updatedPc.hp = 0
-                soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
-                newGS = transferProphecyOnDeath(
-                  { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
-                  updatedPc.id, gs.turn
-                )
-              }
-            }
-            newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
-          }
-        }
-      }
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -3654,11 +3725,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     let userMsg = ''
 
     if (isFirst) {
-      // Get companion (second PC in pcs array — NOT pcQueue which is empty after setup)
-      const companion = gs.pcs.length > 1 ? gs.pcs[1] : undefined
-      const mainPC = gs.pcs[0]
-
-      userMsg = `OPENING SCENE — THE SHARD ENCOUNTER.
+      // v2.19.0: TURN 0 — SHARD-ONLY INTRO
+      // Two paragraphs of pure shard mythology, no PC or companion yet.
+      // The shard appears in the world. Ancient. Waiting. Dangerous.
+      // ~1500 chars max. Ends with a hook — something is about to happen.
+      userMsg = `TURN 0 — THE SHARD AWAKENS (SHARD-ONLY INTRO).
 
 ═══════════════════════════════════════════════════════════════════════════
 THE SHARD
@@ -3667,6 +3738,36 @@ SHARD: ${shard?.name}
 ORIGIN: ${toAscii(shard?.origin || '')}
 PANTHEON AFFINITY: ${shard?.pantheon || 'Primordial'}
 POWER: ${shard?.power || 'Unknown'}
+
+═══════════════════════════════════════════════════════════════════════════
+STRUCTURE (EXACTLY 2 PARAGRAPHS — NEIL GAIMAN STYLE)
+═══════════════════════════════════════════════════════════════════════════
+
+PARAGRAPH 1 — THE SHARD REMEMBERS (1 paragraph, ~600 chars):
+Describe ${shard?.name} appearing in the world. Not as an object, but as an EVENT.
+The shard has been waiting for this moment across millennia. It remembers all its previous holders — their faces, their deaths, their failures. It remembers what it was before it broke from whatever greater whole it once belonged to. Use mythic, sensory language. Make the world feel ancient. The shard is a character — patient, hungry, certain.
+
+PARAGRAPH 2 — THE WORLD RESPONDS (1 paragraph, ~600 chars):
+The shard's arrival disrupts the world around it. Nature reacts — wind falls silent, animals flee, water turns still. Something ancient notices. Do NOT name the antagonist. Describe only its effect — a chill, a shadow that moves wrong, the silence of birds. The shard knows its enemy. It grows cold, or hot, or heavy.
+End with a hook: someone is approaching. Someone the shard has been waiting for.
+
+DO NOT introduce the main PC or companion in this turn. They will appear in Turn 1.
+DO NOT name the antagonist. Only show its effect on the world.
+Write the prose first, then append the JSON state payload.
+HARD MAX: 1500 characters total for dm_narration.
+
+═══════════════════════════════════════════════════════════════════════════
+JSON OUTPUT REQUIREMENTS
+═══════════════════════════════════════════════════════════════════════════
+Set human_pc_id to the first PC's ID (they will appear in Turn 1).
+Generate 3 pc_choices and 3 companion_choices for Turn 1 context.
+Write the narrative prose first. Then append the JSON state payload.`
+    } else if (gs.turn === 0) {
+      // v2.19.0: TURN 1 — FULL INTRO (PC discovers shard, companion bond, prophecy teased)
+      const companion = gs.pcs.length > 1 ? gs.pcs[1] : undefined
+      const mainPC = gs.pcs[0]
+
+      userMsg = `TURN 1 — THE HERO ARRIVES (FULL INTRO — ALL PHASES).
 
 ═══════════════════════════════════════════════════════════════════════════
 THE MAIN PC (CHOSEN BY THE SHARD)
@@ -3687,55 +3788,39 @@ PERSONALITY: ${toAscii(companion?.personality || '')}
 ABILITIES: ${companion?.abilities?.slice(0, 3).join(', ') || 'Unknown'}` : ''}
 
 ═══════════════════════════════════════════════════════════════════════════
-MANDATORY STRUCTURE (NEIL GAIMAN STYLE - 5-7 RICH PARAGRAPHS)
+STRUCTURE (NEIL GAIMAN STYLE — 4-5 RICH PARAGRAPHS)
 ═══════════════════════════════════════════════════════════════════════════
 
-PART 1 — THE SHARD AWAKENS (1-2 paragraphs):
-Describe ${shard?.name} appearing in the world. Be specific and sensory. Use mythic, poetic language. The shard has been waiting for this moment. It remembers all its previous holders. It remembers what it was before it broke from whatever greater whole it once belonged to. Make the world feel ancient and dangerous.
+PART 1 — THE HERO DISCOVERS THE SHARD (1 paragraph):
+${mainPC?.name} finds the shard. Show their reaction — curiosity, fear, recognition?
+The shard CHOSE them. Show the moment of contact. Give us their internal voice.
+They may not understand it yet, but something in them responds to the shard's call.
 
-PART 2 — THE MAIN PC DISCOVERS IT (1 paragraph):
-Introduce ${mainPC?.name}. What were they doing when the shard called to them? Give us their voice, their internal thoughts. The shard CHOSE them — show the moment of recognition, the weight of destiny settling onto their shoulders. They may not understand it yet, but something in them responds.
+${companion ? `PART 2 — THE COMPANION'S BOND (1-2 paragraphs):
+${companion?.name} is with ${mainPC?.name}. Create a MINI-ORIGIN for their bond:
+- WHY are they together? (Shared history, oath, blood, survival, debt, love)
+- HOW did they meet? (Battle, exile, quest, disaster, childhood)
+- WHAT binds them? (Honor, guilt, necessity, friendship, rivalry)
+Write DIALOGUE between them — ${companion?.name} reacts to the shard per their ${companion?.align} alignment.
+Show their dynamic. Let personalities clash or harmonize naturally.` : ''}
 
-${companion ? `PART 3 — THE COMPANION'S ORIGIN (1-2 paragraphs):
-${companion?.name} is already with ${mainPC?.name}. They did not meet by chance. Create a MINI-ORIGIN STORY explaining their bond:
-- WHY are they together? (Shared history, oath, blood, survival, prophecy, debt, love, hate)
-- HOW did they meet? (Battle, exile, quest, disaster, childhood, divine mandate)
-- WHAT binds them? (Honor, guilt, necessity, friendship, rivalry, family)
+PART ${companion ? '3' : '2'} — THE PROPHECY TEASES (1 paragraph):
+The shard whispers something — a fragment of the prophecy bound to ${mainPC?.name}.
+Don't reveal the full prophecy. Just a fragment: an image, a name, a warning.
+Something that creates mystery and urgency. The hero feels the weight of destiny.
 
-Then write DIALOGUE between them — ${companion?.name} speaks and acts according to their ${companion?.align} alignment:
-- Lawful Good: Speaks with conviction, references duty/honor, protective, may quote oaths or laws
-- Chaotic Good: Speaks freely, values freedom, challenges authority kindly, compassionate but wild
-- Lawful Neutral: Speaks precisely, values order and tradition, emotionally reserved, logical
-- True Neutral: Speaks pragmatically, balanced view, observes more than judges, calm
-- Chaotic Neutral: Speaks unpredictably, values personal freedom, may change subject, impulsive
-- Lawful Evil: Speaks with cold formality, respects power, manipulative but bound by code
-- Neutral Evil: Speaks selfishly, calculates advantage, may seem friendly but is not
-- Chaotic Evil: Speaks wildly, threatens, enjoys chaos, unpredictable and dangerous
-
-Show their dynamic through conversation. One may question, one may warn, one may joke — let their personalities clash or harmonize naturally. The companion should react to the shard with their own perspective.
-
-PART 4 — THE BOND IS FATE (1 paragraph):
-Establish that their meeting was NOT happenstance. Perhaps:
-- They were drawn together by the same force that created the shard
-- One saved the other's life in a way that echoes this moment
-- They share a memory or loss connected to something the shard remembers
-- A prophecy spoke of them together before either knew the other's name
-- Their souls have met in previous ages, and the shard knows this
-
-The companion may not fully understand why they're here, but they KNOW they cannot leave ${mainPC?.name}'s side right now. This is not coincidence. This is design.` : 'PART 3 — THE COMPANION (Not present in this opening)'}
-
-PART ${companion ? '5' : '3'} — THE ANTAGONIST SHADOW (1 paragraph):
-Something else noticed the shard. Do not name it. Describe only its effect — a chill in the air, shadows that move wrong, the silence of birds, the way the companion's hand moves to their weapon without conscious thought. The antagonist (a Greater God or Super Monster from DDG) stirs in the distance. The shard knows its enemy. It grows cold, or hot, or heavy in response.
-
-PART ${companion ? '6' : '4'} — THE CHOICE MOMENT:
-End the prose exactly at the moment of decision. ${companion ? `${mainPC?.name} holds the shard. ${companion?.name} watches. ` : ''}What happens next depends on what the hero chooses. Leave the action open for the player.
+PART ${companion ? '4' : '3'} — THE WORLD OPENS (1 paragraph):
+End at the moment of decision. ${companion ? `${mainPC?.name} holds the shard. ${companion?.name} watches. ` : ''}What happens next depends on what the hero chooses.
+Leave the action open. The world is vast and dangerous. A path lies ahead.
 
 ═══════════════════════════════════════════════════════════════════════════
 JSON OUTPUT REQUIREMENTS
 ═══════════════════════════════════════════════════════════════════════════
-${companion ? `The companion ${companion.name} is already in the active party (pcs[1]). Do NOT set "next_pc_id" — no PC needs to be added from a queue.` : 'No companion to add.'}
-Write the full narrative prose first (800-1200 words minimum for this opening). Then append the JSON state payload.`
+${companion ? `The companion ${companion.name} is already in the active party (pcs[1]). Do NOT set "next_pc_id".` : 'No companion.'}
+Generate 3 contextual pc_choices and 3 contextual companion_choices for the next turn.
+Write the narrative prose first (3000-3500 chars). Then append the JSON state payload.`
     } else {
+      // v2.19.0: TURN 2+ — STANDARD LOOP
       const pacingGuide = gs.act === ACTS.ONE && gs.turn < 8
         ? `\n**EARLY ACT I PACING** (Turn ${gs.turn}, < 8): This is EXPLORATION ONLY. Do NOT spawn enemies or introduce combat encounters. Focus on:\n- Describing the environment in rich detail (ancient ruins, mystical landscapes, divine realms)\n- Building the bond between ${living[0]?.name || 'the hero'} and their companion through dialogue\n- The shard reacting to the environment (pulsing near power sources, whispering warnings)\n- Dropping subtle clues about the antagonist through omens and environmental details\n- Creating MYSTERY — something the player wants to investigate further\n- Discovery: hidden paths, ancient inscriptions, forgotten lore, divine remnants\n- DO NOT include any "npc_encounters" with type "ENEMY" or "BOSS" this early.\n`
         : gs.act === ACTS.ONE
@@ -3752,7 +3837,7 @@ ${isRestAction ? 'ACTION TYPE: REST/SLEEP — Narrate briefly (2-3 sentences max
 
 Recent: ${recentLog}
 Act: ${gs.act}
-${gs.pendingShardSummon ? `${shard?.name} INVOKED — process summoning of "${gs.pendingShardSummon}" with d20 roll (DC10).\n` : ''}${pcIntroStr}${gs.act === ACTS.TWO ? 'Introduce 1-2 gods from the DDG roster this turn. Mix pantheons.\n' : ''}${gs.act === ACTS.THREE ? `BOSS FIGHT: ${ant?.name} Phase ${gs.antagonistPhase}. HP ${gs.antagonistHp}/${gs.antagonistMaxHp}.\n` : ''}${pacingGuide}
+${gs.pendingShardQuestion ? `🔮 SHARD INSIGHT — The player asked: "${gs.pendingShardQuestion}". The shard answers with a hidden truth — a piece of lore, an antagonist clue, a prophecy fragment, or a secret about an NPC. Set shard_insight_used to true. The shard remembers everything but doesn't always tell you what you WANTED to hear. Narrate the shard's whisper/vision in 1-2 sentences of prophecy-like prose.\n` : ''}${pcIntroStr}${gs.act === ACTS.TWO ? 'Introduce 1-2 gods from the DDG roster this turn. Mix pantheons.\n' : ''}${gs.act === ACTS.THREE ? `BOSS FIGHT: ${ant?.name} Phase ${gs.antagonistPhase}. HP ${gs.antagonistHp}/${gs.antagonistMaxHp}.\n` : ''}${pacingGuide}
 NARRATIVE STYLE — NEIL GAIMAN:
 Write ONE SHORT paragraph. 80-120 words MAXIMUM. This is a hard limit. Do NOT write more than 120 words under any circumstances. Quality over quantity — every word must count.
 - DO NOT repeat or rephrase prose from previous turns. Each turn must advance the story with NEW narration.
@@ -3930,8 +4015,10 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const preJsonNarr = preJsonNarrativeRef.current || ''
     let narr: string
     if (isFirst) {
-      // OPENING: use pre-JSON prose (rich Gaiman prose with full scene-setting)
-      // but fall back to JSON if pre-JSON is empty
+      // v2.19.0 TURN 0 (shard-only intro): prefer JSON dm_narration (~1500 chars)
+      narr = jsonNarr.length >= 50 ? jsonNarr : (preJsonNarr || 'The shard awakens...')
+    } else if (gs.turn === 0) {
+      // v2.19.0 TURN 1 (full intro): prefer pre-JSON prose (rich Gaiman with full phases)
       narr = preJsonNarr.length > 100 ? preJsonNarr : (jsonNarr || 'The DM gathers thoughts...')
     } else {
       // REGULAR turns: prefer JSON dm_narration (shorter, controlled)
@@ -3947,9 +4034,9 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const quickeningParsed = parseQuickeningData(consequenceParsed.cleanText, gs.turn)
     narr = quickeningParsed.cleanText
 
-    // Truncate long narrations: 400 words for OPENING, 250 words for regular turns
-    const maxWords = isFirst ? 400 : 250
-    const maxChars = isFirst ? 3500 : 2000
+    // v2.19.0: Truncate long narrations — Turn 0: 150 chars, Turn 1: 400 words, Regular: 250 words
+    const maxWords = isFirst ? 200 : gs.turn <= 1 ? 400 : 250
+    const maxChars = isFirst ? 1500 : gs.turn <= 1 ? 3500 : 2000
     if (narr.length > maxChars) {
       const words = narr.split(/\s+/)
       if (words.length > maxWords) {
@@ -5078,20 +5165,21 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     setStatusMessage(victory ? 'Victory.' : 'The myths die.')
   }
 
-  // ── SHARD INVOKE ───────────────────────────────────────────────────────
+  // v2.19.0: Ask the Tear — spend Shard Insight charge
   const invokeShard = () => {
-    if (!shardSummonName.trim() || gameState.shardDark) return
+    if (gameState.shardInsightUsed || gameState.shardCharges <= 0 || gameState.shardDark) return
 
+    const question = shardSummonName.trim() || 'What do you see?'
     const newGS = {
       ...gameState,
-      pendingShardSummon: shardSummonName.trim()
+      pendingShardQuestion: question,
     }
     setGameState(newGS)
     setShardDialogOpen(false)
     setShardSummonName('')
 
-    appendNarrative(`<div style="font-size:.95rem;background:linear-gradient(90deg,rgba(80,0,0,.1),rgba(10,0,20,.1));border:1px solid rgba(80,0,0,.26);border-radius:3px;padding:10px 14px;line-height:1.7;font-style:italic;color:${gameState.shardEntry?.color || '#c9a84c'}">
-      ${gameState.shardEntry?.name} stirs. You have named <strong>${toAscii(shardSummonName.trim())}</strong>. It will be resolved next turn.
+    appendNarrative(`<div style="font-size:.95rem;background:linear-gradient(90deg,rgba(60,0,100,.15),rgba(10,0,20,.1));border:1px solid rgba(100,60,180,.3);border-radius:3px;padding:10px 14px;line-height:1.7;font-style:italic;color:${gameState.shardEntry?.color || '#c080ff'}">
+      🔮 You press your palm against the ${gameState.shardEntry?.name || 'shard'}. The question forms in your mind: <strong>"${toAscii(question)}"</strong> — The shard trembles, remembering. Its answer will come in the next breath of the world.
     </div>`)
   }
 

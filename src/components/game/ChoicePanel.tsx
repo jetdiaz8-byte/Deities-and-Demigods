@@ -222,7 +222,7 @@ export function ChoicePanel({
               onClick={() => setShardDialogOpen(true)}
             >
               <Sparkles className="w-3 h-3 mr-1" />
-              {gameState.shardEntry?.name?.split(' ').pop()} ({gameState.shardCharges})
+              🔮 {gameState.shardCharges} {(gameState.shardCharges === 3) ? '🔮🔮🔮' : (gameState.shardCharges === 2) ? '🔮🔮⚫' : '🔮⚫⚫'}
             </Badge>
           )}
         </div>
