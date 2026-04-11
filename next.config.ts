@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: false,
   // External packages — don't bundle into serverless functions
   serverExternalPackages: ['z-ai-web-dev-sdk', 'sharp', 'ws'],
+  // Disable SWC minification to avoid Turbopack TDZ bug — uses terser instead
+  swcMinify: false,
 };
 
 export default nextConfig;
