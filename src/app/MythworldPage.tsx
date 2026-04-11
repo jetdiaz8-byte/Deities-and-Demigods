@@ -13,7 +13,7 @@ import { PartySelectionScreen } from '@/components/game/PartySelectionScreen'
 import { GameHeader } from '@/components/game/GameHeader'
 import { LoreGlossaryProvider } from '@/components/game/LoreGlossaryCard'
 import { EquipmentTooltipProvider } from '@/components/game/EquipmentTooltip'
-import { SceneIllustration } from '@/components/game/SceneIllustration'
+import { TurnCardShowcase } from '@/components/game/TurnCardShowcase'
 import PartyBar from '@/components/game/PartyBar'
 import CharacterCard from '@/components/game/CharacterCard'
 import CombatOverlay from '@/components/game/CombatOverlay'
@@ -535,10 +535,8 @@ export default function MythworldEngine() {
             <div className="relative">
               <span className="dragon-corner-tl">🐉</span>
               <span className="dragon-corner-br">🐉</span>
-              {/* Scene Illustration — auto-generates at key moments */}
-              <SceneIllustration
-                narration={lastDMNarrative}
-                act={gameState?.act ?? 'act1'}
+              {/* Card Showcase — cinematic portrait gallery */}
+              <TurnCardShowcase
                 turn={gameState?.turn ?? 0}
                 gameState={gameState}
               />
