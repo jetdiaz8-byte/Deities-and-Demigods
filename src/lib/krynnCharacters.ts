@@ -1157,7 +1157,7 @@ export const ALL_KRYNN_CHARACTERS: KrynnCharacter[] = [
 
 // Get portrait path for a Krynn character
 export function getKrynnPortraitPath(character: KrynnCharacter): string {
-  return `/portraits/krynn/${character.id}.png`
+  return `/portraits/krynn/${character.id}.png?v=3`
 }
 
 // Get Krynn character by ID

@@ -300,7 +300,7 @@ export const ALL_CHARACTERS: Character[] = [
 
 // Get portrait path for a character
 export function getPortraitPath(character: Character): string {
-  return `/portraits/${character.category}/${character.id}.png`
+  return `/portraits/${character.category}/${character.id}.png?v=3`
 }
 
 // Get all unique pantheons

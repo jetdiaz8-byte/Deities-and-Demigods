@@ -178,7 +178,7 @@ export function IntroScreen({
   useEffect(() => {
     if (!nextCharacter || typeof window === 'undefined') return
     const preload = new Image()
-    preload.src = `/portraits/${nextCharacter.category}/${nextCharacter.id}.png`
+    preload.src = `/portraits/${nextCharacter.category}/${nextCharacter.id}.png?v=3`
   }, [nextCharacter?.id, nextCharacter?.category])
 
   return (

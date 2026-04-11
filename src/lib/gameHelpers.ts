@@ -52,7 +52,7 @@ export const aCol = (align: string): string => {
 // Get portrait path for any entity
 export const getEntityPortrait = (entity: { id: string; category?: string; type?: string }): string => {
   const category = entity.category || (entity.type === 'monster' ? 'monsters' : entity.type === 'hero' ? 'heroes' : 'greater-gods')
-  return `/portraits/${category}/${entity.id}.png`
+  return `/portraits/${category}/${entity.id}.png?v=3`
 }
 
 // AD&D 1st Edition Ability Bonus Calculator

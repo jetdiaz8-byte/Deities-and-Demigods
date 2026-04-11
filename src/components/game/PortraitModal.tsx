@@ -161,7 +161,7 @@ export function PortraitModal({
 
   if (!character || !isOpen) return null
 
-  const path = portraitPath || `/portraits/${character.category || 'heroes'}/${character.id}.png`
+  const path = portraitPath || `/portraits/${character.category || 'heroes'}/${character.id}.png?v=3`
   const hpPercent = character.maxHp ? Math.max(0, Math.min(100, ((character.hp || 0) / character.maxHp) * 100)) : 100
 
   return (
