@@ -12,17 +12,27 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Self-hosted fantasy fonts (5 currently available in /public/fonts/) */
+/* Self-hosted fantasy fonts (10 available in /public/fonts/) */
 @font-face { font-family: 'Wonderland';    src: url('/fonts/Wonderland.ttf') format('truetype');   font-display: swap; font-weight: 400; }
+/* Wonderland by Alpaprana · Free for personal use */
 @font-face { font-family: 'Mysteria';      src: url('/fonts/Mysteria.ttf') format('truetype');     font-display: swap; font-weight: 400; }
+/* Mysteria by Aminmario Studio */
 @font-face { font-family: 'Wonder Night';  src: url('/fonts/WonderNight.ttf') format('truetype');  font-display: swap; font-weight: 400; }
+/* Wonder Night from Envato Elements */
 @font-face { font-family: 'Fantasy';       src: url('/fonts/Fantasy.ttf') format('truetype');       font-display: swap; font-weight: 400; }
+/* Fantasy sport font from Envato Elements */
 @font-face { font-family: 'Fantasya';      src: url('/fonts/Fantasya.ttf') format('truetype');      font-display: swap; font-weight: 400; }
+/* ALT: Metamorphous by Sorkin Type (Google Fonts) — placeholder for Fantasya */
 @font-face { font-family: 'Midwinter Fire'; src: url('/fonts/MidwinterFire.ttf') format('truetype'); font-display: swap; font-weight: 400; }
+/* ALT: Almendra Display by Ana Sanfelippo (Google Fonts) — placeholder for Midwinter Fire */
 @font-face { font-family: 'Wisp';          src: url('/fonts/Wisp.ttf') format('truetype');          font-display: swap; font-weight: 400; }
-@font-face { font-family: 'Arkana';        src: url('/fonts/Arkana.ttf') format('truetype');        font-display: swap; font-weight: 400; }
-@font-face { font-family: 'Rivendell';     src: url('/fonts/Rivendell.ttf') format('truetype');     font-display: swap; font-weight: 400; }
+/* ALT: Henny Penny by Brownfox (Google Fonts) — placeholder for Wisp */
+@font-face { font-family: 'Arkana';        src: url('/fonts/Arkana.otf') format('opentype');        font-display: swap; font-weight: 400; }
+/* ALT: Nickainley by Mans Greback (DaFont) — placeholder for Arkana */
+@font-face { font-family: 'Rivendell';     src: url('/fonts/Rivendell.otf') format('opentype');     font-display: swap; font-weight: 400; }
+/* ALT: Enchanted Land by Sharkshock (DaFont) — placeholder for Rivendell */
 @font-face { font-family: 'Ghostoons';     src: url('/fonts/Ghostoons.ttf') format('truetype');     font-display: swap; font-weight: 400; }
+/* ALT: Creepster (Google Fonts) — placeholder for Ghostoons */
 
 :root {
   --bg-primary: #0a0a0f;

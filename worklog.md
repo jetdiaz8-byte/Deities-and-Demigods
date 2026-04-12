@@ -91,3 +91,28 @@ Stage Summary:
 - 5 fonts need manual addition to /public/fonts/: Fantasya.ttf, MidwinterFire.ttf, Wisp.ttf, Arkana.ttf, Rivendell.ttf, Ghostoons.ttf
 - CSS variables cascade to ALL components automatically via var() references
 - All pages themed: Intro, Game, Codex, Rulebook, DM Handbook, Combat Overlay
+
+---
+Task ID: 2
+Agent: Main Agent
+Task: v2.32.0 — Download all 10 fantasy fonts (user provided free alternatives)
+
+Work Log:
+- Searched cdnfonts.com (Cloudflare-blocked), 1001fonts.com, dafont.com, fontspace.com
+- Found and downloaded Wonderland from 1001fonts.com (free personal use)
+- User provided free alternatives for remaining 6 fonts:
+  - Fantasya → Metamorphous (Google Fonts)
+  - Midwinter Fire → Almendra Display (Google Fonts)  
+  - Wisp → Henny Penny (Google Fonts)
+  - Arkana → Nickainley (DaFont)
+  - Rivendell → Enchanted Land (DaFont)
+  - Ghostoons → Creepster (Google Fonts)
+- Downloaded all 6 alternatives successfully
+- Updated globals.css @font-face: fixed Arkana and Rivendell to .otf format('opentype')
+- Added attribution comments for each font source
+
+Stage Summary:
+- All 10 fonts now downloaded and self-hosted in /public/fonts/
+- No Google Fonts @import needed for fallbacks anymore (all self-hosted)
+- Font system fully operational across all components
+- Ready for git commit as v2.32.0
