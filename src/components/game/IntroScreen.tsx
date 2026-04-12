@@ -112,24 +112,59 @@ export function IntroScreen({
     })
   }, [])
 
-  const shuffleCharacters = (items: Character[]): Character[] => {
-    const shuffled = [...items]
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  // ── Per-pantheon cycling ──────────────────────────────────────────────
+  // Group characters by pantheon, then build a round-robin queue so every
+  // pantheon gets equal exposure. Characters within each pantheon are
+  // shuffled. When all pantheons complete a round, we reshuffle and start
+  // a new round — guaranteeing every character eventually appears.
+  const pantheonOrder = useMemo(() => {
+    const groups: Record<string, Character[]> = {}
+    for (const c of allCharacters) {
+      const pan = c.pantheon || 'Unknown'
+      if (!groups[pan]) groups[pan] = []
+      groups[pan].push(c)
     }
-    return shuffled
-  }
+    // Shuffle each pantheon's members
+    for (const pan of Object.keys(groups)) {
+      const arr = groups[pan]
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[arr[i], arr[j]] = [arr[j], arr[i]]
+      }
+    }
+    // Sort pantheons by size (largest first) for visual impact, then alphabetical
+    const sorted = Object.entries(groups).sort((a, b) => {
+      if (b[1].length !== a[1].length) return b[1].length - a[1].length
+      return a[0].localeCompare(b[0])
+    })
+    return sorted
+  }, [allCharacters])
+
+  const buildPantheonQueue = useCallback((): Character[] => {
+    const queue: Character[] = []
+    // Re-shuffle each pantheon on each round for variety
+    for (const [_, members] of pantheonOrder) {
+      const shuffled = [...members]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      queue.push(...shuffled)
+    }
+    return queue
+  }, [pantheonOrder])
+
+  const [currentPantheonRound, setCurrentPantheonRound] = useState(0)
 
   useEffect(() => {
     if (!allCharacters.length) return
     const t = window.setTimeout(() => {
-      const shuffled = shuffleCharacters(allCharacters)
-      setCardQueue(shuffled)
+      setCardQueue(buildPantheonQueue())
       setActiveIndex(0)
+      setCurrentPantheonRound(0)
     }, 0)
     return () => window.clearTimeout(t)
-  }, [allCharacters.length])
+  }, [allCharacters.length, buildPantheonQueue])
 
   const advanceShowcaseCard = useCallback(() => {
     setCardFading(true)
@@ -137,12 +172,14 @@ export function IntroScreen({
       setActiveIndex(prev => {
         const next = prev + 1
         if (next < cardQueue.length) return next
-        setCardQueue(shuffleCharacters(allCharacters))
+        // All characters shown — start a new round with reshuffled pantheons
+        setCardQueue(buildPantheonQueue())
+        setCurrentPantheonRound(r => r + 1)
         return 0
       })
       setCardFading(false)
     }, 500)
-  }, [cardQueue.length, allCharacters])
+  }, [cardQueue.length, allCharacters, buildPantheonQueue])
 
   useEffect(() => {
     if (!cardQueue.length) return
@@ -150,7 +187,7 @@ export function IntroScreen({
       advanceShowcaseCard()
     }, 5000)
     return () => clearInterval(timer)
-  }, [cardQueue.length, cycleResetTick, advanceShowcaseCard])
+  }, [cardQueue.length, cycleResetTick, advanceShowcaseCard, currentPantheonRound])
 
   const activeCharacter = cardQueue[activeIndex] || allCharacters[0] || null
   const nextCharacter = cardQueue[(activeIndex + 1) % Math.max(1, cardQueue.length)] || null
@@ -309,6 +346,11 @@ export function IntroScreen({
           <div className="justify-self-center md:justify-self-start intro-showcase-area">
             <div className="text-center mb-2 text-[10px] text-[#9a8860]" style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}>
               CHARACTER CARD SHOWCASE · {portraitCount} portraits
+              {activeCharacter?.pantheon && (
+                <span className="ml-2 text-[#d4af37]" style={{ letterSpacing: '.06em' }}>
+                  &middot; {activeCharacter.pantheon} Pantheon
+                </span>
+              )}
             </div>
             {activeCharacter && (
               <>

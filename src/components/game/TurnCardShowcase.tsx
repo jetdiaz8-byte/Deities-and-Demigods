@@ -80,25 +80,45 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
     })
   }, [])
 
-  // ── Shuffle helper ───────────────────────────────────────────────────
-  const shuffle = useCallback((items: Character[]): Character[] => {
-    const copy = [...items]
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
-      ;[copy[i], copy[j]] = [copy[j], copy[i]]
+  // ── Per-pantheon round-robin ────────────────────────────────────────
+  // Groups characters by pantheon and queues them so every pantheon gets
+  // exposure. Re-shuffles each pantheon when a full round completes.
+  const pantheonGroups = useMemo(() => {
+    const groups: Record<string, Character[]> = {}
+    for (const c of allCharacters) {
+      const pan = c.pantheon || 'Unknown'
+      if (!groups[pan]) groups[pan] = []
+      groups[pan].push(c)
     }
-    return copy
-  }, [])
+    // Sort pantheons by size descending, then alphabetical
+    return Object.entries(groups).sort((a, b) => {
+      if (b[1].length !== a[1].length) return b[1].length - a[1].length
+      return a[0].localeCompare(b[0])
+    })
+  }, [allCharacters])
+
+  const buildPantheonQueue = useCallback((): Character[] => {
+    const queue: Character[] = []
+    for (const [_, members] of pantheonGroups) {
+      const shuffled = [...members]
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+      }
+      queue.push(...shuffled)
+    }
+    return queue
+  }, [pantheonGroups])
 
   // ── Init queue ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!allCharacters.length) return
     const t = window.setTimeout(() => {
-      setCardQueue(shuffle(allCharacters))
+      setCardQueue(buildPantheonQueue())
       setActiveIndex(0)
     }, 0)
     return () => window.clearTimeout(t)
-  }, [allCharacters, shuffle])
+  }, [allCharacters, buildPantheonQueue])
 
   // ── Advance logic ────────────────────────────────────────────────────
   const advance = useCallback(() => {
@@ -107,12 +127,13 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
       setActiveIndex(prev => {
         const next = prev + 1
         if (next < cardQueue.length) return next
-        setCardQueue(shuffle(allCharacters))
+        // Full round complete — reshuffle all pantheons
+        setCardQueue(buildPantheonQueue())
         return 0
       })
       setFading(false)
     }, 400)
-  }, [cardQueue.length, allCharacters, shuffle])
+  }, [cardQueue.length, allCharacters, buildPantheonQueue])
 
   // ── Auto-advance timer ───────────────────────────────────────────────
   useEffect(() => {
@@ -188,7 +209,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
   }
 
   // ═════════════════════════════════════════════════════════════════════
-  // SHOWCASE BANNER
+  // SHOWCASE BANNER — Split layout: left name panel, center portrait, right stats
   // ═════════════════════════════════════════════════════════════════════
   return (
     <>
@@ -201,141 +222,144 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
           transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
         }}
       >
-        {/* ── Portrait area (16:9 cinematic frame) ──────────────────── */}
-        <div
-          className="relative overflow-hidden"
-          style={{ aspectRatio: '16/9' }}
-        >
-          {/* Portrait image — key forces remount on portrait change, resetting error state */}
-          <PortraitImage key={portrait} portrait={portrait} charName={charName} fading={fading} />
+        <div className="flex flex-row" style={{ minHeight: '160px' }}>
+          {/* ── LEFT PANEL: Name + info (vertically centered) ──────── */}
+          <div
+            className="flex flex-col justify-center items-start py-3 pl-3 pr-2 shrink-0"
+            style={{
+              width: '28%',
+              minWidth: '120px',
+              maxWidth: '180px',
+              opacity: fading ? 0 : 1,
+              transition: 'opacity 0.4s',
+            }}
+          >
+            <div
+              className="text-base font-bold tracking-wide leading-tight"
+              style={{
+                fontFamily: 'Cinzel, serif',
+                color: '#f0c860',
+                textShadow: '0 0 10px rgba(212,175,55,0.3), 0 2px 4px rgba(0,0,0,0.8)',
+              }}
+            >
+              {charName}
+            </div>
+            {(charTitle || charDivineRank) && (
+              <div
+                className="text-[9px] tracking-wider mt-1 leading-tight"
+                style={{
+                  fontFamily: 'Cinzel, serif',
+                  color: '#9a8860',
+                  textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+                }}
+              >
+                {[charDivineRank, charTitle].filter(Boolean).join(' / ')}
+              </div>
+            )}
+            {displayCharacter?.pantheon && (
+              <div
+                className="text-[8px] uppercase tracking-widest mt-1.5"
+                style={{ fontFamily: 'Cinzel, serif', color: '#d4af37' }}
+              >
+                {displayCharacter.pantheon}
+              </div>
+            )}
+            {/* Mini stat pills */}
+            {displayCharacter && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {displayCharacter.hp != null && <span className="text-[8px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">HP {displayCharacter.hp}</span>}
+                {displayCharacter.AC != null && <span className="text-[8px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">AC {displayCharacter.AC}</span>}
+                {displayCharacter.align && <span className="text-[8px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">{displayCharacter.align}</span>}
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 mt-2">
+              <button
+                onClick={() => setDetailOpen(true)}
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider transition-all text-[#d4af37]/60 hover:text-[#d4af37] border border-[#d4af37]/20 hover:border-[#d4af37]/50 hover:bg-black/40"
+                title="Inspect Character"
+              >
+                &#128269; Details
+              </button>
+            </div>
+          </div>
 
-          {/* Bottom gradient overlay for name readability */}
-          <div className="absolute bottom-0 left-0 right-0 pointer-events-none" style={{
-            background: 'linear-gradient(to top, rgba(10,8,6,0.92) 0%, rgba(10,8,6,0.6) 40%, transparent 100%)',
-            height: '55%',
-          }} />
+          {/* ── CENTER: Portrait (maximized, object-contain) ───────── */}
+          <div
+            className="relative overflow-hidden flex-1 flex items-center justify-center"
+            style={{ minHeight: '160px' }}
+          >
+            <PortraitImage key={portrait} portrait={portrait} charName={charName} fading={fading} />
 
-          {/* Top gradient overlay for controls readability */}
-          <div className="absolute top-0 left-0 right-0 pointer-events-none" style={{
-            background: 'linear-gradient(to bottom, rgba(10,8,6,0.7) 0%, transparent 100%)',
-            height: '40%',
-          }} />
+            {/* Subtle vignette around portrait edges */}
+            <div className="absolute inset-0 pointer-events-none" style={{
+              boxShadow: 'inset 0 0 30px rgba(10,8,6,0.4)',
+            }} />
+          </div>
 
-          {/* ── Controls overlay (top) ─────────────────────────────── */}
-          <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-2 z-10 pointer-events-none">
-            {/* Left: prev + play/pause */}
-            <div className="flex items-center gap-1 pointer-events-auto">
+          {/* ── RIGHT PANEL: Controls + turn info ──────────────────── */}
+          <div
+            className="flex flex-col justify-between py-3 pl-2 pr-3 shrink-0"
+            style={{
+              width: '18%',
+              minWidth: '80px',
+              maxWidth: '140px',
+            }}
+          >
+            {/* Top: Controls */}
+            <div className="flex flex-col items-center gap-1">
               <button
                 onClick={(e) => { e.stopPropagation(); goPrev() }}
-                className="w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-sm"
+                className="w-6 h-6 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-xs"
                 title="Previous"
               >
                 &#9664;
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setPlaying(v => !v) }}
-                className="w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-xs"
+                className="w-6 h-6 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-[10px]"
                 title={playing ? 'Pause' : 'Play'}
               >
                 {playing ? '\u23F8' : '\u25B6'}
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); goNext() }}
-                className="w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-sm"
+                className="w-6 h-6 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-xs"
                 title="Next"
               >
                 &#9654;
               </button>
             </div>
 
-            {/* Right: hide + boss indicator */}
-            <div className="flex items-center gap-1 pointer-events-auto">
-              {bossEntity && (
-                <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-700/40" style={{ fontFamily: 'Cinzel, serif' }}>
-                  Boss
-                </span>
-              )}
+            {/* Middle: Boss indicator */}
+            {bossEntity && (
+              <span className="text-[8px] uppercase tracking-wider text-center px-1 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-700/40" style={{ fontFamily: 'Cinzel, serif' }}>
+                Boss
+              </span>
+            )}
+
+            {/* Bottom: Turn + hide */}
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-[8px] text-[#5a4d30] font-mono">
+                Turn {turn}
+              </div>
+              <span className="text-[7px] text-[#3a3020]">
+                {allCharacters.length} portraits
+              </span>
               <button
                 onClick={(e) => { e.stopPropagation(); toggleHidden() }}
-                className="w-7 h-7 flex items-center justify-center rounded text-[#5a4d30]/70 hover:text-[#8a7040] hover:bg-black/40 transition-all text-xs"
+                className="w-5 h-5 flex items-center justify-center rounded text-[#5a4d30]/70 hover:text-[#8a7040] hover:bg-black/40 transition-all text-[10px]"
                 title="Hide Gallery"
               >
                 &#x2715;
               </button>
             </div>
           </div>
-
-          {/* ── Name overlay (bottom) ──────────────────────────────── */}
-          <div
-            className="absolute bottom-0 left-0 right-0 p-3 z-10 pointer-events-none"
-            style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.4s' }}
-          >
-            <div className="flex items-end justify-between">
-              <div>
-                <div
-                  className="text-lg font-bold tracking-wide"
-                  style={{
-                    fontFamily: 'Cinzel, serif',
-                    color: '#f0c860',
-                    textShadow: '0 0 10px rgba(212,175,55,0.3), 0 2px 4px rgba(0,0,0,0.8)',
-                  }}
-                >
-                  {charName}
-                </div>
-                {(charTitle || charDivineRank) && (
-                  <div
-                    className="text-[10px] tracking-wider mt-0.5"
-                    style={{
-                      fontFamily: 'Cinzel, serif',
-                      color: '#9a8860',
-                      textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-                    }}
-                  >
-                    {[charDivineRank, charTitle].filter(Boolean).join(' / ')}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2 pointer-events-auto">
-                <button
-                  onClick={() => setDetailOpen(true)}
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] uppercase tracking-wider transition-all text-[#d4af37]/60 hover:text-[#d4af37] border border-[#d4af37]/20 hover:border-[#d4af37]/50 hover:bg-black/40"
-                  title="Inspect Character"
-                >
-                  &#128269; Details
-                </button>
-                <div className="text-[9px] text-[#5a4d30] font-mono" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}>
-                  Turn {turn}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Alignment border glow accent (left edge) */}
-          <div className="absolute top-0 left-0 w-1 h-full pointer-events-none" style={{
-            background: `linear-gradient(to bottom, transparent, ${borderColor}88, transparent)`,
-          }} />
         </div>
 
-        {/* Caption bar */}
-        <div
-          className="px-3 py-1.5 border-t"
-          style={{
-            background: 'linear-gradient(90deg, #1a1510, #0d0a08)',
-            borderColor: `${borderColor}44`,
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <span
-              className="text-[10px] uppercase tracking-widest"
-              style={{ fontFamily: 'Cinzel, serif', color: '#d4af37' }}
-            >
-              {displayCharacter?.pantheon || 'Mythworld Pantheon'}
-            </span>
-            <span className="text-[9px] text-[#3a3020]">
-              {allCharacters.length} portraits
-            </span>
-          </div>
-        </div>
+        {/* Alignment border glow accent (left edge) */}
+        <div className="absolute top-0 left-0 w-1 h-full pointer-events-none" style={{
+          background: `linear-gradient(to bottom, transparent, ${borderColor}88, transparent)`,
+        }} />
       </div>
 
       {/* ── Character Detail Modal ─────────────────────────────────── */}
