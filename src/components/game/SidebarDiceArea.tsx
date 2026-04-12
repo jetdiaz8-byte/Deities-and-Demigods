@@ -119,7 +119,7 @@ function BG3DieFace({ sides, value, isRolling, isCritical, isFumble }: {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="relative z-10 font-bold text-lg"
-              style={{ color: colors.face, fontFamily: 'Cinzel, serif', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
+              style={{ color: colors.face, fontFamily: 'var(--font-heading)', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}
             >
               ?
             </motion.span>
@@ -132,7 +132,7 @@ function BG3DieFace({ sides, value, isRolling, isCritical, isFumble }: {
               className="relative z-10 font-bold text-lg"
               style={{
                 color: isCritical ? '#ffd700' : isFumble ? '#ff4444' : colors.face,
-                fontFamily: 'Cinzel, serif',
+                fontFamily: 'var(--font-heading)',
                 textShadow: isCritical
                   ? '0 0 10px rgba(255,215,0,0.8), 0 1px 3px rgba(0,0,0,0.6)'
                   : isFumble
@@ -148,7 +148,7 @@ function BG3DieFace({ sides, value, isRolling, isCritical, isFumble }: {
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
               className="relative z-10 text-xs font-title"
-              style={{ color: colors.face, fontFamily: 'Cinzel, serif' }}
+              style={{ color: colors.face, fontFamily: 'var(--font-heading)' }}
             >
               {sides === 20 ? 'D20' : `D${sides}`}
             </motion.span>
@@ -318,7 +318,7 @@ export function SidebarDiceArea({ diceRolls }: SidebarDiceAreaProps) {
                                 ? 'text-emerald-400'
                                 : 'text-rose-400'
                         }`}
-                        style={{ fontFamily: 'Cinzel, serif' }}
+                        style={{ fontFamily: 'var(--font-heading)' }}
                       >
                         {isAnimating ? '...' : roll.roll}
                       </span>

@@ -53,7 +53,7 @@ export function DeathScreen({ gameState, visible, onDismiss }: DeathScreenProps)
             animate={{ opacity: 1 }}
             transition={{ delay: 1, duration: 1 }}
             className="text-3xl font-title text-red-500 tracking-widest mb-2"
-            style={{ fontFamily: 'Cinzel Decorative, serif', textShadow: '0 0 20px rgba(200,0,0,0.5)' }}
+            style={{ fontFamily: 'var(--font-title)', textShadow: '0 0 20px rgba(200,0,0,0.5)' }}
           >
             FALLEN
           </motion.h2>

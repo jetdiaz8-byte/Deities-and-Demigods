@@ -325,7 +325,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
               <div
                 className="text-2xl tracking-[0.3em] uppercase font-light"
                 style={{
-                  fontFamily: 'Cinzel, serif',
+                  fontFamily: 'var(--font-heading)',
                   color: theme.glowColor.replace(/[\d.]+\)$/, '0.7)'),
                   textShadow: `0 0 30px ${theme.glowColor}, 0 0 60px ${theme.glowColor.replace(/[\d.]+\)$/, '0.2)')}`,
                   letterSpacing: '0.3em',
@@ -347,7 +347,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
           <div className="flex items-center justify-between">
             <span
               className="text-xs uppercase tracking-widest"
-              style={{ fontFamily: 'Cinzel, serif', color: '#d4af37' }}
+              style={{ fontFamily: 'var(--font-heading)', color: '#d4af37' }}
             >
               {sceneName}
             </span>

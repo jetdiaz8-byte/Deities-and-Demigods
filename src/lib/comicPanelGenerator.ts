@@ -68,14 +68,11 @@ export function extractSceneKeywords(narration: string): string[] {
 export function buildImagePrompt(narration: string, caption: string, artStyle: string): string {
   const stylePrompt = STYLE_PROMPTS[artStyle] || STYLE_PROMPTS['larry-elmore']
 
-  // Use the actual DM narration as the primary prompt — it's rich, evocative
-  // descriptive prose that paints a vivid picture for the image generator.
-  // Truncate to ~500 chars to stay within model limits while keeping key details.
+  // Use the FULL DM narration as the prompt — no truncation.
+  // The DM narration is rich, evocative prose that paints a vivid picture.
+  // Strip dice notation, turn markers, and meta-text that don't make sense visually.
   const sceneText = (narration || caption || '').trim()
-  const truncated = sceneText.length > 500 ? sceneText.slice(0, 500) : sceneText
-
-  // Strip any dice notation, turn markers, or meta-text that wouldn't make sense visually
-   const cleaned = truncated
+  const cleaned = sceneText
     .replace(/\[.*?\]/g, '')           // Remove [dice notation]
     .replace(/\d+d\d+[^\s]*/g, '')    // Remove dice rolls
     .replace(/Turn \d+/gi, '')        // Remove turn markers

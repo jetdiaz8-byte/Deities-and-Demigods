@@ -104,7 +104,7 @@ export function AchievementsDialog({ open, onClose, tracker }: AchievementsDialo
             <Trophy className="w-5 h-5 text-[#d4af37]" />
             <h2
               className="text-lg text-[#d4af37] tracking-wider"
-              style={{ fontFamily: '"Cinzel Decorative", serif' }}
+              style={{ fontFamily: 'var(--font-title)' }}
             >
               ACHIEVEMENTS
             </h2>
@@ -226,7 +226,7 @@ export function AchievementsDialog({ open, onClose, tracker }: AchievementsDialo
                       className="text-xs font-bold truncate"
                       style={{
                         color: unlocked ? tier.color : '#5a4d30',
-                        fontFamily: 'Cinzel, serif',
+                        fontFamily: 'var(--font-heading)',
                       }}
                     >
                       {unlocked ? def.name : '???'}

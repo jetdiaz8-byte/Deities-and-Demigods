@@ -200,7 +200,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
         <button
           onClick={toggleHidden}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] uppercase tracking-wider transition-all text-[#5a4d30] hover:text-[#d4af37] border border-[#2e2008] hover:border-[#3a3020]"
-          style={{ fontFamily: 'Cinzel, serif' }}
+          style={{ fontFamily: 'var(--font-heading)' }}
           title="Show Card Showcase"
         >
           <span style={{ filter: 'grayscale(0.3)' }}>&#x1F5BC;&#xFE0F;</span> Gallery
@@ -248,7 +248,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
               <div
                 className="text-sm font-bold tracking-wide leading-tight"
                 style={{
-                  fontFamily: 'Cinzel, serif',
+                  fontFamily: 'var(--font-heading)',
                   color: '#f0c860',
                   textShadow: '0 0 10px rgba(212,175,55,0.3), 0 2px 4px rgba(0,0,0,0.9)',
                 }}
@@ -257,7 +257,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
               </div>
               {(charTitle || charDivineRank) && (
                 <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-[10px] text-[#7a5f20] truncate" style={{ fontFamily: 'Cinzel, serif' }}>
+                  <span className="text-[10px] text-[#7a5f20] truncate" style={{ fontFamily: 'var(--font-heading)' }}>
                     {charTitle || charDivineRank}
                   </span>
                   {displayCharacter?.pantheon && (
@@ -279,7 +279,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
               <button onClick={(e) => { e.stopPropagation(); setPlaying(v => !v) }} className="w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/90 hover:text-[#d4af37] bg-black/50 hover:bg-black/70 transition-all text-[10px] backdrop-blur-sm">{playing ? '\u23F8' : '\u25B6'}</button>
               <button onClick={(e) => { e.stopPropagation(); goNext() }} className="w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/90 hover:text-[#d4af37] bg-black/50 hover:bg-black/70 transition-all text-xs backdrop-blur-sm">&#8250;</button>
               <button onClick={(e) => { e.stopPropagation(); setDetailOpen(true) }} className="ml-1 w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] bg-black/50 hover:bg-black/70 transition-all text-[9px] backdrop-blur-sm" title="Inspect">{'\uD83D\uDD0D'}</button>
-              {bossEntity && <span className="ml-1 text-[7px] px-1 py-0.5 rounded bg-red-900/70 text-red-300 border border-red-700/40 backdrop-blur-sm" style={{ fontFamily: 'Cinzel, serif' }}>Boss</span>}
+              {bossEntity && <span className="ml-1 text-[7px] px-1 py-0.5 rounded bg-red-900/70 text-red-300 border border-red-700/40 backdrop-blur-sm" style={{ fontFamily: 'var(--font-heading)' }}>Boss</span>}
               <button onClick={(e) => { e.stopPropagation(); toggleHidden() }} className="ml-1 w-5 h-5 flex items-center justify-center rounded text-[#5a4d30]/80 hover:text-[#8a7040] bg-black/50 hover:bg-black/70 transition-all text-[10px] backdrop-blur-sm">{'\u2715'}</button>
             </div>
           </div>

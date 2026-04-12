@@ -92,7 +92,7 @@ export default function QuickeningOverlay({
             )}
           </div>
           <p className="absorbing-text">The Quickening takes hold...</p>
-          <p style={{ fontFamily: 'Cormorant Garamond, serif', color: '#c4b896', fontSize: 14, marginTop: 12, textAlign: 'center', maxWidth: 400 }}>
+          <p style={{ fontFamily: 'var(--font-body)', color: '#c4b896', fontSize: 14, marginTop: 12, textAlign: 'center', maxWidth: 400 }}>
             The divine essence flows into you...
           </p>
         </div>
@@ -164,7 +164,7 @@ export default function QuickeningOverlay({
         </div>
 
         {/* Legend Title */}
-        <p style={{ fontFamily: 'MedievalSharp, serif', color: '#5a4d30', fontSize: 11, marginTop: 16 }}>
+        <p style={{ fontFamily: 'var(--font-button)', color: '#5a4d30', fontSize: 11, marginTop: 16 }}>
           Your Legend: {legendTitle}
         </p>
       </div>

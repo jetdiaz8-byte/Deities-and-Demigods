@@ -425,7 +425,6 @@ export default function MythworldEngine() {
           .screen-effect-dark { animation: screen-darken 1.2s ease-out; }
         `}</style>
         <style jsx global>{`
-          @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Special+Elite&display=swap');
           button, a, [role="button"], .fantasy-tooltip { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
           @keyframes fadeIn {
             from { opacity: 0; transform: translateY(4px); }
@@ -530,7 +529,7 @@ export default function MythworldEngine() {
                   <button
                     onClick={handleToggleNarration}
                     className="min-h-[44px] px-4 py-2 text-xs rounded border text-[#5c3317] bg-[rgba(139,90,43,0.15)] border-[#b8956a] hover:bg-[rgba(139,90,43,0.25)] transition-all"
-                    style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}
+                    style={{ fontFamily: 'var(--font-heading)', letterSpacing: '.08em' }}
                   >
                     {showFullNarration ? 'Show less ▲' : 'Continue reading ▼'}
                   </button>
@@ -694,7 +693,7 @@ export default function MythworldEngine() {
             onClick={handleAdvanceTurn}
             disabled={!!gameState?.ended || !!gameState?.waitingForHuman || !!gameState?.isProcessing}
             className="bg-gradient-to-b from-[#362200] to-[#1e1100] hover:from-[#502f00] hover:to-[#301a00] text-[#f0c860] border border-[#7a5f20] min-h-[44px]"
-            style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.12em' }}
+            style={{ fontFamily: 'var(--font-heading)', letterSpacing: '.12em' }}
           >
             ⚡ Next Turn
           </Button>

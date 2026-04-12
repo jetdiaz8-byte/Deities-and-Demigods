@@ -91,10 +91,10 @@ export function PartySelectionScreen({
       <div className="max-w-7xl mx-auto">
         {/* ── Gaiman-style Header ─────────────────────────────────────────── */}
         <div className="text-center mb-6 max-w-3xl mx-auto">
-          <h1 style={{ fontFamily: '"Cinzel Decorative", serif', fontSize: '1.5rem', color: '#f0c860', letterSpacing: '.16em' }}>
+          <h1 style={{ fontFamily: 'var(--font-title)', fontSize: '1.5rem', color: '#f0c860', letterSpacing: '.16em' }}>
             CHOOSE YOUR FATE
           </h1>
-          <div className="mt-4 text-[#9a8860] leading-relaxed space-y-3" style={{ fontFamily: '"IM Fell English", serif', fontSize: '.95rem' }}>
+          <div className="mt-4 text-[#9a8860] leading-relaxed space-y-3" style={{ fontFamily: 'var(--font-dialogue)', fontSize: '.95rem' }}>
             <p className="italic">
               Every story begins with a single person who does not yet know they are in a story. You are that person.
               The gods have already chosen the ending — they always do — but the path from here to there is
@@ -145,7 +145,7 @@ export function PartySelectionScreen({
                 onClick={handleFateRoll}
                 disabled={isRolling || filteredHeroes.length === 0}
                 className="bg-gradient-to-b from-[#3a1a08] to-[#1a0d04] hover:from-[#5a2a10] hover:to-[#2a1508] text-[#d4af37] border border-[#7a5f20] text-xs h-9 px-3"
-                style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}
+                style={{ fontFamily: 'var(--font-heading)', letterSpacing: '.08em' }}
               >
                 {isRolling ? (
                   <><Dices className="w-3.5 h-3.5 mr-1.5 animate-spin" />Rolling...</>
@@ -166,7 +166,7 @@ export function PartySelectionScreen({
                 onClick={confirmPartySelection}
                 disabled={selectedParty.length !== 1}
                 className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860] border border-[#7a5f20] text-xs h-9 px-3"
-                style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}
+                style={{ fontFamily: 'var(--font-heading)', letterSpacing: '.08em' }}
               >
                 ⚔ The Shard Awakens ⚔
               </Button>
@@ -419,7 +419,7 @@ export function PartySelectionScreen({
                             ? 'bg-[#5a3020] hover:bg-[#7a4030] text-[#e0a080]'
                             : 'bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#f0c860]'
                           } border border-[#7a5f20]`}
-                        style={{ fontFamily: 'Cinzel, serif' }}
+                        style={{ fontFamily: 'var(--font-heading)' }}
                       >
                         {selectedParty.includes(previewHero.id) ? '✦ Release This Fate' : '✦ This Is My Fate'}
                       </Button>
@@ -431,14 +431,14 @@ export function PartySelectionScreen({
                     <div className="w-24 h-24 mx-auto mb-4 rounded-full border-2 border-dashed border-[#3a3020] flex items-center justify-center">
                       <Users className="w-10 h-10 text-[#3a3020]" />
                     </div>
-                    <p className="text-[#5a4d30] italic mb-4" style={{ fontFamily: '"IM Fell English", serif' }}>
+                    <p className="text-[#5a4d30] italic mb-4" style={{ fontFamily: 'var(--font-dialogue)' }}>
                       Click on a hero to see their fate...
                     </p>
                     
                     {/* Party composition info */}
                     <div className="text-left space-y-2">
                       <div className="p-3 bg-[#1a1510] rounded border border-[#2e2008]">
-                        <p className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                        <p className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
                           ✦ Your Story
                         </p>
                         <div className="space-y-1.5 text-[10px]">
@@ -462,7 +462,7 @@ export function PartySelectionScreen({
                       </div>
 
                       <div className="p-3 bg-[#1a1510] rounded border border-[#2e2008]">
-                        <p className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2" style={{ fontFamily: 'Cinzel, serif' }}>
+                        <p className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2" style={{ fontFamily: 'var(--font-heading)' }}>
                           ✦ Prophecy System
                         </p>
                         <p className="text-[10px] text-[#8a7040] italic leading-relaxed">

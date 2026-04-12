@@ -119,13 +119,13 @@ export function GameHeader({
       <div className="flex items-center justify-between px-3 py-2 border-b border-[#2a2015] overflow-x-auto scrollbar-hide">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <h1 className="font-title text-lg md:text-2xl text-[#d4af37] tracking-wider" style={{ fontFamily: '"Cinzel Decorative", serif' }}>
+            <h1 className="font-title text-lg md:text-2xl text-[#d4af37] tracking-wider" style={{ fontFamily: 'var(--font-title)' }}>
               DEITIES & DEMIGODS
             </h1>
             <a 
               href="/rulebook" 
               className="hidden sm:flex items-center gap-1 px-3 py-1 text-xs bg-gradient-to-r from-[#1a2a20] to-[#0d1510] border border-[#2a5038] rounded hover:border-[#40c080] hover:text-[#60e0a0] text-[#40a070] transition-all"
-              style={{ fontFamily: 'Cinzel, serif' }}
+              style={{ fontFamily: 'var(--font-heading)' }}
             >
               <BookOpen className="w-3 h-3" />
               Guide
@@ -133,7 +133,7 @@ export function GameHeader({
             <a 
               href="/codex" 
               className="hidden sm:flex items-center gap-1 px-3 py-1 text-xs bg-gradient-to-r from-[#2a2010] to-[#1a1510] border border-[#5a4018] rounded hover:border-[#d4af37] hover:text-[#f0c860] text-[#c9a84c] transition-all"
-              style={{ fontFamily: 'Cinzel, serif' }}
+              style={{ fontFamily: 'var(--font-heading)' }}
             >
               <ScrollText className="w-3 h-3" />
               Codex
@@ -141,7 +141,7 @@ export function GameHeader({
             <button
               onClick={() => onOpenQuestJournal?.()}
               className="hidden sm:flex items-center gap-1 px-3 py-1 text-xs bg-gradient-to-r from-[#1a2010] to-[#101510] border border-[#3a5018] rounded hover:border-[#4a9060] hover:text-[#60e0a0] text-[#4a9060] transition-all"
-              style={{ fontFamily: 'Cinzel, serif' }}
+              style={{ fontFamily: 'var(--font-heading)' }}
             >
               <BookOpen className="w-3 h-3" />
               Journal

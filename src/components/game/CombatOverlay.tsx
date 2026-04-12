@@ -192,9 +192,9 @@ export default function CombatOverlay({
           color: '#c4b896',
           fontStyle: 'italic',
           lineHeight: 1.5,
-          fontFamily: '"Cormorant Garamond", serif',
+          fontFamily: 'var(--font-body)',
         }}>
-          <div style={{ fontSize: 10, color: '#7a6a4a', marginBottom: 4, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Cinzel, serif' }}>
+          <div style={{ fontSize: 10, color: '#7a6a4a', marginBottom: 4, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
             📜 Battle Context
           </div>
           {combatContext}
@@ -209,7 +209,7 @@ export default function CombatOverlay({
           <div style={{ background: 'rgba(40,10,10,.3)', border: '1px solid rgba(139,0,0,.3)', borderRadius: 8, padding: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Skull className="w-4 h-4 text-red-400" />
-              <span style={{ fontSize: 11, color: '#cc5050', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Cinzel, serif' }}>
+              <span style={{ fontSize: 11, color: '#cc5050', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
                 Enemies ({aliveEnemies.length})
               </span>
               <div style={{ flex: 1, height: 1, background: 'rgba(139,0,0,.2)' }} />
@@ -250,7 +250,7 @@ export default function CombatOverlay({
                         <span style={{
                           fontSize: 13, color: isAntag ? '#e04040' : '#cc5050',
                           fontWeight: isBoss ? 700 : 500,
-                          fontFamily: 'Cinzel, serif',
+                          fontFamily: 'var(--font-heading)',
                           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>
                           {enemy.name}
@@ -310,7 +310,7 @@ export default function CombatOverlay({
           <div style={{ background: 'rgba(20,20,10,.3)', border: '1px solid rgba(100,80,40,.2)', borderRadius: 8, padding: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Shield className="w-4 h-4 text-[#d4af37]" />
-              <span style={{ fontSize: 11, color: '#d4af37', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Cinzel, serif' }}>
+              <span style={{ fontSize: 11, color: '#d4af37', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
                 Allies ({aliveAllies.length})
               </span>
               <div style={{ flex: 1, height: 1, background: 'rgba(100,80,40,.2)' }} />
@@ -347,7 +347,7 @@ export default function CombatOverlay({
                           fontSize: 13,
                           color: isActive ? '#d4af37' : isCompanion ? '#90a0c0' : '#c4b896',
                           fontWeight: isActive ? 700 : 500,
-                          fontFamily: 'Cinzel, serif',
+                          fontFamily: 'var(--font-heading)',
                           whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                         }}>
                           {ally.name}
@@ -401,7 +401,7 @@ export default function CombatOverlay({
             background: 'rgba(0,0,0,.4)', borderTop: '1px solid #333',
             borderBottom: '1px solid #333', borderRadius: 6,
           }}>
-            <div style={{ fontSize: 10, color: '#5a5040', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'Cinzel, serif' }}>
+            <div style={{ fontSize: 10, color: '#5a5040', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
               Combat Log
             </div>
             {combatState.log.slice(-8).map((e, idx) => (
@@ -474,7 +474,7 @@ export default function CombatOverlay({
               color: action.highlight ? '#f0d878' : action.danger ? '#cc5050' : '#c4b896',
               borderRadius: 6,
               cursor: 'pointer',
-              fontFamily: 'MedievalSharp, cursive',
+              fontFamily: 'var(--font-button)',
               fontSize: 13,
               transition: 'all .2s',
             }}

@@ -96,7 +96,7 @@ function EquipmentTooltipCard({ item, position }: { item: Item; position: { x: n
         <div className="flex items-start gap-2 mb-2">
           <span className="text-2xl flex-shrink-0">{item.icon}</span>
           <div className="min-w-0 flex-1">
-            <div className="text-sm font-bold" style={{ color: rarity.name, fontFamily: 'Cinzel, serif' }}>
+            <div className="text-sm font-bold" style={{ color: rarity.name, fontFamily: 'var(--font-heading)' }}>
               {item.name}
             </div>
             <div className="flex items-center gap-1 mt-0.5">
@@ -119,7 +119,7 @@ function EquipmentTooltipCard({ item, position }: { item: Item; position: { x: n
         {/* Stats/Modifiers */}
         {item.modifier && Object.keys(item.modifier).length > 0 && (
           <div className="mb-2">
-            <div className="text-[10px] text-[#7a5f20] uppercase tracking-wider mb-1" style={{ fontFamily: 'Cinzel, serif' }}>
+            <div className="text-[10px] text-[#7a5f20] uppercase tracking-wider mb-1" style={{ fontFamily: 'var(--font-heading)' }}>
               Modifiers
             </div>
             <div className="flex flex-wrap gap-1">
@@ -164,7 +164,7 @@ function EquipmentTooltipCard({ item, position }: { item: Item; position: { x: n
           <div className="mt-2 pt-2 border-t" style={{ borderColor: 'rgba(58,48,32,0.5)' }}>
             <div
               className="text-[11px] text-[#9a8860] italic leading-relaxed"
-              style={{ fontFamily: '"IM Fell English", serif' }}
+              style={{ fontFamily: 'var(--font-dialogue)' }}
             >
               &ldquo;{item.description}&rdquo;
             </div>

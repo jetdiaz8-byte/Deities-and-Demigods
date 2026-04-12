@@ -89,7 +89,7 @@ export function InteractiveDiceRoller({ dieType, label = 'Roll', onRoll, disable
                 animate={{ opacity: 1, rotate: 360 }}
                 exit={{ opacity: 0 }}
                 className="text-2xl font-bold text-[#d4af37]"
-                style={{ fontFamily: 'Cinzel, serif' }}
+                style={{ fontFamily: 'var(--font-heading)' }}
               >
                 ?
               </motion.span>
@@ -100,7 +100,7 @@ export function InteractiveDiceRoller({ dieType, label = 'Roll', onRoll, disable
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.5, opacity: 0 }}
                 className="text-2xl font-bold text-[#f0ebe3]"
-                style={{ fontFamily: 'Cinzel, serif' }}
+                style={{ fontFamily: 'var(--font-heading)' }}
               >
                 {result}
               </motion.span>
@@ -130,7 +130,7 @@ export function InteractiveDiceRoller({ dieType, label = 'Roll', onRoll, disable
           </div>
           {total !== null && bonus !== 0 && (
             <div className={`text-lg font-bold ${total >= maxRoll ? 'text-[#d4af37]' : 'text-[#f0ebe3]'}`}
-              style={{ fontFamily: 'Cinzel, serif' }}>
+              style={{ fontFamily: 'var(--font-heading)' }}>
               Total: {total}
             </div>
           )}

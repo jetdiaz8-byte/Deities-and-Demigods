@@ -87,7 +87,7 @@ export function VictoryCelebration({ type, title, subtitle, visible, onDismiss }
           <h2
             className="text-4xl font-title text-[#d4af37] tracking-widest mb-2"
             style={{
-              fontFamily: 'Cinzel Decorative, serif',
+              fontFamily: 'var(--font-title)',
               textShadow: '0 0 20px rgba(212,175,55,0.6), 0 0 40px rgba(212,175,55,0.3)',
             }}
           >

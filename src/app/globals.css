@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400;1,700&family=Uncial+Antiqua&family=MedievalSharp&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Pirata+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400;1,700&family=Uncial+Antiqua&family=MedievalSharp&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Pirata+One&family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=MedievalSharp&family=Fantasya&family=Pinyon+Script&family=Special+Elite&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -23,11 +23,47 @@
   --sidebar-width: 320px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
-  --font-myth: 'Georgia', 'Times New Roman', serif;
-  --font-ui: system-ui, -apple-system, 'Segoe UI', sans-serif;
   --radius: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     FANTASY TYPOGRAPHY SYSTEM
+     Fonts: Fantasya, Cinzel Decorative, Cinzel, Pinyon Script, Almendra,
+            MedievalSharp, Pirata One, Cormorant Garamond, IM Fell English
+     Colors: Gold (#f0c860), Cream (#f0e8d8), Deep Purple (#a080d0),
+             Emerald (#60c090), Crimson (#e06060), Muted Gold (#8a7a50)
+     ═══════════════════════════════════════════════════════════════════════ */
+  --font-title: 'Cinzel Decorative', 'Cinzel', 'Uncial Antiqua', serif;
+  --font-heading: 'Cinzel', 'Uncial Antiqua', serif;
+  --font-subheading: 'MedievalSharp', 'Cinzel', serif;
+  --font-narrative: 'Almendra', 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Cormorant Garamond', Georgia, serif;
+  --font-ui: 'MedievalSharp', system-ui, sans-serif;
+  --font-button: 'MedievalSharp', 'Cinzel', sans-serif;
+  --font-caption: 'Cormorant Garamond', Georgia, serif;
+  --font-dialogue: 'IM Fell English', 'Cormorant Garamond', serif;
+  --font-script: 'Pinyon Script', cursive;
+  --font-fantasy: 'Fantasya', 'Uncial Antiqua', serif;
+  --font-combat: 'Pirata One', cursive;
+  --font-myth: 'Georgia', 'Times New Roman', serif;
+
+  /* Fantasy color palette */
+  --gold: #f0c860;
+  --gold-dim: #c9a84c;
+  --gold-muted: #8a7a50;
+  --gold-dark: #5a4a28;
+  --cream: #f0e8d8;
+  --cream-dim: #d4c8b0;
+  --purple: #a080d0;
+  --purple-deep: #7a50b0;
+  --purple-glow: rgba(160,128,208,0.3);
+  --emerald: #60c090;
+  --emerald-deep: #40a070;
+  --crimson: #e06060;
+  --crimson-deep: #c04040;
+  --parchment: #3c2415;
+  --parchment-light: #5c4030;
 }
 
 .dark {
@@ -54,7 +90,7 @@ body {
   padding: 0;
   background: var(--bg-primary);
   color: var(--text-primary);
-  font-family: var(--font-ui);
+  font-family: var(--font-body);
   line-height: 1.5;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
@@ -77,14 +113,22 @@ body {
 .narrative-area { font-size: 0.875rem; line-height: 1.6; }
 @media (min-width: 640px) { .narrative-area { font-size: 0.9375rem; } }
 .dm-narration-body, .dm-narration-block, [class*="dm-narration"] {
-  font-family: 'Almendra', 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--font-narrative);
   font-size: 1.05rem;
   line-height: 1.7;
 }
-.font-title, h1, h2, h3, .section-title { font-family: 'Uncial Antiqua', 'Almendra', serif; }
-button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
-.choice-option, .action-choice, .choice-panel button { font-family: 'MedievalSharp', 'Cormorant Garamond', serif; }
-.caption, .text-xs, .text-sm, .text-base { font-family: 'Cormorant Garamond', Georgia, serif; }
+.font-title, h1, h2, h3, .section-title { font-family: var(--font-heading); }
+.font-heading { font-family: var(--font-heading); }
+.font-subheading { font-family: var(--font-subheading); }
+.font-narrative { font-family: var(--font-narrative); }
+.font-dialogue { font-family: var(--font-dialogue); }
+.font-script { font-family: var(--font-script); }
+.font-fantasy { font-family: var(--font-fantasy); }
+.font-combat { font-family: var(--font-combat); }
+.font-button { font-family: var(--font-button); }
+button, .btn, [role='button'] { font-family: var(--font-button); }
+.choice-option, .action-choice, .choice-panel button { font-family: var(--font-button); }
+.caption, .text-xs, .text-sm, .text-base { font-family: var(--font-caption); }
 
 /* DM narration parchment block */
 .dm-narration-block {
@@ -219,7 +263,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
   display: block;
   min-height: 44px;
   color: #5c3317;
-  font-family: 'Cinzel', serif;
+  font-family: var(--font-heading);
   cursor: pointer;
   background: rgba(139, 90, 43, 0.15);
   border: 1px solid #b8956a;
@@ -242,7 +286,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 @keyframes narration-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .drop-cap::first-letter {
   float: left;
-  font-family: 'Cinzel Decorative', 'Cinzel', serif;
+  font-family: var(--font-title);
   font-size: 3em;
   line-height: 0.9;
   margin: 0.06em 0.08em 0 0;
@@ -260,13 +304,13 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
   background: radial-gradient(circle, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0) 70%);
 }
 .dialogue-bubble { background: rgba(42, 34, 24, 0.6); border-left: 3px solid #8b6914; }
-.dialogue-text { font-family: 'IM Fell English', serif; color: #8b5e20; position: relative; }
+.dialogue-text { font-family: var(--font-dialogue); color: #8b5e20; position: relative; }
 .dialogue-text::before { content: '❝'; margin-right: 4px; opacity: 0.7; }
 .dialogue-text::after { content: '❞'; margin-left: 4px; opacity: 0.7; }
 .combat-narration { padding-left: 12px; position: relative; }
 .combat-narration::before { content: '⚔'; position: absolute; left: 0; top: 0; opacity: 0.75; }
 
-.dm-narration-header { font-family: 'Cinzel', serif; font-size: 1.1rem; letter-spacing: 0.16em; display: flex; align-items: center; gap: 12px; }
+.dm-narration-header { font-family: var(--font-heading); font-size: 1.1rem; letter-spacing: 0.16em; display: flex; align-items: center; gap: 12px; }
 .dm-narration-header .header-rune-left, .dm-narration-header .header-rune-right { opacity: 0.3; color: #8b6914; }
 .dm-narration-header .header-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #8b6914, transparent); }
 .sidebar-parchment {
@@ -315,7 +359,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 
 .character-name, .npc-name, .god-name, [data-name] {
   color: #FFD700;
-  font-family: 'Pirata One', 'Almendra', cursive;
+  font-family: var(--font-combat);
   font-weight: bold;
   text-shadow:
     0 0 2px #000,
@@ -330,7 +374,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
   border-radius: 2px;
 }
 [data-shard], .shard-name, .artifact-name {
-  font-family: 'Pirata One', cursive;
+  font-family: var(--font-combat);
   color: #9b59b6;
   text-shadow: 0 0 8px rgba(155, 89, 182, 0.45);
 }
@@ -411,7 +455,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
   width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
   color: #f0c860; font-size: 2rem; background: linear-gradient(135deg, #211624, #33263a);
 }
-.card-compact__name { color: #f1e4cd; font-family: 'Cinzel', serif; text-align: left; }
+.card-compact__name { color: #f1e4cd; font-family: var(--font-heading); text-align: left; }
 .card-modal {
   position: fixed;
   inset: 0;
@@ -472,13 +516,13 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .party-bar__member.active .party-bar__portrait { border-color: #FFD700; box-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
 .party-bar__member.dead { opacity: 0.5; filter: grayscale(1); }
 .party-bar__member.processing .party-bar__portrait { animation: aura-gold-pulse 1.2s ease-in-out infinite; }
-.party-bar__name { font-family: 'Cormorant Garamond', serif; font-size: 0.7rem; color: #e0d5c0; margin-top: 2px; max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.party-bar__name { font-family: var(--font-body); font-size: 0.7rem; color: #e0d5c0; margin-top: 2px; max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .party-bar__hp-bar { width: 48px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-top: 3px; }
 .party-bar__hp-fill { height: 100%; border-radius: 2px; transition: width 0.5s ease; }
 .hp-high { background: #2ecc71; }
 .hp-mid { background: #f39c12; }
 .hp-low { background: #e74c3c; }
-.party-bar__hp-text { font-family: 'Cormorant Garamond', serif; font-size: 0.6rem; color: #a09880; margin-top: 1px; }
+.party-bar__hp-text { font-family: var(--font-body); font-size: 0.6rem; color: #a09880; margin-top: 1px; }
 .party-bar__loading-note { text-align: center; font-size: 0.75rem; color: #c9a84c; padding: 4px 8px 8px; background: rgba(10, 8, 16, 0.98); }
 .party-card-expand {
   position: absolute;
@@ -514,7 +558,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
-  font-family: 'MedievalSharp', sans-serif;
+  font-family: var(--font-button);
   min-width: 44px;
   min-height: 44px;
 }
@@ -620,11 +664,11 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
   .ember-container, .vignette-overlay, .fog-overlay, .time-cycle-overlay { display: none !important; }
 }
 
-.combat-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.92); display: flex; flex-direction: column; animation: combatFadeIn 0.5s ease-out; font-family: 'Cormorant Garamond', serif; overflow-y: auto; }
+.combat-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.92); display: flex; flex-direction: column; animation: combatFadeIn 0.5s ease-out; font-family: var(--font-body); overflow-y: auto; }
 @keyframes combatFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .combat-banner { text-align: center; padding: 16px; border-bottom: 2px solid #8b0000; animation: bannerPulse 2s ease-in-out infinite; position: relative; }
 @keyframes bannerPulse { 0%, 100% { border-color: #8b0000; } 50% { border-color: #d4a843; } }
-.combat-banner h2 { font-family: 'Pirata One', cursive; font-size: 28px; color: #d4a843; margin: 0; }
+.combat-banner h2 { font-family: var(--font-combat); font-size: 28px; color: #d4a843; margin: 0; }
 .combat-close-btn { position: absolute; top: 12px; right: 16px; background: none; border: 1px solid #555; color: #c4b896; font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
 .initiative-tracker { display: flex; justify-content: center; gap: 12px; padding: 12px; flex-wrap: wrap; }
 .initiative-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all .3s; }
@@ -647,15 +691,15 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .combat-log-entry { padding: 4px 0; font-size: 13px; color: #c4b896; }
 .actor-player { color: #d4a843; font-weight: 700; }
 .actor-enemy { color: #cc4444; font-weight: 700; }
-.damage-popup { font-family: 'Pirata One', cursive; animation: floatUp 2s ease-out forwards; }
+.damage-popup { font-family: var(--font-combat); animation: floatUp 2s ease-out forwards; }
 @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
 .combat-end-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1100; }
 .combat-victory { background: rgba(0,0,0,.85); }
 .combat-defeat { background: rgba(40,0,0,.9); }
-.combat-end-title { font-family: 'Pirata One', cursive; font-size: 64px; margin-bottom: 20px; }
-.combat-end-btn { font-family: 'MedievalSharp', cursive; font-size: 16px; padding: 10px 24px; background: transparent; border: 2px solid #d4a843; color: #d4a843; border-radius: 6px; cursor: pointer; }
+.combat-end-title { font-family: var(--font-combat); font-size: 64px; margin-bottom: 20px; }
+.combat-end-btn { font-family: var(--font-button); font-size: 16px; padding: 10px 24px; background: transparent; border: 2px solid #d4a843; color: #d4a843; border-radius: 6px; cursor: pointer; }
 .combat-action-bar { display: flex; justify-content: center; gap: 8px; padding: 10px; background: rgba(0,0,0,.7); border-top: 1px solid #333; flex-wrap: wrap; }
-.combat-action-btn { font-family: 'MedievalSharp', cursive; font-size: 13px; padding: 8px 14px; background: rgba(60,36,21,.5); border: 1px solid #555; color: #c4b896; border-radius: 4px; cursor: pointer; }
+.combat-action-btn { font-family: var(--font-button); font-size: 13px; padding: 8px 14px; background: rgba(60,36,21,.5); border: 1px solid #555; color: #c4b896; border-radius: 4px; cursor: pointer; }
 .combat-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 12px; }
 .combat-column { background: rgba(0,0,0,.35); border: 1px solid #333; border-radius: 6px; padding: 8px; }
 .combat-column h4 { margin: 0 0 6px; color: #d4a843; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
@@ -680,7 +724,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .map-travel-btn { width: 100%; font-size: 12px; padding: 4px 12px; background: transparent; border: 1px solid #d4a843; color: #d4a843; border-radius: 4px; cursor: pointer; }
 .map-travel-btn:disabled { opacity: .3; cursor: not-allowed; }
 .alignment-meter { padding: 12px; background: rgba(26,20,16,.5); border-radius: 8px; }
-.alignment-title { font-family: 'MedievalSharp', cursive; text-align: center; color: #d4a843; font-size: 14px; margin-bottom: 10px; }
+.alignment-title { font-family: var(--font-button); text-align: center; color: #d4a843; font-size: 14px; margin-bottom: 10px; }
 .alignment-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 0 auto 12px; max-width: 220px; border: 1px solid #3c2415; border-radius: 4px; overflow: hidden; }
 .alignment-cell { padding: 8px 2px; text-align: center; font-size: 9px; color: #999; background: rgba(0,0,0,.3); }
 .alignment-cell.good-cell { background: rgba(30,60,100,.3); color: #6699cc; }
@@ -734,20 +778,20 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
   scrollbar-color: #555 #1a1a1a;
 }
 .character-detail-section { padding-bottom: 8px; border-bottom: 1px solid rgba(60,36,21,0.3); }
-.character-detail-header { font-family: 'MedievalSharp', sans-serif; font-size: 12px; color: #d4a843; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
-.character-detail-lore { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: #c4b896; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.character-detail-header { font-family: var(--font-button); font-size: 12px; color: #d4a843; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; }
+.character-detail-lore { font-family: var(--font-body); font-size: 13px; color: #c4b896; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
 .character-detail-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 12px; }
 .character-detail-stat { display: flex; justify-content: space-between; font-size: 12px; }
-.character-detail-stat .label { font-family: 'MedievalSharp', sans-serif; color: #888; font-size: 11px; }
+.character-detail-stat .label { font-family: var(--font-button); color: #888; font-size: 11px; }
 .character-detail-stat .value { color: #e8d5b7; font-size: 13px; font-weight: 700; }
 .character-detail-abilities { display: flex; flex-wrap: wrap; gap: 4px; }
-.character-detail-ability { font-family: 'Cormorant Garamond', serif; font-size: 12px; color: #d4a843; background: rgba(212,168,67,0.1); border: 1px solid rgba(212,168,67,0.3); border-radius: 4px; padding: 3px 8px; }
+.character-detail-ability { font-family: var(--font-body); font-size: 12px; color: #d4a843; background: rgba(212,168,67,0.1); border: 1px solid rgba(212,168,67,0.3); border-radius: 4px; padding: 3px 8px; }
 .character-detail-phase { font-size: 12px; color: #c4b896; padding: 4px 0; border-bottom: 1px solid rgba(60,36,21,0.2); }
-.character-detail-phase-label { font-family: 'MedievalSharp', sans-serif; color: #888; font-size: 10px; text-transform: uppercase; }
+.character-detail-phase-label { font-family: var(--font-button); color: #888; font-size: 10px; text-transform: uppercase; }
 .character-detail-domain { font-size: 12px; color: #888; }
-.character-detail-personality { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 12px; color: #9966cc; border-left: 2px solid rgba(153,102,204,0.3); padding: 6px 10px; margin-top: 8px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.character-detail-personality { font-family: var(--font-body); font-style: italic; font-size: 12px; color: #9966cc; border-left: 2px solid rgba(153,102,204,0.3); padding: 6px 10px; margin-top: 8px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .character-detail-badges { display: flex; gap: 6px; flex-wrap: wrap; }
-.character-detail-badge { font-family: 'MedievalSharp', sans-serif; font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid #555; color: #c4b896; }
+.character-detail-badge { font-family: var(--font-button); font-size: 11px; padding: 2px 8px; border-radius: 4px; border: 1px solid #555; color: #c4b896; }
 .character-detail-badge.divine { border-color: #d4a843; color: #d4a843; }
 @keyframes detailFadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .detail-fade-in { animation: detailFadeIn 0.3s ease; }
@@ -771,13 +815,13 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .quickening-center { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: 700px; padding: 20px; }
 .quickening-close-btn { position: absolute; top: 16px; right: 20px; z-index: 10; background: none; border: 1px solid rgba(255,255,255,0.2); color: #c4b896; font-size: 18px; cursor: pointer; padding: 6px 12px; border-radius: 4px; transition: all 0.3s; }
 .quickening-close-btn:hover { border-color: #d4a843; color: #d4a843; }
-.quickening-title { font-family: 'MedievalSharp', cursive; font-size: 28px; color: #d4a843; text-shadow: 0 0 20px rgba(212,168,67,0.5), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.1em; margin-bottom: 8px; }
+.quickening-title { font-family: var(--font-button); font-size: 28px; color: #d4a843; text-shadow: 0 0 20px rgba(212,168,67,0.5), 0 2px 4px rgba(0,0,0,0.8); letter-spacing: 0.1em; margin-bottom: 8px; }
 
 /* Fallen deity section */
 .quickening-fallen { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 8px; }
-.quickening-fallen-name { font-family: 'Pirata One', cursive; font-size: 22px; color: #d4a843; text-shadow: 0 0 10px rgba(212,168,67,0.3); }
-.quickening-fallen-pantheon { font-family: 'Cormorant Garamond', serif; font-size: 13px; color: #c4b896; }
-.quickening-transfer-text { font-family: 'MedievalSharp', cursive; font-size: 11px; color: #d4a843; text-transform: uppercase; letter-spacing: 0.15em; animation: quickeningPulse 2s ease-in-out infinite; }
+.quickening-fallen-name { font-family: var(--font-combat); font-size: 22px; color: #d4a843; text-shadow: 0 0 10px rgba(212,168,67,0.3); }
+.quickening-fallen-pantheon { font-family: var(--font-body); font-size: 13px; color: #c4b896; }
+.quickening-transfer-text { font-family: var(--font-button); font-size: 11px; color: #d4a843; text-transform: uppercase; letter-spacing: 0.15em; animation: quickeningPulse 2s ease-in-out infinite; }
 
 /* Portrait cracking */
 .portrait-cracking { position: relative; }
@@ -788,29 +832,29 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 
 /* Warning box */
 .quickening-warning { background: rgba(150,0,0,0.15); border: 1px solid rgba(200,0,0,0.4); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; max-width: 500px; text-align: center; }
-.quickening-warning h4 { font-family: 'MedievalSharp', cursive; color: #cc4444; font-size: 14px; margin: 0 0 8px 0; }
-.quickening-warning p { font-family: 'Cormorant Garamond', serif; color: #cc8888; font-size: 13px; margin: 4px 0; }
+.quickening-warning h4 { font-family: var(--font-button); color: #cc4444; font-size: 14px; margin: 0 0 8px 0; }
+.quickening-warning p { font-family: var(--font-body); color: #cc8888; font-size: 13px; margin: 4px 0; }
 .quickening-warning .current-power-name { color: #d4a843; font-weight: bold; font-size: 14px; }
 .quickening-warning .current-echo-name { color: #9966cc; font-style: italic; }
 
 /* Power choice cards */
-.quickening-choose-title { font-family: 'MedievalSharp', cursive; color: #d4a843; font-size: 16px; margin-bottom: 4px; }
+.quickening-choose-title { font-family: var(--font-button); color: #d4a843; font-size: 16px; margin-bottom: 4px; }
 .power-choice-cards-container { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 .power-choice-card { background: rgba(26,20,16,0.85); border: 2px solid #3c2415; border-radius: 8px; padding: 16px; cursor: pointer; transition: all 0.3s; max-width: 200px; min-width: 160px; display: flex; flex-direction: column; gap: 6px; }
 .power-choice-card:hover { border-color: #d4a843; transform: translateY(-4px); box-shadow: 0 8px 24px rgba(212,168,67,0.2); }
-.power-choice-name { font-family: 'MedievalSharp', cursive; color: #d4a843; font-size: 16px; margin-bottom: 4px; }
-.power-choice-desc { font-family: 'Cormorant Garamond', serif; color: #c4b896; font-size: 13px; line-height: 1.4; }
+.power-choice-name { font-family: var(--font-button); color: #d4a843; font-size: 16px; margin-bottom: 4px; }
+.power-choice-desc { font-family: var(--font-body); color: #c4b896; font-size: 13px; line-height: 1.4; }
 .power-choice-type { font-size: 11px; color: #888; margin-bottom: 4px; }
 .power-choice-source { font-size: 10px; color: #666; font-style: italic; margin-bottom: 8px; }
-.absorb-btn { font-family: 'MedievalSharp', cursive; font-size: 14px; padding: 8px 20px; background: transparent; border: 2px solid #d4a843; color: #d4a843; border-radius: 6px; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: auto; }
+.absorb-btn { font-family: var(--font-button); font-size: 14px; padding: 8px 20px; background: transparent; border: 2px solid #d4a843; color: #d4a843; border-radius: 6px; cursor: pointer; transition: all 0.3s; width: 100%; margin-top: auto; }
 .absorb-btn:hover { background: rgba(212,168,67,0.15); transform: scale(1.02); }
 
 /* Absorbing text */
-.absorbing-text { font-family: 'Pirata One', cursive; color: #d4a843; font-size: 24px; text-shadow: 0 0 20px rgba(212,168,67,0.5); animation: absorbFadeIn 1s ease; }
+.absorbing-text { font-family: var(--font-combat); color: #d4a843; font-size: 24px; text-shadow: 0 0 20px rgba(212,168,67,0.5); animation: absorbFadeIn 1s ease; }
 @keyframes absorbFadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
 
 /* Echo whisper in narration */
-.echo-whisper { margin: 10px 0; padding: 10px 14px; border-radius: 6px; border-left: 3px solid; animation: echoFadeIn 0.8s ease; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px; line-height: 1.5; }
+.echo-whisper { margin: 10px 0; padding: 10px 14px; border-radius: 6px; border-left: 3px solid; animation: echoFadeIn 0.8s ease; font-family: var(--font-body); font-style: italic; font-size: 13px; line-height: 1.5; }
 .echo-whisper.good { background: rgba(212,168,67,0.08); border-color: #d4a843; color: #c4a040; }
 .echo-whisper.evil { background: rgba(150,0,0,0.08); border-color: #cc4444; color: #cc6666; }
 .echo-whisper.chaotic { background: rgba(100,60,150,0.08); border-color: #9966cc; color: #aa88cc; }
@@ -830,7 +874,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 
 /* Graveyard sidebar tab */
 .graveyard-header { padding: 12px; border-bottom: 1px solid #5a1a1a; }
-.graveyard-header h3 { font-family: 'MedievalSharp', cursive; color: #8b2222; font-size: 16px; margin: 0 0 8px 0; }
+.graveyard-header h3 { font-family: var(--font-button); color: #8b2222; font-size: 16px; margin: 0 0 8px 0; }
 .graveyard-stats { font-size: 12px; color: #c4b896; display: flex; gap: 16px; }
 .graveyard-legend { font-size: 13px; color: #d4a843; margin-top: 4px; }
 .pantheon-progress { padding: 8px 12px; border-bottom: 1px solid rgba(60,36,21,0.3); }
@@ -839,7 +883,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .pantheon-progress-fill { height: 100%; background: #8b2222; border-radius: 3px; transition: width 0.5s ease; }
 .pantheon-progress-fill.extinguished { background: #d4a843; animation: extinguishedGlow 2s ease-in-out infinite; }
 @keyframes extinguishedGlow { 0%, 100% { box-shadow: 0 0 4px #d4a843; } 50% { box-shadow: 0 0 12px #d4a843; } }
-.pantheon-extinguished-banner { text-align: center; font-family: 'MedievalSharp', cursive; color: #d4a843; font-size: 13px; padding: 8px; margin: 8px 12px; border: 1px solid rgba(212,168,67,0.3); border-radius: 4px; animation: extinguishedGlow 2s ease-in-out infinite; }
+.pantheon-extinguished-banner { text-align: center; font-family: var(--font-button); color: #d4a843; font-size: 13px; padding: 8px; margin: 8px 12px; border: 1px solid rgba(212,168,67,0.3); border-radius: 4px; animation: extinguishedGlow 2s ease-in-out infinite; }
 .graveyard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; }
 .graveyard-card { text-align: center; cursor: pointer; transition: all 0.3s; }
 .graveyard-card:hover { transform: scale(1.05); }
@@ -849,18 +893,18 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .graveyard-card-power { font-size: 10px; color: #d4a843; margin-top: 2px; }
 .graveyard-empty { text-align: center; padding: 40px 20px; }
 .graveyard-empty-icon { font-size: 48px; color: #555; margin-bottom: 12px; }
-.graveyard-empty-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; color: #888; margin-bottom: 8px; }
+.graveyard-empty-text { font-family: var(--font-body); font-style: italic; font-size: 14px; color: #888; margin-bottom: 8px; }
 .graveyard-empty-hint { font-size: 11px; color: #555; }
 .graveyard-expanded { padding: 12px; background: rgba(60,36,21,0.2); border-radius: 8px; margin: 8px 12px; }
 .graveyard-expanded-portrait { width: 100px; height: 130px; border-radius: 6px; object-fit: cover; margin: 0 auto 10px; display: block; filter: grayscale(0.8); }
-.graveyard-expanded-name { font-family: 'MedievalSharp', cursive; color: #e8d5b7; font-size: 16px; text-align: center; margin-bottom: 4px; }
+.graveyard-expanded-name { font-family: var(--font-button); color: #e8d5b7; font-size: 16px; text-align: center; margin-bottom: 4px; }
 .graveyard-expanded-pantheon { font-size: 12px; color: #888; text-align: center; margin-bottom: 10px; }
 .graveyard-expanded-detail { font-size: 12px; color: #c4b896; padding: 4px 0; border-bottom: 1px solid rgba(60,36,21,0.2); }
 .graveyard-expanded-farewell { font-style: italic; color: #9966cc; font-size: 12px; margin-top: 8px; padding: 8px; background: rgba(100,60,150,0.1); border-radius: 4px; }
 
 /* Fallen intro screen cards */
 .card-fallen { position: relative; }
-.card-fallen::after { content: 'FALLEN'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: 'Pirata One', cursive; font-size: 28px; color: rgba(200,0,0,0.25); text-transform: uppercase; transform: rotate(-30deg); pointer-events: none; z-index: 5; }
+.card-fallen::after { content: 'FALLEN'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--font-combat); font-size: 28px; color: rgba(200,0,0,0.25); text-transform: uppercase; transform: rotate(-30deg); pointer-events: none; z-index: 5; }
 .card-fallen .card-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.55); border-radius: inherit; z-index: 3; pointer-events: none; }
 .card-fallen .card-skull-badge { position: absolute; top: 6px; right: 6px; font-size: 16px; z-index: 6; }
 .card-fallen { border-color: #5a1a1a !important; filter: grayscale(0.5); }
@@ -869,7 +913,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 
 /* Absorbed power on character card */
 .absorbed-power-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(212,168,67,0.3); }
-.absorbed-power-header { font-family: 'MedievalSharp', cursive; color: #d4a843; font-size: 13px; margin-bottom: 6px; }
+.absorbed-power-header { font-family: var(--font-button); color: #d4a843; font-size: 13px; margin-bottom: 6px; }
 .absorbed-power-name { font-weight: bold; color: #e8d5b7; font-size: 14px; margin-bottom: 4px; }
 .absorbed-power-desc { font-size: 12px; color: #c4b896; line-height: 1.4; margin-bottom: 6px; }
 .absorbed-power-source { font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; margin-bottom: 6px; }
@@ -885,7 +929,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .echo-conflicted-badge { font-size: 10px; color: #cc4444; font-weight: bold; animation: conflictedFlicker 2s ease-in-out infinite; }
 
 /* Divine Power combat button */
-.divine-power-btn { font-family: 'MedievalSharp', cursive; font-size: 12px; padding: 6px 12px; background: rgba(212,168,67,0.1); border: 1px solid #d4a843; color: #d4a843; border-radius: 4px; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
+.divine-power-btn { font-family: var(--font-button); font-size: 12px; padding: 6px 12px; background: rgba(212,168,67,0.1); border: 1px solid #d4a843; color: #d4a843; border-radius: 4px; cursor: pointer; transition: all 0.3s; white-space: nowrap; }
 .divine-power-btn:hover { background: rgba(212,168,67,0.25); }
 .divine-power-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 

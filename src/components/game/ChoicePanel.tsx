@@ -90,7 +90,7 @@ function CooldownIndicator({ turnsLeft, totalTurns }: { turnsLeft: number; total
           dominantBaseline="central"
           fill="#d4af37"
           fontSize={10}
-          fontFamily="Cinzel, serif"
+          fontFamily="var(--font-heading)"
           fontWeight="bold"
           className="rotate-90 origin-center"
           style={{ transform: `rotate(90deg) translateX(0) translateY(-${size / 2}px) rotate(-90deg) translateX(-${size / 2}px)` }}
@@ -201,16 +201,16 @@ export function ChoicePanel({
     <Card className="mt-4 border-2 border-[#c9a84c] parchment-bg-choices shadow-[0_0_16px_rgba(200,160,60,.2)]">
       <CardHeader className="bg-gradient-to-r from-[rgba(80,55,0,.6)] to-[rgba(20,10,0,.4)] border-b border-[#7a5f20]">
         <div className="flex items-center gap-3">
-          <span style={{ fontFamily: '"Cinzel Decorative", serif', fontSize: '0.9rem', color: '#f0c860', letterSpacing: '.12em' }} className="text-sm sm:text-base">
+          <span style={{ fontFamily: 'var(--font-title)', fontSize: '0.9rem', color: '#f0c860', letterSpacing: '.12em' }} className="text-sm sm:text-base">
             YOUR TURN
           </span>
-          <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#c9a84c' }} className="text-sm sm:text-base">
+          <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', color: '#c9a84c' }} className="text-sm sm:text-base">
             {pc?.name}
           </span>
           {companion && (
             <>
               <span className="text-[#7a5f20] mx-1">&</span>
-                <span style={{ fontFamily: 'Cinzel, serif', fontSize: '1rem', color: '#90a0c0' }} className="text-sm sm:text-base">
+                <span style={{ fontFamily: 'var(--font-heading)', fontSize: '1rem', color: '#90a0c0' }} className="text-sm sm:text-base">
                 {companion.name}
               </span>
             </>
@@ -568,7 +568,7 @@ export function ChoicePanel({
                 className="text-center"
               >
                 <div className="text-xs text-[#5a4040] font-title uppercase">Damage Roll</div>
-                <div className={`text-xl font-bold ${diceRollResult >= parseInt(damageDie.replace('d', '')) * 0.8 ? 'text-[#d4af37]' : 'text-[#f0ebe3]'}`} style={{ fontFamily: 'Cinzel, serif' }}>
+                <div className={`text-xl font-bold ${diceRollResult >= parseInt(damageDie.replace('d', '')) * 0.8 ? 'text-[#d4af37]' : 'text-[#f0ebe3]'}`} style={{ fontFamily: 'var(--font-heading)' }}>
                   {diceRollResult}
                 </div>
               </motion.div>

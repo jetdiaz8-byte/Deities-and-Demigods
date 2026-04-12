@@ -101,7 +101,7 @@ export function AchievementNotification({ achievementId, turnNumber, onDismiss }
               </div>
               <div
                 className="text-base font-bold truncate"
-                style={{ color: tier.color, fontFamily: 'Cinzel, serif' }}
+                style={{ color: tier.color, fontFamily: 'var(--font-heading)' }}
               >
                 {def.name}
               </div>

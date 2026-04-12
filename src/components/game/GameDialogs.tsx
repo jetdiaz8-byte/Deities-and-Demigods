@@ -107,7 +107,7 @@ function SaveSlotThumbnail({ slot, children, interactive = false }: {
 
       {/* Last narration snippet */}
       {slot.lastNarration && (
-        <div className="text-[11px] text-[#9a8860] italic leading-relaxed mb-3 line-clamp-2" style={{ fontFamily: '"IM Fell English", serif' }}>
+        <div className="text-[11px] text-[#9a8860] italic leading-relaxed mb-3 line-clamp-2" style={{ fontFamily: 'var(--font-dialogue)' }}>
           &ldquo;{slot.lastNarration}&rdquo;
         </div>
       )}
@@ -205,7 +205,7 @@ function InventoryItemRow({ item, onUse, disabled }: { item: Item; onUse: () => 
             <span className="mx-0.5">·</span>
             <span style={{ color: rarityColors[item.rarity] || '#9a8860' }}>{item.rarity}</span>
           </div>
-          <div className="text-xs text-[#9a8860] italic mt-0.5" style={{ fontFamily: '"IM Fell English", serif' }}>
+          <div className="text-xs text-[#9a8860] italic mt-0.5" style={{ fontFamily: 'var(--font-dialogue)' }}>
             {item.description}
           </div>
           {item.charges && item.charges < 99 && (
@@ -284,7 +284,7 @@ export function GameDialogs({
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
         <DialogContent className="bg-[#110d07] border-[#5a4018] max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-[#f0c860]" style={{ fontFamily: 'Cinzel, serif' }}>Save Campaign</DialogTitle>
+            <DialogTitle className="text-[#f0c860]" style={{ fontFamily: 'var(--font-heading)' }}>Save Campaign</DialogTitle>
             <DialogDescription className="text-[#9a8860]">Choose a slot to preserve your legend</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto scroll-parchment">
@@ -316,7 +316,7 @@ export function GameDialogs({
       <Dialog open={showLoadDialog} onOpenChange={setShowLoadDialog}>
         <DialogContent className="bg-[#110d07] border-[#5a4018] max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-[#f0c860]" style={{ fontFamily: 'Cinzel, serif' }}>Load Campaign</DialogTitle>
+            <DialogTitle className="text-[#f0c860]" style={{ fontFamily: 'var(--font-heading)' }}>Load Campaign</DialogTitle>
             <DialogDescription className="text-[#9a8860]">Select a saved chronicle to continue</DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[60vh] overflow-y-auto scroll-parchment">
@@ -340,7 +340,7 @@ export function GameDialogs({
       <Dialog open={showInventoryDialog} onOpenChange={setShowInventoryDialog}>
         <DialogContent className="bg-[#110d07] border-[#5a4018] max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-[#f0c860]" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#f0c860]" style={{ fontFamily: 'var(--font-heading)' }}>
               <Package className="w-5 h-5 inline mr-2" />
               Party Inventory
             </DialogTitle>
@@ -369,7 +369,7 @@ export function GameDialogs({
       <Dialog open={shardDialogOpen} onOpenChange={setShardDialogOpen}>
         <DialogContent className="bg-[#0d0810] border-[#5a3898]" style={{ borderColor: gameState.shardEntry?.color || '#8060c0' }}>
           <DialogHeader>
-            <DialogTitle className="text-[#c0a0f0]" style={{ fontFamily: '"Cinzel Decorative", serif', color: gameState.shardEntry?.color || '#c080ff' }}>
+            <DialogTitle className="text-[#c0a0f0]" style={{ fontFamily: 'var(--font-title)', color: gameState.shardEntry?.color || '#c080ff' }}>
               🔮 Ask the Tear
             </DialogTitle>
             <DialogDescription className="text-[#7a6090]">

@@ -242,7 +242,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'story'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <BookOpen className="w-5 h-5" /> The Story So Far
             </DialogTitle>
           </DialogHeader>
@@ -266,7 +266,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'pcs'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <Users className="w-5 h-5" /> Player Characters
             </DialogTitle>
           </DialogHeader>
@@ -362,7 +362,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'npcs'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <Crown className="w-5 h-5" /> Active NPCs
             </DialogTitle>
           </DialogHeader>
@@ -391,7 +391,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'quests'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <ScrollText className="w-5 h-5" /> Quest Journal
             </DialogTitle>
           </DialogHeader>
@@ -428,7 +428,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'map'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-3xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <MapIcon className="w-5 h-5" /> World Map
             </DialogTitle>
           </DialogHeader>
@@ -470,7 +470,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'soul'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <Sparkles className="w-5 h-5" /> Soul & Consequences
             </DialogTitle>
           </DialogHeader>
@@ -501,7 +501,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'graveyard'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <Skull className="w-5 h-5" /> The Graveyard
             </DialogTitle>
           </DialogHeader>
@@ -547,7 +547,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'prophecies'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <Star className="w-5 h-5" /> Prophecies & Shards
             </DialogTitle>
           </DialogHeader>
@@ -557,7 +557,7 @@ export function GameSidebar({
                 <CardHeader className="p-3">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5" style={{ color: gameState.shardEntry.color || '#c080ff' }} />
-                    <CardTitle className="text-sm" style={{ color: gameState.shardEntry.color || '#c080ff', fontFamily: 'Cinzel, serif' }}>
+                    <CardTitle className="text-sm" style={{ color: gameState.shardEntry.color || '#c080ff', fontFamily: 'var(--font-heading)' }}>
                       {gameState.shardEntry.name}
                     </CardTitle>
                     <Badge className="ml-auto text-[10px] bg-[rgba(60,40,80,.5)] text-[#c090d0]" style={{ borderColor: gameState.shardEntry.color || '#808080' }}>
@@ -577,7 +577,7 @@ export function GameSidebar({
               </Card>
             )}
 
-            <h3 className="text-[#c9a84c] mb-3 text-base flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <h3 className="text-[#c9a84c] mb-3 text-base flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <ScrollText className="w-4 h-4" /> Bound Destinies
             </h3>
             {gameState.prophecies.length === 0 ? (
@@ -608,7 +608,7 @@ export function GameSidebar({
                         )}
                       </CardHeader>
                       <CardContent className="p-3">
-                        <div className="text-xs text-[#a08060] italic leading-relaxed font-narrative" style={{ fontFamily: '"IM Fell English", serif' }}>
+                        <div className="text-xs text-[#a08060] italic leading-relaxed font-narrative" style={{ fontFamily: 'var(--font-dialogue)' }}>
                           &ldquo;{prophecy.riddle}&rdquo;
                         </div>
                         {prophecyData && (
@@ -637,7 +637,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'logs'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <ClipboardList className="w-5 h-5" /> Chronicle of Events
             </DialogTitle>
           </DialogHeader>
@@ -672,7 +672,7 @@ export function GameSidebar({
                   <div className="flex flex-col items-center flex-shrink-0">
                     <div className="text-sm text-[#d4af37]" style={{ textShadow: '0 0 8px rgba(212,175,55,0.5)' }}>✦</div>
                   </div>
-                  <div className="text-xs text-[#d4af37] font-title italic" style={{ fontFamily: 'Cinzel, serif' }}>
+                  <div className="text-xs text-[#d4af37] font-title italic" style={{ fontFamily: 'var(--font-heading)' }}>
                     Campaign Begin
                   </div>
                 </div>
@@ -687,7 +687,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'gallery'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <ImageIcon className="w-5 h-5" /> Gallery
             </DialogTitle>
           </DialogHeader>
@@ -714,7 +714,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'settings'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-lg max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <SettingsIcon className="w-5 h-5" /> Settings
             </DialogTitle>
           </DialogHeader>
@@ -773,7 +773,7 @@ export function GameSidebar({
       <Dialog open={openPanel === 'dmnotes'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
         <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
           <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
-            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)' }}>
               <FileText className="w-5 h-5" /> DM Notes
             </DialogTitle>
           </DialogHeader>

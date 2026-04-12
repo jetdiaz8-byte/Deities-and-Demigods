@@ -194,7 +194,7 @@ function LoreGlossaryCard({
           <div className="flex-1 min-w-0">
             <div
               className="text-sm font-bold truncate"
-              style={{ fontFamily: 'Cinzel, serif', color: '#d4af37' }}
+              style={{ fontFamily: 'var(--font-heading)', color: '#d4af37' }}
             >
               {entry.name}
             </div>
@@ -205,7 +205,7 @@ function LoreGlossaryCard({
                   background: `${typeColor}20`,
                   color: typeColor,
                   border: `1px solid ${typeColor}30`,
-                  fontFamily: 'Cinzel, serif',
+                  fontFamily: 'var(--font-heading)',
                 }}
               >
                 {entry.type?.replace('_', ' ') || 'unknown'}
@@ -221,7 +221,7 @@ function LoreGlossaryCard({
             <div className="text-[10px] text-[#c9a84c] italic mb-1">{entry.title}</div>
           )}
           {(entry.personality || entry.description) && (
-            <div className="text-[11px] text-[#a09080] leading-relaxed line-clamp-2" style={{ fontFamily: 'IM Fell English, serif' }}>
+            <div className="text-[11px] text-[#a09080] leading-relaxed line-clamp-2" style={{ fontFamily: 'var(--font-dialogue)' }}>
               {entry.personality || entry.description}
             </div>
           )}
