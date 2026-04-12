@@ -96,3 +96,26 @@ Stage Summary:
 - Modified: `src/app/api/tts/route.ts` — complete rewrite using z-ai-web-dev-sdk, no more WebSocket timeouts
 - Modified: `src/hooks/useGameEngine.ts` — updated speakWithEdgeTTS to send `speed` parameter and updated comments
 - Result: TTS now uses reliable server-side HTTP calls via z-ai-web-dev-sdk, eliminating Vercel serverless timeout errors
+
+---
+Task ID: 8
+Agent: Main Agent
+Task: v2.24.0 — Final assembly, build, lint, and push
+
+Work Log:
+- Applied P0 fix: Dice tray — removed duplicate VisualDiceRoll from MythworldPage.tsx main area (lines 492-507)
+- Applied P0 fix: Turn 2+ narrative flow — expanded system prompt (line 1997), user prompt (line 3888), JSON schema (line 2312), and truncation limits (line 4107) from 80-120w → 150-300w with RESULTS/REACTIONS/HOOK structure
+- Applied P0 fix: Turn 0 hook — strengthened ending hook from generic "someone is approaching" to specific urgency-based hooks
+- Applied P1 fix: DM narration blinking — added userExpanded state with useEffect reset on narrativeCount, handleToggleNarration callback, stable key strategy
+- Applied P1 fix: Combat overlay — delegated to subagent, verified gameState prop passed from MythworldPage
+- Applied P1 fix: Character card size — responsive flex-col/flex-row layout, 480x288 portrait target, mobile-first controls
+- Applied P1 fix: TTS — delegated to subagent, verified z-ai-web-dev-sdk integration with speed parameter
+- Applied P0 fix: Scene illustration — delegated to subagent, verified real AI image generation via SDK
+- Ran lint: 10 pre-existing errors (0 new from our changes)
+- Committed as v2.24.0 with detailed message
+- Pushed to origin/main successfully
+
+Stage Summary:
+- 8 files modified, 290 insertions, 202 deletions
+- Commit: 8b44c6e pushed to https://github.com/jetdiaz8-byte/Deities-and-Demigods.git
+- All 7 fixes applied and verified
