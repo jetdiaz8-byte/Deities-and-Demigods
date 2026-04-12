@@ -300,10 +300,12 @@ export function useGameEngine() {
   const [conversationHistory, setConversationHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
 
   // ── TTS STATE ────────────────────────────────────────────────────────
-  // Dual-engine TTS: browser (primary, zero server) + Edge TTS (neural fallback)
+  // Neural TTS (server-side, React-immune) is now the default.
+  // Browser SpeechSynthesis is kept as fallback but disabled by default
+  // because Chrome aborts speech on ANY React state change during playback.
   const [ttsEnabled, setTtsEnabled] = useState(false)
   const [ttsVoice, setTtsVoice] = useState('guy') // Edge TTS neural voice key
-  const [ttsEngine, setTtsEngine] = useState<'browser' | 'neural'>('browser') // Primary engine
+  const [ttsEngine, setTtsEngine] = useState<'browser' | 'neural'>('neural') // Neural (server-side) is default
   const [ttsSpeed, setTtsSpeed] = useState(0.9)
   const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')
   const [ttsPending, setTtsPending] = useState(false)
@@ -536,7 +538,9 @@ export function useGameEngine() {
     const saved = safeLocalStorageGetItem('ddg_browser_voice')
     if (saved) setBrowserVoiceName(saved)
     const savedEngine = safeLocalStorageGetItem('ddg_tts_engine') as 'browser' | 'neural' | null
-    if (savedEngine) setTtsEngine(savedEngine)
+    // Always default to neural — browser SpeechSynthesis is broken with React re-renders
+    setTtsEngine('neural')
+    safeLocalStorageSetItem('ddg_tts_engine', 'neural')
     return () => { window.speechSynthesis.removeEventListener('voiceschanged', loadVoices) }
   }, [])
 
