@@ -219,3 +219,24 @@ Stage Summary:
 - TTS: Browser primary with Edge TTS option, no more disruptive error toasts
 - Layout: Right panel with portrait gallery + dice tray replaces wasted 320px margin
 - Dead code removed: narrator controls, duplicate dice tray, wrong <Image> tag
+
+---
+Task ID: 12
+Agent: Main Agent
+Task: v2.25.1 — Fix narratorMode ReferenceError crash on Vercel
+
+Work Log:
+- Diagnosed crash: `narratorMode is not defined` in MythworldPage.tsx line 178
+- Root cause: Previous session removed narrator controls UI (v2.25.0) but left two orphaned references
+  - MythworldPage.tsx lines 176-187: dead useEffect that checked narratorMode === 'auto' but did nothing
+  - useGameEngine.ts: narratorMode state + 3 guard checks + return value
+- Removed dead useEffect from MythworldPage.tsx
+- Removed narratorMode/setNarratorMode state from useGameEngine.ts
+- Simplified TTS auto-speak guards (removed narratorMode === 'auto' condition, now always-on)
+- Lint: 0 new errors (all 10 are pre-existing in useGameAudio.ts)
+- Committed and pushed as v2.25.1
+
+Stage Summary:
+- Fixed: ReferenceError crash that broke the entire app on Vercel
+- Commit: d570495 pushed to GitHub
+- 2 files changed, 4 insertions, 18 deletions
