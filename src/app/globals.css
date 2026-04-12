@@ -448,7 +448,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .intro-showcase-area { max-height: calc(100vh - 80px); overflow-y: auto; }
 .intro-showcase-card .character-card { max-height: calc(100vh - 100px); overflow-y: auto; }
 
-.party-bar-wrap { position: sticky; bottom: 0; z-index: 80; }
+.party-bar-wrap { position: fixed; bottom: 0; left: 0; right: 0; z-index: 80; }
 .party-bar {
   display: flex;
   align-items: center;
@@ -556,7 +556,7 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .glow-hover:hover { box-shadow: 0 0 14px rgba(201, 168, 76, 0.25); }
 .safe-bottom { padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
 .mythworld-main-layout { min-height: 0; }
-.mythworld-bottom-bar { position: relative; }
+.mythworld-bottom-bar { position: fixed; }
 
 @media (max-width: 768px) {
   .mythworld-main-layout {

@@ -222,10 +222,10 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
           transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
         }}
       >
-        <div className="flex flex-row" style={{ minHeight: '160px' }}>
+        <div className="flex flex-row" style={{ maxHeight: '140px' }}>
           {/* ── LEFT PANEL: Name + info (vertically centered) ──────── */}
           <div
-            className="flex flex-col justify-center items-start py-3 pl-3 pr-2 shrink-0"
+            className="flex flex-col justify-center items-start py-2 pl-3 pr-2 shrink-0"
             style={{
               width: '28%',
               minWidth: '120px',
@@ -246,7 +246,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             </div>
             {(charTitle || charDivineRank) && (
               <div
-                className="text-[9px] tracking-wider mt-1 leading-tight"
+                className="text-[9px] tracking-wider mt-0.5 leading-tight"
                 style={{
                   fontFamily: 'Cinzel, serif',
                   color: '#9a8860',
@@ -258,7 +258,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             )}
             {displayCharacter?.pantheon && (
               <div
-                className="text-[8px] uppercase tracking-widest mt-1.5"
+                className="text-[8px] uppercase tracking-widest mt-1"
                 style={{ fontFamily: 'Cinzel, serif', color: '#d4af37' }}
               >
                 {displayCharacter.pantheon}
@@ -266,13 +266,13 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             )}
             {/* Mini stat pills */}
             {displayCharacter && (
-              <div className="flex flex-wrap gap-1 mt-2">
+              <div className="flex flex-wrap gap-1 mt-1.5">
                 {displayCharacter.hp != null && <span className="text-[8px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">HP {displayCharacter.hp}</span>}
                 {displayCharacter.AC != null && <span className="text-[8px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">AC {displayCharacter.AC}</span>}
                 {displayCharacter.align && <span className="text-[8px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">{displayCharacter.align}</span>}
               </div>
             )}
-            <div className="flex items-center gap-1.5 mt-2">
+            <div className="flex items-center gap-1.5 mt-1.5">
               <button
                 onClick={() => setDetailOpen(true)}
                 className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider transition-all text-[#d4af37]/60 hover:text-[#d4af37] border border-[#d4af37]/20 hover:border-[#d4af37]/50 hover:bg-black/40"
@@ -283,22 +283,22 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             </div>
           </div>
 
-          {/* ── CENTER: Portrait (maximized, object-contain) ───────── */}
+          {/* ── CENTER: Portrait (capped height, object-contain) ─────── */}
           <div
             className="relative overflow-hidden flex-1 flex items-center justify-center"
-            style={{ minHeight: '160px' }}
+            style={{ maxHeight: '140px' }}
           >
             <PortraitImage key={portrait} portrait={portrait} charName={charName} fading={fading} />
 
             {/* Subtle vignette around portrait edges */}
             <div className="absolute inset-0 pointer-events-none" style={{
-              boxShadow: 'inset 0 0 30px rgba(10,8,6,0.4)',
+              boxShadow: 'inset 0 0 20px rgba(10,8,6,0.3)',
             }} />
           </div>
 
           {/* ── RIGHT PANEL: Controls + turn info ──────────────────── */}
           <div
-            className="flex flex-col justify-between py-3 pl-2 pr-3 shrink-0"
+            className="flex flex-col justify-between py-2 pl-2 pr-3 shrink-0"
             style={{
               width: '18%',
               minWidth: '80px',

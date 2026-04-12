@@ -530,49 +530,6 @@ export default function MythworldEngine() {
                 turn={gameState?.turn ?? 0}
                 gameState={gameState}
               />
-              {/* Party Character Cards — compact strip */}
-              {gameState?.pcs?.filter(p => !p.dead).length > 0 && gameState?.turn > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-2 mb-2 scrollbar-hide" style={{ scrollSnapType: 'x mandatory' }}>
-                  {gameState.pcs.filter(p => !p.dead).map(pc => {
-                    const charData = ALL_CHARACTERS.find(c => c.id === pc.portrait || c.name === pc.name)
-                    return (
-                      <div
-                        key={pc.id}
-                        className="flex-shrink-0 rounded-md border border-[#3a3020] overflow-hidden cursor-pointer transition-all hover:border-[#d4af37] hover:shadow-[0_0_12px_rgba(212,175,55,0.2)]"
-                        style={{ width: '120px', background: 'rgba(15,12,8,0.9)', scrollSnapAlign: 'start' }}
-                        onClick={() => {
-                          setSidebarOpen(true)
-                          setActiveTab('pcs')
-                          setExpandedPC(pc.id)
-                        }}
-                      >
-                        <div className="relative" style={{ height: '80px' }}>
-                          {charData?.portrait ? (
-                            <img src={charData.portrait} alt={pc.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-2xl" style={{ background: 'linear-gradient(135deg, #1a1510, #0d0a08)' }}>
-                              {pc.name.charAt(0)}
-                            </div>
-                          )}
-                          {pc.id === gameState.humanPCId && (
-                            <div className="absolute top-0.5 right-0.5 text-[8px] px-1 rounded bg-[#d4af37] text-[#0d0a08] font-bold">PC</div>
-                          )}
-                        </div>
-                        <div className="p-1.5">
-                          <div className="text-[10px] font-title text-[#d4af37] truncate">{pc.name}</div>
-                          <div className="text-[8px] text-[#8a7040]">{pc.hp}/{pc.maxHp}</div>
-                          <div className="mt-0.5 h-1 rounded-full overflow-hidden" style={{ background: '#2a2010' }}>
-                            <div className="h-full rounded-full transition-all" style={{
-                              width: `${Math.max(0, (pc.hp / pc.maxHp) * 100)}%`,
-                              background: pc.hp / pc.maxHp > 0.5 ? '#4a9060' : pc.hp / pc.maxHp > 0.25 ? '#c09030' : '#c04040'
-                            }} />
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
               {(narrativeContent ?? []).map((item, idx) => {
                 const isLast = idx === (narrativeContent ?? []).length - 1
                 const collapseClass = isLast && shouldCollapseNarration && !showFullNarration
@@ -696,6 +653,8 @@ export default function MythworldEngine() {
 
             {/* Scroll anchor — auto-scroll targets this */}
             <div id="narrative-bottom" />
+            {/* Spacer for fixed bottom bars (PartyBar ~90px + BottomBar ~50px) */}
+            <div style={{ height: '140px', flexShrink: 0 }} />
             {/* Fog of War Overlay */}
             <div className="fog-overlay" />
           </div>
@@ -793,8 +752,8 @@ export default function MythworldEngine() {
           </div>
         )}
 
-        {/* Bottom Bar */}
-        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap relative z-[41] md:mr-80 safe-bottom mythworld-bottom-bar">
+        {/* Bottom Bar — fixed above PartyBar */}
+        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap safe-bottom" style={{ position: 'fixed', bottom: '90px', left: 0, right: 0, zIndex: 79, marginRight: undefined }}>
           <Button
             onClick={() => setSidebarOpen(true)}
             variant="outline"
