@@ -204,7 +204,18 @@ export default function MythworldEngine() {
     () => latestNarrativeHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim(),
     [latestNarrativeHtml],
   )
-  const shouldCollapseNarration = latestNarrativeText.length > 1200
+  // v2.24.0: Stabilize collapse — only toggle when the user hasn't already expanded
+  const [userExpanded, setUserExpanded] = React.useState(false)
+  // Reset userExpanded when turn changes (new narration)
+  React.useEffect(() => {
+    setUserExpanded(false)
+    setShowFullNarration(false)
+  }, [narrativeCount])
+  const shouldCollapseNarration = latestNarrativeText.length > 1200 && !userExpanded
+  const handleToggleNarration = React.useCallback(() => {
+    setUserExpanded(prev => !prev)
+    setShowFullNarration(prev => !prev)
+  }, [])
   const shuffleCharacters = React.useCallback((items: Character[]) => {
     const copy = [...items]
     for (let i = copy.length - 1; i > 0; i--) {
@@ -489,22 +500,8 @@ export default function MythworldEngine() {
           onOpenQuestJournal={() => setShowQuestJournal(true)}
         />
 
-        {/* Dice Rolls Display */}
-        {(gameState?.lastDiceRolls ?? []).length > 0 && (
-          <div className="px-3 py-2">
-            {(gameState?.lastDiceRolls ?? []).map((roll, idx) => (
-              <VisualDiceRoll
-                key={idx}
-                die={roll.die}
-                roll={roll.roll}
-                dc={roll.dc}
-                success={roll.success}
-                roller={roll.roller}
-                notes={roll.notes}
-              />
-            ))}
-          </div>
-        )}
+        {/* Dice rolls are now ONLY in the sidebar Dice Tray (SidebarDiceArea).
+            Previously they rendered here too, cluttering the DM Narration area. */}
 
         {/* Main Content Area with Fixed Sidebar */}
         <div className="flex flex-1 relative overflow-hidden mythworld-main-layout">
@@ -540,22 +537,18 @@ export default function MythworldEngine() {
                 }
                 return (
                   <div
-                    key={idx}
+                    key={isLast ? `turn-${idx}-last` : idx}
                     className={isLast ? `dm-narration-block scroll-parchment ${collapseClass}` : undefined}
                     style={isLast ? { position: 'relative' } : undefined}
                   >
-                    {isLast ? (
-                      <span dangerouslySetInnerHTML={{ __html: item.html }} />
-                    ) : (
-                      <span dangerouslySetInnerHTML={{ __html: item.html }} />
-                    )}
+                    <span dangerouslySetInnerHTML={{ __html: item.html }} />
                   </div>
                 )
               })}
               {shouldCollapseNarration && (
                 <div className="mt-2 mb-3 text-center">
                   <button
-                    onClick={() => setShowFullNarration(!showFullNarration)}
+                    onClick={handleToggleNarration}
                     className="min-h-[44px] px-4 py-2 text-xs rounded border text-[#5c3317] bg-[rgba(139,90,43,0.15)] border-[#b8956a] hover:bg-[rgba(139,90,43,0.25)] transition-all"
                     style={{ fontFamily: 'Cinzel, serif', letterSpacing: '.08em' }}
                   >
@@ -701,6 +694,7 @@ export default function MythworldEngine() {
         {combatState?.isActive && !combatOverlayMinimized && (
           <CombatOverlay
             combatState={combatState as any}
+            gameState={gameState as any}
             onClose={() => setCombatOverlayMinimized(true)}
             onFlee={() => submitQuickAction('I attempt to flee from combat!')}
             onAction={submitQuickAction}

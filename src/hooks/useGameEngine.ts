@@ -1249,7 +1249,7 @@ export function useGameEngine() {
   // ═══════════════════════════════════════════════════════════════════════════
   // DUAL-ENGINE TTS SYSTEM
   // Primary: Browser Web Speech API (zero server, instant, no cost)
-  // Fallback: Edge TTS Neural Voices (server-side, higher quality)
+  // Fallback: SDK TTS via z-ai-web-dev-sdk (server-side, no WebSocket timeouts)
   // ═══════════════════════════════════════════════════════════════════════════
 
   // ── BROWSER TTS (Primary) ────────────────────────────────────────────
@@ -1409,7 +1409,7 @@ export function useGameEngine() {
     })
   }
 
-  // ── EDGE TTS (Neural Fallback) ───────────────────────────────────────
+  // ── SDK TTS (Neural Voice via z-ai-web-dev-sdk) ─────────────────────
   const speakWithEdgeTTS = async (text: string, voice?: string): Promise<void> => {
     const chunks = splitTextIntoChunks(text, 2000)
     const selectedVoice = voice || ttsVoice
@@ -1424,7 +1424,7 @@ export function useGameEngine() {
       const response = await fetch('/api/tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: chunk, voice: selectedVoice, rate: '-15%' })
+        body: JSON.stringify({ text: chunk, voice: selectedVoice, speed: ttsSpeed })
       })
 
       if (abortSpeakRef.current) break
@@ -1477,7 +1477,7 @@ export function useGameEngine() {
         // Primary: Browser Speech API (instant, no server)
         await speakWithBrowser(text)
       } else {
-        // Fallback: Edge TTS Neural Voices
+        // Fallback: SDK TTS Neural Voices
         await speakWithEdgeTTS(text, voice)
       }
       setStatusMessage('Ready')
@@ -1994,9 +1994,12 @@ CRITICAL RULES:
      e) NEXT TURN INTRO — End with a hook: a fork in the road, a distant threat, a mystery. (1-2 sentences)
      f) Include companion dialogue that reflects their personality
      Total: ~3000-3500 chars. TTS-friendly: ~60-75 seconds.
-   - REGULAR TURNS (Turn 2+): Write exactly ONE paragraph (80-150 words). HARD LIMIT.
-     The paragraph MUST contain: what happened, character reaction, and a hook/tension for next turn.
-     Reference past events when relevant. Include 1-2 lines of dialogue max.
+   - REGULAR TURNS (Turn 2+): Write 2-3 paragraphs (150-300 words total). STRUCTURED:
+     Paragraph 1 — RESULTS: What happened as a result of the player's choices from the previous turn. Be vivid. Reference the specific action.
+     Paragraph 2 — REACTIONS: The PC and companion react to what happened. Include 1-2 lines of dialogue that reveal personality.
+     Paragraph 3 — HOOK: A new development, tension, or fork in the road. End with something that demands a response.
+     If combat occurred, weave it naturally into Paragraph 1-2. Do NOT write a separate combat section.
+     This is a HARD LIMIT: 150-300 words total. No more, no less.
    - CRITICAL: NEVER repeat or rephrase narration from previous turns. Every turn must be ENTIRELY NEW prose.
    - Write like Neil Gaiman — mythic, poetic, dark, like a fairy tale for adults
    - Use specific sensory language: the taste of copper, the weight of shadows
@@ -2306,7 +2309,7 @@ QUICKENING RULES:
 ` : ''}`}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — Turn 0 shard intro: ~600 chars max. Turn 1 full intro: 3000-3500 chars (4-5 paragraphs). Regular turns: 80-120 words HARD MAX, ONE paragraph only. REST/SLEEP: 2-3 sentences. COMBAT: up to 100 words. EXCEEDING THE WORD LIMIT IS A CRITICAL FAILURE.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","shard_insight_used":false,"pc_choices":[{"narrative":"string (CONTEXTUAL story-specific action with emoji, max 80 chars — NEVER generic like 'Search the area')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}],"companion_choices":[{"narrative":"string (CONTEXTUAL companion action with emoji, max 80 chars — reference current scene)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — Turn 0 shard intro: ~600 chars max. Turn 1 full intro: 3000-3500 chars (4-5 paragraphs). Regular turns: 150-300 words, 2-3 paragraphs (RESULTS / REACTIONS / HOOK structure). REST/SLEEP: 2-3 sentences. COMBAT: weave into paragraphs 1-2, up to 300 words total. EXCEEDING THE WORD LIMIT IS A CRITICAL FAILURE.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","shard_insight_used":false,"pc_choices":[{"narrative":"string (CONTEXTUAL story-specific action with emoji, max 80 chars — NEVER generic like 'Search the area')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}],"companion_choices":[{"narrative":"string (CONTEXTUAL companion action with emoji, max 80 chars — reference current scene)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -3793,7 +3796,7 @@ Use mythic, sensory language. Make the world feel ancient. The shard is a charac
 PARAGRAPH 2 — THE WORLD RESPONDS (~600 chars):
 The shard's arrival disrupts the world. Nature reacts. Something ancient notices.
 Do NOT name the antagonist. Describe only its effect — a chill, a shadow that moves wrong.
-End with a hook: someone is approaching. Someone the shard has been waiting for.
+End with a HOOK — a single sentence that creates urgency: a footstep on broken glass, a voice calling from the darkness, a door that should not be open. Something is coming. The shard knows who.
 
 HARD LIMITS:
 - dm_narration: MAX 1500 characters. EXACTLY 2 paragraphs. SHARD ONLY.
@@ -3883,11 +3886,13 @@ Recent: ${recentLog}
 Act: ${gs.act}
 ${gs.pendingShardQuestion ? `🔮 SHARD INSIGHT — The player asked: "${gs.pendingShardQuestion}". The shard answers with a hidden truth — a piece of lore, an antagonist clue, a prophecy fragment, or a secret about an NPC. Set shard_insight_used to true. The shard remembers everything but doesn't always tell you what you WANTED to hear. Narrate the shard's whisper/vision in 1-2 sentences of prophecy-like prose.\n` : ''}${pcIntroStr}${gs.act === ACTS.TWO ? 'Introduce 1-2 gods from the DDG roster this turn. Mix pantheons.\n' : ''}${gs.act === ACTS.THREE ? `BOSS FIGHT: ${ant?.name} Phase ${gs.antagonistPhase}. HP ${gs.antagonistHp}/${gs.antagonistMaxHp}.\n` : ''}${pacingGuide}
 NARRATIVE STYLE — NEIL GAIMAN:
-Write ONE SHORT paragraph. 80-120 words MAXIMUM. This is a hard limit. Do NOT write more than 120 words under any circumstances. Quality over quantity — every word must count.
-- DO NOT repeat or rephrase prose from previous turns. Each turn must advance the story with NEW narration.
-- ONE paragraph must cover: what happened, character reaction, and a hook or tension
-- Dialogue: 1-2 lines max, woven naturally into the paragraph
-- Layer sensory details sparingly: one strong image, not a catalog
+Write 2-3 paragraphs (150-300 words total). STRUCTURED:
+Paragraph 1 — RESULTS: What happened as a result of the player's choices. Vivid, specific. Reference the action they took.
+Paragraph 2 — REACTIONS: The PC and companion react. Include 1-2 lines of dialogue that reveal personality and alignment.
+Paragraph 3 — HOOK: A new development, tension, or fork in the road. End with something that demands a response.
+- DO NOT repeat or rephrase prose from previous turns. Each turn must be ENTIRELY NEW.
+- Sensory details: one strong image per paragraph, not a catalog
+- If combat occurred, weave it into Paragraph 1-2 naturally
 Make the world feel ancient and dangerous. End with a hook.
 
 Continue building the narrative, execute mechanics, and output JSON at the end.`
@@ -4099,9 +4104,9 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const quickeningParsed = parseQuickeningData(consequenceParsed.cleanText, gs.turn)
     narr = quickeningParsed.cleanText
 
-    // v2.19.0: Truncate long narrations — Turn 0: 150 chars, Turn 1: 400 words, Regular: 250 words
-    const maxWords = isFirst ? 200 : gs.turn <= 1 ? 400 : 250
-    const maxChars = isFirst ? 1500 : gs.turn <= 1 ? 3500 : 2000
+    // v2.24.0: Truncate long narrations — Turn 0: 200 words, Turn 1: 500 words, Regular: 350 words
+    const maxWords = isFirst ? 200 : gs.turn <= 1 ? 500 : 350
+    const maxChars = isFirst ? 1500 : gs.turn <= 1 ? 4000 : 3000
     if (narr.length > maxChars) {
       const words = narr.split(/\s+/)
       if (words.length > maxWords) {

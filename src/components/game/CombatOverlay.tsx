@@ -44,6 +44,7 @@ export default function CombatOverlay({
   onAction,
   onContinue,
   currentPower,
+  gameState,
 }: {
   combatState: CombatState
   onClose: () => void
@@ -51,11 +52,44 @@ export default function CombatOverlay({
   onAction: (text: string) => void
   onContinue: () => void
   currentPower?: any
+  gameState?: {
+    pcs?: Array<{ id: string; name: string; hp: number; maxHp: number; abilities?: string[]; personality?: string }>
+    activeNPCs?: Array<{ id: string; name: string; encounter_type?: string; conditions?: string[] }>
+    humanPCId?: string
+  }
 }) {
   const latest = combatState.log[combatState.log.length - 1]
   const current = combatState.turnOrder[combatState.currentTurnIndex]
   const allies = combatState.turnOrder.filter(c => c.isPlayer)
   const enemies = combatState.turnOrder.filter(c => !c.isPlayer)
+
+  // --- Contextual text helpers derived from gameState ---
+  const humanPC = gameState?.pcs?.find(p => p.id === gameState?.humanPCId) ?? gameState?.pcs?.[0]
+  const pcName = humanPC?.name ?? null
+
+  // Enemy: prefer the first alive enemy from activeNPCs, fallback to first combat enemy
+  const enemyName =
+    gameState?.activeNPCs?.[0]?.name ??
+    enemies.find(e => !e.isDead)?.name ??
+    null
+
+  // Magical ability: pick first ability from PC that sounds magical
+  const magicalKeywords = ['magic', 'spell', 'arcane', 'divine', 'fire', 'ice', 'lightning', 'shadow', 'holy', 'dark', 'enchant', 'summon', 'curse', 'heal', 'flame', 'frost', 'thunder']
+  const pcAbility = humanPC?.abilities?.find(a =>
+    magicalKeywords.some(k => a.toLowerCase().includes(k))
+  ) ?? humanPC?.abilities?.[0] ?? null
+
+  // Lowest-HP ally for healing
+  const lowestHPAlly = gameState?.pcs
+    ?.filter(p => !p.isDead && p.hp < p.maxHp)
+    ?.sort((a, b) => (a.hp / Math.max(1, a.maxHp)) - (b.hp / Math.max(1, b.maxHp)))
+    ?.[0]?.name ?? null
+
+  const attackText = enemyName ? `I strike ${enemyName} with my weapon!` : 'I attack with my weapon!'
+  const defendText = pcName ? `${pcName} takes a defensive stance!` : 'I take a defensive stance.'
+  const castSpellText = pcAbility && pcName ? `${pcName} channels ${pcAbility}!` : 'I cast a spell!'
+  const healText = lowestHPAlly ? `I focus my energy on healing ${lowestHPAlly}!` : 'I focus on healing.'
+  const fleeText = enemyName ? `I flee from ${enemyName}!` : 'I attempt to flee!'
   const statusIcon = (s: string) => {
     const key = s.toLowerCase()
     if (key.includes('burn')) return '🔥'
@@ -119,12 +153,12 @@ export default function CombatOverlay({
         </div>
       )}
       <div className="combat-action-bar">
-        <button className="combat-action-btn" onClick={() => onAction('I attack with my weapon!')}>⚔ Attack</button>
-        <button className="combat-action-btn" onClick={() => onAction('I take a defensive stance.')}>🛡 Defend</button>
-        <button className="combat-action-btn" onClick={() => onAction('I cast a spell.')}>🔮 Cast Spell</button>
-        <button className="combat-action-btn" onClick={() => onAction('I focus on healing.')}>🩺 Heal</button>
+        <button className="combat-action-btn" onClick={() => onAction(attackText)}>⚔ Attack</button>
+        <button className="combat-action-btn" onClick={() => onAction(defendText)}>🛡 Defend</button>
+        <button className="combat-action-btn" onClick={() => onAction(castSpellText)}>🔮 Cast Spell</button>
+        <button className="combat-action-btn" onClick={() => onAction(healText)}>🩺 Heal</button>
         <button className="combat-action-btn divine-power-btn" onClick={() => onAction(`I unleash ${currentPower?.powerName || 'divine power'}!`)} disabled={!currentPower}>✨ {currentPower ? `Divine Power (${currentPower.attunement}%)` : 'No Power'}</button>
-        <button className="combat-action-btn" onClick={onFlee} disabled={combatState.phase !== 'player_turn'}>🏃 Flee</button>
+        <button className="combat-action-btn" onClick={() => onAction(fleeText)} disabled={combatState.phase !== 'player_turn'}>🏃 Flee</button>
       </div>
     </div>
   )

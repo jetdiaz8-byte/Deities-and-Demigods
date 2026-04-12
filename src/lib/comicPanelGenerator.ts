@@ -109,26 +109,27 @@ export async function generatePanelImage(
   artStyle: string,
   turnNumber: number
 ): Promise<ComicPanelData> {
-  const placeholderImage = (() => {
-    const safeCaption = (panel.caption || 'Scene illustration loading...').replace(/[<>&]/g, '').slice(0, 80)
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
-      <defs>
-        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#1a1510"/>
-          <stop offset="100%" stop-color="#0d0a08"/>
-        </linearGradient>
-      </defs>
-      <rect width="800" height="600" fill="url(#g)"/>
-      <circle cx="150" cy="120" r="120" fill="rgba(212,175,55,0.16)"/>
-      <text x="400" y="292" text-anchor="middle" fill="#c9a84c" font-size="28" font-family="Georgia">Scene illustration loading...</text>
-      <text x="400" y="330" text-anchor="middle" fill="#8a7a60" font-size="18" font-family="Georgia">${safeCaption}</text>
-    </svg>`
-    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)))
-  })()
+  // Build the prompt using the existing helper
+  const builtPrompt = buildImagePrompt(narration, panel.caption || '', artStyle);
 
-  // NOTE: pollinations.ai is rate-limited (429) and unreliable.
-  // SceneIllustration.tsx now handles scene art via CSS atmospheric backgrounds.
-  // This function returns a styled SVG placeholder for comic-mode fallback.
+  // v2.24.0: Try real AI image first, fallback to SVG placeholder
+  try {
+    const res = await fetch('/api/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: builtPrompt, artStyle, size: '1344x768' }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.imageUrl) {
+        return { ...panel, imageUrl: data.imageUrl, isGenerating: false, error: undefined };
+      }
+    }
+  } catch (err) {
+    console.warn('AI image generation failed, using SVG fallback:', err);
+  }
+
+  // SVG fallback placeholder
   const keywords = extractSceneKeywords(panel.caption || narration).slice(0, 4).join(', ')
   const sceneLabel = (panel.caption || 'Scene').replace(/[<>&"']/g, '').slice(0, 60)
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">

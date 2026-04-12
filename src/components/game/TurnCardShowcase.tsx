@@ -222,14 +222,12 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
           transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
         }}
       >
-        <div className="flex flex-row" style={{ minHeight: '320px' }}>
-          {/* ── LEFT PANEL: Name + info (vertically centered) ──────── */}
+        {/* Desktop: horizontal layout. Mobile: vertical stacked layout */}
+        <div className="flex flex-col md:flex-row" style={{ minHeight: '288px' }}>
+          {/* ── LEFT PANEL: Name + info (vertically centered) — HIDDEN on mobile, shown as top bar ──── */}
           <div
-            className="flex flex-col justify-center items-start py-2 pl-3 pr-2 shrink-0"
+            className="flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start py-2 px-3 md:pl-3 md:pr-2 md:shrink-0"
             style={{
-              width: '28%',
-              minWidth: '120px',
-              maxWidth: '180px',
               opacity: fading ? 0 : 1,
               transition: 'opacity 0.4s',
             }}
@@ -283,10 +281,10 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             </div>
           </div>
 
-          {/* ── CENTER: Portrait (~480x288 showcase size — wow factor) ─────── */}
+          {/* ── CENTER: Portrait — 480x288px on desktop, full width on mobile (5"×3" at 96 DPI) ─────── */}
           <div
-            className="relative overflow-hidden flex-1 flex items-center justify-center"
-            style={{ minHeight: '320px' }}
+            className="relative overflow-hidden flex items-center justify-center w-full"
+            style={{ minHeight: '288px', maxHeight: '340px' }}
           >
             <PortraitImage key={portrait} portrait={portrait} charName={charName} fading={fading} />
 
@@ -296,17 +294,12 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             }} />
           </div>
 
-          {/* ── RIGHT PANEL: Controls + turn info ──────────────────── */}
+          {/* ── RIGHT PANEL: Controls + turn info — HIDDEN on mobile, shown as bottom bar ──── */}
           <div
-            className="flex flex-col justify-between py-2 pl-2 pr-3 shrink-0"
-            style={{
-              width: '18%',
-              minWidth: '80px',
-              maxWidth: '140px',
-            }}
+            className="flex flex-row md:flex-col justify-between items-center md:items-stretch py-1.5 px-3 md:py-2 md:pl-2 md:pr-3 md:shrink-0 md:w-[80px] md:min-w-[80px] md:max-w-[140px]"
           >
-            {/* Top: Controls */}
-            <div className="flex flex-col items-center gap-1">
+            {/* Desktop: Vertical controls */}
+            <div className="hidden md:flex flex-col items-center gap-1">
               <button
                 onClick={(e) => { e.stopPropagation(); goPrev() }}
                 className="w-6 h-6 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-xs"
@@ -330,15 +323,15 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
               </button>
             </div>
 
-            {/* Middle: Boss indicator */}
+            {/* Boss indicator */}
             {bossEntity && (
               <span className="text-[8px] uppercase tracking-wider text-center px-1 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-700/40" style={{ fontFamily: 'Cinzel, serif' }}>
                 Boss
               </span>
             )}
 
-            {/* Bottom: Turn + hide */}
-            <div className="flex flex-col items-center gap-1">
+            {/* Desktop: Bottom info */}
+            <div className="hidden md:flex flex-col items-center gap-1">
               <div className="text-[8px] text-[#5a4d30] font-mono">
                 Turn {turn}
               </div>
@@ -352,6 +345,14 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
               >
                 &#x2715;
               </button>
+            </div>
+
+            {/* Mobile: Horizontal controls */}
+            <div className="flex md:hidden items-center gap-2">
+              <button onClick={() => goPrev()} className="text-[#d4af37]/70 hover:text-[#d4af37] text-xs">&#9664;</button>
+              <button onClick={() => setPlaying(v => !v)} className="text-[#d4af37]/70 hover:text-[#d4af37] text-[10px]">{playing ? '\u23F8' : '\u25B6'}</button>
+              <button onClick={() => goNext()} className="text-[#d4af37]/70 hover:text-[#d4af37] text-xs">&#9654;</button>
+              <span className="text-[8px] text-[#5a4d30] font-mono">Turn {turn}</span>
             </div>
           </div>
         </div>
@@ -398,7 +399,7 @@ function PortraitImage({ portrait, charName, fading }: { portrait: string; charN
       src={portrait}
       alt={charName}
       className="object-contain"
-      style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.4s', maxWidth: '540px', maxHeight: '320px', width: '100%', height: 'auto' }}
+      style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.4s', maxWidth: '480px', maxHeight: '288px', width: '100%', height: 'auto' }}
       onError={() => setImgError(true)}
       loading="eager"
     />
