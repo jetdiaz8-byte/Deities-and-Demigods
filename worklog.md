@@ -119,3 +119,27 @@ Stage Summary:
 - 8 files modified, 290 insertions, 202 deletions
 - Commit: 8b44c6e pushed to https://github.com/jetdiaz8-byte/Deities-and-Demigods.git
 - All 7 fixes applied and verified
+
+---
+Task ID: 9
+Agent: Main Agent
+Task: v2.24.1 — Fix TTS 500 on Vercel + dice tray stuck showing '?'
+
+Work Log:
+- Investigated TTS 500 error: z-ai-web-dev-sdk requires /etc/.z-ai-config (only exists on dev sandbox)
+- The SDK's internal baseUrl (172.25.136.193:8080) is unreachable from Vercel serverless
+- Root cause: Line 542 in useGameEngine.ts forced 'neural' engine and overrode localStorage every mount
+- Switched default TTS engine from 'neural' to 'browser' (SpeechSynthesis API)
+- Browser TTS is 100% client-side, no server needed, works on all deployment targets
+- Added auto-switch: if neural TTS fails, automatically switches to browser and persists preference
+- Investigated dice tray: user reported dice showing "?" permanently after rolling
+- Found useEffect dependency cycle in SidebarDiceArea.tsx: `animatingKeys` was in deps array
+- When setAnimatingKeys(newKeys) fired, it created new Set ref → re-triggered effect → cleanup cleared setTimeout → animation timer killed before revealing value
+- Fixed by using animatingKeysRef (useRef) to track keys, removed animatingKeys from deps array
+- Added eslint-disable for exhaustive-deps since we intentionally want only diceRolls changes to trigger
+
+Stage Summary:
+- Modified: src/hooks/useGameEngine.ts — TTS default 'browser', auto-switch on neural failure
+- Modified: src/components/game/SidebarDiceArea.tsx — fixed animation dependency cycle bug
+- Commit: 59c9735 pushed to GitHub
+- Both issues now work correctly on Vercel deployment
