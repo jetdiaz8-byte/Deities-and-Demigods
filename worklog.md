@@ -341,3 +341,27 @@ Stage Summary:
 - Action buttons are context-aware — only shows relevant abilities for the current PC
 - DM narration provides battle context at the top of the overlay
 - Pushed as v2.30.0
+---
+Task ID: v2.31.0
+Agent: Main Agent
+Task: Name/title overlay on card showcase + image prompt improvement
+
+Work Log:
+- Moved name + title from below portrait to overlay on TOP in TurnCardShowcase
+  - Added gradient fade background (dark at top, transparent below) for readability
+  - pointer-events: none so it doesn't block card interactions
+  - Controls remain at bottom-right of portrait
+- Added name + title overlay on CharacterCard in IntroScreen showcase
+  - Same gradient overlay technique, absolute positioned above portrait
+  - Shows name, title/divine rank, and pantheon
+- Rewrote buildImagePrompt to use full DM narration instead of keyword extraction
+  - OLD: "dark fantasy illustration of crystal, shadow, forest, [mapped generic scene], dramatic lighting..."
+  - NEW: "Illustrate this fantasy scene: {full DM narration text up to 500 chars}. {Larry Elmore style prompt}"
+  - Strips dice notation, turn markers, HP/AC mentions that don't make sense visually
+  - The DM narration is already rich descriptive prose — perfect as an image prompt
+  - This matches what image.z.ai does: users paste narration directly and get rich scenes
+
+Stage Summary:
+- Card showcase name/title now appears overlaid on top of portrait in both intro screen and gameplay
+- Image generation now produces much richer scenes by using the full DM narration as the prompt
+- Pushed as v2.31.0
