@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { ALL_CHARACTERS, getPortraitPath } from '@/lib/characterData'
 import type { Character } from '@/lib/characterTypes'
 import { CharacterDetailModal } from './CharacterDetailModal'
@@ -222,137 +223,57 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
           transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
         }}
       >
-        {/* Desktop: horizontal layout. Mobile: vertical stacked layout */}
-        <div className="flex flex-col md:flex-row" style={{ minHeight: '288px' }}>
-          {/* ── LEFT PANEL: Name + info (vertically centered) — HIDDEN on mobile, shown as top bar ──── */}
+        {/* Portrait-first layout for right panel — portrait is dominant */}
+        <div className="flex flex-col">
+          {/* PORTRAIT: Full picture, 5" height (480px), object-contain, NO CROPPING */}
           <div
-            className="flex flex-row md:flex-col justify-between md:justify-center items-center md:items-start py-2 px-3 md:pl-3 md:pr-2 md:shrink-0"
-            style={{
-              opacity: fading ? 0 : 1,
-              transition: 'opacity 0.4s',
-            }}
-          >
-            <div
-              className="text-lg font-bold tracking-wide leading-tight"
-              style={{
-                fontFamily: 'Cinzel, serif',
-                color: '#f0c860',
-                textShadow: '0 0 10px rgba(212,175,55,0.3), 0 2px 4px rgba(0,0,0,0.8)',
-              }}
-            >
-              {charName}
-            </div>
-            {(charTitle || charDivineRank) && (
-              <div
-                className="text-[11px] tracking-wider mt-0.5 leading-tight"
-                style={{
-                  fontFamily: 'Cinzel, serif',
-                  color: '#9a8860',
-                  textShadow: '0 1px 3px rgba(0,0,0,0.8)',
-                }}
-              >
-                {[charDivineRank, charTitle].filter(Boolean).join(' / ')}
-              </div>
-            )}
-            {displayCharacter?.pantheon && (
-              <div
-                className="text-[9px] uppercase tracking-widest mt-1"
-                style={{ fontFamily: 'Cinzel, serif', color: '#d4af37' }}
-              >
-                {displayCharacter.pantheon}
-              </div>
-            )}
-            {/* Mini stat pills */}
-            {displayCharacter && (
-              <div className="flex flex-wrap gap-1 mt-1.5">
-                {displayCharacter.hp != null && <span className="text-[9px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">HP {displayCharacter.hp}</span>}
-                {displayCharacter.AC != null && <span className="text-[9px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">AC {displayCharacter.AC}</span>}
-                {displayCharacter.align && <span className="text-[9px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">{displayCharacter.align}</span>}
-              </div>
-            )}
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <button
-                onClick={() => setDetailOpen(true)}
-                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider transition-all text-[#d4af37]/60 hover:text-[#d4af37] border border-[#d4af37]/20 hover:border-[#d4af37]/50 hover:bg-black/40"
-                title="Inspect Character"
-              >
-                &#128269; Details
-              </button>
-            </div>
-          </div>
-
-          {/* ── CENTER: Portrait — 480x288px on desktop, full width on mobile (5"×3" at 96 DPI) ─────── */}
-          <div
-            className="relative overflow-hidden flex items-center justify-center w-full"
-            style={{ minHeight: '288px', maxHeight: '340px' }}
+            className="relative overflow-hidden flex items-center justify-center bg-[#0a0806]"
+            style={{ minHeight: '480px', maxHeight: '520px' }}
           >
             <PortraitImage key={portrait} portrait={portrait} charName={charName} fading={fading} />
-
-            {/* Subtle vignette around portrait edges */}
+            {/* Vignette */}
             <div className="absolute inset-0 pointer-events-none" style={{
-              boxShadow: 'inset 0 0 20px rgba(10,8,6,0.3)',
+              boxShadow: 'inset 0 0 30px rgba(10,8,6,0.4)',
             }} />
           </div>
 
-          {/* ── RIGHT PANEL: Controls + turn info — HIDDEN on mobile, shown as bottom bar ──── */}
+          {/* NAME + INFO BAR */}
           <div
-            className="flex flex-row md:flex-col justify-between items-center md:items-stretch py-1.5 px-3 md:py-2 md:pl-2 md:pr-3 md:shrink-0 md:w-[80px] md:min-w-[80px] md:max-w-[140px]"
+            className="flex items-center justify-between px-3 py-2 border-t border-[#2e2008]/60"
+            style={{
+              opacity: fading ? 0 : 1,
+              transition: 'opacity 0.4s',
+              background: 'rgba(13,10,7,0.6)',
+            }}
           >
-            {/* Desktop: Vertical controls */}
-            <div className="hidden md:flex flex-col items-center gap-1">
-              <button
-                onClick={(e) => { e.stopPropagation(); goPrev() }}
-                className="w-6 h-6 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-xs"
-                title="Previous"
+            <div className="flex items-center gap-2 min-w-0">
+              <div
+                className="text-sm font-bold tracking-wide leading-tight truncate"
+                style={{
+                  fontFamily: 'Cinzel, serif',
+                  color: '#f0c860',
+                  textShadow: '0 0 10px rgba(212,175,55,0.3), 0 2px 4px rgba(0,0,0,0.8)',
+                }}
               >
-                &#9664;
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); setPlaying(v => !v) }}
-                className="w-6 h-6 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-[10px]"
-                title={playing ? 'Pause' : 'Play'}
-              >
-                {playing ? '\u23F8' : '\u25B6'}
-              </button>
-              <button
-                onClick={(e) => { e.stopPropagation(); goNext() }}
-                className="w-6 h-6 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-xs"
-                title="Next"
-              >
-                &#9654;
-              </button>
-            </div>
-
-            {/* Boss indicator */}
-            {bossEntity && (
-              <span className="text-[8px] uppercase tracking-wider text-center px-1 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-700/40" style={{ fontFamily: 'Cinzel, serif' }}>
-                Boss
-              </span>
-            )}
-
-            {/* Desktop: Bottom info */}
-            <div className="hidden md:flex flex-col items-center gap-1">
-              <div className="text-[8px] text-[#5a4d30] font-mono">
-                Turn {turn}
+                {charName}
               </div>
-              <span className="text-[7px] text-[#3a3020]">
-                {allCharacters.length} portraits
-              </span>
-              <button
-                onClick={(e) => { e.stopPropagation(); toggleHidden() }}
-                className="w-5 h-5 flex items-center justify-center rounded text-[#5a4d30]/70 hover:text-[#8a7040] hover:bg-black/40 transition-all text-[10px]"
-                title="Hide Gallery"
-              >
-                &#x2715;
-              </button>
+              {(charTitle || charDivineRank) && (
+                <span className="text-[10px] text-[#7a5f20] hidden sm:inline truncate" style={{ fontFamily: 'Cinzel, serif' }}>
+                  {charTitle || charDivineRank}
+                </span>
+              )}
+              {displayCharacter?.pantheon && (
+                <Badge className="text-[8px] px-1 py-0 bg-[#1a1510] text-[#d4af37] border-[#3a3020] hidden lg:inline-flex">{displayCharacter.pantheon}</Badge>
+              )}
             </div>
-
-            {/* Mobile: Horizontal controls */}
-            <div className="flex md:hidden items-center gap-2">
-              <button onClick={() => goPrev()} className="text-[#d4af37]/70 hover:text-[#d4af37] text-xs">&#9664;</button>
-              <button onClick={() => setPlaying(v => !v)} className="text-[#d4af37]/70 hover:text-[#d4af37] text-[10px]">{playing ? '\u23F8' : '\u25B6'}</button>
-              <button onClick={() => goNext()} className="text-[#d4af37]/70 hover:text-[#d4af37] text-xs">&#9654;</button>
-              <span className="text-[8px] text-[#5a4d30] font-mono">Turn {turn}</span>
+            {/* Controls */}
+            <div className="flex items-center gap-1 flex-shrink-0">
+              <button onClick={(e) => { e.stopPropagation(); goPrev() }} className="w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-xs">&#8249;</button>
+              <button onClick={(e) => { e.stopPropagation(); setPlaying(v => !v) }} className="w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-[10px]">{playing ? '\u23F8' : '\u25B6'}</button>
+              <button onClick={(e) => { e.stopPropagation(); goNext() }} className="w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/70 hover:text-[#d4af37] hover:bg-black/40 transition-all text-xs">&#8250;</button>
+              <button onClick={(e) => { e.stopPropagation(); setDetailOpen(true) }} className="ml-1 w-7 h-7 flex items-center justify-center rounded text-[#d4af37]/50 hover:text-[#d4af37] hover:bg-black/40 transition-all text-[9px]" title="Inspect">{'\uD83D\uDD0D'}</button>
+              {bossEntity && <span className="ml-1 text-[7px] px-1 py-0.5 rounded bg-red-900/60 text-red-300 border border-red-700/40" style={{ fontFamily: 'Cinzel, serif' }}>Boss</span>}
+              <button onClick={(e) => { e.stopPropagation(); toggleHidden() }} className="ml-1 w-5 h-5 flex items-center justify-center rounded text-[#5a4d30]/70 hover:text-[#8a7040] hover:bg-black/40 transition-all text-[10px]">{'\u2715'}</button>
             </div>
           </div>
         </div>

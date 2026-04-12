@@ -25,6 +25,7 @@ import type { Character } from '@/lib/characterTypes'
 import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
 import { GameDialogs } from '@/components/game/GameDialogs'
+import { SidebarDiceArea } from '@/components/game/SidebarDiceArea'
 import { QuestJournalModal } from '@/components/game/QuestJournalModal'
 import { CombatTracker } from '@/components/game/CombatTracker'
 import { TestOfFaith } from '@/components/game/TestOfFaith'
@@ -80,7 +81,6 @@ export default function MythworldEngine() {
     ttsEngine, setTtsEngine,
     browserVoices, browserVoiceName, setBrowserVoiceName,
     isSpeaking,
-    narratorMode, setNarratorMode,
     tokenUsage,
     conversationHistory,
     narrRef,
@@ -500,10 +500,7 @@ export default function MythworldEngine() {
           onOpenQuestJournal={() => setShowQuestJournal(true)}
         />
 
-        {/* Dice rolls are now ONLY in the sidebar Dice Tray (SidebarDiceArea).
-            Previously they rendered here too, cluttering the DM Narration area. */}
-
-        {/* Main Content Area with Fixed Sidebar */}
+        {/* Main Content Area with Right Panel */}
         <div className="flex flex-1 relative overflow-hidden mythworld-main-layout">
           {/* Narrative Panel */}
           <div
@@ -522,11 +519,6 @@ export default function MythworldEngine() {
             <div className="relative">
               <span className="dragon-corner-tl">🐉</span>
               <span className="dragon-corner-br">🐉</span>
-              {/* Card Showcase — cinematic portrait gallery */}
-              <TurnCardShowcase
-                turn={gameState?.turn ?? 0}
-                gameState={gameState}
-              />
               {(narrativeContent ?? []).map((item, idx) => {
                 const isLast = idx === (narrativeContent ?? []).length - 1
                 const collapseClass = isLast && shouldCollapseNarration && !showFullNarration
@@ -572,68 +564,6 @@ export default function MythworldEngine() {
             {/* Combat Tracker */}
             <CombatTracker gameState={gameState} />
 
-            {/* Smart Narrator Controls */}
-            {lastDMNarrative && (
-              <div className="relative z-20 mb-2 mt-4">
-                <div className="flex items-center justify-between p-1.5 sm:p-2 rounded-lg border border-[#2a2010]" style={{
-                  background: 'linear-gradient(135deg, rgba(26,21,16,0.95), rgba(16,12,8,0.95))',
-                  backdropFilter: 'blur(8px)',
-                }}>
-                  {/* Narrator Mode Toggle */}
-                  <div className="flex items-center gap-1">
-                    {(['auto', 'manual', 'off'] as const).map(mode => (
-                      <button
-                        key={mode}
-                        onClick={() => {
-                          unlockTTS()
-                          setNarratorMode(mode)
-                        }}
-                        className={`min-h-[44px] min-w-[44px] flex items-center justify-center px-1.5 py-0.5 sm:px-2 sm:py-1 rounded text-[8px] sm:text-[10px] font-title uppercase tracking-wider transition-all ${
-                          narratorMode === mode
-                            ? 'bg-[rgba(212,175,55,.15)] text-[#d4af37] border border-[#d4af37]'
-                            : 'text-[#5a4a30] border border-transparent hover:text-[#8a7a50] hover:border-[#3a3020]'
-                        }`}
-                      >
-                        {mode === 'auto' ? '\u{1F50A}' : mode === 'manual' ? '\u{1F508}' : '\u{1F507}'} <span className="hidden sm:inline">{mode}</span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Speaking indicator */}
-                  <div className="flex items-center gap-2">
-                    {isSpeaking ? (
-                      <button
-                        onClick={stopSpeaking}
-                        className="min-h-[44px] flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded text-xs transition-all"
-                        style={{
-                          background: 'rgba(200,50,50,.15)',
-                          border: '1px solid rgba(200,50,50,.3)',
-                          color: '#e08080',
-                        }}
-                      >
-                        <span className="inline-block w-2 h-2 rounded-full bg-red-400 animate-pulse" />
-                        <span className="hidden sm:inline">Speaking... Click to stop</span>
-                      </button>
-                    ) : narratorMode === 'manual' ? (
-                      <button
-                        onClick={speakNarrative}
-                        className="min-h-[44px] flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded text-xs transition-all hover:bg-[rgba(212,175,55,.1)]"
-                        style={{
-                          background: 'rgba(42,32,16,.5)',
-                          border: '1px solid #3a3020',
-                          color: '#c9a84c',
-                        }}
-                      >
-                        {'\u{1F50A}'} <span className="hidden sm:inline">Speak Narration</span>
-                      </button>
-                    ) : narratorMode === 'auto' ? (
-                      <span className="text-[10px] text-[#5a4a30] italic font-narrative hidden sm:inline">Auto-narrating</span>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Human Choice Panel */}
             <ChoicePanel
               gameState={gameState}
@@ -652,7 +582,22 @@ export default function MythworldEngine() {
             <div className="fog-overlay" />
           </div>
 
-          {/* Desktop Sidebar + Mobile Sheet Drawer */}
+          {/* Right Panel: Portrait Gallery + Dice Tray */}
+          <div className="hidden md:flex flex-col w-[320px] fixed right-0 top-[52px] bottom-0 z-10 border-l border-[#2e2008] overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(13,10,7,0.98), rgba(8,6,4,0.98))' }}>
+            {/* Portrait Gallery */}
+            <div className="flex-1 overflow-y-auto scroll-parchment">
+              <TurnCardShowcase
+                turn={gameState?.turn ?? 0}
+                gameState={gameState}
+              />
+            </div>
+            {/* Dice Tray */}
+            <div className="flex-shrink-0 max-h-[280px] overflow-y-auto">
+              <SidebarDiceArea diceRolls={gameState?.lastDiceRolls} />
+            </div>
+          </div>
+
+          {/* Desktop Sidebar Icon Strip + Mobile Sheet Drawer */}
           <GameSidebar
             gameState={gameState}
             activeTab={activeTab}

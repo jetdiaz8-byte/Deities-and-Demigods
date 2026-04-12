@@ -40,8 +40,8 @@ export interface GameHeaderProps {
   isSpeaking: boolean
   ttsVoice: string
   setTtsVoice: (voice: string) => void
-  ttsEngine: 'browser' | 'neural'
-  setTtsEngine: (engine: 'browser' | 'neural') => void
+  ttsEngine: 'browser' | 'edge'
+  setTtsEngine: (engine: 'browser' | 'edge') => void
   browserVoices: SpeechSynthesisVoice[]
   browserVoiceName: string
   setBrowserVoiceName: (name: string) => void
@@ -269,7 +269,7 @@ export function GameHeader({
           </div>
         )}
 
-        {/* Voice Narration Controls - Dual Engine */}
+        {/* Voice Narration Controls */}
         <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-[#1a1510] border border-[#3a3020] rounded-lg min-w-0">
           {isSpeaking ? (
             <Button
@@ -303,11 +303,11 @@ export function GameHeader({
               ⚡ Browser
             </button>
             <button
-              onClick={() => { setTtsEngine('neural'); localStorage.setItem('ddg_tts_engine', 'neural'); }}
-              className={`px-2 py-1 text-[10px] font-medium transition-all ${ttsEngine === 'neural' ? 'bg-[#2a3a5a] text-[#7ac0e0] border-r border-[#3a3020]' : 'text-[#807060] hover:text-[#c9a84c]'}`}
-              title="Neural Voices — higher quality, uses server"
+              onClick={() => { setTtsEngine('edge'); localStorage.setItem('ddg_tts_engine', 'edge'); }}
+              className={`px-2 py-1 text-[10px] font-medium transition-all ${ttsEngine === 'edge' ? 'bg-[#2a3a5a] text-[#7ac0e0] border-r border-[#3a3020]' : 'text-[#807060] hover:text-[#c9a84c]'}`}
+              title="Edge TTS — Microsoft Neural Voices, premium quality"
             >
-              🧠 Neural
+              🎙️ Edge
             </button>
           </div>
           {/* Voice Selector — changes based on engine */}
@@ -334,15 +334,15 @@ export function GameHeader({
               </SelectTrigger>
               <SelectContent className="bg-[#1a1510] border-[#3a3020]">
                 <SelectItem value="guy" className="text-xs text-[#c9a84c]">🧙 DM (Guy)</SelectItem>
-                <SelectItem value="christopher" className="text-xs text-[#c9a84c]">📜 Christopher</SelectItem>
-                <SelectItem value="brian" className="text-xs text-[#c9a84c]">🗡️ Brian</SelectItem>
-                <SelectItem value="ryan" className="text-xs text-[#c9a84c]">👑 Ryan (British)</SelectItem>
-                <SelectItem value="aria" className="text-xs text-[#c9a84c]">✨ Aria</SelectItem>
-                <SelectItem value="jenny" className="text-xs text-[#c9a84c]">🌟 Jenny</SelectItem>
-                <SelectItem value="connor" className="text-xs text-[#c9a84c]">🍀 Connor (Irish)</SelectItem>
-                <SelectItem value="thomas" className="text-xs text-[#c9a84c]">📖 Thomas (Storyteller)</SelectItem>
-                <SelectItem value="davis" className="text-xs text-[#c9a84c]">🏛️ Davis (Sage)</SelectItem>
-                <SelectItem value="jason" className="text-xs text-[#c9a84c]">🌑 Jason (Mysterious)</SelectItem>
+                <SelectItem value="alan" className="text-xs text-[#c9a84c]">📜 Elder (Alan)</SelectItem>
+                <SelectItem value="andrew" className="text-xs text-[#c9a84c]">⚔️ Battle (Andrew)</SelectItem>
+                <SelectItem value="brian" className="text-xs text-[#c9a84c]">🗡️ Guide (Brian)</SelectItem>
+                <SelectItem value="davis" className="text-xs text-[#c9a84c]">🏛️ Sage (Davis)</SelectItem>
+                <SelectItem value="thomas" className="text-xs text-[#c9a84c]">📖 Scholar (Thomas)</SelectItem>
+                <SelectItem value="aria" className="text-xs text-[#c9a84c]">✨ Mystic (Aria)</SelectItem>
+                <SelectItem value="jenny" className="text-xs text-[#c9a84c]">🌟 Bard (Jenny)</SelectItem>
+                <SelectItem value="sonia" className="text-xs text-[#c9a84c]">🔮 Oracle (Sonia)</SelectItem>
+                <SelectItem value="michelle" className="text-xs text-[#c9a84c]">👑 Priestess (Michelle)</SelectItem>
               </SelectContent>
             </Select>
           )}

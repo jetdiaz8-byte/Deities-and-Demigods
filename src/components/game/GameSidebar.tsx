@@ -11,7 +11,6 @@ import { BookOpen, ScrollText, Star, Crown, Skull, Sparkles, Swords, Users, Map 
 import { NarrativeSection } from '@/components/game/GameComponents'
 import CharacterCard from '@/components/game/CharacterCard'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
-import { SidebarDiceArea } from '@/components/game/SidebarDiceArea'
 import { hpCls, aCol, getEntityPortrait, getAbilityBonus } from '@/lib/gameHelpers'
 import { getProphecyById } from '@/lib/prophecyData'
 import type { GameState, SaveSlot } from '@/lib/gameTypes'
@@ -221,8 +220,8 @@ export function GameSidebar({
           {/* ── Spacer ── */}
           <div className="flex-1" />
 
-          {/* ── Bottom: Region indicator + Dice tray ── */}
-          <div className="w-full flex flex-col items-center gap-1 pb-2 relative flex-shrink-0">
+          {/* ── Bottom: Region indicator + Dice icon ── */}
+          <div className="w-full flex flex-col items-center gap-1 pb-2 flex-shrink-0">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button className="w-10 h-8 rounded-lg flex items-center justify-center text-[#7a5f20] hover:text-[#d4af37] hover:bg-[#1a1510] transition-all">
@@ -231,13 +230,6 @@ export function GameSidebar({
               </TooltipTrigger>
               <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs max-w-[180px]">{locText}</TooltipContent>
             </Tooltip>
-            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-[#7a5f20] opacity-60">
-              <span className="text-lg">🎲</span>
-            </div>
-            {/* Dice tray — floats to the left of the icon strip */}
-            <div className="absolute bottom-0 right-full z-20" style={{ paddingRight: 4, width: 220 }}>
-              <SidebarDiceArea diceRolls={gameState.lastDiceRolls} />
-            </div>
           </div>
         </div>
       </TooltipProvider>
@@ -1075,12 +1067,11 @@ function NPCDetailCard({ npc, expanded, onToggle, onPortraitClick }: {
                 onPortraitClick()
               }}
             >
-              <Image
+              <img
                 src={getEntityPortrait(npc)}
                 alt={npc.name}
-                fill
                 className="object-contain"
-                unoptimized
+                loading="lazy"
               />
             </div>
             <div>
