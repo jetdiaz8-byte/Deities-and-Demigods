@@ -291,3 +291,28 @@ Stage Summary:
 - Commit: 6f4ed36 pushed to GitHub
 - TTS triple-guard system prevents all known repeat scenarios
 - Right panel with portrait gallery + dice tray restored on desktop
+---
+Task ID: v2.29.0
+Agent: Main Agent
+Task: Enable FANTASY SCENE image generation always-on, full-width
+
+Work Log:
+- Searched codebase for FANTASY SCENE / image generation code
+- Found the feature was gated behind `comicMode` toggle in useGameEngine.ts (line 4192)
+- Found ComicPanel rendered only when comicMode is true in MythworldPage.tsx (line 539)
+- Found image generation API at /api/generate-image/route.ts using z-ai-web-dev-sdk
+- Found comicPanelGenerator.ts with prompt builder and SVG fallback logic
+- Removed `if (comicMode)` guard from useGameEngine.ts — scene images now always generate
+- Removed `comicMode &&` check from MythworldPage.tsx — ComicPanel always renders when panels exist
+- Added `w-full` to ComicPanel wrapper div for explicit full-width
+- Added `comic-grid-1` CSS class (always `1fr`) for single-panel layout
+- Updated ComicPanel.tsx to use `comic-grid-1` when panels.length === 1
+- Scene images now span the full width of the DM narration panel
+- Kept 4:3 aspect ratio (user confirmed current height is good)
+
+Stage Summary:
+- FANTASY SCENE image generation is now always active for every DM turn
+- Images render at full width of the narration panel (same width as DM text)
+- Single panel layout uses comic-grid-1 (1fr) instead of comic-grid-2 (1fr 1fr on desktop)
+- ComicMode sidebar toggle still exists but no longer gates image generation
+- Pushed as v2.29.0
