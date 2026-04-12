@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing prompt' }, { status: 400 });
     }
 
+    console.log(`🖼️ [generate-image] prompt length: ${prompt.length}, style: ${artStyle}, size: ${size}`);
+
     // v2.24.0: Real AI image generation via z-ai-web-dev-sdk
     const zai = await ZAI.create();
     const response = await zai.images.generations.create({
@@ -53,6 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     const imageUrl = `data:image/png;base64,${imageBase64}`;
+    console.log(`🖼️ [generate-image] SUCCESS — image size: ${imageBase64.length} chars`);
     return NextResponse.json({ imageUrl });
   } catch (error) {
     console.error('Image generation failed:', error);

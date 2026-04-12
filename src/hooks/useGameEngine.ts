@@ -4198,20 +4198,25 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         (gs.activeNPCs || []).some(n => n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS') ||
         ((res.dice_rolls || []).length > 0) ||
         ((res.damage_dealt || []).length > 0)
-      const seededPanels = await generateComicPanels(displayedText || narr, isCombatScene, { artStyle: comicArtStyle, maxPanels: 1 })
+      const narrationForImage = displayedText || narr
+      console.log(`🖼️ Scene image gen — turn:${gs.turn}, narrLen:${narrationForImage?.length || 0}, combat:${isCombatScene}`)
+      const seededPanels = await generateComicPanels(narrationForImage, isCombatScene, { artStyle: comicArtStyle, maxPanels: 1 })
       const cachedTurnImage = sceneImageByTurn[gs.turn]
       if (cachedTurnImage) {
+        console.log(`🖼️ Using cached image for turn ${gs.turn}`)
         setComicPanels(seededPanels.map(panel => ({ ...panel, imageUrl: cachedTurnImage, isGenerating: false, error: undefined })))
-        return
-      }
-      setComicPanels(seededPanels)
-      const renderedPanels = await Promise.all(
-        seededPanels.map(panel => generatePanelImage(panel, displayedText || narr, comicArtStyle, gs.turn)),
-      )
-      setComicPanels(renderedPanels)
-      const firstImage = renderedPanels.find(p => p.imageUrl)?.imageUrl
-      if (firstImage) {
-        setSceneImageByTurn(prev => ({ ...prev, [gs.turn]: firstImage }))
+      } else {
+        console.log(`🖼️ Generating new AI image for turn ${gs.turn}...`)
+        setComicPanels(seededPanels)
+        const renderedPanels = await Promise.all(
+          seededPanels.map(panel => generatePanelImage(panel, narrationForImage, comicArtStyle, gs.turn)),
+        )
+        console.log(`🖼️ Image generated — panels: ${renderedPanels.length}, hasImage: ${!!renderedPanels[0]?.imageUrl}, isPlaceholder: ${renderedPanels[0]?.imageUrl?.startsWith('data:image/svg')}`)
+        setComicPanels(renderedPanels)
+        const firstImage = renderedPanels.find(p => p.imageUrl)?.imageUrl
+        if (firstImage) {
+          setSceneImageByTurn(prev => ({ ...prev, [gs.turn]: firstImage }))
+        }
       }
     } catch (sceneErr) {
       console.warn('Scene image generation failed:', sceneErr)
