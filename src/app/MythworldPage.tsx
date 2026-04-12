@@ -619,6 +619,7 @@ export default function MythworldEngine() {
           <CombatOverlay
             combatState={combatState as any}
             gameState={gameState as any}
+            lastDMNarrative={lastDMNarrative}
             onClose={() => setCombatOverlayMinimized(true)}
             onFlee={() => submitQuickAction('I attempt to flee from combat!')}
             onAction={submitQuickAction}
