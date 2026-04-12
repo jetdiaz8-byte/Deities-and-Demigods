@@ -13,7 +13,6 @@ import { PartySelectionScreen } from '@/components/game/PartySelectionScreen'
 import { GameHeader } from '@/components/game/GameHeader'
 import { LoreGlossaryProvider } from '@/components/game/LoreGlossaryCard'
 import { EquipmentTooltipProvider } from '@/components/game/EquipmentTooltip'
-import { TurnCardShowcase } from '@/components/game/TurnCardShowcase'
 import PartyBar from '@/components/game/PartyBar'
 import CharacterCard from '@/components/game/CharacterCard'
 import CombatOverlay from '@/components/game/CombatOverlay'
@@ -25,7 +24,6 @@ import type { Character } from '@/lib/characterTypes'
 import { ChoicePanel } from '@/components/game/ChoicePanel'
 import { GameSidebar } from '@/components/game/GameSidebar'
 import { GameDialogs } from '@/components/game/GameDialogs'
-import { SidebarDiceArea } from '@/components/game/SidebarDiceArea'
 import { QuestJournalModal } from '@/components/game/QuestJournalModal'
 import { CombatTracker } from '@/components/game/CombatTracker'
 import { TestOfFaith } from '@/components/game/TestOfFaith'
@@ -492,7 +490,7 @@ export default function MythworldEngine() {
           {/* Narrative Panel */}
           <div
             ref={narrRef}
-            className={`flex-1 min-w-0 overflow-y-auto p-2 sm:p-3 md:p-4 pb-6 md:pb-8 md:mr-80 scroll-smooth ${atmosphereClass}`}
+            className={`flex-1 min-w-0 overflow-y-auto p-2 sm:p-3 md:p-4 pb-6 md:pb-8 scroll-smooth ${atmosphereClass}`}
             style={{
               background: gameState?.act === 'act1'
                 ? 'rgba(6,4,3,.98)'
@@ -567,21 +565,6 @@ export default function MythworldEngine() {
             <div style={{ height: '170px', flexShrink: 0 }} />
             {/* Fog of War Overlay */}
             <div className="fog-overlay" />
-          </div>
-
-          {/* Right Panel: Portrait Gallery + Dice Tray */}
-          <div className="hidden md:flex flex-col w-[320px] fixed right-0 top-[52px] bottom-0 z-10 border-l border-[#2e2008] overflow-hidden" style={{ background: 'linear-gradient(180deg, rgba(13,10,7,0.98), rgba(8,6,4,0.98))' }}>
-            {/* Portrait Gallery */}
-            <div className="flex-1 overflow-y-auto scroll-parchment">
-              <TurnCardShowcase
-                turn={gameState?.turn ?? 0}
-                gameState={gameState}
-              />
-            </div>
-            {/* Dice Tray */}
-            <div className="flex-shrink-0 max-h-[280px] overflow-y-auto">
-              <SidebarDiceArea diceRolls={gameState?.lastDiceRolls} />
-            </div>
           </div>
 
           {/* Desktop Sidebar Icon Strip + Mobile Sheet Drawer */}
