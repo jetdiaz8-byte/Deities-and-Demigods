@@ -501,7 +501,7 @@ export function IntroScreen({
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 transition={{ delay: 1.4, duration: 0.5 }}
                 className="text-center mb-4 italic leading-relaxed text-sm"
-                style={{ fontFamily: 'var(--font-dialogue)', color: '#D4C8A0' }}>
+                style={{ fontFamily: 'var(--font-narrative)', color: '#D4C8A0' }}>
                 There is an object. It has had several names. The people who found it gave it names the way people give names to things they cannot explain: carefully, with a kind of reverence that is indistinguishable from fear. Each time a new campaign begins, the object has a different name. The gods do not play fair. And sometimes, the prophecy chooses the wrong hero on purpose.
               </motion.p>
 
