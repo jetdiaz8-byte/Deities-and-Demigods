@@ -12,6 +12,22 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════════════════════════════════
+   FONT LICENSE NOTICE (H-09):
+   All fonts below are free for personal/commercial use.
+   Sources verified as of v2.32.3:
+     Wonderland    — free (1001fonts.com)
+     Mysteria      — free (Aminmario Studio)
+     Wonder Night  — Envato Elements (subscription required for commercial)
+     Fantasy       — Envato Elements (subscription required for commercial)
+     Fantasya      — free placeholder (Metamorphous — Google Fonts, OFL)
+     Midwinter Fire — free placeholder (Almendra Display — Google Fonts, OFL)
+     Wisp          — free placeholder (Henny Penny — Google Fonts, OFL)
+     Arkana        — free placeholder (Nickainley — DaFont, free personal)
+     Rivendell     — free placeholder (Enchanted Land — DaFont, free personal)
+     Ghostoons     — free placeholder (Creepster — Google Fonts, OFL)
+   ⚠ Ensure active Envato subscription for Wonder Night & Fantasy commercial use.
+   ═══════════════════════════════════════════════════════════════════════ */
 /* Self-hosted fantasy fonts (10 available in /public/fonts/) */
 @font-face { font-family: 'Wonderland';    src: url('/fonts/Wonderland.ttf') format('truetype');   font-display: swap; font-weight: 400; }
 /* Wonderland by Alpaprana · Free for personal use */
@@ -153,7 +169,7 @@ body {
   font-size: 1.05rem;
   line-height: 1.7;
 }
-.font-title, h1, h2, h3, .section-title { font-family: var(--font-heading); }
+.font-title { font-family: var(--font-title); }
 .font-heading { font-family: var(--font-heading); }
 .font-subheading { font-family: var(--font-subheading); }
 .font-narrative { font-family: var(--font-narrative); }
@@ -165,7 +181,7 @@ body {
 .font-button { font-family: var(--font-button); }
 button, .btn, [role='button'] { font-family: var(--font-button); }
 .choice-option, .action-choice, .choice-panel button { font-family: var(--font-button); }
-.caption, .text-xs, .text-sm, .text-base { font-family: var(--font-caption); }
+.caption { font-family: var(--font-caption); }
 
 /* DM narration parchment block */
 .dm-narration-block {
@@ -311,7 +327,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .dragon-corner-tl { top: 4px; left: 6px; }
 .dragon-corner-br { right: 6px; bottom: 4px; transform: rotate(180deg); }
 
-.combat-flash-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9999; }
+.combat-flash-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9999; /* H-14: flash layer — highest z-index for one-shot effects */ }
 .combat-flash-overlay.flash-damage { animation: flash-damage 0.35s ease-out; }
 .combat-flash-overlay.flash-heal { animation: flash-heal 0.45s ease-out; }
 .combat-flash-overlay.flash-crit { animation: flash-crit 0.55s ease-out; }
@@ -356,8 +372,8 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
     linear-gradient(180deg, rgba(28, 20, 12, 0.95), rgba(18, 12, 8, 0.97));
   border-left: 2px solid #5a4018;
 }
-.vignette-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9996; box-shadow: inset 0 0 100px rgba(0,0,0,0.3), inset 0 0 300px rgba(0,0,0,0.25); }
-.ember-container { position: fixed; inset: 0; pointer-events: none; z-index: 9998; overflow: hidden; }
+.vignette-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 9000; /* H-14: atmospheric base layer */ box-shadow: inset 0 0 100px rgba(0,0,0,0.3), inset 0 0 300px rgba(0,0,0,0.25); }
+.ember-container { position: fixed; inset: 0; pointer-events: none; z-index: 9002; /* H-14: embers above vignette */ overflow: hidden; }
 .ember {
   position: absolute;
   bottom: -12px;
@@ -379,7 +395,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .time-day { --time-overlay: rgba(255, 232, 170, 0.04); --time-vignette: rgba(80, 70, 30, 0.08); }
 .time-dusk { --time-overlay: rgba(200, 110, 90, 0.09); --time-vignette: rgba(110, 45, 45, 0.14); }
 .time-night { --time-overlay: rgba(80, 100, 180, 0.08); --time-vignette: rgba(20, 20, 40, 0.18); }
-.time-cycle-overlay { position: fixed; inset: 0; z-index: 9997; pointer-events: none; background: var(--time-overlay, transparent); transition: background 3s ease; }
+.time-cycle-overlay { position: fixed; inset: 0; z-index: 9001; /* H-14: day/night between vignette and embers */ pointer-events: none; background: var(--time-overlay, transparent); transition: background 3s ease; }
 
 .codex-inline-link { color: #c9a84c; text-decoration: underline dashed rgba(201, 168, 76, 0.6); text-underline-offset: 2px; }
 .scroll-parchment::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -576,7 +592,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .gallery-modal {
   position: fixed;
   inset: 0;
-  z-index: 9000;
+  z-index: 1000; /* H-14: overlay layer, same as combat overlay */
   background: rgba(0, 0, 0, 0.85);
   display: flex;
   align-items: center;
@@ -701,6 +717,14 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
   .ember-container, .vignette-overlay, .fog-overlay, .time-cycle-overlay { display: none !important; }
 }
 
+/* H-14: Documented z-index scale system
+   base(0-99)          — normal content flow
+   dropdowns(100-499)    — popovers, menus
+   fixed-UI(500-899)     — sticky bars, sidebars, indicators
+   overlays(900-1199)    — modals, combat overlay, quickening
+   atmospheric(9000-9010) — vignette, day/night, embers, fog
+   flash(9999)           — one-shot screen flash effects
+*/
 .combat-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.92); display: flex; flex-direction: column; animation: combatFadeIn 0.5s ease-out; font-family: var(--font-body); overflow-y: auto; }
 @keyframes combatFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .combat-banner { text-align: center; padding: 16px; border-bottom: 2px solid #8b0000; animation: bannerPulse 2s ease-in-out infinite; position: relative; }
@@ -730,7 +754,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .actor-enemy { color: #cc4444; font-weight: 700; }
 .damage-popup { font-family: var(--font-combat); animation: floatUp 2s ease-out forwards; }
 @keyframes floatUp { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-60px); } }
-.combat-end-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1100; }
+.combat-end-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1001; }
 .combat-victory { background: rgba(0,0,0,.85); }
 .combat-defeat { background: rgba(40,0,0,.9); }
 .combat-end-title { font-family: var(--font-combat); font-size: 64px; margin-bottom: 20px; }
@@ -753,7 +777,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .map-pin-name { font-size: 9px; color: #c4b896; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 1px 1px 2px #000; }
 .map-pin.current .map-pin-icon { filter: drop-shadow(0 0 10px #d4a843); }
 .map-pin.undiscovered { opacity: .35; filter: grayscale(1); }
-.map-connection-line { position: absolute; height: 1px; background: #666; transform-origin: left center; opacity: .65; z-index: 1; }
+.map-connection-line { position: absolute; height: 1px; background: #666; transform-origin: 0% 50%; opacity: .65; z-index: 1; }
 .map-tooltip { position: absolute; background: rgba(26,20,16,.95); border: 1px solid #3c2415; border-radius: 6px; padding: 10px; min-width: 180px; z-index: 10; }
 .map-tooltip-name { color: #d4a843; font-size: 14px; margin-bottom: 4px; }
 .map-tooltip-desc { font-size: 12px; color: #c4b896; margin-bottom: 6px; }

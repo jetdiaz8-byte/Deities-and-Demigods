@@ -392,8 +392,6 @@ export function useSceneMusic(gameState: {
   const [detectedTheme, setDetectedTheme] = useState<SceneTheme>(() =>
     gameState ? detectSceneTheme(gameState) : 'forest'
   )
-  // Derive theme: manual override takes priority, else auto-detect
-  const effectiveTheme = manualOverride.current || detectedTheme
   // Sync to state when autoTheme changes and no manual override
   useEffect(() => {
     if (!manualOverride.current) {

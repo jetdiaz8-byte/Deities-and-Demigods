@@ -17,13 +17,9 @@ function isAllowedLocalhost(url: string): boolean {
   }
 }
 
-const CORS_HEADERS = {
-  'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-}
-
+// H-01: No CORS wildcard — same-origin requests only. No Access-Control-Allow-Origin.
 export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: CORS_HEADERS })
+  return new NextResponse(null, { status: 204 })
 }
 
 export async function POST(request: NextRequest) {
@@ -32,13 +28,13 @@ export async function POST(request: NextRequest) {
     const { systemPrompt, userMessage, messages, temperature, maxOutputTokens, max_tokens, lmStudioUrl, model } = body
 
     if (!userMessage && (!Array.isArray(messages) || messages.length === 0)) {
-      return NextResponse.json({ error: 'Missing required field: userMessage or messages' }, { status: 400, headers: CORS_HEADERS })
+      return NextResponse.json({ error: 'Missing required field: userMessage or messages' }, { status: 400 })
     }
 
     // Default to localhost:1234 (LM Studio default) — SSRF-protected
     const baseUrl = (lmStudioUrl || 'http://localhost:1234').replace(/\/+$/, '')
     if (!isAllowedLocalhost(baseUrl)) {
-      return NextResponse.json({ error: 'URL must be a localhost address (SSRF protection)' }, { status: 403, headers: CORS_HEADERS })
+      return NextResponse.json({ error: 'URL must be a localhost address (SSRF protection)' }, { status: 403 })
     }
     const endpoint = `${baseUrl}/v1/chat/completions`
 
@@ -71,11 +67,15 @@ export async function POST(request: NextRequest) {
 
     console.log(`[LM Studio Proxy] → ${endpoint} (model: ${model || 'default'})`)
 
+    // H-10: 30-second timeout on external fetch
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30_000)
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody),
-    })
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId))
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => 'Unknown error')
@@ -85,13 +85,13 @@ export async function POST(request: NextRequest) {
       if (response.status === 0 || errorText.includes('ECONNREFUSED') || errorText.includes('fetch failed')) {
         return NextResponse.json(
           { error: 'Cannot connect to LM Studio. Make sure it is running and the Local Server is started (default: http://localhost:1234)' },
-          { status: 502, headers: CORS_HEADERS },
+          { status: 502 },
         )
       }
 
       return NextResponse.json(
         { error: `LM Studio error ${response.status}: ${errorText.slice(0, 200)}` },
-        { status: response.status, headers: CORS_HEADERS },
+        { status: response.status },
       )
     }
 
@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       text: content,
       modelUsed,
       fallbackUsed: false,
-    }, { headers: CORS_HEADERS })
+    })
 
   } catch (error) {
     console.error('[LM Studio Proxy] Unexpected error:', error)
@@ -131,13 +131,13 @@ export async function POST(request: NextRequest) {
     if (message.includes('ECONNREFUSED') || message.includes('fetch failed') || message.includes('connect')) {
       return NextResponse.json(
         { error: 'Cannot connect to LM Studio. Make sure it is running and the Local Server is started.' },
-        { status: 502, headers: CORS_HEADERS },
+        { status: 502 },
       )
     }
 
     return NextResponse.json(
       { error: `Server error: ${message}` },
-      { status: 500, headers: CORS_HEADERS },
+      { status: 500 },
     )
   }
 }
@@ -148,20 +148,24 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url)
     const baseUrl = (url.searchParams.get('url') || 'http://localhost:1234').replace(/\/+$/, '')
     if (!isAllowedLocalhost(baseUrl)) {
-      return NextResponse.json({ connected: false, error: 'URL must be a localhost address (SSRF protection)' }, { status: 403, headers: CORS_HEADERS })
+      return NextResponse.json({ connected: false, error: 'URL must be a localhost address (SSRF protection)' }, { status: 403 })
     }
 
+    // H-10: 15-second timeout for connectivity check
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 15_000)
     const response = await fetch(`${baseUrl}/v1/models`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
-    })
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId))
 
     if (!response.ok) {
       return NextResponse.json({
         connected: false,
         error: `LM Studio returned ${response.status}`,
         url: baseUrl,
-      }, { status: 200, headers: CORS_HEADERS })
+      }, { status: 200 })
     }
 
     const data = await response.json()
@@ -174,7 +178,7 @@ export async function GET(request: NextRequest) {
       url: baseUrl,
       models,
       modelCount: models.length,
-    }, { headers: CORS_HEADERS })
+    })
 
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
@@ -184,6 +188,6 @@ export async function GET(request: NextRequest) {
         ? 'Cannot connect to LM Studio. Make sure it is running and the Local Server is started.'
         : message,
       url: request.nextUrl.searchParams.get('url') || 'http://localhost:1234',
-    }, { status: 200, headers: CORS_HEADERS })
+    }, { status: 200 })
   }
 }

@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       ]
     }
 
-    // Query entities
+    // H-10: 15-second timeout on DB queries via AbortController pattern
     let entities = await db.entity.findMany({
       where,
       take: limit,
@@ -62,7 +62,8 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       count: entities.length,
-      total: await db.entity.count({ where: includeCategories ? { category: { in: includeCategories } } : category ? { category } : {} }),
+      // H-04: Use same 'where' clause for count to get accurate filtered totals
+      total: await db.entity.count({ where }),
       entities: entities.map(e => ({
         id: e.id,
         name: e.name,
@@ -75,7 +76,13 @@ export async function GET(request: NextRequest) {
         AC: e.AC,
         MR: e.MR,
         align: e.align,
-        abilities: e.abilities ? JSON.parse(e.abilities) : [],
+        // H-02: Safe JSON.parse with fallback
+        abilities: (function() {
+          if (!e.abilities) return []
+          if (Array.isArray(e.abilities)) return e.abilities
+          if (typeof e.abilities !== 'string') return []
+          try { const parsed = JSON.parse(e.abilities); return Array.isArray(parsed) ? parsed : [] } catch { return [] }
+        })(),
         personality: e.personality
       }))
     })

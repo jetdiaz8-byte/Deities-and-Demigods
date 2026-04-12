@@ -7,6 +7,21 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { Package, Save, Upload, Download, X as XIcon } from 'lucide-react'
+import DOMPurify from 'dompurify'
+
+// H-11: Configure DOMPurify to allow safe HTML tags only (strip scripts, iframes, etc.)
+const PURIFY_CONFIG = {
+  ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br', 'span', 'div', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'blockquote', 'a', 'hr', 'sub', 'sup'],
+  ALLOWED_ATTR: ['class', 'style', 'href', 'data-name', 'data-shard'],
+}
+
+function sanitizeHtml(html: string): string {
+  if (typeof window !== 'undefined') {
+    return DOMPurify.sanitize(html, PURIFY_CONFIG)
+  }
+  // Server-side: basic regex strip (fallback, should never render server-side for this component)
+  return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+}
 import { VisualDiceRoll } from '@/components/game/GameComponents'
 import { IntroScreen } from '@/components/game/IntroScreen'
 import { PartySelectionScreen } from '@/components/game/PartySelectionScreen'
@@ -512,7 +527,7 @@ export default function MythworldEngine() {
                   ? 'dm-narration-collapsed line-clamp-3 overflow-hidden'
                   : ''
                 if (typingMode && !isLast) {
-                  return <div key={idx} dangerouslySetInnerHTML={{ __html: item.html }} style={{ opacity: 0.6 }} />
+                  return <div key={idx} dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.html) }} style={{ opacity: 0.6 }} />
                 }
                 return (
                   <div
@@ -520,7 +535,7 @@ export default function MythworldEngine() {
                     className={isLast ? `dm-narration-block scroll-parchment ${collapseClass}` : undefined}
                     style={isLast ? { position: 'relative' } : undefined}
                   >
-                    <span dangerouslySetInnerHTML={{ __html: item.html }} />
+                    <span dangerouslySetInnerHTML={{ __html: sanitizeHtml(item.html) }} />
                   </div>
                 )
               })}

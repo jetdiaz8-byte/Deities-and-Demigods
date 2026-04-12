@@ -11,7 +11,8 @@ type OpenRouterMessage = {
 }
 
 export async function POST(request: Request) {
-  const apiKey = process.env.OPENROUTER_API_KEY || process.env.NEXT_PUBLIC_OPENROUTER_API_KEY || ''
+  // H-13: Server-side only — never use NEXT_PUBLIC_ prefix for secrets
+  const apiKey = process.env.OPENROUTER_API_KEY || ''
   if (!apiKey) {
     return NextResponse.json({ error: 'No OpenRouter API key configured' }, { status: 500 })
   }
@@ -36,8 +37,12 @@ export async function POST(request: Request) {
     const tokenLimit = OPENROUTER_MODEL_TOKEN_LIMITS[requestedModel] ?? 8192
     const maxTokens = Math.min(max_tokens ?? tokenLimit, tokenLimit)
 
+    // H-10: 60-second timeout on external AI API call
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 60_000)
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
+      signal: controller.signal,
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',

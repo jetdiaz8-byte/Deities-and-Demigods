@@ -107,7 +107,12 @@ const formatEntity = (e: any) => ({
   AC: e.AC,
   MR: typeof e.MR === 'string' ? (e.MR === 'Immune' ? 100 : parseInt(e.MR) || 0) : (e.MR || 0),
   align: e.align,
-  abilities: typeof e.abilities === 'string' ? JSON.parse(e.abilities) : (e.abilities || ['Basic Strike', 'Defend', 'Heroic Surge']),
+  // H-02: Safe JSON.parse with fallback
+  abilities: (function() {
+    if (Array.isArray(e.abilities)) return e.abilities
+    if (typeof e.abilities !== 'string') return ['Basic Strike', 'Defend', 'Heroic Surge']
+    try { const parsed = JSON.parse(e.abilities); return Array.isArray(parsed) ? parsed : ['Basic Strike', 'Defend', 'Heroic Surge'] } catch { return ['Basic Strike', 'Defend', 'Heroic Surge'] }
+  })(),
   personality: e.personality || 'A mysterious figure.',
   // Ability Scores (AD&D 1e format)
   str: e.str,
@@ -217,12 +222,8 @@ export async function GET(request: NextRequest) {
     })
   } catch (error) {
     console.error('Game entities error:', error)
-    // Last resort: pure JSON fallback
-    const fallback = getFallbackEntities('heroes', 999, [])
-    return NextResponse.json({
-      count: fallback.length,
-      total: fallback.length,
-      entities: fallback.map(formatEntity)
-    })
+    // H-03: Return 500 for programming errors, not 200 with fallback data
+    const message = error instanceof Error ? error.message : String(error)
+    return NextResponse.json({ error: 'Internal server error', details: message }, { status: 500 })
   }
 }

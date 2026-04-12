@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -49,6 +49,16 @@ export function PartySelectionScreen({
     })
   }, [availableHeroes, pantheonFilter, typeFilter])
 
+  // H-06: Store interval ID in ref, clear on unmount
+  const fateRollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (fateRollIntervalRef.current) clearInterval(fateRollIntervalRef.current)
+    }
+  }, [])
+
   const handleFateRoll = useCallback(() => {
     if (filteredHeroes.length === 0) return
     setIsRolling(true)
@@ -57,13 +67,16 @@ export function PartySelectionScreen({
     // Animate the roll for 1.5 seconds
     let ticks = 0
     const maxTicks = 15
-    const interval = setInterval(() => {
+    // H-06: Clear any existing interval before creating new one
+    if (fateRollIntervalRef.current) clearInterval(fateRollIntervalRef.current)
+    fateRollIntervalRef.current = setInterval(() => {
       const tempResult = Math.floor(Math.random() * 100) + 1
       const tempHero = filteredHeroes[Math.floor(Math.random() * filteredHeroes.length)]
       setFateRoll({ result: tempResult, heroId: tempHero.id, heroName: tempHero.name })
       ticks++
       if (ticks >= maxTicks) {
-        clearInterval(interval)
+        if (fateRollIntervalRef.current) clearInterval(fateRollIntervalRef.current)
+        fateRollIntervalRef.current = null
         // Final roll: d100 determines which hero from the filtered pool
         const finalRoll = Math.floor(Math.random() * 100) + 1
         const index = Math.floor((finalRoll / 100) * filteredHeroes.length)

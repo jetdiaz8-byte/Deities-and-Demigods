@@ -116,3 +116,30 @@ Stage Summary:
 - No Google Fonts @import needed for fallbacks anymore (all self-hosted)
 - Font system fully operational across all components
 - Ready for git commit as v2.32.0
+
+---
+Task ID: 3
+Agent: main
+Task: Fix all 14 HIGH severity bugs from audit
+
+Work Log:
+- H-01: Removed all CORS headers from lmstudio/route.ts (same-origin only)
+- H-02: Wrapped JSON.parse in try-catch with safe fallback in game-entities/route.ts and entities/route.ts
+- H-03: Changed outer catch in game-entities/route.ts to return 500 (not 200) for programming errors
+- H-04: Fixed entities/route.ts count query to use same 'where' clause as findMany
+- H-05: Added explicit transform-origin: 0% 50% to .map-connection-line in globals.css
+- H-06: Added useRef for interval ID + useEffect cleanup on unmount in PartySelectionScreen.tsx
+- H-07: Removed dead effectiveTheme variable that read ref during render in useGameAudio.ts
+- H-08: Removed .text-xs/.text-sm/.text-base from .caption font selector in globals.css
+- H-09: Added comprehensive font license notice comment block in globals.css
+- H-10: Added AbortController timeouts: LM Studio (30s), OpenRouter (60s), image gen (90s), connectivity check (15s)
+- H-11: Installed dompurify, created sanitizeHtml() with whitelist config, applied to all dangerouslySetInnerHTML
+- H-12: Added trap 'mv .config_bak .config 2>/dev/null' EXIT to build scripts in package.json
+- H-13: Removed NEXT_PUBLIC_OPENROUTER_API_KEY fallback from openrouter/route.ts
+- H-14: Documented z-index scale system in CSS, fixed atmospheric layers (9000-9002), gallery modal (1000)
+- Bonus: Fixed .font-title class to use --font-title (was --font-heading)
+
+Stage Summary:
+- All 14 HIGH severity bugs fixed
+- DOMPurify added as dependency for XSS protection
+- Zero new compilation errors introduced

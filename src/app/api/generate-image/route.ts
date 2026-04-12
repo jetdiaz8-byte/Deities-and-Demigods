@@ -43,10 +43,12 @@ export async function POST(request: NextRequest) {
     console.log(`🖼️ [generate-image] prompt length: ${prompt.length}, style: ${artStyle}, size: ${size}`);
 
     // v2.24.0: Real AI image generation via z-ai-web-dev-sdk
+    // H-10: 90-second timeout for image generation
     const zai = await ZAI.create();
     const response = await zai.images.generations.create({
       prompt,
       size: (size || '1344x768') as '1344x768' | '1024x1024' | '768x1344',
+      timeout: 90_000,
     });
 
     const imageBase64 = response.data[0]?.base64;
