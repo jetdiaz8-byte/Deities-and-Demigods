@@ -3021,6 +3021,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     if (res.story_summary) newGS.storySummary = res.story_summary
     if (res.journey_so_far) newGS.journeySoFar = res.journey_so_far
 
+    // ── DICE TRAY — Populate lastDiceRolls for sidebar dice display ─────
+    if (res.dice_rolls?.length) {
+      newGS.lastDiceRolls = [...(newGS.lastDiceRolls || []), ...res.dice_rolls].slice(-20)
+    }
+
     // ── CHRONICLE LOG — Add a regular entry for every turn ──────────────
     if (gs.turn === 0) {
       newGS.log = [...newGS.log, { msg: 'The Shard Awakens — the campaign begins.', type: 'discovery' as const, turn: 0 }]
@@ -4308,7 +4313,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       )
     }
 
-    html += `<div class="parchment-bg-dm mood-${narrationMood} narration-fade-in" style="padding:20px;margin-bottom:12px">
+    html += `<div class="parchment-bg-dm mood-${narrationMood}" style="padding:20px;margin-bottom:12px">
       <div class="dm-narration-header">
         <span class="header-rune-left">ᚠ ᚢ ᚦ</span>
         <span>✦ DM Narration</span>
