@@ -1,8 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400;1,700&family=Uncial+Antiqua&family=MedievalSharp&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Pirata+One&family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=MedievalSharp&family=Fantasya&family=Pinyon+Script&family=Special+Elite&display=swap');
+/* ═══════════════════════════════════════════════════════════════════════════
+   FANTASY FONT SYSTEM v2.32.0
+   10 Exclusive Fantasy Fonts:
+     Wonderland · Mysteria · Wonder Night · Fantasy · Fantasya
+     Midwinter Fire · Wisp · Arkana · Rivendell · Ghostoons
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Google Fonts fallback stack (used when self-hosted files are unavailable) */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Pirata+One&family=MedievalSharp&family=Special+Elite&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+
+/* Self-hosted fantasy fonts (5 currently available in /public/fonts/) */
+@font-face { font-family: 'Wonderland';    src: url('/fonts/Wonderland.ttf') format('truetype');   font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Mysteria';      src: url('/fonts/Mysteria.ttf') format('truetype');     font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Wonder Night';  src: url('/fonts/WonderNight.ttf') format('truetype');  font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Fantasy';       src: url('/fonts/Fantasy.ttf') format('truetype');       font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Fantasya';      src: url('/fonts/Fantasya.ttf') format('truetype');      font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Midwinter Fire'; src: url('/fonts/MidwinterFire.ttf') format('truetype'); font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Wisp';          src: url('/fonts/Wisp.ttf') format('truetype');          font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Arkana';        src: url('/fonts/Arkana.ttf') format('truetype');        font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Rivendell';     src: url('/fonts/Rivendell.ttf') format('truetype');     font-display: swap; font-weight: 400; }
+@font-face { font-family: 'Ghostoons';     src: url('/fonts/Ghostoons.ttf') format('truetype');     font-display: swap; font-weight: 400; }
 
 :root {
   --bg-primary: #0a0a0f;
@@ -28,42 +48,48 @@
   --radius-xl: 16px;
 
   /* ═══════════════════════════════════════════════════════════════════════
-     FANTASY TYPOGRAPHY SYSTEM
-     Fonts: Fantasya, Cinzel Decorative, Cinzel, Pinyon Script, Almendra,
-            MedievalSharp, Pirata One, Cormorant Garamond, IM Fell English
-     Colors: Gold (#f0c860), Cream (#f0e8d8), Deep Purple (#a080d0),
-             Emerald (#60c090), Crimson (#e06060), Muted Gold (#8a7a50)
+     FANTASY TYPOGRAPHY SYSTEM v2.32.0
+     Primary fonts:   Rivendell (title) · Wonderland (heading) · Wisp (narrative)
+                      Mysteria (dialogue) · Arkana (combat) · Midwinter Fire (button)
+                      Fantasya (body/UI) · Wonder Night (caption) · Fantasy (script/accent)
+                      Ghostoons (death/spooky accent)
+     Fallback stack:  Cinzel Decorative · Cinzel · MedievalSharp · Pirata One
+                      Cormorant Garamond · Special Elite
+     Colors:          Gold (#D4AF37) · Deep Purple (#7B2D8E) · Emerald (#2ECC71)
+                      Crimson (#DC143C) · Parchment Cream (#F5E6C8)
      ═══════════════════════════════════════════════════════════════════════ */
-  --font-title: 'Cinzel Decorative', 'Cinzel', 'Uncial Antiqua', serif;
-  --font-heading: 'Cinzel', 'Uncial Antiqua', serif;
-  --font-subheading: 'MedievalSharp', 'Cinzel', serif;
-  --font-narrative: 'Almendra', 'Cormorant Garamond', Georgia, serif;
-  --font-body: 'Cormorant Garamond', Georgia, serif;
-  --font-ui: 'MedievalSharp', system-ui, sans-serif;
-  --font-button: 'MedievalSharp', 'Cinzel', sans-serif;
-  --font-caption: 'Cormorant Garamond', Georgia, serif;
-  --font-dialogue: 'IM Fell English', 'Cormorant Garamond', serif;
-  --font-script: 'Pinyon Script', cursive;
-  --font-fantasy: 'Fantasya', 'Uncial Antiqua', serif;
-  --font-combat: 'Pirata One', cursive;
-  --font-myth: 'Georgia', 'Times New Roman', serif;
+  --font-title:       'Rivendell',       'Cinzel Decorative', 'Cinzel', serif;
+  --font-heading:     'Wonderland',       'Cinzel', serif;
+  --font-subheading:  'Midwinter Fire',   'MedievalSharp', 'Cinzel', serif;
+  --font-narrative:   'Wisp',             'Cormorant Garamond', Georgia, serif;
+  --font-body:        'Fantasya',         'Cormorant Garamond', Georgia, serif;
+  --font-ui:          'Fantasya',         'MedievalSharp', system-ui, sans-serif;
+  --font-button:      'Midwinter Fire',   'MedievalSharp', 'Cinzel', sans-serif;
+  --font-caption:     'Wonder Night',     'Cormorant Garamond', Georgia, serif;
+  --font-dialogue:    'Mysteria',         'Cormorant Garamond', serif;
+  --font-script:      'Fantasy',          cursive;
+  --font-fantasy:     'Wonderland',       'Cinzel', serif;
+  --font-combat:      'Arkana',           'Pirata One', cursive;
+  --font-myth:        'Fantasya',         'Georgia', 'Times New Roman', serif;
+  --font-ghost:       'Ghostoons',        'Special Elite', cursive;
 
-  /* Fantasy color palette */
-  --gold: #f0c860;
-  --gold-dim: #c9a84c;
-  --gold-muted: #8a7a50;
-  --gold-dark: #5a4a28;
-  --cream: #f0e8d8;
-  --cream-dim: #d4c8b0;
-  --purple: #a080d0;
-  --purple-deep: #7a50b0;
-  --purple-glow: rgba(160,128,208,0.3);
-  --emerald: #60c090;
-  --emerald-deep: #40a070;
-  --crimson: #e06060;
-  --crimson-deep: #c04040;
-  --parchment: #3c2415;
-  --parchment-light: #5c4030;
+  /* Fantasy color palette — v2.32.0 enhanced */
+  --gold:          #D4AF37;
+  --gold-bright:   #F0C860;
+  --gold-dim:      #C9A84C;
+  --gold-muted:    #8A7A50;
+  --gold-dark:     #5A4A28;
+  --cream:         #F5E6C8;
+  --cream-dim:     #D4C8B0;
+  --purple:        #7B2D8E;
+  --purple-deep:   #5A1A6E;
+  --purple-glow:   rgba(123,45,142,0.35);
+  --emerald:       #2ECC71;
+  --emerald-deep:  #1FA85A;
+  --crimson:       #DC143C;
+  --crimson-deep:  #A00D2A;
+  --parchment:     #3C2415;
+  --parchment-light: #5C4030;
 }
 
 .dark {
@@ -125,6 +151,7 @@ body {
 .font-script { font-family: var(--font-script); }
 .font-fantasy { font-family: var(--font-fantasy); }
 .font-combat { font-family: var(--font-combat); }
+.font-ghost { font-family: var(--font-ghost); }
 .font-button { font-family: var(--font-button); }
 button, .btn, [role='button'] { font-family: var(--font-button); }
 .choice-option, .action-choice, .choice-panel button { font-family: var(--font-button); }

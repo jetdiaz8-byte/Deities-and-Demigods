@@ -87,19 +87,19 @@ export default function RulebookPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" style={{ fontFamily: 'var(--font-body)' }}>
       {/* Header */}
       <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-700">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"><ChevronLeft className="w-5 h-5" /><span>Back to Game</span></Link>
+              <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors" style={{ fontFamily: 'var(--font-ui)' }}><ChevronLeft className="w-5 h-5" /><span>Back to Game</span></Link>
               <Separator orientation="vertical" className="h-8 bg-slate-700" />
-              <div className="flex items-center gap-2"><BookOpen className="w-6 h-6 text-emerald-400" /><h1 className="text-xl font-bold text-white">Player&apos;s Handbook</h1></div>
+              <div className="flex items-center gap-2"><BookOpen className="w-6 h-6" style={{ color: '#D4AF37' }} /><h1 className="text-xl font-bold" style={{ fontFamily: 'var(--font-title)', color: '#D4AF37' }}>Player&apos;s Handbook</h1></div>
             </div>
             <div className="flex items-center gap-3">
-              <Link href="/codex"><Button variant="outline" className="border-slate-600 text-gray-300"><ScrollText className="w-4 h-4 mr-2" />Codex</Button></Link>
-              <Link href="/dm-handbook"><Button variant="outline" className="border-slate-600 text-gray-300"><Info className="w-4 h-4 mr-2" />DM Handbook</Button></Link>
+              <Link href="/codex"><Button variant="outline" className="border-slate-600 text-gray-300" style={{ fontFamily: 'var(--font-button)' }}><ScrollText className="w-4 h-4 mr-2" />Codex</Button></Link>
+              <Link href="/dm-handbook"><Button variant="outline" className="border-slate-600 text-gray-300" style={{ fontFamily: 'var(--font-button)' }}><Info className="w-4 h-4 mr-2" />DM Handbook</Button></Link>
             </div>
           </div>
         </div>
@@ -109,22 +109,22 @@ export default function RulebookPage() {
       <main className="max-w-6xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="flex-wrap gap-1 bg-slate-800/50 p-2 h-auto">
-            <TabsTrigger value="getting-started" className="data-[state=active]:bg-emerald-600 text-xs">1. Getting Started</TabsTrigger>
-            <TabsTrigger value="game-structure" className="data-[state=active]:bg-emerald-600 text-xs">2. Game Structure</TabsTrigger>
-            <TabsTrigger value="turns" className="data-[state=active]:bg-emerald-600 text-xs">3. Turns</TabsTrigger>
-            <TabsTrigger value="character" className="data-[state=active]:bg-emerald-600 text-xs">4. Characters</TabsTrigger>
-            <TabsTrigger value="combat" className="data-[state=active]:bg-emerald-600 text-xs">5. Success Rate</TabsTrigger>
-            <TabsTrigger value="shards" className="data-[state=active]:bg-amber-600 text-xs">6. Shards</TabsTrigger>
-            <TabsTrigger value="test-of-faith" className="data-[state=active]:bg-amber-600 text-xs">7. Test of Faith</TabsTrigger>
-            <TabsTrigger value="injuries" className="data-[state=active]:bg-emerald-600 text-xs">8. Injuries</TabsTrigger>
-            <TabsTrigger value="items" className="data-[state=active]:bg-emerald-600 text-xs">9. Items</TabsTrigger>
-            <TabsTrigger value="prophecy" className="data-[state=active]:bg-emerald-600 text-xs">10. Prophecies</TabsTrigger>
-            <TabsTrigger value="companions" className="data-[state=active]:bg-emerald-600 text-xs">11. Companions</TabsTrigger>
-            <TabsTrigger value="antagonists" className="data-[state=active]:bg-emerald-600 text-xs">12. Antagonists</TabsTrigger>
-            <TabsTrigger value="saving" className="data-[state=active]:bg-emerald-600 text-xs">13. Saving</TabsTrigger>
-            <TabsTrigger value="achievements" className="data-[state=active]:bg-amber-600 text-xs">14. Achievements</TabsTrigger>
-            <TabsTrigger value="audio" className="data-[state=active]:bg-emerald-600 text-xs">15. Audio & Voice</TabsTrigger>
-            <TabsTrigger value="difficulty" className="data-[state=active]:bg-emerald-600 text-xs">16. Difficulty</TabsTrigger>
+            <TabsTrigger value="getting-started" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>1. Getting Started</TabsTrigger>
+            <TabsTrigger value="game-structure" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>2. Game Structure</TabsTrigger>
+            <TabsTrigger value="turns" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>3. Turns</TabsTrigger>
+            <TabsTrigger value="character" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>4. Characters</TabsTrigger>
+            <TabsTrigger value="combat" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>5. Success Rate</TabsTrigger>
+            <TabsTrigger value="shards" className="data-[state=active]:bg-amber-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>6. Shards</TabsTrigger>
+            <TabsTrigger value="test-of-faith" className="data-[state=active]:bg-amber-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>7. Test of Faith</TabsTrigger>
+            <TabsTrigger value="injuries" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>8. Injuries</TabsTrigger>
+            <TabsTrigger value="items" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>9. Items</TabsTrigger>
+            <TabsTrigger value="prophecy" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>10. Prophecies</TabsTrigger>
+            <TabsTrigger value="companions" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>11. Companions</TabsTrigger>
+            <TabsTrigger value="antagonists" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>12. Antagonists</TabsTrigger>
+            <TabsTrigger value="saving" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>13. Saving</TabsTrigger>
+            <TabsTrigger value="achievements" className="data-[state=active]:bg-amber-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>14. Achievements</TabsTrigger>
+            <TabsTrigger value="audio" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>15. Audio & Voice</TabsTrigger>
+            <TabsTrigger value="difficulty" className="data-[state=active]:bg-emerald-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>16. Difficulty</TabsTrigger>
           </TabsList>
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
@@ -132,29 +132,29 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="getting-started" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Key className="w-5 h-5 text-emerald-400" />What You Need to Play</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Key className="w-5 h-5 text-emerald-400" />What You Need to Play</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">Before you can play, you need an OpenRouter API key that powers the AI Dungeon Master. It is FREE with generous usage limits.</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>Before you can play, you need an OpenRouter API key that powers the AI Dungeon Master. It is FREE with generous usage limits.</p>
                 <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                   <div className="p-4 rounded-lg bg-red-900/20 border border-red-700">
-                    <h4 className="font-bold text-red-400 mb-2 flex items-center gap-2"><Gem className="w-4 h-4" />OpenRouter API Key (REQUIRED)</h4>
-                    <p className="text-sm text-gray-400 mb-3">Powers the AI Dungeon Master that narrates the story and generates all game content</p>
-                    <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
+                    <h4 className="font-bold text-red-400 mb-2 flex items-center gap-2" style={{ fontFamily: 'var(--font-subheading)' }}><Gem className="w-4 h-4" />OpenRouter API Key (REQUIRED)</h4>
+                    <p className="text-sm text-gray-400 mb-3" style={{ fontFamily: 'var(--font-body)' }}>Powers the AI Dungeon Master that narrates the story and generates all game content</p>
+                    <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>Visit <span className="text-emerald-400">openrouter.ai/keys</span></li>
                       <li>Sign in or create an OpenRouter account</li>
                       <li>Click &quot;Create Key&quot;</li>
                       <li>Name the key for Mythworld (optional)</li>
                       <li>Copy the key (starts with sk-or-v1-...)</li>
                     </ol>
-                    <div className="mt-3 text-xs text-gray-500">Uses OpenRouter free-tier models configured in the app</div>
+                    <div className="mt-3 text-xs text-gray-500" style={{ fontFamily: 'var(--font-caption)' }}>Uses OpenRouter free-tier models configured in the app</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Star className="w-5 h-5 text-amber-400" />Creating a Campaign</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Star className="w-5 h-5 text-amber-400" />Creating a Campaign</CardTitle></CardHeader>
               <CardContent>
-                <ol className="text-gray-300 space-y-2 list-decimal list-inside">
+                <ol className="text-gray-300 space-y-2 list-decimal list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                   <li>Open the Mythworld Engine app in your browser</li>
                   <li>Enter your OpenRouter API key in the &quot;OpenRouter Key&quot; field</li>
                   <li>Click <strong className="text-emerald-400">⚔ &quot;Begin Your Legend&quot; ⚔</strong></li>
@@ -162,7 +162,7 @@ export default function RulebookPage() {
                   <li>Select <strong>1 main PC</strong> as your hero — the DM auto-selects <strong>1 companion</strong> for you</li>
                   <li>A mysterious Shard is assigned, and the game begins!</li>
                 </ol>
-                <div className="mt-4 p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Note:</strong> Your API key is stored locally in your browser and is only sent to OpenRouter via the app&apos;s API proxy.</div>
+                <div className="mt-4 p-3 rounded bg-slate-700/50 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}><strong className="text-white">Note:</strong> Your API key is stored locally in your browser and is only sent to OpenRouter via the app&apos;s API proxy.</div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -172,13 +172,13 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="game-structure" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><ArrowRight className="w-5 h-5 text-emerald-400" />Three-Act Structure</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><ArrowRight className="w-5 h-5 text-emerald-400" />Three-Act Structure</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-gray-300 mb-4 italic">Every campaign is a story. Stories have three parts: a beginning that gathers, a middle that investigates, and an end that confronts. The engine enforces this structure through RNG-driven turn limits.</p>
+                <p className="text-gray-300 mb-4 italic" style={{ fontFamily: 'var(--font-narrative)' }}>Every campaign is a story. Stories have three parts: a beginning that gathers, a middle that investigates, and an end that confronts. The engine enforces this structure through RNG-driven turn limits.</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 rounded-lg bg-green-900/20 border border-green-700">
-                    <h4 className="font-bold text-green-400 mb-2">Act I: Gathering</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
+                    <h4 className="font-bold text-green-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Act I: Gathering</h4>
+                    <ul className="text-sm text-gray-300 space-y-1" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>&#8226; Party members introduced one at a time</li>
                       <li>&#8226; Shard artifact discovered and prophecy assigned</li>
                       <li>&#8226; Antagonist is only shadows and clues</li>
@@ -187,8 +187,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-yellow-900/20 border border-yellow-700">
-                    <h4 className="font-bold text-yellow-400 mb-2">Act II: Investigation</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
+                    <h4 className="font-bold text-yellow-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Act II: Investigation</h4>
+                    <ul className="text-sm text-gray-300 space-y-1" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>&#8226; Full party assembled, companions active</li>
                       <li>&#8226; NPCs encountered, quests undertaken</li>
                       <li>&#8226; Antagonist clues revealed progressively</li>
@@ -198,8 +198,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-red-900/20 border border-red-700">
-                    <h4 className="font-bold text-red-400 mb-2">Act III: Confrontation</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
+                    <h4 className="font-bold text-red-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Act III: Confrontation</h4>
+                    <ul className="text-sm text-gray-300 space-y-1" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>&#8226; Antagonist identity fully revealed</li>
                       <li>&#8226; 3-phase boss battle (HP thresholds)</li>
                       <li>&#8226; Banished antagonists return at full power</li>
@@ -217,9 +217,9 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="turns" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Timer className="w-5 h-5 text-emerald-400" />How Turns Work</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Timer className="w-5 h-5 text-emerald-400" />How Turns Work</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">Each turn follows a strict cycle. The AI Dungeon Master receives the full game state, generates a narrative response with structured JSON, and the engine applies all state changes.</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>Each turn follows a strict cycle. The AI Dungeon Master receives the full game state, generates a narrative response with structured JSON, and the engine applies all state changes.</p>
                 <div className="space-y-3">
                   {[
                     { step: 1, label: 'Choose Your Action', desc: 'Select from 3 AI-generated quick actions, OR write your own custom action in the text field. Quick actions have their stamina costs enforced by the engine; custom actions are interpreted by the DM.', color: 'border-blue-500/50' },
@@ -229,7 +229,7 @@ export default function RulebookPage() {
                   ].map(s => (
                     <div key={s.step} className={`flex items-start gap-3 p-3 rounded-lg border ${s.color} bg-slate-700/30`}>
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold bg-slate-800 text-white shrink-0">{s.step}</div>
-                      <div><div className="text-sm font-bold text-white">{s.label}</div><div className="text-xs text-gray-400">{s.desc}</div></div>
+                      <div><div className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-subheading)' }}>{s.label}</div><div className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>{s.desc}</div></div>
                     </div>
                   ))}
                 </div>
@@ -241,22 +241,22 @@ export default function RulebookPage() {
           {/* 3b. ACTIONS & CHOICES — Hybrid Input System */}
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader><CardTitle className="text-white flex items-center gap-2"><Sword className="w-5 h-5 text-blue-400" />Actions &amp; Choices</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Sword className="w-5 h-5 text-blue-400" />Actions &amp; Choices</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-gray-300">The game uses a <strong className="text-blue-300">hybrid action system</strong>. Each turn, you can either pick from AI-generated quick actions or write your own custom action in a free-text field. Both approaches are mechanically resolved by the DM.</p>
+              <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>The game uses a <strong className="text-blue-300">hybrid action system</strong>. Each turn, you can either pick from AI-generated quick actions or write your own custom action in a free-text field. Both approaches are mechanically resolved by the DM.</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="p-3 rounded-lg bg-slate-700/50 border border-blue-500/30">
-                  <div className="text-sm font-bold text-blue-300 mb-1">⚔️ Quick Actions</div>
-                  <p className="text-xs text-gray-400">3 context-sensitive options generated by the AI based on your PC&apos;s abilities, skills, and the current situation. Stamina costs are enforced by the game engine before the DM responds. These are reliable and mechanically precise — the engine handles stamina, Fate Points, and cooldowns automatically.</p>
+                  <div className="text-sm font-bold text-blue-300 mb-1" style={{ fontFamily: 'var(--font-subheading)' }}>⚔️ Quick Actions</div>
+                  <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>3 context-sensitive options generated by the AI based on your PC&apos;s abilities, skills, and the current situation. Stamina costs are enforced by the game engine before the DM responds. These are reliable and mechanically precise — the engine handles stamina, Fate Points, and cooldowns automatically.</p>
                 </div>
                 <div className="p-3 rounded-lg bg-slate-700/50 border border-amber-500/30">
-                  <div className="text-sm font-bold text-amber-300 mb-1">✍️ Custom Actions</div>
-                  <p className="text-xs text-gray-400">Write anything you want to do in the text field — persuade an NPC, investigate a clue, attempt a creative maneuver, or roleplay a character moment. The DM interprets your intent, determines the appropriate skill check, and resolves it mechanically. Stamina costs are suggested to the DM (1 for observation, 2 for combat, 3 for magical actions).</p>
+                  <div className="text-sm font-bold text-amber-300 mb-1" style={{ fontFamily: 'var(--font-subheading)' }}>✍️ Custom Actions</div>
+                  <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>Write anything you want to do in the text field — persuade an NPC, investigate a clue, attempt a creative maneuver, or roleplay a character moment. The DM interprets your intent, determines the appropriate skill check, and resolves it mechanically. Stamina costs are suggested to the DM (1 for observation, 2 for combat, 3 for magical actions).</p>
                 </div>
               </div>
               <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600">
-                <div className="text-sm font-bold text-emerald-300 mb-1">💡 How It Works</div>
-                <ul className="text-xs text-gray-400 space-y-1.5 list-disc list-inside">
+                <div className="text-sm font-bold text-emerald-300 mb-1" style={{ fontFamily: 'var(--font-subheading)' }}>💡 How It Works</div>
+                <ul className="text-xs text-gray-400 space-y-1.5 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                   <li>Quick actions appear as numbered buttons (1, 2, 3) at the top of the choice panel</li>
                   <li>The custom action text field appears below — click it to expand and start typing</li>
                   <li>Selecting a quick action deactivates the text field, and vice versa</li>
@@ -273,9 +273,9 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="character" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Shield className="w-5 h-5 text-emerald-400" />Character Statistics</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Shield className="w-5 h-5 text-emerald-400" />Character Statistics</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">Each PC has the following core stats drawn from AD&amp;D 1st Edition:</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>Each PC has the following core stats drawn from AD&amp;D 1st Edition:</p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
                     { stat: 'HP', full: 'Hit Points', desc: 'Health. Reaches 0 = death (unless Test of Faith). Clamped to [0, maxHp].' },
@@ -284,9 +284,9 @@ export default function RulebookPage() {
                     { stat: 'Move', full: 'Movement Rate', desc: 'Inches per round (AD&D 1e). Higher = faster. Average is 12".' },
                   ].map(s => (
                     <div key={s.stat} className="p-3 rounded-lg bg-slate-700/50">
-                      <div className="text-lg font-bold text-amber-400">{s.stat}</div>
-                      <div className="text-xs text-gray-500 mb-1">{s.full}</div>
-                      <div className="text-xs text-gray-400">{s.desc}</div>
+                      <div className="text-lg font-bold text-amber-400" style={{ fontFamily: 'var(--font-subheading)' }}>{s.stat}</div>
+                      <div className="text-xs text-gray-500 mb-1" style={{ fontFamily: 'var(--font-caption)' }}>{s.full}</div>
+                      <div className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>{s.desc}</div>
                     </div>
                   ))}
                 </div>
@@ -294,16 +294,16 @@ export default function RulebookPage() {
             </Card>
 
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Dumbbell className="w-5 h-5 text-cyan-400" />Ability Scores (AD&amp;D 1e)</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Dumbbell className="w-5 h-5 text-cyan-400" />Ability Scores (AD&amp;D 1e)</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Six ability scores define your character. Each provides a modifier to relevant actions. AD&amp;D 1st Edition uses exceptional strength (18/01-18/00) for fighters, representing percentiles of superhuman power.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>Six ability scores define your character. Each provides a modifier to relevant actions. AD&amp;D 1st Edition uses exceptional strength (18/01-18/00) for fighters, representing percentiles of superhuman power.</p>
                 <div className="overflow-x-auto max-h-64 overflow-y-auto">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm" style={{ fontFamily: 'var(--font-body)' }}>
                     <thead className="sticky top-0 bg-slate-800">
                       <tr className="border-b border-slate-600">
-                        <th className="text-left py-2 text-gray-400">Score</th>
-                        <th className="text-left py-2 text-gray-400">Bonus</th>
-                        <th className="text-left py-2 text-gray-400">Description</th>
+                        <th className="text-left py-2 text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>Score</th>
+                        <th className="text-left py-2 text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>Bonus</th>
+                        <th className="text-left py-2 text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>Description</th>
                       </tr>
                     </thead>
                     <tbody className="text-gray-300">
@@ -321,9 +321,9 @@ export default function RulebookPage() {
             </Card>
 
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Target className="w-5 h-5 text-amber-400" />Alignment Effects</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Target className="w-5 h-5 text-amber-400" />Alignment Effects</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-gray-300 text-sm mb-4">Alignment affects your success rate through the Alignment Harmony factor. A unified party performs better; a fractured one suffers.</p>
+                <p className="text-gray-300 text-sm mb-4" style={{ fontFamily: 'var(--font-body)' }}>Alignment affects your success rate through the Alignment Harmony factor. A unified party performs better; a fractured one suffers.</p>
                 <div className="space-y-2">
                   {[
                     { scenario: 'Good + Evil in same party', penalty: '-3', note: 'Moral conflict creates tension' },
@@ -333,10 +333,10 @@ export default function RulebookPage() {
                     { scenario: 'Range: disharmony to harmony', range: '-5 to +5', note: 'Total alignment harmony is clamped' },
                   ].map(a => (
                     <div key={a.scenario} className="flex items-center justify-between p-3 rounded-lg bg-slate-700/30">
-                      <span className="text-sm text-gray-300">{a.scenario}</span>
+                      <span className="text-sm text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>{a.scenario}</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs text-gray-500">{a.note}</span>
-                        <Badge className={a.penalty ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300'}>{a.penalty || a.bonus}</Badge>
+                        <span className="text-xs text-gray-500" style={{ fontFamily: 'var(--font-caption)' }}>{a.note}</span>
+                        <Badge className={a.penalty ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300'} style={{ fontFamily: 'var(--font-caption)' }}>{a.penalty || a.bonus}</Badge>
                       </div>
                     </div>
                   ))}
@@ -345,20 +345,20 @@ export default function RulebookPage() {
             </Card>
 
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Dumbbell className="w-5 h-5 text-cyan-400" />D&amp;D 5e Skill Proficiencies</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Dumbbell className="w-5 h-5 text-cyan-400" />D&amp;D 5e Skill Proficiencies</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">On top of the AD&amp;D 1e core stats, heroes and demigods also carry <strong className="text-cyan-300">D&amp;D 5e skill proficiencies</strong>. These do not replace the core stats &mdash; they are a narrative layer that helps the AI DM generate relevant, character-appropriate action choices. A fighter sees &quot;Intimidate the guard&quot;; a thief sees &quot;Sneak past the patrol.&quot; Gods and monsters do not use this system; they rely on their named divine abilities instead.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>On top of the AD&amp;D 1e core stats, heroes and demigods also carry <strong className="text-cyan-300">D&amp;D 5e skill proficiencies</strong>. These do not replace the core stats &mdash; they are a narrative layer that helps the AI DM generate relevant, character-appropriate action choices. A fighter sees &quot;Intimidate the guard&quot;; a thief sees &quot;Sneak past the patrol.&quot; Gods and monsters do not use this system; they rely on their named divine abilities instead.</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-3">All 18 Skills (by Ability)</h4>
+                    <h4 className="font-bold text-white mb-3" style={{ fontFamily: 'var(--font-subheading)' }}>All 18 Skills (by Ability)</h4>
                     <div className="space-y-2">
                       {SKILL_GROUPS.map(g => (
                         <div key={g.ability} className="flex items-start gap-2">
-                          <span className="text-xs font-bold text-amber-400 w-24 shrink-0">{g.ability}</span>
+                          <span className="text-xs font-bold text-amber-400 w-24 shrink-0" style={{ fontFamily: 'var(--font-caption)' }}>{g.ability}</span>
                           <div className="flex flex-wrap gap-1">
                             {g.skills.map(s => (
-                              <Badge key={s} className="bg-cyan-900/50 text-cyan-300 text-[10px]">{s}</Badge>
+                              <Badge key={s} className="bg-cyan-900/50 text-cyan-300 text-[10px]" style={{ fontFamily: 'var(--font-caption)' }}>{s}</Badge>
                             ))}
                           </div>
                         </div>
@@ -366,27 +366,27 @@ export default function RulebookPage() {
                     </div>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-3">How Proficiencies Are Assigned</h4>
-                    <p className="text-xs text-gray-400 mb-3">Each PC&apos;s top 3 inferred classes grant 3 skills each. Additionally, any ability score of 15+ grants its associated skills. Maximum 9 proficiencies from class + extras from high stats.</p>
+                    <h4 className="font-bold text-white mb-3" style={{ fontFamily: 'var(--font-subheading)' }}>How Proficiencies Are Assigned</h4>
+                    <p className="text-xs text-gray-400 mb-3" style={{ fontFamily: 'var(--font-body)' }}>Each PC&apos;s top 3 inferred classes grant 3 skills each. Additionally, any ability score of 15+ grants its associated skills. Maximum 9 proficiencies from class + extras from high stats.</p>
                     <div className="space-y-2">
                       {CLASS_SKILL_MAP.map(c => (
                         <div key={c.cls} className="flex items-start gap-2">
-                          <span className={`text-xs font-bold w-24 shrink-0 ${c.color}`}>{c.cls}</span>
+                          <span className={`text-xs font-bold w-24 shrink-0 ${c.color}`} style={{ fontFamily: 'var(--font-caption)' }}>{c.cls}</span>
                           <div className="flex flex-wrap gap-1">
                             {c.skills.map(s => (
-                              <Badge key={s} className="bg-slate-600 text-gray-200 text-[10px]">{s} +2</Badge>
+                              <Badge key={s} className="bg-slate-600 text-gray-200 text-[10px]" style={{ fontFamily: 'var(--font-caption)' }}>{s} +2</Badge>
                             ))}
                           </div>
                         </div>
                       ))}
                     </div>
-                    <div className="mt-3 p-2 rounded bg-slate-600/30 text-[11px] text-gray-400">
+                    <div className="mt-3 p-2 rounded bg-slate-600/30 text-[11px] text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>
                       <strong className="text-gray-300">High Stat Bonus (15+):</strong> CHA 15+ &rarr; Deception, Persuasion, Performance &bull; WIS 15+ &rarr; Perception, Survival, Animal Handling &bull; DEX 15+ &rarr; Acrobatics, Stealth
                     </div>
                   </div>
                 </div>
 
-                <div className="p-3 rounded bg-cyan-900/20 border border-cyan-700/50 text-sm text-gray-400"><strong className="text-cyan-300">Where to see it:</strong> Your character card in-game shows your skill proficiencies as small badges. The Codex also displays skills on hero and demigod entries. Proficiencies are inferred automatically from your class levels and ability scores &mdash; no manual selection needed.</div>
+                <div className="p-3 rounded bg-cyan-900/20 border border-cyan-700/50 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}><strong className="text-cyan-300">Where to see it:</strong> Your character card in-game shows your skill proficiencies as small badges. The Codex also displays skills on hero and demigod entries. Proficiencies are inferred automatically from your class levels and ability scores &mdash; no manual selection needed.</div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -396,12 +396,12 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="combat" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Dice5 className="w-5 h-5 text-emerald-400" />Success Rate &amp; d20 Rolls</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Dice5 className="w-5 h-5 text-emerald-400" />Success Rate &amp; d20 Rolls</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">Every action in Mythworld is governed by a success rate &mdash; a percentage that determines whether your chosen action succeeds, fails, or triggers an unexpected outcome. The rate is calculated from 13 factors that shift as your story unfolds, covering party composition, divine aid, injuries, and your bond with your companion.</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>Every action in Mythworld is governed by a success rate &mdash; a percentage that determines whether your chosen action succeeds, fails, or triggers an unexpected outcome. The rate is calculated from 13 factors that shift as your story unfolds, covering party composition, divine aid, injuries, and your bond with your companion.</p>
                 <div className="p-4 rounded-lg bg-slate-700/50 border border-slate-600">
-                  <h4 className="font-bold text-emerald-400 mb-3">The Full Formula (13 Factors)</h4>
-                  <div className="p-3 rounded bg-slate-900/50 font-mono text-sm text-gray-300 mb-4">
+                  <h4 className="font-bold text-emerald-400 mb-3" style={{ fontFamily: 'var(--font-subheading)' }}>The Full Formula (13 Factors)</h4>
+                  <div className="p-3 rounded bg-slate-900/50 font-mono text-sm text-gray-300 mb-4" style={{ fontFamily: 'var(--font-body)' }}>
                     <span className="text-white">successRate</span> = <span className="text-amber-400">50</span> (base)<br />
                     &nbsp;&nbsp;+ <span className="text-green-400">min(livingPCs &times; 2, 10)</span> &nbsp;&nbsp;# party bonus<br />
                     &nbsp;&nbsp;+ <span className="text-purple-400">prophecyStateBonus</span> &nbsp;&nbsp;# dormant:0, awakening:+3, manifesting:+5, fulfilled:+8, broken:-5<br />
@@ -426,9 +426,9 @@ export default function RulebookPage() {
                     { label: 'Absolute Range', value: '5%-95%', desc: 'Always some chance of either outcome' },
                   ].map(s => (
                     <div key={s.label} className="p-3 rounded bg-slate-700/50 text-center">
-                      <div className="text-lg font-bold text-white">{s.value}</div>
-                      <div className="text-xs text-gray-400">{s.label}</div>
-                      <div className="text-xs text-gray-500 mt-1">{s.desc}</div>
+                      <div className="text-lg font-bold text-white" style={{ fontFamily: 'var(--font-subheading)' }}>{s.value}</div>
+                      <div className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>{s.label}</div>
+                      <div className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'var(--font-caption)' }}>{s.desc}</div>
                     </div>
                   ))}
                 </div>
@@ -441,13 +441,13 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="shards" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Flame className="w-5 h-5 text-amber-400" />The Shard System</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Flame className="w-5 h-5 text-amber-400" />The Shard System</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">Central to every campaign is the Shard &mdash; an ancient artifact from before the gods themselves. The Shard is not a tool. It is a character with its own agenda.</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>Central to every campaign is the Shard &mdash; an ancient artifact from before the gods themselves. The Shard is not a tool. It is a character with its own agenda.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">How Invocation Works</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-white mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>How Invocation Works</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>Starts with <strong className="text-amber-400">2 charges</strong></li>
                       <li>Declare which god or being to summon by name</li>
                       <li>A d20 roll is made against <strong>DC 10</strong></li>
@@ -457,8 +457,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-amber-900/20 border border-amber-700">
-                    <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4" />Charges &amp; Darkening</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-amber-400 mb-2 flex items-center gap-2" style={{ fontFamily: 'var(--font-subheading)' }}><AlertTriangle className="w-4 h-4" />Charges &amp; Darkening</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li><strong className="text-amber-300">Lesser summon</strong>: Costs 1 charge</li>
                       <li><strong className="text-red-300">Greater summon</strong>: Costs ALL charges, sets <code className="text-red-300">shardDark = true</code></li>
                       <li>When charges reach 0, the shard darkens</li>
@@ -471,16 +471,16 @@ export default function RulebookPage() {
             </Card>
 
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white">All {SHARD_NAMES.length} Shards</CardTitle></CardHeader>
+              <CardHeader><CardTitle style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}>All {SHARD_NAMES.length} Shards</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-2 max-h-96 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: '#475569 transparent' }}>
                   {SHARD_NAMES.map((shard) => (
                     <div key={shard.name} className="p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 cursor-pointer transition-colors" onClick={() => setExpandedShard(expandedShard === shard.name ? null : shard.name)}>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 flex-wrap"><span className="font-bold text-white text-sm">{shard.name}</span><Badge className="bg-slate-600 text-xs">{shard.pantheon}</Badge></div>
-                        <Badge className="bg-amber-600 text-xs">{shard.power}</Badge>
+                        <div className="flex items-center gap-2 flex-wrap"><span className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>{shard.name}</span><Badge className="bg-slate-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>{shard.pantheon}</Badge></div>
+                        <Badge className="bg-amber-600 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>{shard.power}</Badge>
                       </div>
-                      {expandedShard === shard.name && <p className="mt-2 text-sm text-gray-400 italic border-t border-slate-600 pt-2">{shard.origin}</p>}
+                      {expandedShard === shard.name && <p className="mt-2 text-sm text-gray-400 italic border-t border-slate-600 pt-2" style={{ fontFamily: 'var(--font-narrative)' }}>{shard.origin}</p>}
                     </div>
                   ))}
                 </div>
@@ -493,22 +493,22 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="test-of-faith" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Dice5 className="w-5 h-5 text-amber-400" />Test of Faith</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Dice5 className="w-5 h-5 text-amber-400" />Test of Faith</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 italic">There are moments when the dice are not enough. When the story demands something larger than probability. In those moments, the universe holds its breath and offers you a choice: trust fate, or accept what is written.</p>
+                <p className="text-gray-300 italic" style={{ fontFamily: 'var(--font-narrative)' }}>There are moments when the dice are not enough. When the story demands something larger than probability. In those moments, the universe holds its breath and offers you a choice: trust fate, or accept what is written.</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-amber-900/20 border border-amber-700">
-                    <h4 className="font-bold text-amber-400 mb-2">When It Triggers</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-amber-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>When It Triggers</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>A PC dies (death_save trigger)</li>
                       <li>Boss enters a new phase (boss_phase trigger)</li>
                       <li>Success rate drops below 40% (desperate_odds)</li>
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-red-900/20 border border-red-700">
-                    <h4 className="font-bold text-red-400 mb-2">Safeguards</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-red-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Safeguards</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li><strong>1 miracle per PC</strong> &mdash; each PC can only be saved once</li>
                       <li><strong>2 miracles max</strong> &mdash; total across the entire party</li>
                       <li><strong>10-turn cooldown</strong> between tests</li>
@@ -518,24 +518,24 @@ export default function RulebookPage() {
                 </div>
 
                 <div className="p-4 rounded-lg bg-slate-700/50 border border-slate-600">
-                  <h4 className="font-bold text-white mb-3">The d20 Roll Ranges</h4>
+                  <h4 className="font-bold text-white mb-3" style={{ fontFamily: 'var(--font-subheading)' }}>The d20 Roll Ranges</h4>
                   <div className="space-y-3">
                     <div className="p-3 rounded-lg bg-amber-900/20 border border-amber-700/50">
-                      <div className="flex items-center gap-2 mb-1"><span className="font-bold text-amber-400">&#10022; Miracle (18-20)</span></div>
-                      <p className="text-sm text-gray-300">The universe intervenes. On death saves: PC revives at 1 HP, prophecy restored, successor removed. On boss phases: antagonist takes 15% max HP damage. Always grants +8 success rate, restores 1 shard charge, rekindles the shard.</p>
+                      <div className="flex items-center gap-2 mb-1"><span className="font-bold text-amber-400" style={{ fontFamily: 'var(--font-subheading)' }}>&#10022; Miracle (18-20)</span></div>
+                      <p className="text-sm text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>The universe intervenes. On death saves: PC revives at 1 HP, prophecy restored, successor removed. On boss phases: antagonist takes 15% max HP damage. Always grants +8 success rate, restores 1 shard charge, rekindles the shard.</p>
                     </div>
                     <div className="p-3 rounded-lg bg-slate-600/20 border border-slate-500/50">
-                      <div className="flex items-center gap-2 mb-1"><span className="font-bold text-gray-300">&#9881; Fate Holds (4-17)</span></div>
-                      <p className="text-sm text-gray-400">Neither miracle nor catastrophe. The world exhales. No mechanical changes.</p>
+                      <div className="flex items-center gap-2 mb-1"><span className="font-bold text-gray-300" style={{ fontFamily: 'var(--font-subheading)' }}>&#9881; Fate Holds (4-17)</span></div>
+                      <p className="text-sm text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>Neither miracle nor catastrophe. The world exhales. No mechanical changes.</p>
                     </div>
                     <div className="p-3 rounded-lg bg-red-900/20 border border-red-700/50">
-                      <div className="flex items-center gap-2 mb-1"><span className="font-bold text-red-400">&#9760; Murphy&apos;s Law (1-3)</span></div>
-                      <p className="text-sm text-gray-300">Everything that can go wrong does. -5 success rate. A random item in your inventory loses a charge. The shard darkens.</p>
+                      <div className="flex items-center gap-2 mb-1"><span className="font-bold text-red-400" style={{ fontFamily: 'var(--font-subheading)' }}>&#9760; Murphy&apos;s Law (1-3)</span></div>
+                      <p className="text-sm text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>Everything that can go wrong does. -5 success rate. A random item in your inventory loses a charge. The shard darkens.</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">&quot;Trust Fate&quot; Option:</strong> You may decline the test. If you do, fate is neutral &mdash; the death stands, the phase proceeds, the odds remain. Sometimes wisdom is knowing when not to roll.</div>
+                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}><strong className="text-white">&quot;Trust Fate&quot; Option:</strong> You may decline the test. If you do, fate is neutral &mdash; the death stands, the phase proceeds, the odds remain. Sometimes wisdom is knowing when not to roll.</div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -545,9 +545,9 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="injuries" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Heart className="w-5 h-5 text-red-400" />Injury System &mdash; {INJURY_TABLE.length} Injury Types</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Heart className="w-5 h-5 text-red-400" />Injury System &mdash; {INJURY_TABLE.length} Injury Types</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Injuries are generated by the AI during combat and exploration. Each has a <code className="text-red-300 bg-red-900/20 px-1 rounded">turnsLeft</code> counter that decrements each turn. DOT (damage over time) injuries drain HP at the start of each turn. Injury duration is parsed from the cure field: &quot;Rest N turns&quot; sets duration to N; DOT injuries default to 5 turns; others default to 4.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>Injuries are generated by the AI during combat and exploration. Each has a <code className="text-red-300 bg-red-900/20 px-1 rounded">turnsLeft</code> counter that decrements each turn. DOT (damage over time) injuries drain HP at the start of each turn. Injury duration is parsed from the cure field: &quot;Rest N turns&quot; sets duration to N; DOT injuries default to 5 turns; others default to 4.</p>
                 
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
                   {INJURY_CATEGORIES.map(cat => {
@@ -555,8 +555,8 @@ export default function RulebookPage() {
                     return (
                       <div key={cat.type} className={`p-3 rounded-lg border ${cat.border} bg-slate-700/20 text-center`}>
                         <Icon className={`w-5 h-5 ${cat.color} mx-auto mb-1`} />
-                        <div className="text-lg font-bold text-white">{cat.count}</div>
-                        <div className={`text-xs ${cat.color}`}>{cat.type}</div>
+                        <div className="text-lg font-bold text-white" style={{ fontFamily: 'var(--font-subheading)' }}>{cat.count}</div>
+                        <div className={`text-xs ${cat.color}`} style={{ fontFamily: 'var(--font-caption)' }}>{cat.type}</div>
                       </div>
                     )
                   })}
@@ -566,10 +566,10 @@ export default function RulebookPage() {
                   const Icon = cat.icon
                   return (
                     <div key={cat.type} className="space-y-2">
-                      <h3 className={`font-bold text-sm flex items-center gap-2 ${cat.color}`}><Icon className="w-4 h-4" />{cat.type} Injuries ({cat.count})</h3>
+                      <h3 className={`font-bold text-sm flex items-center gap-2 ${cat.color}`} style={{ fontFamily: 'var(--font-subheading)' }}><Icon className="w-4 h-4" />{cat.type} Injuries ({cat.count})</h3>
                       <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                          <thead><tr className="border-b border-slate-600"><th className="text-left py-1.5 text-gray-400 text-xs">Name</th><th className="text-left py-1.5 text-gray-400 text-xs">Effect</th><th className="text-left py-1.5 text-gray-400 text-xs">Cure</th></tr></thead>
+                        <table className="w-full text-sm" style={{ fontFamily: 'var(--font-body)' }}>
+                          <thead><tr className="border-b border-slate-600"><th className="text-left py-1.5 text-gray-400 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>Name</th><th className="text-left py-1.5 text-gray-400 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>Effect</th><th className="text-left py-1.5 text-gray-400 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>Cure</th></tr></thead>
                           <tbody className="text-gray-300">
                             {cat.injuries.map(inj => (
                               <tr key={inj.id} className="border-b border-slate-700/50">
@@ -593,12 +593,12 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="items" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Package className="w-5 h-5 text-amber-400" />Items &amp; Equipment</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Package className="w-5 h-5 text-amber-400" />Items &amp; Equipment</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Items are acquired through six methods: <code className="text-amber-300 bg-amber-900/20 px-1 rounded">npc_encounter</code>, <code className="text-amber-300 bg-amber-900/20 px-1 rounded">monster_drop</code>, <code className="text-amber-300 bg-amber-900/20 px-1 rounded">exploration</code>, <code className="text-amber-300 bg-amber-900/20 px-1 rounded">pickpocket</code>, <code className="text-amber-300 bg-amber-900/20 px-1 rounded">conversation</code>, and <code className="text-amber-300 bg-amber-900/20 px-1 rounded">quest_reward</code>.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>Items are acquired through six methods: <code className="text-amber-300 bg-amber-900/20 px-1 rounded">npc_encounter</code>, <code className="text-amber-300 bg-amber-900/20 px-1 rounded">monster_drop</code>, <code className="text-amber-300 bg-amber-900/20 px-1 rounded">exploration</code>, <code className="text-amber-300 bg-amber-900/20 px-1 rounded">pickpocket</code>, <code className="text-amber-300 bg-amber-900/20 px-1 rounded">conversation</code>, and <code className="text-amber-300 bg-amber-900/20 px-1 rounded">quest_reward</code>.</p>
                 
-                <h4 className="font-bold text-white text-sm">Active Item Modifiers</h4>
-                <p className="text-gray-400 text-xs mb-3">These modifiers trigger an immediate effect when the item is used:</p>
+                <h4 className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>Active Item Modifiers</h4>
+                <p className="text-gray-400 text-xs mb-3" style={{ fontFamily: 'var(--font-caption)' }}>These modifiers trigger an immediate effect when the item is used:</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-6">
                   {[
                     { mod: 'healing', desc: 'Restores HP (flat or 2d8+4)', example: 'Healing Potion' },
@@ -617,31 +617,31 @@ export default function RulebookPage() {
                   ].map(i => (
                     <div key={i.mod} className="flex items-center gap-2 p-2 rounded bg-slate-700/30">
                       <code className="text-amber-300 text-xs bg-amber-900/20 px-1.5 py-0.5 rounded">{i.mod}</code>
-                      <span className="text-xs text-gray-400">{i.desc}</span>
-                      <span className="text-xs text-gray-600 ml-auto">{i.example}</span>
+                      <span className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>{i.desc}</span>
+                      <span className="text-xs text-gray-600 ml-auto" style={{ fontFamily: 'var(--font-caption)' }}>{i.example}</span>
                     </div>
                   ))}
                 </div>
 
-                <h4 className="font-bold text-white text-sm">Equipment &amp; Passive Bonuses</h4>
-                <p className="text-gray-400 text-xs mb-3">Equipment provides persistent combat bonuses. When used, the game shows &quot;This item provides passive bonuses and cannot be actively used.&quot; Charges on equipment are high (99) and never consumed.</p>
+                <h4 className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>Equipment &amp; Passive Bonuses</h4>
+                <p className="text-gray-400 text-xs mb-3" style={{ fontFamily: 'var(--font-caption)' }}>Equipment provides persistent combat bonuses. When used, the game shows &quot;This item provides passive bonuses and cannot be actively used.&quot; Charges on equipment are high (99) and never consumed.</p>
                 
-                <h4 className="font-bold text-white text-sm">Charge System</h4>
+                <h4 className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>Charge System</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-3 rounded bg-slate-700/50">
-                    <h5 className="text-sm text-amber-300 mb-2">Consumable Items</h5>
-                    <p className="text-xs text-gray-400">Potions and scrolls have 1 charge. When used, they are removed from inventory. Multi-charge items decrement by 1 per use.</p>
+                    <h5 className="text-sm text-amber-300 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Consumable Items</h5>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>Potions and scrolls have 1 charge. When used, they are removed from inventory. Multi-charge items decrement by 1 per use.</p>
                   </div>
                   <div className="p-3 rounded bg-slate-700/50">
-                    <h5 className="text-sm text-blue-300 mb-2">Permanent Equipment</h5>
-                    <p className="text-xs text-gray-400">Equipment and most artifacts have 99 charges (effectively infinite). They persist in your inventory and provide passive bonuses.</p>
+                    <h5 className="text-sm text-blue-300 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Permanent Equipment</h5>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>Equipment and most artifacts have 99 charges (effectively infinite). They persist in your inventory and provide passive bonuses.</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white">Rarity Tiers</CardTitle></CardHeader>
+              <CardHeader><CardTitle style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}>Rarity Tiers</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {[
@@ -651,8 +651,8 @@ export default function RulebookPage() {
                     { rarity: 'Legendary', color: 'bg-amber-700', count: ITEM_TEMPLATES.filter(i => i.rarity === 'legendary').length },
                   ].map(r => (
                     <div key={r.rarity} className={`p-4 rounded-lg ${r.color}/20 border ${r.color}/30 text-center`}>
-                      <div className="text-2xl font-bold text-white">{r.count}</div>
-                      <div className={`inline-block px-2 py-0.5 rounded text-xs text-white font-semibold ${r.color} mt-1`}>{r.rarity}</div>
+                      <div className="text-2xl font-bold text-white" style={{ fontFamily: 'var(--font-subheading)' }}>{r.count}</div>
+                      <div className={`inline-block px-2 py-0.5 rounded text-xs text-white font-semibold ${r.color} mt-1`} style={{ fontFamily: 'var(--font-caption)' }}>{r.rarity}</div>
                     </div>
                   ))}
                 </div>
@@ -665,9 +665,9 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="prophecy" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><ScrollText className="w-5 h-5 text-purple-400" />The Eight Prophecies</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><ScrollText className="w-5 h-5 text-purple-400" />The Eight Prophecies</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm italic">The prophecy is bound to the Shard, not just the PC. The main PC carries it directly. When the main PC dies, the shard summons a replacement and passes the prophecy.</p>
+                <p className="text-gray-300 text-sm italic" style={{ fontFamily: 'var(--font-narrative)' }}>The prophecy is bound to the Shard, not just the PC. The main PC carries it directly. When the main PC dies, the shard summons a replacement and passes the prophecy.</p>
                 
                 <div className="grid grid-cols-5 gap-2 mb-4">
                   {[
@@ -678,15 +678,15 @@ export default function RulebookPage() {
                     { state: 'Broken', color: 'bg-red-700', bonus: '-5%' },
                   ].map(s => (
                     <div key={s.state} className="text-center p-2 rounded bg-slate-700/50">
-                      <div className={`inline-block px-2 py-0.5 rounded text-xs text-white font-semibold ${s.color} mb-1`}>{s.state}</div>
-                      <div className="text-sm font-bold text-gray-300">{s.bonus}</div>
+                      <div className={`inline-block px-2 py-0.5 rounded text-xs text-white font-semibold ${s.color} mb-1`} style={{ fontFamily: 'var(--font-caption)' }}>{s.state}</div>
+                      <div className="text-sm font-bold text-gray-300" style={{ fontFamily: 'var(--font-caption)' }}>{s.bonus}</div>
                     </div>
                   ))}
                 </div>
 
-                <h4 className="font-bold text-white text-sm mb-2">Mantle-Passing Chain on Death</h4>
+                <h4 className="font-bold text-white text-sm mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Mantle-Passing Chain on Death</h4>
                 <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600 mb-4">
-                  <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
+                  <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                     <li>Main PC dies &rarr; Companion becomes the Chosen One</li>
                     <li>If companion also falls &rarr; RNG pool NPC steps up</li>
                     <li>Successor feels the accumulated grief of all previous holders</li>
@@ -700,10 +700,10 @@ export default function RulebookPage() {
                   {PROPHECIES.map((p, i) => (
                     <div key={p.name} className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/50">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-white text-sm">{i + 1}. {p.name}</span>
-                        <Badge className="bg-purple-900/50 text-purple-300 text-xs">{p.bonus}</Badge>
+                        <span className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>{i + 1}. {p.name}</span>
+                        <Badge className="bg-purple-900/50 text-purple-300 text-xs" style={{ fontFamily: 'var(--font-caption)' }}>{p.bonus}</Badge>
                       </div>
-                      <p className="text-xs text-gray-400 italic">{p.desc}</p>
+                      <p className="text-xs text-gray-400 italic" style={{ fontFamily: 'var(--font-narrative)' }}>{p.desc}</p>
                     </div>
                   ))}
                 </div>
@@ -716,13 +716,13 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="companions" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Users className="w-5 h-5 text-emerald-400" />Companions &amp; NPCs</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Users className="w-5 h-5 text-emerald-400" />Companions &amp; NPCs</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">The second PC in your party is the <strong className="text-amber-300">Companion</strong>, bound by fate to the main PC. They have a shared mini-origin and cannot abandon the main PC.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>The second PC in your party is the <strong className="text-amber-300">Companion</strong>, bound by fate to the main PC. They have a shared mini-origin and cannot abandon the main PC.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Companion Affinity</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-white mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Companion Affinity</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>Range: <strong>-100 to +100</strong></li>
                       <li>Moods: loyal, concerned, conflicted, distant, hostile, devoted</li>
                       <li>Affinity affects dialogue and cooperation</li>
@@ -731,8 +731,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">NPC Alliance System</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-white mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>NPC Alliance System</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>NPCs encountered can be ALLY, ENEMY, or BOSS</li>
                       <li>Allied NPCs contribute to the Allied Gods bonus (+3 each)</li>
                       <li>NPCs have full entity data: HP, AC, MR, abilities, personality</li>
@@ -750,29 +750,29 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="antagonists" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Skull className="w-5 h-5 text-red-400" />Antagonists</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Skull className="w-5 h-5 text-red-400" />Antagonists</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">The antagonist&apos;s identity is hidden until Act III. During Acts I-II, only clues about pantheon, domain, alignment, and symbols are revealed. The antagonist may be a Greater God OR a Super Monster (Jormungandr, Fenris, Malystryx, etc.).</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>The antagonist&apos;s identity is hidden until Act III. During Acts I-II, only clues about pantheon, domain, alignment, and symbols are revealed. The antagonist may be a Greater God OR a Super Monster (Jormungandr, Fenris, Malystryx, etc.).</p>
                 
-                <h4 className="font-bold text-white text-sm">3-Phase Boss Battle</h4>
+                <h4 className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>3-Phase Boss Battle</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                   <div className="p-4 rounded-lg bg-red-900/20 border border-red-700/50">
-                    <h5 className="font-bold text-red-400 mb-1">Phase 1 (100%-65% HP)</h5>
-                    <p className="text-xs text-gray-400">The antagonist&apos;s base abilities. Each Greater God has a unique phase1 description.</p>
+                    <h5 className="font-bold text-red-400 mb-1" style={{ fontFamily: 'var(--font-subheading)' }}>Phase 1 (100%-65% HP)</h5>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>The antagonist&apos;s base abilities. Each Greater God has a unique phase1 description.</p>
                   </div>
                   <div className="p-4 rounded-lg bg-yellow-900/20 border border-yellow-700/50">
-                    <h5 className="font-bold text-yellow-400 mb-1">Phase 2 (65%-30% HP)</h5>
-                    <p className="text-xs text-gray-400">Deeper power unleashed. Each Greater God has a unique phase2 description. Triggers Test of Faith.</p>
+                    <h5 className="font-bold text-yellow-400 mb-1" style={{ fontFamily: 'var(--font-subheading)' }}>Phase 2 (65%-30% HP)</h5>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>Deeper power unleashed. Each Greater God has a unique phase2 description. Triggers Test of Faith.</p>
                   </div>
                   <div className="p-4 rounded-lg bg-red-800/30 border border-red-500/50">
-                    <h5 className="font-bold text-red-300 mb-1">Phase 3 (30%-0% HP)</h5>
-                    <p className="text-xs text-gray-400">All restraint shatters. Full terrible might. Each Greater God has a unique phase3 description.</p>
+                    <h5 className="font-bold text-red-300 mb-1" style={{ fontFamily: 'var(--font-subheading)' }}>Phase 3 (30%-0% HP)</h5>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>All restraint shatters. Full terrible might. Each Greater God has a unique phase3 description.</p>
                   </div>
                 </div>
 
-                <h4 className="font-bold text-white text-sm">Banishment Mechanic</h4>
+                <h4 className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>Banishment Mechanic</h4>
                 <div className="p-4 rounded-lg bg-slate-700/30 border border-slate-600">
-                  <ul className="text-sm text-gray-300 space-y-2">
+                  <ul className="text-sm text-gray-300 space-y-2" style={{ fontFamily: 'var(--font-body)' }}>
                     <li>&#8226; <strong className="text-amber-300">Act I-II:</strong> If the antagonist reaches 0 HP, they are <strong>banished</strong> to another plane rather than killed</li>
                     <li>&#8226; HP is restored to <strong>40% of max HP</strong></li>
                     <li>&#8226; An <strong>archrival</strong> is identified &mdash; the antagonist&apos;s mythological enemy</li>
@@ -790,12 +790,12 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="saving" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-cyan-400" />Saving &amp; Loading</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><ShieldCheck className="w-5 h-5 text-cyan-400" />Saving &amp; Loading</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Save Slots</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-white mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Save Slots</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li><strong>5 save slots</strong> available</li>
                       <li>Each slot stores: turn number, act, party names</li>
                       <li>Full GameState serialized as JSON to localStorage</li>
@@ -803,8 +803,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Backward Compatibility</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-white mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Backward Compatibility</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>Loading merges saved data with default GameState</li>
                       <li>Missing fields from older saves are filled with defaults</li>
                       <li>This allows campaigns to survive game updates</li>
@@ -821,26 +821,26 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="achievements" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Trophy className="w-5 h-5 text-amber-400" />Achievement System &mdash; {ACHIEVEMENT_DEFS.length} Achievements</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Trophy className="w-5 h-5 text-amber-400" />Achievement System &mdash; {ACHIEVEMENT_DEFS.length} Achievements</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Achievements are unlocked automatically as you play. Some are visible from the start; others are <strong className="text-purple-400">hidden</strong> until you discover them. The tracker checks your game state after every turn and fires a notification when a new achievement unlocks.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>Achievements are unlocked automatically as you play. Some are visible from the start; others are <strong className="text-purple-400">hidden</strong> until you discover them. The tracker checks your game state after every turn and fires a notification when a new achievement unlocks.</p>
 
                 {/* Tiers */}
-                <h4 className="font-bold text-white text-sm">4 Tiers</h4>
+                <h4 className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>4 Tiers</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {(Object.entries(TIER_CONFIG) as [AchievementTier, typeof TIER_CONFIG[AchievementTier]][]).map(([tier, cfg]) => {
                     const count = ACHIEVEMENT_DEFS.filter(a => a.tier === tier).length
                     return (
                       <div key={tier} className="p-3 rounded-lg border text-center" style={{ borderColor: cfg.border, backgroundColor: cfg.bg }}>
-                        <div className="text-lg font-bold" style={{ color: cfg.color }}>{count}</div>
-                        <div className="text-xs" style={{ color: cfg.color }}>{cfg.label}</div>
+                        <div className="text-lg font-bold" style={{ color: cfg.color, fontFamily: 'var(--font-subheading)' }}>{count}</div>
+                        <div className="text-xs" style={{ color: cfg.color, fontFamily: 'var(--font-caption)' }}>{cfg.label}</div>
                       </div>
                     )
                   })}
                 </div>
 
                 {/* Categories */}
-                <h4 className="font-bold text-white text-sm">7 Categories</h4>
+                <h4 className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>7 Categories</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {(Object.entries(CATEGORY_CONFIG) as [AchievementCategory, typeof CATEGORY_CONFIG[AchievementCategory]][]).map(([cat, cfg]) => {
                     const count = ACHIEVEMENT_DEFS.filter(a => a.category === cat).length
@@ -848,27 +848,27 @@ export default function RulebookPage() {
                     return (
                       <div key={cat} className="p-3 rounded-lg bg-slate-700/50 text-center">
                         <div className="text-lg">{cfg.icon}</div>
-                        <div className="text-sm font-bold text-white">{cfg.label}</div>
-                        <div className="text-xs text-gray-400">{count} total &middot; {visibleCount} visible</div>
+                        <div className="text-sm font-bold text-white" style={{ fontFamily: 'var(--font-subheading)' }}>{cfg.label}</div>
+                        <div className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>{count} total &middot; {visibleCount} visible</div>
                       </div>
                     )
                   })}
                 </div>
 
                 {/* How they're earned */}
-                <h4 className="font-bold text-white text-sm">How Achievements Are Earned</h4>
+                <h4 className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>How Achievements Are Earned</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h5 className="font-bold text-amber-400 mb-2">Campaign Milestones</h5>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h5 className="font-bold text-amber-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Campaign Milestones</h5>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>Completing each act (Act I, II, III)</li>
                       <li>Victory or defeat endings</li>
                       <li>Speedrunning (under 40 turns) or marathons (150+ turns)</li>
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h5 className="font-bold text-red-400 mb-2">Combat</h5>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h5 className="font-bold text-red-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Combat</h5>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>First blood, critical strikes</li>
                       <li>Boss phase transitions (Phase 2, Phase 3)</li>
                       <li>Banishment and archrival summons</li>
@@ -876,8 +876,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h5 className="font-bold text-cyan-400 mb-2">Exploration & Social</h5>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h5 className="font-bold text-cyan-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Exploration &amp; Social</h5>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>Encountering gods across pantheons (5 / 15 / 30)</li>
                       <li>Multi-pantheon encounters (5+ pantheons)</li>
                       <li>Quest acceptance and completion</li>
@@ -885,8 +885,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h5 className="font-bold text-purple-400 mb-2">Survival & Shard</h5>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h5 className="font-bold text-purple-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Survival &amp; Shard</h5>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>Surviving 50 / 100 / 150 turns</li>
                       <li>Zero-death runs, full HP entering Act III</li>
                       <li>First shard invocation, greater god summons</li>
@@ -895,7 +895,7 @@ export default function RulebookPage() {
                   </div>
                 </div>
 
-                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Hidden Achievements:</strong> {ACHIEVEMENT_DEFS.filter(a => a.hidden).length} of {ACHIEVEMENT_DEFS.length} achievements are hidden until unlocked. They reward unexpected feats &mdash; try everything!</div>
+                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}><strong className="text-white">Hidden Achievements:</strong> {ACHIEVEMENT_DEFS.filter(a => a.hidden).length} of {ACHIEVEMENT_DEFS.length} achievements are hidden until unlocked. They reward unexpected feats &mdash; try everything!</div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -905,14 +905,14 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="audio" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Volume2 className="w-5 h-5 text-emerald-400" />Audio &amp; Voice Systems</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Volume2 className="w-5 h-5 text-emerald-400" />Audio &amp; Voice Systems</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Mythworld features a layered audio system that combines procedural ambient soundscapes, contextual sound effects, and AI-powered text-to-speech narration to create an immersive experience.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>Mythworld features a layered audio system that combines procedural ambient soundscapes, contextual sound effects, and AI-powered text-to-speech narration to create an immersive experience.</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-emerald-400 mb-2">Procedural Ambient Audio</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-emerald-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Procedural Ambient Audio</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li><strong>8 audio themes</strong> that match scene types</li>
                       <li>Themes include: forest, dungeon, combat, temple, tavern, coastal, mountain, and void</li>
                       <li>Soundscapes are generated procedurally using Web Audio API</li>
@@ -920,8 +920,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-amber-400 mb-2">Sound Effects (SFX)</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-amber-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Sound Effects (SFX)</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>Dice rolls &mdash; tactile rumble on every action</li>
                       <li>Combat hits &mdash; impacts, clashes, and spell sounds</li>
                       <li>Injury events &mdash; wince-inducing feedback</li>
@@ -931,8 +931,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-cyan-400 mb-2">TTS Narration (Edge TTS)</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-cyan-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>TTS Narration (Edge TTS)</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>AI narration spoken aloud via Microsoft Edge TTS</li>
                       <li>Narrator voice selected to match the game&apos;s tone</li>
                       <li>Toggle on/off from the game settings</li>
@@ -940,8 +940,8 @@ export default function RulebookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-purple-400 mb-2">Auto Scene Detection</h4>
-                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
+                    <h4 className="font-bold text-purple-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Auto Scene Detection</h4>
+                    <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside" style={{ fontFamily: 'var(--font-body)' }}>
                       <li>The engine detects scene type from the AI&apos;s response</li>
                       <li>Keywords in the narrative trigger theme changes</li>
                       <li>Combat scenes auto-switch to battle audio</li>
@@ -950,7 +950,7 @@ export default function RulebookPage() {
                   </div>
                 </div>
 
-                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Tip:</strong> All audio is browser-native (Web Audio API). No external services or downloads required beyond the TTS endpoint. Audio can be fully muted from the in-game settings panel.</div>
+                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}><strong className="text-white">Tip:</strong> All audio is browser-native (Web Audio API). No external services or downloads required beyond the TTS endpoint. Audio can be fully muted from the in-game settings panel.</div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -960,26 +960,26 @@ export default function RulebookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="difficulty" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Scale className="w-5 h-5 text-emerald-400" />Difficulty &amp; Balance</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Scale className="w-5 h-5 text-emerald-400" />Difficulty &amp; Balance</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">There is no difficulty selector in Mythworld. Instead, <strong className="text-white">difficulty emerges dynamically</strong> from the success rate formula. As your story progresses and circumstances shift, the odds rise and fall naturally.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>There is no difficulty selector in Mythworld. Instead, <strong className="text-white">difficulty emerges dynamically</strong> from the success rate formula. As your story progresses and circumstances shift, the odds rise and fall naturally.</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 rounded-lg bg-green-900/20 border border-green-700">
-                    <h4 className="font-bold text-green-400 mb-2">Act I: ~50-65%</h4>
-                    <p className="text-xs text-gray-400">Full party alive, few injuries, early story bonuses. The world is forgiving &mdash; but the clock is ticking.</p>
+                    <h4 className="font-bold text-green-400 mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#2ECC71' }}>Act I: ~50-65%</h4>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>Full party alive, few injuries, early story bonuses. The world is forgiving &mdash; but the clock is ticking.</p>
                   </div>
                   <div className="p-4 rounded-lg bg-yellow-900/20 border border-yellow-700">
-                    <h4 className="font-bold text-yellow-400 mb-2">Act II: ~40-60%</h4>
-                    <p className="text-xs text-gray-400">Injuries accumulate. The Greater God penalty (-5%) kicks in. Prophecy state and ally count become critical swings.</p>
+                    <h4 className="font-bold text-yellow-400 mb-2" style={{ fontFamily: 'var(--font-subheading)' }}>Act II: ~40-60%</h4>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>Injuries accumulate. The Greater God penalty (-5%) kicks in. Prophecy state and ally count become critical swings.</p>
                   </div>
                   <div className="p-4 rounded-lg bg-red-900/20 border border-red-700">
-                    <h4 className="font-bold text-red-400 mb-2">Act III: ~30-55%</h4>
-                    <p className="text-xs text-gray-400">Injuries stack up to -15%. Boss phases impose additional pressure. Every factor matters. Victory is earned, not given.</p>
+                    <h4 className="font-bold text-red-400 mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#DC143C' }}>Act III: ~30-55%</h4>
+                    <p className="text-xs text-gray-400" style={{ fontFamily: 'var(--font-body)' }}>Injuries stack up to -15%. Boss phases impose additional pressure. Every factor matters. Victory is earned, not given.</p>
                   </div>
                 </div>
 
-                <h4 className="font-bold text-white text-sm">Key Pressure Points</h4>
+                <h4 className="font-bold text-white text-sm" style={{ fontFamily: 'var(--font-subheading)' }}>Key Pressure Points</h4>
                 <div className="space-y-2">
                   {[
                     { factor: '13 dynamic factors', desc: 'The success rate recalculates every turn based on 13 shifting variables', color: 'text-emerald-400' },
@@ -990,13 +990,13 @@ export default function RulebookPage() {
                     { factor: 'Floor: 5% / Ceiling: 95%', desc: 'No matter how dire or how blessed, there is always a chance', color: 'text-cyan-400' },
                   ].map(f => (
                     <div key={f.factor} className="flex items-center justify-between p-3 rounded-lg bg-slate-700/30">
-                      <span className={`text-sm font-bold ${f.color}`}>{f.factor}</span>
-                      <span className="text-xs text-gray-400 text-right max-w-xs">{f.desc}</span>
+                      <span className={`text-sm font-bold ${f.color}`} style={{ fontFamily: 'var(--font-subheading)' }}>{f.factor}</span>
+                      <span className="text-xs text-gray-400 text-right max-w-xs" style={{ fontFamily: 'var(--font-body)' }}>{f.desc}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400"><strong className="text-white">Design Philosophy:</strong> Difficulty is not a knob you set &mdash; it is a story you live. Manage your injuries, nurture your companion bond, fulfill your prophecy, and summon allies wisely. The formula rewards preparation and punishes neglect.</div>
+                <div className="p-3 rounded bg-slate-700/50 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}><strong className="text-white">Design Philosophy:</strong> Difficulty is not a knob you set &mdash; it is a story you live. Manage your injuries, nurture your companion bond, fulfill your prophecy, and summon allies wisely. The formula rewards preparation and punishes neglect.</div>
               </CardContent>
             </Card>
           </TabsContent>

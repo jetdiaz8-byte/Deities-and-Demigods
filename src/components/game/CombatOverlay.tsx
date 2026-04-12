@@ -171,9 +171,9 @@ export default function CombatOverlay({
 
       {/* ── Combat Banner ────────────────────────────────────────────── */}
       <div className="combat-banner">
-        <h2>⚔ COMBAT — Round {combatState.round || 1}</h2>
+        <h2 style={{ fontFamily: 'var(--font-combat)', fontSize: 28, color: '#D4AF37', margin: 0, textShadow: '0 0 10px rgba(212,175,55,0.3)' }}>⚔ COMBAT — Round {combatState.round || 1}</h2>
         {combatState.phase && (
-          <div style={{ fontSize: 12, color: '#8a7040', marginTop: 4, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: 12, color: '#D4AF37', marginTop: 4, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
             {combatState.phase === 'player_turn' ? '🗡 Your Move' :
              combatState.phase === 'enemy_turn' ? '💀 Enemy Turn' :
              combatState.phase === 'resolution' ? '⚖ Resolution' : '🎲 Initiative'}
@@ -194,7 +194,7 @@ export default function CombatOverlay({
           lineHeight: 1.5,
           fontFamily: 'var(--font-body)',
         }}>
-          <div style={{ fontSize: 10, color: '#7a6a4a', marginBottom: 4, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 10, color: '#8A7A50', marginBottom: 4, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
             📜 Battle Context
           </div>
           {combatContext}
@@ -209,7 +209,7 @@ export default function CombatOverlay({
           <div style={{ background: 'rgba(40,10,10,.3)', border: '1px solid rgba(139,0,0,.3)', borderRadius: 8, padding: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Skull className="w-4 h-4 text-red-400" />
-              <span style={{ fontSize: 11, color: '#cc5050', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
+              <span style={{ fontSize: 11, color: '#DC143C', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
                 Enemies ({aliveEnemies.length})
               </span>
               <div style={{ flex: 1, height: 1, background: 'rgba(139,0,0,.2)' }} />
@@ -310,7 +310,7 @@ export default function CombatOverlay({
           <div style={{ background: 'rgba(20,20,10,.3)', border: '1px solid rgba(100,80,40,.2)', borderRadius: 8, padding: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <Shield className="w-4 h-4 text-[#d4af37]" />
-              <span style={{ fontSize: 11, color: '#d4af37', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
+              <span style={{ fontSize: 11, color: '#D4AF37', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
                 Allies ({aliveAllies.length})
               </span>
               <div style={{ flex: 1, height: 1, background: 'rgba(100,80,40,.2)' }} />
@@ -401,7 +401,7 @@ export default function CombatOverlay({
             background: 'rgba(0,0,0,.4)', borderTop: '1px solid #333',
             borderBottom: '1px solid #333', borderRadius: 6,
           }}>
-            <div style={{ fontSize: 10, color: '#5a5040', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
+            <div style={{ fontSize: 10, color: '#8A7A50', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
               Combat Log
             </div>
             {combatState.log.slice(-8).map((e, idx) => (
@@ -444,8 +444,8 @@ export default function CombatOverlay({
       {/* ── Victory / Defeat Overlay ─────────────────────────────────── */}
       {combatState.victory && (
         <div className={`combat-end-overlay ${combatState.victory === 'players' ? 'combat-victory' : 'combat-defeat'}`}>
-          <div className="combat-end-title">{combatState.victory === 'players' ? '🏆 VICTORY!' : '💀 DEFEAT'}</div>
-          <button className="combat-end-btn" onClick={onContinue}>
+          <div className="combat-end-title" style={{ fontFamily: 'var(--font-combat)' }}>{combatState.victory === 'players' ? '🏆 VICTORY!' : '💀 DEFEAT'}</div>
+          <button className="combat-end-btn" onClick={onContinue} style={{ fontFamily: 'var(--font-button)' }}>
             {combatState.victory === 'players' ? 'Continue Adventure' : 'Rise Again'}
           </button>
         </div>

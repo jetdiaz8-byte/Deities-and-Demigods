@@ -30,7 +30,7 @@ export function QuestJournalModal({ open, onOpenChange, gameState }: QuestJourna
             ))}
           </div>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-[#d4af37]" style={{ fontFamily: '"Cinzel Decorative", serif', fontSize: 'clamp(1.1rem, 4vw, 1.4rem)' }}>
+            <DialogTitle className="flex items-center gap-3 text-[#D4AF37]" style={{ fontFamily: 'var(--font-title)', fontSize: 'clamp(1.1rem, 4vw, 1.4rem)' }}>
               <ScrollText className="w-6 h-6" />
               Quest Journal
             </DialogTitle>

@@ -76,7 +76,7 @@ export function TestOfFaith({ gameState, resolveTestOfFaith }: TestOfFaithProps)
       animation: 'fadeIn 0.6s ease'
     }}>
       <div style={{
-        fontFamily: '"Cinzel Decorative", serif',
+        fontFamily: 'var(--font-title)',
         fontSize: '1.1rem',
         color: resultColor,
         letterSpacing: '.12em',
@@ -88,7 +88,7 @@ export function TestOfFaith({ gameState, resolveTestOfFaith }: TestOfFaithProps)
       <p style={{
         color: '#b0a080',
         fontStyle: 'italic',
-        fontFamily: '"IM Fell English", serif',
+        fontFamily: 'var(--font-dialogue)',
         lineHeight: '1.7',
         marginBottom: '1.5rem',
         fontSize: '0.95rem'
@@ -116,7 +116,7 @@ export function TestOfFaith({ gameState, resolveTestOfFaith }: TestOfFaithProps)
         }}
       >
         <span style={{
-          fontFamily: '"Cinzel Decorative", serif',
+          fontFamily: 'var(--font-title)',
           fontSize: '2rem',
           fontWeight: 'bold',
           color: resultColor,
@@ -132,7 +132,7 @@ export function TestOfFaith({ gameState, resolveTestOfFaith }: TestOfFaithProps)
           <button
             onClick={rollDice}
             style={{
-              fontFamily: '"Cinzel", serif',
+              fontFamily: 'var(--font-heading)',
               fontSize: '0.95rem',
               letterSpacing: '.1em',
               padding: '0.75rem 2rem',
@@ -150,7 +150,7 @@ export function TestOfFaith({ gameState, resolveTestOfFaith }: TestOfFaithProps)
           <button
             onClick={trustFate}
             style={{
-              fontFamily: '"Cinzel", serif',
+              fontFamily: 'var(--font-heading)',
               fontSize: '0.85rem',
               letterSpacing: '.08em',
               padding: '0.6rem 1.5rem',

@@ -114,30 +114,30 @@ export default function DMHandbookPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       {/* HEADER */}
-      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-700">
+      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur" style={{ borderBottom: '1px solid rgba(212,175,55,0.2)' }}>
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"><ChevronLeft className="w-5 h-5" /><span>Back to Game</span></Link>
+              <Link href="/" className="flex items-center gap-2 hover:text-white transition-colors" style={{ fontFamily: 'var(--font-button)', color: '#8A7A50' }}><ChevronLeft className="w-5 h-5" /><span>Back to Game</span></Link>
               <Separator orientation="vertical" className="h-8 bg-slate-700" />
-              <div className="flex items-center gap-2"><ScrollText className="w-6 h-6 text-red-400" /><h1 className="text-xl font-bold text-white">DM Handbook</h1></div>
+              <div className="flex items-center gap-2"><ScrollText className="w-6 h-6" style={{ color: '#D4AF37' }} /><h1 className="text-xl font-bold" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}>DM Handbook</h1></div>
             </div>
-            <Link href="/rulebook"><Button variant="outline" className="border-slate-600 text-gray-300"><BookOpen className="w-4 h-4 mr-2" />Player&apos;s Guide</Button></Link>
+            <Link href="/rulebook"><Button variant="outline" className="border-slate-600" style={{ fontFamily: 'var(--font-button)', color: '#D4AF37', borderColor: '#D4AF37' }}><BookOpen className="w-4 h-4 mr-2" />Player&apos;s Guide</Button></Link>
           </div>
         </div>
       </header>
 
       {/* HERO BANNER */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-950/40 via-slate-900/80 to-slate-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-900/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-950/40 via-slate-900/80 to-slate-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent" />
         <div className="relative max-w-6xl mx-auto px-4 py-16 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-red-400 mb-4 tracking-wider" style={{ textShadow: '0 0 20px rgba(220,38,38,0.4), 0 2px 4px rgba(0,0,0,0.8)' }}>DUNGEON MASTER&apos;S HANDBOOK</h2>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-2">The arcane machinery behind the AI Dungeon Master</p>
-          <p className="text-sm text-gray-500">Deities &amp; Demigods Edition &mdash; How the engine thinks, decides, and narrates</p>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-wider" style={{ fontFamily: 'var(--font-title)', color: '#D4AF37', textShadow: '0 0 30px rgba(212,175,55,0.5), 0 2px 4px rgba(0,0,0,0.8)' }}>DUNGEON MASTER&apos;S HANDBOOK</h2>
+          <p className="text-lg max-w-2xl mx-auto mb-2" style={{ fontFamily: 'var(--font-body)', color: '#F5E6C8' }}>The arcane machinery behind the AI Dungeon Master</p>
+          <p className="text-sm" style={{ fontFamily: 'var(--font-caption)', color: '#8A7A50' }}>Deities &amp; Demigods Edition &mdash; How the engine thinks, decides, and narrates</p>
           <div className="flex justify-center mt-6 gap-3">
-            <Badge className="bg-red-900/50 border border-red-700/50 text-red-300 text-xs">Cloud AI</Badge>
-            <Badge className="bg-slate-800 border border-slate-600 text-gray-400 text-xs">TypeScript Engine</Badge>
+            <Badge className="bg-purple-900/50 border border-purple-700/50 text-xs" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Cloud AI</Badge>
+            <Badge className="bg-slate-800 border text-xs" style={{ fontFamily: 'var(--font-caption)', color: '#8A7A50', borderColor: '#5A4A28' }}>TypeScript Engine</Badge>
           </div>
         </div>
       </section>
@@ -145,23 +145,23 @@ export default function DMHandbookPage() {
       {/* MAIN CONTENT */}
       <main className="max-w-6xl mx-auto px-4 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="flex-wrap gap-1 bg-slate-800/50 p-2 h-auto">
-            <TabsTrigger value="ai-dm" className="data-[state=active]:bg-red-700 text-xs">1. AI DM</TabsTrigger>
-            <TabsTrigger value="prompt" className="data-[state=active]:bg-red-700 text-xs">2. Prompt</TabsTrigger>
-            <TabsTrigger value="schema" className="data-[state=active]:bg-red-700 text-xs">3. Schema</TabsTrigger>
-            <TabsTrigger value="state-updates" className="data-[state=active]:bg-red-700 text-xs">4. State Protocol</TabsTrigger>
-            <TabsTrigger value="success-rate" className="data-[state=active]:bg-red-700 text-xs">5. Success Rate</TabsTrigger>
-            <TabsTrigger value="narrative" className="data-[state=active]:bg-red-700 text-xs">6. Narrative</TabsTrigger>
-            <TabsTrigger value="skill-system" className="data-[state=active]:bg-cyan-700 text-xs">7. Skill System</TabsTrigger>
-            <TabsTrigger value="fallbacks" className="data-[state=active]:bg-red-700 text-xs">8. Fallbacks</TabsTrigger>
-            <TabsTrigger value="faith-engine" className="data-[state=active]:bg-amber-700 text-xs">9. Test of Faith</TabsTrigger>
-            <TabsTrigger value="difficulty" className="data-[state=active]:bg-red-700 text-xs">10. Difficulty</TabsTrigger>
-            <TabsTrigger value="hp-validation" className="data-[state=active]:bg-red-700 text-xs">11. HP Validation</TabsTrigger>
-            <TabsTrigger value="items-dm" className="data-[state=active]:bg-red-700 text-xs">12. Items</TabsTrigger>
-            <TabsTrigger value="quests-dm" className="data-[state=active]:bg-red-700 text-xs">13. Quests</TabsTrigger>
-            <TabsTrigger value="saves-dm" className="data-[state=active]:bg-red-700 text-xs">14. Saves</TabsTrigger>
-            <TabsTrigger value="achievements-dm" className="data-[state=active]:bg-red-700 text-xs">15. Achievements</TabsTrigger>
-            <TabsTrigger value="audio-engine" className="data-[state=active]:bg-red-700 text-xs">16. Audio Engine</TabsTrigger>
+          <TabsList className="flex-wrap gap-1 p-2 h-auto" style={{ background: 'rgba(123,45,142,0.15)', border: '1px solid rgba(212,175,55,0.15)' }}>
+            <TabsTrigger value="ai-dm" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>1. AI DM</TabsTrigger>
+            <TabsTrigger value="prompt" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>2. Prompt</TabsTrigger>
+            <TabsTrigger value="schema" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>3. Schema</TabsTrigger>
+            <TabsTrigger value="state-updates" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>4. State Protocol</TabsTrigger>
+            <TabsTrigger value="success-rate" className="data-[state=active]:bg-emerald-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>5. Success Rate</TabsTrigger>
+            <TabsTrigger value="narrative" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>6. Narrative</TabsTrigger>
+            <TabsTrigger value="skill-system" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>7. Skill System</TabsTrigger>
+            <TabsTrigger value="fallbacks" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>8. Fallbacks</TabsTrigger>
+            <TabsTrigger value="faith-engine" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>9. Test of Faith</TabsTrigger>
+            <TabsTrigger value="difficulty" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>10. Difficulty</TabsTrigger>
+            <TabsTrigger value="hp-validation" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>11. HP Validation</TabsTrigger>
+            <TabsTrigger value="items-dm" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>12. Items</TabsTrigger>
+            <TabsTrigger value="quests-dm" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>13. Quests</TabsTrigger>
+            <TabsTrigger value="saves-dm" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>14. Saves</TabsTrigger>
+            <TabsTrigger value="achievements-dm" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>15. Achievements</TabsTrigger>
+            <TabsTrigger value="audio-engine" className="data-[state=active]:bg-purple-800 text-xs" style={{ fontFamily: 'var(--font-button)' }}>16. Audio Engine</TabsTrigger>
           </TabsList>
 
           {/* ═══════════════════════════════════════════════════════════════════ */}
@@ -169,11 +169,11 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="ai-dm" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Brain className="w-5 h-5 text-red-400" />AI Dungeon Master Architecture</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Brain className="w-5 h-5 text-red-400" />AI Dungeon Master Architecture</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">The AI Dungeon Master is not a chatbot with a personality prompt. It is a <strong className="text-red-300">narrative state machine</strong> &mdash; a system that receives the full game state, generates both prose and structured data, and returns a response that the engine parses and applies.</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>The AI Dungeon Master is not a chatbot with a personality prompt. It is a <strong className="text-red-300">narrative state machine</strong> &mdash; a system that receives the full game state, generates both prose and structured data, and returns a response that the engine parses and applies.</p>
                 <div className="space-y-3 mt-6">
-                  <h4 className="font-bold text-gray-400 text-sm uppercase tracking-wider mb-3">Turn Processing Pipeline (7 Steps)</h4>
+                  <h4 className="text-sm uppercase tracking-wider mb-3" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Turn Processing Pipeline (7 Steps)</h4>
                   {AI_FLOW_STEPS.map((s, i) => {
                     const IconComp = s.icon
                     return (
@@ -193,9 +193,9 @@ export default function DMHandbookPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader><CardTitle className="text-white flex items-center gap-2"><Gem className="w-5 h-5 text-amber-400" />Cloud AI (Primary)</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Gem className="w-5 h-5 text-amber-400" />Cloud AI (Primary)</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-gray-300">Powers the core narrative generation and full game state management. Every turn&apos;s prose, dice rolls, and state updates flow through Cloud AI.</p>
+                  <p className="text-sm text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>Powers the core narrative generation and full game state management. Every turn&apos;s prose, dice rolls, and state updates flow through Cloud AI.</p>
                   <div className="space-y-2 text-sm">
                     {[
                       { label: 'Opening Scene Tokens', value: '8,000 max' },
@@ -212,7 +212,7 @@ export default function DMHandbookPage() {
             </div>
 
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Timer className="w-5 h-5 text-amber-400" />Throttling &amp; Rate Limits</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Timer className="w-5 h-5 text-amber-400" />Throttling &amp; Rate Limits</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 rounded-lg bg-amber-900/20 border border-amber-700/50 text-center"><div className="text-3xl font-bold text-amber-400">15</div><div className="text-sm text-gray-400">requests / minute max</div></div>
@@ -228,9 +228,9 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="prompt" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><MessageSquare className="w-5 h-5 text-red-400" />What the DM Sees Every Turn</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><MessageSquare className="w-5 h-5 text-red-400" />What the DM Sees Every Turn</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Each turn, the engine constructs a comprehensive system prompt containing <em>everything</em> the DM needs to make informed decisions. The prompt is built by the <code className="text-red-300 bg-red-900/20 px-1 rounded">buildDMSystem(gs)</code> function.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>Each turn, the engine constructs a comprehensive system prompt containing <em>everything</em> the DM needs to make informed decisions. The prompt is built by the <code className="text-red-300 bg-red-900/20 px-1 rounded">buildDMSystem(gs)</code> function.</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {[
                     { label: 'Party State', desc: 'All living PCs: HP, AC, alignment, injuries, personality, ability scores, class levels', icon: Users },
@@ -252,7 +252,7 @@ export default function DMHandbookPage() {
                     )
                   })}
                 </div>
-                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400"><strong className="text-white">Key design principle:</strong> The prompt is ASCII-only (toAscii conversion strips smart quotes, em dashes, etc.) to prevent JSON parsing issues. The prompt ends with the complete JSON schema the AI must follow.</div>
+                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}><strong style={{ color: '#D4AF37' }}>Key design principle:</strong> The prompt is ASCII-only (toAscii conversion strips smart quotes, em dashes, etc.) to prevent JSON parsing issues. The prompt ends with the complete JSON schema the AI must follow.</div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -262,12 +262,12 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="schema" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><FileWarning className="w-5 h-5 text-amber-400" />Complete DMResponse Schema (20 fields)</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><FileWarning className="w-5 h-5 text-amber-400" />Complete DMResponse Schema (20 fields)</CardTitle></CardHeader>
               <CardContent>
                 <div className="overflow-x-auto max-h-96 overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-slate-800">
-                      <tr className="border-b border-slate-600"><th className="text-left py-2 text-gray-400">Field</th><th className="text-left py-2 text-gray-400">Type</th><th className="text-left py-2 text-gray-400">Description</th></tr>
+                      <tr className="border-b border-slate-600"><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Field</th><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Type</th><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Description</th></tr>
                     </thead>
                     <tbody className="text-gray-300">
                       {DM_RESPONSE_SCHEMA.map((s) => (
@@ -283,11 +283,11 @@ export default function DMHandbookPage() {
               </CardContent>
             </Card>
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><RefreshCcw className="w-5 h-5 text-cyan-400" />State Update Sub-Schema</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><RefreshCcw className="w-5 h-5 text-cyan-400" />State Update Sub-Schema</CardTitle></CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
-                    <thead><tr className="border-b border-slate-600"><th className="text-left py-2 text-gray-400">Field</th><th className="text-left py-2 text-gray-400">Type</th><th className="text-left py-2 text-gray-400">Description</th></tr></thead>
+                    <thead><tr className="border-b border-slate-600"><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Field</th><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Type</th><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Description</th></tr></thead>
                     <tbody className="text-gray-300">
                       {STATE_UPDATE_SCHEMA.map((s) => (
                         <tr key={s.field} className="border-b border-slate-700/50">
@@ -299,8 +299,8 @@ export default function DMHandbookPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="p-3 rounded bg-slate-900/80 border border-slate-600 font-mono text-sm text-gray-300 overflow-x-auto mt-4">
-                  <pre>{`// Example state_updates from AI response
+                <div className="p-3 rounded bg-slate-900/80 border border-slate-600 text-sm text-gray-300 overflow-x-auto mt-4" style={{ fontFamily: 'var(--font-caption)' }}>
+                  <pre style={{ fontFamily: 'var(--font-caption)' }}>{`// Example state_updates from AI response
 [
   { "pc_id": "heracles", "hp_delta": -15, "new_condition": "Bleeding" },
   { "pc_id": "ANTAGONIST", "hp_delta": -25 },
@@ -317,10 +317,10 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="state-updates" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Database className="w-5 h-5 text-red-400" />State Updates: The Only Way the Game Changes</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Database className="w-5 h-5 text-red-400" />State Updates: The Only Way the Game Changes</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300"><strong className="text-red-300">Every game state change flows through the AI&apos;s JSON state_updates array.</strong> The engine never modifies HP, conditions, or death flags on its own (except for DOT damage processing and success rate recalculation). All mutations originate from the DM&apos;s response.</p>
-                <p className="text-gray-300 text-sm mt-2"><strong className="text-amber-300">Hybrid Input System:</strong> Players can either select preset quick actions (stamina costs enforced by engine) or write free-text custom actions. Custom actions are tagged as <code className="text-amber-300 bg-amber-900/20 px-1 rounded">custom_action</code> in the prompt — the DM must interpret intent, determine the appropriate skill check, apply stamina (1 observation, 2 combat, 3 magical), and mechanically resolve them like any other choice.</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}><strong style={{ color: '#D4AF37' }}>Every game state change flows through the AI&apos;s JSON state_updates array.</strong> The engine never modifies HP, conditions, or death flags on its own (except for DOT damage processing and success rate recalculation). All mutations originate from the DM&apos;s response.</p>
+                <p className="text-gray-300 text-sm mt-2" style={{ fontFamily: 'var(--font-body)' }}><strong style={{ color: '#D4AF37' }}>Hybrid Input System:</strong> Players can either select preset quick actions (stamina costs enforced by engine) or write free-text custom actions. Custom actions are tagged as <code className="text-amber-300 bg-amber-900/20 px-1 rounded">custom_action</code> in the prompt — the DM must interpret intent, determine the appropriate skill check, apply stamina (1 observation, 2 combat, 3 magical), and mechanically resolve them like any other choice.</p>
                 <div className="space-y-3">
                   {[
                     { step: 'HP Delta', desc: 'hp_delta is coerced with Number() and clamped to [0, maxHp]. Antagonist uses "ANTAGONIST" as pc_id and routes to antagonistHp.', icon: Heart },
@@ -347,13 +347,13 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="success-rate" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Target className="w-5 h-5 text-emerald-400" />Success Rate Engine</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Target className="w-5 h-5 text-emerald-400" />Success Rate Engine</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">The success rate is recalculated <strong>every turn</strong> after state updates are applied. It uses <code className="text-red-300 bg-red-900/20 px-1 rounded">calculateSuccessRate(factors)</code> which returns both the total and a breakdown.</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>The success rate is recalculated <strong>every turn</strong> after state updates are applied. It uses <code className="text-red-300 bg-red-900/20 px-1 rounded">calculateSuccessRate(factors)</code> which returns both the total and a breakdown.</p>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-slate-800">
-                      <tr className="border-b border-slate-600"><th className="text-left py-2 text-gray-400">Factor</th><th className="text-left py-2 text-gray-400">Formula</th><th className="text-left py-2 text-gray-400">Range</th><th className="text-left py-2 text-gray-400">Cap</th><th className="text-left py-2 text-gray-400">Details</th></tr>
+                      <tr className="border-b border-slate-600"><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Factor</th><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Formula</th><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Range</th><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Cap</th><th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Details</th></tr>
                     </thead>
                     <tbody className="text-gray-300">
                       {SUCCESS_FACTORS.map(f => {
@@ -371,8 +371,8 @@ export default function DMHandbookPage() {
                     </tbody>
                   </table>
                 </div>
-                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400 mt-4">
-                  <strong className="text-white">Recalculation (each turn):</strong> livingPCs = pcs.filter(!dead). alliedGods = npcHistory.filter(align.includes(&apos;good&apos;)).length. pcRenown = Σ(classLevel/3). pcPower = Σ(hp/100). storyAchievements = completedQuests + floor(clues/2).
+                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400 mt-4" style={{ fontFamily: 'var(--font-caption)' }}>
+                  <strong style={{ color: '#D4AF37' }}>Recalculation (each turn):</strong> livingPCs = pcs.filter(!dead). alliedGods = npcHistory.filter(align.includes(&apos;good&apos;)).length. pcRenown = Σ(classLevel/3). pcPower = Σ(hp/100). storyAchievements = completedQuests + floor(clues/2).
                 </div>
               </CardContent>
             </Card>
@@ -383,12 +383,12 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="narrative" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><BookOpen className="w-5 h-5 text-red-400" />Narrative Voice Guidelines</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><BookOpen className="w-5 h-5 text-red-400" />Narrative Voice Guidelines</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">The AI DM writes in the style of Neil Gaiman &mdash; literary, atmospheric, wry, and deeply aware of the weight of myth. The system prompt includes explicit instructions for prose quality.</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>The AI DM writes in the style of Neil Gaiman &mdash; literary, atmospheric, wry, and deeply aware of the weight of myth. The system prompt includes explicit instructions for prose quality.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Prose Requirements</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Prose Requirements</h4>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
                       <li><strong className="text-amber-300">2-3 paragraphs (150-300 words)</strong> for regular turns</li>
                       <li>Opening scenes get 4-6 paragraphs (600-1000 words)</li>
@@ -399,7 +399,7 @@ export default function DMHandbookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Dice Roll Narration</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Dice Roll Narration</h4>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
                       <li>Every d20 roll is narrated, not just reported</li>
                       <li>Success and failure both get dramatic treatment</li>
@@ -409,7 +409,7 @@ export default function DMHandbookPage() {
                     </ul>
                   </div>
                 </div>
-                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400 italic">&quot;Write the narrative prose. Then, append the JSON block.&quot; &mdash; The prompt instructs the AI to write prose FIRST, then append the structured data. This produces natural-feeling narrative that contains the required game mechanics.</div>
+                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400 italic" style={{ fontFamily: 'var(--font-caption)' }}>&quot;Write the narrative prose. Then, append the JSON block.&quot; &mdash; The prompt instructs the AI to write prose FIRST, then append the structured data. This produces natural-feeling narrative that contains the required game mechanics.</div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -419,13 +419,13 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="skill-system" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Target className="w-5 h-5 text-cyan-400" />D&amp;D 5e Skill System &mdash; DM Reference</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Target className="w-5 h-5 text-cyan-400" />D&amp;D 5e Skill System &mdash; DM Reference</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300">The skill system is a <strong className="text-cyan-300">narrative enrichment layer</strong>, not a mechanical resolver. It does not alter the success rate formula or replace d20 rolls. Instead, it tells the AI DM what kinds of actions each character is good at, so the generated choices reflect each PC&apos;s identity. Without it, every hero gets the same generic options. With it, a fighter-strong PC gets &quot;Intimidate the sentry&quot; while a thief-dextrous PC gets &quot;Pick the lock.&quot;</p>
+                <p className="text-gray-300" style={{ fontFamily: 'var(--font-body)' }}>The skill system is a <strong className="text-cyan-300">narrative enrichment layer</strong>, not a mechanical resolver. It does not alter the success rate formula or replace d20 rolls. Instead, it tells the AI DM what kinds of actions each character is good at, so the generated choices reflect each PC&apos;s identity. Without it, every hero gets the same generic options. With it, a fighter-strong PC gets &quot;Intimidate the sentry&quot; while a thief-dextrous PC gets &quot;Pick the lock.&quot;</p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Class Inference Pipeline</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Class Inference Pipeline</h4>
                     <p className="text-xs text-gray-400 mb-3">When a hero or demigod is loaded as a PC, the engine infers their AD&amp;D 1e classes from three sources, ranked by priority:</p>
                     <div className="space-y-2">
                       {[
@@ -441,7 +441,7 @@ export default function DMHandbookPage() {
                     </div>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Proficiency Assignment Rules</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Proficiency Assignment Rules</h4>
                     <p className="text-xs text-gray-400 mb-3">The engine takes the PC&apos;s top 3 classes by level and grants 3 skills per class. Additionally:</p>
                     <ul className="text-xs text-gray-300 space-y-1.5 list-disc list-inside">
                       <li><strong className="text-white">Fighter:</strong> Athletics, Intimidation</li>
@@ -458,11 +458,11 @@ export default function DMHandbookPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-cyan-900/20 border border-cyan-700/50">
-                    <h4 className="font-bold text-cyan-400 mb-2">How Skills Reach the AI Prompt</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#2ECC71', fontWeight: 700 }}>How Skills Reach the AI Prompt</h4>
                     <p className="text-xs text-gray-300">Skill proficiencies are included in the <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skills</code> and <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">pc.skillProficiencies</code> fields of the game state sent to the Cloud API every turn. The system prompt instructs the AI to use these when generating the 3 quick action choices. Skills are also displayed on the player&apos;s character card as badges for quick reference. For custom (free-text) actions, the DM infers the appropriate skill based on the player&apos;s description.</p>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Scope &amp; Exclusions</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Scope &amp; Exclusions</h4>
                     <ul className="text-xs text-gray-300 space-y-1.5 list-disc list-inside">
                       <li><strong className="text-cyan-300">Heroes &amp; Demigods:</strong> Full skill system applies</li>
                       <li><strong className="text-gray-400">Greater/Lesser Gods:</strong> No skills &mdash; use named divine abilities</li>
@@ -480,9 +480,9 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="fallbacks" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><AlertTriangle className="w-5 h-5 text-amber-400" />Fallback System</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><AlertTriangle className="w-5 h-5 text-amber-400" />Fallback System</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-gray-300 text-sm mb-4">The engine has 6 fallback scenarios. All are recoverable <strong>except</strong> invalid API key, which blocks gameplay until the user provides a valid key.</p>
+                <p className="text-gray-300 text-sm mb-4" style={{ fontFamily: 'var(--font-body)' }}>The engine has 6 fallback scenarios. All are recoverable <strong>except</strong> invalid API key, which blocks gameplay until the user provides a valid key.</p>
                 <div className="space-y-3">
                   {FALLBACK_SCENARIOS.map((s, i) => {
                     const Icon = s.icon
@@ -508,12 +508,12 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="faith-engine" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Zap className="w-5 h-5 text-amber-400" />Test of Faith Engine</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Zap className="w-5 h-5 text-amber-400" />Test of Faith Engine</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">The <code className="text-amber-300 bg-amber-900/20 px-1 rounded">checkTestOfFaith()</code> function runs after <code className="text-amber-300 bg-amber-900/20 px-1 rounded">applyMechanics()</code> to determine if the player should be offered a Test of Faith.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>The <code className="text-amber-300 bg-amber-900/20 px-1 rounded">checkTestOfFaith()</code> function runs after <code className="text-amber-300 bg-amber-900/20 px-1 rounded">applyMechanics()</code> to determine if the player should be offered a Test of Faith.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-amber-900/20 border border-amber-700">
-                    <h4 className="font-bold text-amber-400 mb-2">Trigger Conditions (checked in order)</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Trigger Conditions (checked in order)</h4>
                     <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
                       <li><strong>Guard:</strong> Must be Act II or later (not Act I)</li>
                       <li><strong>Guard:</strong> 10-turn cooldown since last test</li>
@@ -524,7 +524,7 @@ export default function DMHandbookPage() {
                     </ol>
                   </div>
                   <div className="p-4 rounded-lg bg-red-900/20 border border-red-700">
-                    <h4 className="font-bold text-red-400 mb-2">Roll Processing (resolveTestOfFaith)</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#DC143C', fontWeight: 700 }}>Roll Processing (resolveTestOfFaith)</h4>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
                       <li><strong className="text-amber-300">18-20 (Miracle):</strong> +8 success rate, restore 1 shard charge, rekindle shard. Death save: revive at 1 HP, restore prophecy, remove successor. Boss phase: 15% max HP damage.</li>
                       <li><strong className="text-gray-300">4-17 (Fate Holds):</strong> No mechanical changes.</li>
@@ -532,8 +532,8 @@ export default function DMHandbookPage() {
                     </ul>
                   </div>
                 </div>
-                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400">
-                  <strong className="text-white">Prophecy restoration on miracle:</strong> If a successor PC received the prophecy after the original PC died, a miracle reverses the transfer. The successor is removed from the party (if they were added solely as a replacement), and the original PC reclaims their prophecy.
+                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>
+                  <strong style={{ color: '#D4AF37' }}>Prophecy restoration on miracle:</strong> If a successor PC received the prophecy after the original PC died, a miracle reverses the transfer. The successor is removed from the party (if they were added solely as a replacement), and the original PC reclaims their prophecy.
                 </div>
               </CardContent>
             </Card>
@@ -544,12 +544,12 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="difficulty" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><BarChart3 className="w-5 h-5 text-red-400" />Difficulty Scaling</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><BarChart3 className="w-5 h-5 text-red-400" />Difficulty Scaling</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Difficulty is not a single slider but an emergent property of multiple interacting systems. The success rate formula naturally produces harder campaigns as the story progresses.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>Difficulty is not a single slider but an emergent property of multiple interacting systems. The success rate formula naturally produces harder campaigns as the story progresses.</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="p-4 rounded-lg bg-green-900/20 border border-green-700">
-                    <h4 className="font-bold text-green-400 mb-2">Act I (50-65%)</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#2ECC71', fontWeight: 700 }}>Act I (50-65%)</h4>
                     <ul className="text-sm text-gray-300 space-y-1">
                       <li>&#8226; Base 50 + party bonus</li>
                       <li>&#8226; Prophecy dormant (+0)</li>
@@ -558,7 +558,7 @@ export default function DMHandbookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-yellow-900/20 border border-yellow-700">
-                    <h4 className="font-bold text-yellow-400 mb-2">Act II (65-80%)</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Act II (65-80%)</h4>
                     <ul className="text-sm text-gray-300 space-y-1">
                       <li>&#8226; Allies accumulated (+3 each)</li>
                       <li>&#8226; Prophecy awakening (+3)</li>
@@ -567,7 +567,7 @@ export default function DMHandbookPage() {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-red-900/20 border border-red-700">
-                    <h4 className="font-bold text-red-400 mb-2">Act III (70-90%)</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#DC143C', fontWeight: 700 }}>Act III (70-90%)</h4>
                     <ul className="text-sm text-gray-300 space-y-1">
                       <li>&#8226; Prophecy manifesting (+5) or fulfilled (+8)</li>
                       <li>&#8226; Maximum story achievements</li>
@@ -576,7 +576,7 @@ export default function DMHandbookPage() {
                     </ul>
                   </div>
                 </div>
-                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400"><strong className="text-white">Key insight:</strong> A Greater God antagonist imposes a flat -5% penalty. Combined with party deaths reducing livingPCs, and a broken prophecy (-5%), campaigns can become genuinely desperate &mdash; which triggers the Test of Faith.</div>
+                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}><strong style={{ color: '#D4AF37' }}>Key insight:</strong> A Greater God antagonist imposes a flat -5% penalty. Combined with party deaths reducing livingPCs, and a broken prophecy (-5%), campaigns can become genuinely desperate &mdash; which triggers the Test of Faith.</div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -586,9 +586,9 @@ export default function DMHandbookPage() {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="hp-validation" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Shield className="w-5 h-5 text-emerald-400" />HP Validation &amp; Clamping</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Shield className="w-5 h-5 text-emerald-400" />HP Validation &amp; Clamping</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">The engine applies strict HP validation to prevent AI errors from corrupting game state. Every hp_delta value runs through the same validation pipeline.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>The engine applies strict HP validation to prevent AI errors from corrupting game state. Every hp_delta value runs through the same validation pipeline.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-3">
                     {[
@@ -607,8 +607,8 @@ export default function DMHandbookPage() {
                       )
                     })}
                   </div>
-                  <div className="p-4 rounded-lg bg-slate-900/80 border border-slate-600 font-mono text-xs text-gray-300 overflow-x-auto">
-                    <pre>{`// HP validation in applyMechanics
+                  <div className="p-4 rounded-lg bg-slate-900/80 border border-slate-600 text-xs text-gray-300 overflow-x-auto" style={{ fontFamily: 'var(--font-caption)' }}>
+                    <pre style={{ fontFamily: 'var(--font-caption)' }}>{`// HP validation in applyMechanics
 if (u.hp_delta) {
   pc.hp = Math.max(0, Math.min(pc.maxHp, pc.hp + Number(u.hp_delta)))
 }
@@ -635,12 +635,12 @@ if (u.pc_id === 'ANTAGONIST') {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="items-dm" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Briefcase className="w-5 h-5 text-amber-400" />Item System</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Briefcase className="w-5 h-5 text-amber-400" />Item System</CardTitle></CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Modifier Handling</h4>
-                    <p className="text-sm text-gray-300 mb-3">The AI generates items with modifier objects. The <code className="text-amber-300 bg-amber-900/20 px-1 rounded">handleUseItem()</code> function checks for 13 modifier keys:</p>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Modifier Handling</h4>
+                    <p className="text-sm text-gray-300 mb-3" style={{ fontFamily: 'var(--font-body)' }}>The AI generates items with modifier objects. The <code className="text-amber-300 bg-amber-900/20 px-1 rounded">handleUseItem()</code> function checks for 13 modifier keys:</p>
                     <div className="space-y-1">
                       {['healing', 'full_heal', 'cure_poison', 'cure_all_poison', 'death_ward', 'invisible', 'str_set', 'all_saves', 'protection', 'undead_ward', 'true_sight', 'regen', 'fear_immune'].map(m => (
                         <div key={m} className="text-xs"><code className="text-amber-300 bg-amber-900/20 px-1 rounded">{m}</code></div>
@@ -649,7 +649,7 @@ if (u.pc_id === 'ANTAGONIST') {
                     <p className="text-xs text-gray-500 mt-2">If no modifier matches, the item is treated as passive (equipment).</p>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Charge System</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Charge System</h4>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
                       <li>Items with charges &gt; 1: decrement by 1 on use</li>
                       <li>Items with charges = 1: removed from inventory</li>
@@ -667,12 +667,12 @@ if (u.pc_id === 'ANTAGONIST') {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="quests-dm" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Scroll className="w-5 h-5 text-purple-400" />Quest System</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Scroll className="w-5 h-5 text-purple-400" />Quest System</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Quests are tracked in the prompt as formatted strings for AI awareness, and managed via the <code className="text-purple-300 bg-purple-900/20 px-1 rounded">quest_updates</code> array in the DMResponse.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>Quests are tracked in the prompt as formatted strings for AI awareness, and managed via the <code className="text-purple-300 bg-purple-900/20 px-1 rounded">quest_updates</code> array in the DMResponse.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Quest Types &amp; Status</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#7B2D8E', fontWeight: 700 }}>Quest Types &amp; Status</h4>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
                       <li><strong className="text-white">main</strong> &mdash; Core campaign quest</li>
                       <li><strong className="text-white">side</strong> &mdash; Optional exploration quests</li>
@@ -682,7 +682,7 @@ if (u.pc_id === 'ANTAGONIST') {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Success Rate Integration</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#2ECC71', fontWeight: 700 }}>Success Rate Integration</h4>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
                       <li>Completed quests contribute to storyAchievements</li>
                       <li>storyAchievements × 2 (max +12%)</li>
@@ -691,8 +691,8 @@ if (u.pc_id === 'ANTAGONIST') {
                     </ul>
                   </div>
                 </div>
-                <div className="p-3 rounded bg-slate-900/80 border border-slate-600 font-mono text-sm text-gray-300 overflow-x-auto mt-4">
-                  <pre>{`// quest_updates in DMResponse
+                <div className="p-3 rounded bg-slate-900/80 border border-slate-600 text-sm text-gray-300 overflow-x-auto mt-4" style={{ fontFamily: 'var(--font-caption)' }}>
+                  <pre style={{ fontFamily: 'var(--font-caption)' }}>{`// quest_updates in DMResponse
 {
   "quest_updates": [{
     "id": "find_the_shard",
@@ -713,12 +713,12 @@ if (u.pc_id === 'ANTAGONIST') {
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="saves-dm" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Save className="w-5 h-5 text-cyan-400" />Save/Load Integrity</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Save className="w-5 h-5 text-cyan-400" />Save/Load Integrity</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">The complete game state is serialized to <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">localStorage</code>. The load function uses a default merge strategy for backward compatibility.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>The complete game state is serialized to <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">localStorage</code>. The load function uses a default merge strategy for backward compatibility.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Default Merge Strategy</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Default Merge Strategy</h4>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
                       <li>Load reads saved JSON from localStorage</li>
                       <li>Merges with a fresh default GameState</li>
@@ -727,7 +727,7 @@ if (u.pc_id === 'ANTAGONIST') {
                     </ul>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Save Slot Metadata</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Save Slot Metadata</h4>
                     <ul className="text-sm text-gray-300 space-y-1 list-disc list-inside">
                       <li>5 slots with id, name, timestamp</li>
                       <li>Stores: turn number, act, party names</li>
@@ -736,8 +736,8 @@ if (u.pc_id === 'ANTAGONIST') {
                     </ul>
                   </div>
                 </div>
-                <div className="p-3 rounded bg-slate-900/80 border border-slate-600 font-mono text-sm text-gray-300 overflow-x-auto mt-4">
-                  <pre>{`// Simplified loadGame logic
+                <div className="p-3 rounded bg-slate-900/80 border border-slate-600 text-sm text-gray-300 overflow-x-auto mt-4" style={{ fontFamily: 'var(--font-caption)' }}>
+                  <pre style={{ fontFamily: 'var(--font-caption)' }}>{`// Simplified loadGame logic
 const saved = JSON.parse(localStorage.getItem(key))
 const merged = { ...getDefaultGameState(), ...saved }
 // All new fields from updates are preserved via defaults
@@ -752,12 +752,12 @@ const merged = { ...getDefaultGameState(), ...saved }
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="achievements-dm" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Sparkles className="w-5 h-5 text-yellow-400" />Achievement System</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Sparkles className="w-5 h-5 text-yellow-400" />Achievement System</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">The achievement system runs <code className="text-yellow-300 bg-yellow-900/20 px-1 rounded">checkAchievements()</code> after every turn, comparing the current game state against the previous turn to detect milestones. Unlocks are persisted in save data via <code className="text-yellow-300 bg-yellow-900/20 px-1 rounded">serializeTracker()</code>.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>The achievement system runs <code className="text-yellow-300 bg-yellow-900/20 px-1 rounded">checkAchievements()</code> after every turn, comparing the current game state against the previous turn to detect milestones. Unlocks are persisted in save data via <code className="text-yellow-300 bg-yellow-900/20 px-1 rounded">serializeTracker()</code>.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">4 Tiers</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>4 Tiers</h4>
                     <div className="space-y-2">
                       {Object.entries(TIER_CONFIG).map(([tier, cfg]) => (
                         <div key={tier} className="flex items-center gap-2 text-sm">
@@ -769,7 +769,7 @@ const merged = { ...getDefaultGameState(), ...saved }
                     </div>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">7 Categories</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>7 Categories</h4>
                     <div className="space-y-1">
                       {Object.entries(CATEGORY_CONFIG).map(([cat, cfg]) => (
                         <div key={cat} className="flex items-center gap-2 text-sm text-gray-300">
@@ -781,24 +781,24 @@ const merged = { ...getDefaultGameState(), ...saved }
                     </div>
                   </div>
                 </div>
-                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400">
-                  <strong className="text-white">Success Rate Integration:</strong> Achievements feed into the <code className="text-red-300 bg-red-900/20 px-1 rounded">storyAchievements</code> factor: <code className="text-amber-300">min((completedQuests + floor(clues/2)) × 2, 12)</code>. Completed quests and uncovered antagonist clues both contribute +2 each (capped at +12%). This means thorough exploration and quest completion directly improve the party&apos;s odds of victory.
+                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400" style={{ fontFamily: 'var(--font-caption)' }}>
+                  <strong style={{ color: '#2ECC71' }}>Success Rate Integration:</strong> Achievements feed into the <code className="text-red-300 bg-red-900/20 px-1 rounded">storyAchievements</code> factor: <code className="text-amber-300">min((completedQuests + floor(clues/2)) × 2, 12)</code>. Completed quests and uncovered antagonist clues both contribute +2 each (capped at +12%). This means thorough exploration and quest completion directly improve the party&apos;s odds of victory.
                 </div>
               </CardContent>
             </Card>
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Scroll className="w-5 h-5 text-red-400" />Full Achievement Registry ({ACHIEVEMENT_DEFS.length} total)</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Scroll className="w-5 h-5 text-red-400" />Full Achievement Registry ({ACHIEVEMENT_DEFS.length} total)</CardTitle></CardHeader>
               <CardContent>
                 <div className="overflow-x-auto max-h-96 overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-slate-800">
                       <tr className="border-b border-slate-600">
-                        <th className="text-left py-2 text-gray-400">ID</th>
-                        <th className="text-left py-2 text-gray-400">Name</th>
-                        <th className="text-left py-2 text-gray-400">Category</th>
-                        <th className="text-left py-2 text-gray-400">Tier</th>
-                        <th className="text-left py-2 text-gray-400">Description</th>
-                        <th className="text-left py-2 text-gray-400">Hidden</th>
+                        <th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>ID</th>
+                        <th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Name</th>
+                        <th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Category</th>
+                        <th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Tier</th>
+                        <th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Description</th>
+                        <th className="text-left py-2" style={{ fontFamily: 'var(--font-caption)', color: '#D4AF37' }}>Hidden</th>
                       </tr>
                     </thead>
                     <tbody className="text-gray-300">
@@ -828,12 +828,12 @@ const merged = { ...getDefaultGameState(), ...saved }
           {/* ═══════════════════════════════════════════════════════════════════ */}
           <TabsContent value="audio-engine" className="space-y-6">
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Music className="w-5 h-5 text-purple-400" />Procedural Audio Engine</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Music className="w-5 h-5 text-purple-400" />Procedural Audio Engine</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">The audio engine (<code className="text-purple-300 bg-purple-900/20 px-1 rounded">useGameAudio()</code>) generates all sound procedurally using the Web Audio API &mdash; no audio files are loaded. Every sound is synthesized in real-time from oscillators, noise generators, and filters.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>The audio engine (<code className="text-purple-300 bg-purple-900/20 px-1 rounded">useGameAudio()</code>) generates all sound procedurally using the Web Audio API &mdash; no audio files are loaded. Every sound is synthesized in real-time from oscillators, noise generators, and filters.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">8 Ambient Themes</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#7B2D8E', fontWeight: 700 }}>8 Ambient Themes</h4>
                     <p className="text-xs text-gray-400 mb-2">Each theme is a layered drone built from base frequency, harmonics, LFO modulation, and filtered noise:</p>
                     <div className="space-y-2">
                       {[
@@ -855,7 +855,7 @@ const merged = { ...getDefaultGameState(), ...saved }
                     </div>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">SFX Event System</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#7B2D8E', fontWeight: 700 }}>SFX Event System</h4>
                     <p className="text-xs text-gray-400 mb-2">The <code className="text-purple-300 bg-purple-900/20 px-1 rounded">soundEvents</code> publish/subscribe bus dispatches procedural sound effects:</p>
                     <div className="space-y-2">
                       {[
@@ -881,12 +881,12 @@ const merged = { ...getDefaultGameState(), ...saved }
               </CardContent>
             </Card>
             <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader><CardTitle className="text-white flex items-center gap-2"><Eye className="w-5 h-5 text-cyan-400" />Scene Theme Auto-Detection</CardTitle></CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}><Eye className="w-5 h-5 text-cyan-400" />Scene Theme Auto-Detection</CardTitle></CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">The <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">useSceneMusic()</code> hook automatically selects ambient themes based on the current game state. It checks the <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">storySummary</code> for location keywords and active NPC conditions for battle detection.</p>
+                <p className="text-gray-300 text-sm" style={{ fontFamily: 'var(--font-body)' }}>The <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">useSceneMusic()</code> hook automatically selects ambient themes based on the current game state. It checks the <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">storySummary</code> for location keywords and active NPC conditions for battle detection.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Detection Priority</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#2ECC71', fontWeight: 700 }}>Detection Priority</h4>
                     <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
                       <li><strong className="text-red-300">Hostile NPCs:</strong> Any NPC with &quot;hostile&quot; or &quot;enemy&quot; condition &rarr; battle theme</li>
                       <li><strong className="text-orange-300">Tavern:</strong> Keywords: tavern, inn, bar, pub, alehouse</li>
@@ -897,7 +897,7 @@ const merged = { ...getDefaultGameState(), ...saved }
                     </ol>
                   </div>
                   <div className="p-4 rounded-lg bg-slate-700/50">
-                    <h4 className="font-bold text-white mb-2">Act Progression</h4>
+                    <h4 className="mb-2" style={{ fontFamily: 'var(--font-subheading)', color: '#D4AF37', fontWeight: 700 }}>Act Progression</h4>
                     <p className="text-xs text-gray-400 mb-2">Ambient themes evolve with the story:</p>
                     <div className="space-y-2">
                       {[
@@ -914,8 +914,8 @@ const merged = { ...getDefaultGameState(), ...saved }
                     </div>
                   </div>
                 </div>
-                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400 mt-4">
-                  <strong className="text-white">Seamless Transitions:</strong> When the theme changes (e.g., entering a tavern or act transition), the current ambient fades out over 1.5 seconds via <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">transitionAmbient()</code>, then the new theme fades in over 3 seconds. Act III gets special treatment: the LFO also modulates the filter cutoff frequency for an ominous pulsing sweep effect.
+                <div className="p-3 rounded bg-slate-700/30 text-sm text-gray-400 mt-4" style={{ fontFamily: 'var(--font-caption)' }}>
+                  <strong style={{ color: '#7B2D8E' }}>Seamless Transitions:</strong> When the theme changes (e.g., entering a tavern or act transition), the current ambient fades out over 1.5 seconds via <code className="text-cyan-300 bg-cyan-900/20 px-1 rounded">transitionAmbient()</code>, then the new theme fades in over 3 seconds. Act III gets special treatment: the LFO also modulates the filter cutoff frequency for an ominous pulsing sweep effect.
                 </div>
               </CardContent>
             </Card>

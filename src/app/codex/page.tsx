@@ -26,6 +26,27 @@ import {
 import { CharacterDetailModal } from '@/components/game/CharacterDetailModal'
 
 // ═══════════════════════════════════════════════════════════════════════════
+// FANTASY FONT & COLOR CONSTANTS
+// ═══════════════════════════════════════════════════════════════════════════
+const FONTS = {
+  heading: 'var(--font-heading)',
+  subheading: 'var(--font-subheading)',
+  body: 'var(--font-body)',
+  caption: 'var(--font-caption)',
+  button: 'var(--font-button)',
+  narrative: 'var(--font-narrative)',
+  combat: 'var(--font-combat)',
+} as const
+
+const COLORS = {
+  gold: '#D4AF37',
+  deepPurple: '#7B2D8E',
+  emerald: '#2ECC71',
+  crimson: '#DC143C',
+  parchment: '#F5E6C8',
+} as const
+
+// ═══════════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -127,25 +148,25 @@ function CharacterCard({ character, onClick }: CharacterCardProps) {
             </div>
           )}
           {character.divineRank && (
-            <div className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${rankBadge.color}`}>
+            <div className={`absolute top-2 right-2 flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold ${rankBadge.color}`} style={{ fontFamily: FONTS.caption }}>
               {rankBadge.icon}<span>{character.divineRank}</span>
             </div>
           )}
-          <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/70 text-xs font-mono">
-            <Heart className="w-3 h-3 inline mr-1 text-red-400" />{character.hp} HP
+          <div className="absolute bottom-2 left-2 px-2 py-1 rounded bg-black/70 text-xs" style={{ fontFamily: FONTS.caption, color: COLORS.crimson }}>
+            <Heart className="w-3 h-3 inline mr-1" />{character.hp} HP
           </div>
         </div>
         <div className="p-3">
-          <h3 className="font-bold text-white truncate text-sm">{character.name}</h3>
-          <p className="text-xs text-gray-400 truncate">{character.title}</p>
+          <h3 className="font-bold truncate text-sm" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}>{character.name}</h3>
+          <p className="text-xs truncate" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.7 }}>{character.title}</p>
           <div className="flex flex-wrap gap-1 mt-2">
-            <Badge variant="secondary" className={`text-xs ${pantheonColor(character.pantheon)}`}>{character.pantheon}</Badge>
-            <Badge variant="secondary" className={`text-xs ${alignColor(character.align)}`}>{alignShort(character.align)}</Badge>
+            <Badge variant="secondary" className={`text-xs ${pantheonColor(character.pantheon)}`} style={{ fontFamily: FONTS.caption }}>{character.pantheon}</Badge>
+            <Badge variant="secondary" className={`text-xs ${alignColor(character.align)}`} style={{ fontFamily: FONTS.caption }}>{alignShort(character.align)}</Badge>
           </div>
-          <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
+          <div className="flex items-center gap-3 mt-2 text-xs" style={{ fontFamily: FONTS.caption, color: COLORS.emerald }}>
             <span className="flex items-center gap-1"><Shield className="w-3 h-3" />AC {character.AC}</span>
             {character.MR !== undefined && character.MR > 0 && (
-              <span className="flex items-center gap-1"><Sparkles className="w-3 h-3" />MR {character.MR}%</span>
+              <span className="flex items-center gap-1" style={{ color: COLORS.deepPurple }}><Sparkles className="w-3 h-3" />MR {character.MR}%</span>
             )}
           </div>
         </div>
@@ -220,21 +241,26 @@ export default function CodexPage() {
   }, [selectedCategory, selectedPantheon, searchQuery])
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950" style={{ fontFamily: FONTS.body }}>
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b border-slate-700">
+      <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur border-b" style={{ borderColor: COLORS.gold + '40' }}>
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"><ChevronLeft className="w-5 h-5" /><span>Back to Game</span></Link>
+              <Link href="/" className="flex items-center gap-2 hover:text-white transition-colors" style={{ fontFamily: FONTS.button, color: COLORS.parchment, opacity: 0.7 }}>
+                <ChevronLeft className="w-5 h-5" /><span>Back to Game</span>
+              </Link>
               <Separator orientation="vertical" className="h-8 bg-slate-700" />
-              <div className="flex items-center gap-2"><BookOpen className="w-6 h-6 text-amber-400" /><h1 className="text-xl font-bold text-white">Codex</h1></div>
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-6 h-6" style={{ color: COLORS.gold }} />
+                <h1 className="text-xl font-bold" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}>Codex</h1>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <Tabs value={topTab} onValueChange={setTopTab}>
-                <TabsList className="bg-slate-800/50 border border-slate-700">
-                  <TabsTrigger value="characters" className="data-[state=active]:bg-amber-600 text-xs">Characters</TabsTrigger>
-                  <TabsTrigger value="mechanics" className="data-[state=active]:bg-amber-600 text-xs">Game Mechanics</TabsTrigger>
+                <TabsList className="bg-slate-800/50 border" style={{ borderColor: COLORS.gold + '30' }}>
+                  <TabsTrigger value="characters" className="data-[state=active]:bg-amber-600 text-xs" style={{ fontFamily: FONTS.button }}>Characters</TabsTrigger>
+                  <TabsTrigger value="mechanics" className="data-[state=active]:bg-amber-600 text-xs" style={{ fontFamily: FONTS.button }}>Game Mechanics</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
@@ -250,38 +276,38 @@ export default function CodexPage() {
           <>
             {/* Intro Text */}
             <div className="max-w-3xl mb-6">
-              <p className="text-gray-300 text-lg leading-relaxed mb-4">
-                This Codex holds the living pantheon of Mythworld: <span className="text-amber-400 font-semibold">{counts.all} beings</span> who have crossed the threshold from myth into memory. They are the ones who were worshipped before history learned to write itself down.
+              <p className="text-lg leading-relaxed mb-4" style={{ fontFamily: FONTS.narrative, color: COLORS.parchment }}>
+                This Codex holds the living pantheon of Mythworld: <span className="font-semibold" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}>{counts.all} beings</span> who have crossed the threshold from myth into memory. They are the ones who were worshipped before history learned to write itself down.
               </p>
-              <div className="flex flex-wrap gap-4 text-xs text-gray-500 mb-2">
-                <span className="flex items-center gap-1"><Crown className="w-3 h-3 text-amber-400" /> {counts['greater-gods']} Greater Gods (HP 300&ndash;450)</span>
-                <span className="flex items-center gap-1"><Sparkles className="w-3 h-3 text-purple-400" /> {counts['lesser-gods']} Lesser Gods (HP 200&ndash;350)</span>
+              <div className="flex flex-wrap gap-4 text-xs mb-2" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.6 }}>
+                <span className="flex items-center gap-1"><Crown className="w-3 h-3" style={{ color: COLORS.gold }} /> {counts['greater-gods']} Greater Gods (HP 300&ndash;450)</span>
+                <span className="flex items-center gap-1"><Sparkles className="w-3 h-3" style={{ color: COLORS.deepPurple }} /> {counts['lesser-gods']} Lesser Gods (HP 200&ndash;350)</span>
                 <span className="flex items-center gap-1"><Zap className="w-3 h-3 text-cyan-400" /> {counts.demigods} Demigods (HP 150&ndash;300)</span>
-                <span className="flex items-center gap-1"><Sword className="w-3 h-3 text-green-400" /> {counts.heroes} Heroes (HP 50&ndash;150)</span>
-                <span className="flex items-center gap-1"><Skull className="w-3 h-3 text-red-400" /> {counts.monsters} Monsters (HP 40&ndash;300)</span>
+                <span className="flex items-center gap-1"><Sword className="w-3 h-3" style={{ color: COLORS.emerald }} /> {counts.heroes} Heroes (HP 50&ndash;150)</span>
+                <span className="flex items-center gap-1"><Skull className="w-3 h-3" style={{ color: COLORS.crimson }} /> {counts.monsters} Monsters (HP 40&ndash;300)</span>
               </div>
               {counts.krynn > 0 && (
-                <p className="text-gray-500 text-xs italic">Plus {counts.krynn} beings from the world of Krynn, where dragons wage eternal war and the gods themselves walk among mortals.</p>
+                <p className="text-xs italic" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.5 }}>Plus {counts.krynn} beings from the world of Krynn, where dragons wage eternal war and the gods themselves walk among mortals.</p>
               )}
             </div>
             
             {/* Filters */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
               <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full sm:w-auto">
-                <TabsList className="bg-slate-800/50 border border-slate-700 flex-wrap h-auto gap-1 p-1">
-                  <TabsTrigger value="all" className="data-[state=active]:bg-slate-700">All ({counts.all})</TabsTrigger>
-                  <TabsTrigger value="greater-gods" className="data-[state=active]:bg-amber-900/50"><Crown className="w-3 h-3 mr-1" />Greater ({counts['greater-gods']})</TabsTrigger>
-                  <TabsTrigger value="lesser-gods" className="data-[state=active]:bg-purple-900/50"><Sparkles className="w-3 h-3 mr-1" />Lesser ({counts['lesser-gods']})</TabsTrigger>
-                  <TabsTrigger value="demigods" className="data-[state=active]:bg-cyan-900/50"><Zap className="w-3 h-3 mr-1" />Demigods ({counts.demigods})</TabsTrigger>
-                  <TabsTrigger value="heroes" className="data-[state=active]:bg-green-900/50"><Sword className="w-3 h-3 mr-1" />Heroes ({counts.heroes})</TabsTrigger>
-                  <TabsTrigger value="monsters" className="data-[state=active]:bg-red-900/50"><Skull className="w-3 h-3 mr-1" />Monsters ({counts.monsters})</TabsTrigger>
-                  {counts.krynn > 0 && <TabsTrigger value="krynn" className="data-[state=active]:bg-amber-800/50"><Flame className="w-3 h-3 mr-1" />Krynn ({counts.krynn})</TabsTrigger>}
+                <TabsList className="bg-slate-800/50 border flex-wrap h-auto gap-1 p-1" style={{ borderColor: COLORS.gold + '30' }}>
+                  <TabsTrigger value="all" className="data-[state=active]:bg-slate-700" style={{ fontFamily: FONTS.button }}>All ({counts.all})</TabsTrigger>
+                  <TabsTrigger value="greater-gods" className="data-[state=active]:bg-amber-900/50" style={{ fontFamily: FONTS.button }}><Crown className="w-3 h-3 mr-1" />Greater ({counts['greater-gods']})</TabsTrigger>
+                  <TabsTrigger value="lesser-gods" className="data-[state=active]:bg-purple-900/50" style={{ fontFamily: FONTS.button }}><Sparkles className="w-3 h-3 mr-1" />Lesser ({counts['lesser-gods']})</TabsTrigger>
+                  <TabsTrigger value="demigods" className="data-[state=active]:bg-cyan-900/50" style={{ fontFamily: FONTS.button }}><Zap className="w-3 h-3 mr-1" />Demigods ({counts.demigods})</TabsTrigger>
+                  <TabsTrigger value="heroes" className="data-[state=active]:bg-green-900/50" style={{ fontFamily: FONTS.button }}><Sword className="w-3 h-3 mr-1" />Heroes ({counts.heroes})</TabsTrigger>
+                  <TabsTrigger value="monsters" className="data-[state=active]:bg-red-900/50" style={{ fontFamily: FONTS.button }}><Skull className="w-3 h-3 mr-1" />Monsters ({counts.monsters})</TabsTrigger>
+                  {counts.krynn > 0 && <TabsTrigger value="krynn" className="data-[state=active]:bg-amber-800/50" style={{ fontFamily: FONTS.button }}><Flame className="w-3 h-3 mr-1" />Krynn ({counts.krynn})</TabsTrigger>}
                 </TabsList>
               </Tabs>
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-400" />
+                <Users className="w-4 h-4" style={{ color: COLORS.parchment, opacity: 0.5 }} />
                 <Select value={selectedPantheon} onValueChange={setSelectedPantheon}>
-                  <SelectTrigger className="w-48 bg-slate-800 border-slate-700 text-white"><SelectValue placeholder="Filter by Pantheon" /></SelectTrigger>
+                  <SelectTrigger className="w-48 bg-slate-800 border-slate-700 text-white" style={{ fontFamily: FONTS.caption }}><SelectValue placeholder="Filter by Pantheon" /></SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700 text-white max-h-80">
                     <SelectItem value="all">All Pantheons</SelectItem>
                     {pantheons.map(pantheon => <SelectItem key={pantheon} value={pantheon}>{pantheon}</SelectItem>)}
@@ -290,7 +316,7 @@ export default function CodexPage() {
               </div>
             </div>
             
-            <div className="mb-4 text-sm text-gray-400">
+            <div className="mb-4 text-sm" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.6 }}>
               Showing {filteredCharacters.length} character{filteredCharacters.length !== 1 ? 's' : ''}{selectedPantheon !== 'all' && ` from ${selectedPantheon}`}{searchQuery && ` matching "${searchQuery}"`}
             </div>
             
@@ -299,7 +325,11 @@ export default function CodexPage() {
                 {filteredCharacters.map(character => <CharacterCard key={character.id} character={character} onClick={() => setSelectedCharacter(character)} />)}
               </div>
             ) : (
-              <div className="text-center py-20"><div className="text-6xl mb-4">&#128218;</div><h3 className="text-xl font-semibold text-gray-300 mb-2">No Characters Found</h3><p className="text-gray-500">Try adjusting your filters or search query</p></div>
+              <div className="text-center py-20">
+                <div className="text-6xl mb-4">&#128218;</div>
+                <h3 className="text-xl font-semibold mb-2" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}>No Characters Found</h3>
+                <p style={{ fontFamily: FONTS.body, color: COLORS.parchment, opacity: 0.6 }}>Try adjusting your filters or search query</p>
+              </div>
             )}
           </>
         )}
@@ -311,23 +341,23 @@ export default function CodexPage() {
           <div className="space-y-8">
             {/* Intro */}
             <div className="max-w-3xl">
-              <p className="text-gray-300 text-lg leading-relaxed italic">
+              <p className="text-lg leading-relaxed italic" style={{ fontFamily: FONTS.narrative, color: COLORS.parchment }}>
                 Beneath the pantheon lies the machinery of fate. The Shards, the injuries, the prophecies, the relics of forgotten ages &mdash; these are the forces that shape every campaign, every battle, every breathless turn of the dice.
               </p>
             </div>
 
             {/* ═══ SHARD TYPES TABLE ═══ */}
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-slate-800/50" style={{ borderColor: COLORS.gold + '30' }}>
               <CardHeader>
-                <h2 className="text-white text-xl flex items-center gap-2"><Gem className="w-5 h-5 text-amber-400" />The {SHARD_NAMES.length} Shards of Power</h2>
+                <h2 className="text-xl flex items-center gap-2" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}><Gem className="w-5 h-5" />The {SHARD_NAMES.length} Shards of Power</h2>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Each campaign begins with one Shard &mdash; an artifact drawn from {Object.keys(SHARD_PANTHEON_COUNTS).length} pantheons. Shards hold 2 charges and allow your party to summon divine beings. A d20 roll against DC 10 determines success. Greater summons exhaust all charges and may <span className="text-red-400 font-semibold">darken the shard</span>.</p>
+                <p className="text-sm" style={{ fontFamily: FONTS.body, color: COLORS.parchment }}>Each campaign begins with one Shard &mdash; an artifact drawn from {Object.keys(SHARD_PANTHEON_COUNTS).length} pantheons. Shards hold 2 charges and allow your party to summon divine beings. A d20 roll against DC 10 determines success. Greater summons exhaust all charges and may <span className="font-semibold" style={{ color: COLORS.crimson }}>darken the shard</span>.</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                   {Object.entries(SHARD_PANTHEON_COUNTS).map(([pantheon, count]) => (
                     <div key={pantheon} className="text-center p-2 rounded bg-slate-700/50">
-                      <div className="text-lg font-bold text-amber-400">{count}</div>
-                      <div className="text-xs text-gray-400">{pantheon}</div>
+                      <div className="text-lg font-bold" style={{ fontFamily: FONTS.heading, color: COLORS.emerald }}>{count}</div>
+                      <div className="text-xs" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.7 }}>{pantheon}</div>
                     </div>
                   ))}
                 </div>
@@ -336,13 +366,13 @@ export default function CodexPage() {
                     <div key={shard.name} className="p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 cursor-pointer transition-colors" onClick={() => setExpandedShard(expandedShard === shard.name ? null : shard.name)}>
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-bold text-white text-sm">{shard.name}</span>
-                          <Badge variant="secondary" className={`${pantheonColor(shard.pantheon)} text-xs`}>{shard.pantheon}</Badge>
+                          <span className="font-bold text-sm" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}>{shard.name}</span>
+                          <Badge variant="secondary" className={`${pantheonColor(shard.pantheon)} text-xs`} style={{ fontFamily: FONTS.caption }}>{shard.pantheon}</Badge>
                         </div>
-                        <Badge className="bg-amber-900/50 text-amber-300 text-xs whitespace-nowrap">{shard.power}</Badge>
+                        <Badge className="bg-amber-900/50 text-amber-300 text-xs whitespace-nowrap" style={{ fontFamily: FONTS.caption }}>{shard.power}</Badge>
                       </div>
                       {expandedShard === shard.name && (
-                        <p className="mt-2 text-sm text-gray-400 italic border-t border-slate-600 pt-2">{shard.origin}</p>
+                        <p className="mt-2 text-sm italic border-t pt-2" style={{ fontFamily: FONTS.narrative, color: COLORS.parchment, opacity: 0.7, borderColor: COLORS.gold + '20' }}>{shard.origin}</p>
                       )}
                     </div>
                   ))}
@@ -351,12 +381,12 @@ export default function CodexPage() {
             </Card>
 
             {/* ═══ PROPHECIES ═══ */}
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-slate-800/50" style={{ borderColor: COLORS.deepPurple + '30' }}>
               <CardHeader>
-                <h2 className="text-white text-xl flex items-center gap-2"><ScrollText className="w-5 h-5 text-purple-400" />The {PROPHECIES.length} Prophecies</h2>
+                <h2 className="text-xl flex items-center gap-2" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}><ScrollText className="w-5 h-5" style={{ color: COLORS.deepPurple }} />The {PROPHECIES.length} Prophecies</h2>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Each PC carries a prophecy bound to the Shard. Prophecies progress through five states: <span className="text-gray-100">dormant</span> &rarr; <span className="text-amber-300">awakening</span> &rarr; <span className="text-yellow-300">manifesting</span> &rarr; <span className="text-green-300">fulfilled</span> or <span className="text-red-300">broken</span>. When a PC dies, the prophecy passes to a successor, accumulating the grief of all previous holders.</p>
+                <p className="text-sm" style={{ fontFamily: FONTS.body, color: COLORS.parchment }}>Each PC carries a prophecy bound to the Shard. Prophecies progress through five states: <span style={{ color: COLORS.parchment }}>dormant</span> &rarr; <span style={{ color: COLORS.gold }}>awakening</span> &rarr; <span style={{ color: '#FBBF24' }}>manifesting</span> &rarr; <span style={{ color: COLORS.emerald }}>fulfilled</span> or <span style={{ color: COLORS.crimson }}>broken</span>. When a PC dies, the prophecy passes to a successor, accumulating the grief of all previous holders.</p>
                 <div className="grid grid-cols-5 gap-2 mb-4">
                   {[
                     { state: 'Dormant', color: 'bg-gray-600', bonus: '+0' },
@@ -366,19 +396,19 @@ export default function CodexPage() {
                     { state: 'Broken', color: 'bg-red-700', bonus: '-5' },
                   ].map(s => (
                     <div key={s.state} className="text-center p-2 rounded bg-slate-700/50">
-                      <div className={`inline-block px-2 py-0.5 rounded text-xs text-white font-semibold ${s.color} mb-1`}>{s.state}</div>
-                      <div className="text-sm font-bold text-gray-300">{s.bonus}%</div>
+                      <div className={`inline-block px-2 py-0.5 rounded text-xs text-white font-semibold ${s.color} mb-1`} style={{ fontFamily: FONTS.caption }}>{s.state}</div>
+                      <div className="text-sm font-bold" style={{ fontFamily: FONTS.heading, color: COLORS.emerald }}>{s.bonus}%</div>
                     </div>
                   ))}
                 </div>
                 <div className="space-y-2">
                   {PROPHECIES.map(p => (
-                    <div key={p.id} className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/50">
+                    <div key={p.id} className="p-3 rounded-lg bg-slate-700/30 border" style={{ borderColor: COLORS.deepPurple + '20' }}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-bold text-white text-sm">{p.name}</span>
-                        <Badge className="bg-purple-900/50 text-purple-300 text-xs capitalize">{p.theme}</Badge>
+                        <span className="font-bold text-sm" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}>{p.name}</span>
+                        <Badge className="bg-purple-900/50 text-purple-300 text-xs capitalize" style={{ fontFamily: FONTS.caption }}>{p.theme}</Badge>
                       </div>
-                      <p className="text-xs text-gray-400 italic">{p.riddle}</p>
+                      <p className="text-xs italic" style={{ fontFamily: FONTS.narrative, color: COLORS.parchment, opacity: 0.7 }}>{p.riddle}</p>
                     </div>
                   ))}
                 </div>
@@ -386,21 +416,21 @@ export default function CodexPage() {
             </Card>
 
             {/* ═══ INJURIES ═══ */}
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-slate-800/50" style={{ borderColor: COLORS.crimson + '30' }}>
               <CardHeader>
-                <h2 className="text-white text-xl flex items-center gap-2"><Heart className="w-5 h-5 text-red-400" />Injury System &mdash; {INJURY_TABLE.length} Types</h2>
+                <h2 className="text-xl flex items-center gap-2" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}><Heart className="w-5 h-5" style={{ color: COLORS.crimson }} />Injury System &mdash; {INJURY_TABLE.length} Types</h2>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Wounds come in five forms. Each injury persists for a number of turns determined by its cure description. DOT (damage over time) injuries drain HP at the start of each turn. Some injuries carry permanent penalties until cured by magic.</p>
+                <p className="text-sm" style={{ fontFamily: FONTS.body, color: COLORS.parchment }}>Wounds come in five forms. Each injury persists for a number of turns determined by its cure description. DOT (damage over time) injuries drain HP at the start of each turn. Some injuries carry permanent penalties until cured by magic.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                   {INJURY_CATEGORIES.map(cat => {
                     const Icon = cat.icon
                     return (
                       <div key={cat.type} className={`p-4 rounded-lg bg-slate-700/30 border ${cat.border}`}>
-                        <div className="flex items-center gap-2 mb-2"><Icon className={`w-4 h-4 ${cat.color}`} /><span className={`font-bold text-sm ${cat.color}`}>{cat.type}</span></div>
-                        <div className="text-2xl font-bold text-white mb-1">{cat.count}</div>
-                        <div className="text-xs text-gray-400 mb-2">injuries{cat.dot > 0 && ` (${cat.dot} with DOT)`}</div>
-                        <div className="text-xs text-gray-500">{cat.examples}</div>
+                        <div className="flex items-center gap-2 mb-2"><Icon className={`w-4 h-4 ${cat.color}`} /><span className={`font-bold text-sm ${cat.color}`} style={{ fontFamily: FONTS.subheading }}>{cat.type}</span></div>
+                        <div className="text-2xl font-bold mb-1" style={{ fontFamily: FONTS.heading, color: COLORS.emerald }}>{cat.count}</div>
+                        <div className="text-xs mb-2" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.7 }}>injuries{cat.dot > 0 && ` (${cat.dot} with DOT)`}</div>
+                        <div className="text-xs" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.5 }}>{cat.examples}</div>
                       </div>
                     )
                   })}
@@ -409,19 +439,19 @@ export default function CodexPage() {
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-slate-800">
                       <tr className="border-b border-slate-600">
-                        <th className="text-left py-2 text-gray-400">Injury</th>
-                        <th className="text-left py-2 text-gray-400">Type</th>
-                        <th className="text-left py-2 text-gray-400">Effect</th>
-                        <th className="text-left py-2 text-gray-400">Cure</th>
+                        <th className="text-left py-2" style={{ fontFamily: FONTS.caption, color: COLORS.gold }}>Injury</th>
+                        <th className="text-left py-2" style={{ fontFamily: FONTS.caption, color: COLORS.gold }}>Type</th>
+                        <th className="text-left py-2" style={{ fontFamily: FONTS.caption, color: COLORS.gold }}>Effect</th>
+                        <th className="text-left py-2" style={{ fontFamily: FONTS.caption, color: COLORS.gold }}>Cure</th>
                       </tr>
                     </thead>
-                    <tbody className="text-gray-300">
+                    <tbody style={{ fontFamily: FONTS.body, color: COLORS.parchment }}>
                       {INJURY_TABLE.map(inj => (
                         <tr key={inj.id} className="border-b border-slate-700/50">
-                          <td className="py-1.5 text-white">{inj.icon} {inj.name}</td>
-                          <td className="py-1.5"><Badge className={`${inj.type === 'physical' ? 'bg-red-900/50 text-red-300' : inj.type === 'magic' ? 'bg-blue-900/50 text-blue-300' : inj.type === 'poison' ? 'bg-green-900/50 text-green-300' : inj.type === 'psionic' ? 'bg-purple-900/50 text-purple-300' : 'bg-amber-900/50 text-amber-300'} text-xs`}>{inj.type}</Badge></td>
-                          <td className="py-1.5 text-xs text-gray-400">{inj.effect}</td>
-                          <td className="py-1.5 text-xs text-gray-500">{inj.cure}</td>
+                          <td className="py-1.5" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}>{inj.icon} {inj.name}</td>
+                          <td className="py-1.5"><Badge className={`${inj.type === 'physical' ? 'bg-red-900/50 text-red-300' : inj.type === 'magic' ? 'bg-blue-900/50 text-blue-300' : inj.type === 'poison' ? 'bg-green-900/50 text-green-300' : inj.type === 'psionic' ? 'bg-purple-900/50 text-purple-300' : 'bg-amber-900/50 text-amber-300'} text-xs`} style={{ fontFamily: FONTS.caption }}>{inj.type}</Badge></td>
+                          <td className="py-1.5 text-xs" style={{ color: COLORS.parchment, opacity: 0.8 }}>{inj.effect}</td>
+                          <td className="py-1.5 text-xs" style={{ color: COLORS.parchment, opacity: 0.6 }}>{inj.cure}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -431,47 +461,47 @@ export default function CodexPage() {
             </Card>
 
             {/* ═══ ITEMS & RARITY ═══ */}
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-slate-800/50" style={{ borderColor: COLORS.gold + '30' }}>
               <CardHeader>
-                <h2 className="text-white text-xl flex items-center gap-2"><Package className="w-5 h-5 text-amber-400" />Items &amp; Equipment &mdash; {ITEM_TEMPLATES.length} Items</h2>
+                <h2 className="text-xl flex items-center gap-2" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}><Package className="w-5 h-5" />Items &amp; Equipment &mdash; {ITEM_TEMPLATES.length} Items</h2>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Items are acquired through NPC encounters, monster drops, exploration, pickpocketing, conversation, and quest rewards. They fall into four categories and four rarity tiers. Active items consume charges on use; equipment provides passive bonuses indefinitely.</p>
+                <p className="text-sm" style={{ fontFamily: FONTS.body, color: COLORS.parchment }}>Items are acquired through NPC encounters, monster drops, exploration, pickpocketing, conversation, and quest rewards. They fall into four categories and four rarity tiers. Active items consume charges on use; equipment provides passive bonuses indefinitely.</p>
                 
                 {/* Item Type Summary */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                   {Object.entries(ITEM_TYPE_COUNTS).map(([type, count]) => (
                     <div key={type} className="text-center p-3 rounded bg-slate-700/50">
-                      <div className="text-lg font-bold text-white">{count}</div>
-                      <div className="text-xs text-gray-400 capitalize">{type}s</div>
+                      <div className="text-lg font-bold" style={{ fontFamily: FONTS.heading, color: COLORS.emerald }}>{count}</div>
+                      <div className="text-xs capitalize" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.7 }}>{type}s</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Rarity Tiers */}
-                <h3 className="text-white font-bold text-sm mb-3">Rarity System</h3>
+                <h3 className="font-bold text-sm mb-3" style={{ fontFamily: FONTS.subheading, color: COLORS.gold }}>Rarity System</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   {ITEM_RARITY_DATA.map(r => (
                     <div key={r.rarity} className={`p-3 rounded-lg ${r.color}/20 border border-current/20`}>
-                      <div className={`inline-block px-2 py-0.5 rounded text-xs text-white font-semibold ${r.color} mb-2`}>{r.rarity}</div>
-                      <div className="text-2xl font-bold text-white mb-1">{r.count}</div>
-                      <div className="text-xs text-gray-400">{r.examples}</div>
+                      <div className={`inline-block px-2 py-0.5 rounded text-xs text-white font-semibold ${r.color} mb-2`} style={{ fontFamily: FONTS.caption }}>{r.rarity}</div>
+                      <div className="text-2xl font-bold mb-1" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}>{r.count}</div>
+                      <div className="text-xs" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.7 }}>{r.examples}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Active Modifier Types */}
-                <h3 className="text-white font-bold text-sm mb-3">Active Item Modifiers</h3>
+                <h3 className="font-bold text-sm mb-3" style={{ fontFamily: FONTS.subheading, color: COLORS.gold }}>Active Item Modifiers</h3>
                 <div className="overflow-x-auto max-h-64 overflow-y-auto">
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-slate-800">
                       <tr className="border-b border-slate-600">
-                        <th className="text-left py-2 text-gray-400">Modifier</th>
-                        <th className="text-left py-2 text-gray-400">Effect</th>
-                        <th className="text-left py-2 text-gray-400">Example Item</th>
+                        <th className="text-left py-2" style={{ fontFamily: FONTS.caption, color: COLORS.gold }}>Modifier</th>
+                        <th className="text-left py-2" style={{ fontFamily: FONTS.caption, color: COLORS.gold }}>Effect</th>
+                        <th className="text-left py-2" style={{ fontFamily: FONTS.caption, color: COLORS.gold }}>Example Item</th>
                       </tr>
                     </thead>
-                    <tbody className="text-gray-300">
+                    <tbody style={{ fontFamily: FONTS.body, color: COLORS.parchment }}>
                       {[
                         { mod: 'healing', desc: 'Restores HP (dice roll or flat amount)', item: 'Healing Potion (2d8+4)' },
                         { mod: 'full_heal', desc: 'Restores to full HP, cures ALL injuries', item: 'Ambrosia' },
@@ -488,9 +518,9 @@ export default function CodexPage() {
                         { mod: 'fear_immune', desc: 'Grants Fearless condition', item: 'Golden Fleece' },
                       ].map(r => (
                         <tr key={r.mod} className="border-b border-slate-700/50">
-                          <td className="py-1.5 font-mono text-amber-300 text-xs">{r.mod}</td>
-                          <td className="py-1.5 text-xs text-gray-400">{r.desc}</td>
-                          <td className="py-1.5 text-xs text-gray-300">{r.item}</td>
+                          <td className="py-1.5 text-xs" style={{ fontFamily: FONTS.caption, color: COLORS.gold }}>{r.mod}</td>
+                          <td className="py-1.5 text-xs" style={{ color: COLORS.parchment, opacity: 0.8 }}>{r.desc}</td>
+                          <td className="py-1.5 text-xs" style={{ color: COLORS.parchment }}>{r.item}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -500,32 +530,32 @@ export default function CodexPage() {
             </Card>
 
             {/* ═══ ACHIEVEMENTS ═══ */}
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-slate-800/50" style={{ borderColor: COLORS.gold + '30' }}>
               <CardHeader>
-                <h2 className="text-white text-xl flex items-center gap-2"><Trophy className="w-5 h-5 text-yellow-400" />Achievements &mdash; {ACHIEVEMENT_DEFS.length} Total</h2>
+                <h2 className="text-xl flex items-center gap-2" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}><Trophy className="w-5 h-5" style={{ color: COLORS.gold }} />Achievements &mdash; {ACHIEVEMENT_DEFS.length} Total</h2>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">Achievements track your party&apos;s heroic milestones across every campaign. They span {Object.keys(TIER_CONFIG).length} tiers and {Object.keys(CATEGORY_CONFIG).length} categories. Some achievements are <span className="text-amber-300">visible from the start</span>; others are <span className="text-purple-300">hidden</span> until unlocked &mdash; rewarding exploration and bold choices.</p>
+                <p className="text-sm" style={{ fontFamily: FONTS.body, color: COLORS.parchment }}>Achievements track your party&apos;s heroic milestones across every campaign. They span {Object.keys(TIER_CONFIG).length} tiers and {Object.keys(CATEGORY_CONFIG).length} categories. Some achievements are <span style={{ color: COLORS.gold }}>visible from the start</span>; others are <span style={{ color: COLORS.deepPurple }}>hidden</span> until unlocked &mdash; rewarding exploration and bold choices.</p>
 
                 {/* Tier Breakdown */}
-                <h3 className="text-white font-bold text-sm mb-3">Tier Breakdown</h3>
+                <h3 className="font-bold text-sm mb-3" style={{ fontFamily: FONTS.subheading, color: COLORS.gold }}>Tier Breakdown</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   {Object.entries(TIER_CONFIG).map(([tier, config]) => (
                     <div key={tier} className="p-3 rounded-lg border" style={{ borderColor: config.border, backgroundColor: config.bg }}>
-                      <div className="text-2xl font-bold mb-1" style={{ color: config.color }}>{ACHIEVEMENT_TIER_COUNTS[tier]}</div>
-                      <div className="text-xs font-semibold" style={{ color: config.color }}>{config.label}</div>
+                      <div className="text-2xl font-bold mb-1" style={{ fontFamily: FONTS.heading, color: config.color }}>{ACHIEVEMENT_TIER_COUNTS[tier]}</div>
+                      <div className="text-xs font-semibold" style={{ fontFamily: FONTS.caption, color: config.color }}>{config.label}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Category Breakdown */}
-                <h3 className="text-white font-bold text-sm mb-3">Categories</h3>
+                <h3 className="font-bold text-sm mb-3" style={{ fontFamily: FONTS.subheading, color: COLORS.gold }}>Categories</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
                   {Object.entries(CATEGORY_CONFIG).map(([cat, config]) => (
                     <div key={cat} className="text-center p-3 rounded-lg bg-slate-700/50">
                       <div className="text-lg mb-1">{config.icon}</div>
-                      <div className="text-lg font-bold text-white">{ACHIEVEMENT_CATEGORY_COUNTS[cat]}</div>
-                      <div className="text-xs text-gray-400">{config.label}</div>
+                      <div className="text-lg font-bold" style={{ fontFamily: FONTS.heading, color: COLORS.emerald }}>{ACHIEVEMENT_CATEGORY_COUNTS[cat]}</div>
+                      <div className="text-xs" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.7 }}>{config.label}</div>
                     </div>
                   ))}
                 </div>
@@ -533,56 +563,56 @@ export default function CodexPage() {
             </Card>
 
             {/* ═══ AUDIO & NARRATION ═══ */}
-            <Card className="bg-slate-800/50 border-slate-700">
+            <Card className="bg-slate-800/50" style={{ borderColor: COLORS.deepPurple + '30' }}>
               <CardHeader>
-                <h2 className="text-white text-xl flex items-center gap-2"><Volume2 className="w-5 h-5 text-cyan-400" />Audio &amp; Narration</h2>
+                <h2 className="text-xl flex items-center gap-2" style={{ fontFamily: FONTS.heading, color: COLORS.gold }}><Volume2 className="w-5 h-5" style={{ color: COLORS.deepPurple }} />Audio &amp; Narration</h2>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-gray-300 text-sm">The campaign is brought to life through layered procedural audio and AI-powered narration. Every scene shift, every dice roll, every whispered oracle riddle carries its own sonic signature.</p>
+                <p className="text-sm" style={{ fontFamily: FONTS.body, color: COLORS.parchment }}>The campaign is brought to life through layered procedural audio and AI-powered narration. Every scene shift, every dice roll, every whispered oracle riddle carries its own sonic signature.</p>
 
                 {/* Scene Themes */}
-                <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2"><Volume2 className="w-4 h-4 text-cyan-400" />Procedural Dark Fantasy Audio</h3>
-                <p className="text-gray-400 text-xs mb-3">8 scene themes dynamically shift based on narrative context:</p>
+                <h3 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ fontFamily: FONTS.subheading, color: COLORS.gold }}><Volume2 className="w-4 h-4" style={{ color: COLORS.deepPurple }} />Procedural Dark Fantasy Audio</h3>
+                <p className="text-xs mb-3" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.6 }}>8 scene themes dynamically shift based on narrative context:</p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                   {[
-                    { scene: 'Intro', desc: 'Ominous awakening', color: 'text-slate-300' },
-                    { scene: 'Act I', desc: 'Growing tension', color: 'text-blue-300' },
-                    { scene: 'Act II', desc: 'Dark escalation', color: 'text-purple-300' },
-                    { scene: 'Act III', desc: 'Climactic fury', color: 'text-red-300' },
-                    { scene: 'Tavern', desc: 'Warm & weary', color: 'text-amber-300' },
-                    { scene: 'Forest', desc: 'Ancient & eerie', color: 'text-green-300' },
-                    { scene: 'Battle', desc: 'Brutal & urgent', color: 'text-orange-300' },
-                    { scene: 'Temple', desc: 'Sacred dread', color: 'text-yellow-300' },
+                    { scene: 'Intro', desc: 'Ominous awakening', color: COLORS.parchment },
+                    { scene: 'Act I', desc: 'Growing tension', color: '#93C5FD' },
+                    { scene: 'Act II', desc: 'Dark escalation', color: COLORS.deepPurple },
+                    { scene: 'Act III', desc: 'Climactic fury', color: COLORS.crimson },
+                    { scene: 'Tavern', desc: 'Warm & weary', color: COLORS.gold },
+                    { scene: 'Forest', desc: 'Ancient & eerie', color: COLORS.emerald },
+                    { scene: 'Battle', desc: 'Brutal & urgent', color: '#FB923C' },
+                    { scene: 'Temple', desc: 'Sacred dread', color: '#FBBF24' },
                   ].map(s => (
                     <div key={s.scene} className="text-center p-2 rounded bg-slate-700/50">
-                      <div className={`text-sm font-bold ${s.color}`}>{s.scene}</div>
-                      <div className="text-xs text-gray-500">{s.desc}</div>
+                      <div className="text-sm font-bold" style={{ fontFamily: FONTS.subheading, color: s.color }}>{s.scene}</div>
+                      <div className="text-xs" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, opacity: 0.5 }}>{s.desc}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* SFX */}
-                <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2"><Volume2 className="w-4 h-4 text-cyan-400" />Sound Effects (SFX)</h3>
+                <h3 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ fontFamily: FONTS.subheading, color: COLORS.gold }}><Volume2 className="w-4 h-4" style={{ color: COLORS.deepPurple }} />Sound Effects (SFX)</h3>
                 <div className="flex flex-wrap gap-2 mb-6">
                   {[
                     'Dice Rolls', 'Combat Hits', 'Injuries', 'Level Ups',
                     'Shard Pulses', 'Act Transitions', 'Boss Phases',
                     'Victory', 'Death'
                   ].map(sfx => (
-                    <Badge key={sfx} variant="secondary" className="bg-slate-700 text-gray-300 text-xs">{sfx}</Badge>
+                    <Badge key={sfx} variant="secondary" className="bg-slate-700 text-xs" style={{ fontFamily: FONTS.caption, color: COLORS.parchment, borderColor: COLORS.gold + '20' }}>{sfx}</Badge>
                   ))}
                 </div>
 
                 {/* TTS */}
-                <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2"><Volume2 className="w-4 h-4 text-cyan-400" />Text-to-Speech Narration</h3>
+                <h3 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ fontFamily: FONTS.subheading, color: COLORS.gold }}><Volume2 className="w-4 h-4" style={{ color: COLORS.deepPurple }} />Text-to-Speech Narration</h3>
                 <div className="space-y-3">
-                  <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/50">
-                    <div className="text-sm text-white font-semibold mb-1">Edge TTS Engine</div>
-                    <p className="text-xs text-gray-400">Narration is powered by Microsoft Edge TTS with multiple voice options, delivering atmospheric storytelling that adapts to the tone of each scene.</p>
+                  <div className="p-3 rounded-lg bg-slate-700/30 border" style={{ borderColor: COLORS.deepPurple + '20' }}>
+                    <div className="text-sm font-semibold mb-1" style={{ fontFamily: FONTS.subheading, color: COLORS.gold }}>Edge TTS Engine</div>
+                    <p className="text-xs" style={{ fontFamily: FONTS.body, color: COLORS.parchment, opacity: 0.7 }}>Narration is powered by Microsoft Edge TTS with multiple voice options, delivering atmospheric storytelling that adapts to the tone of each scene.</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-slate-700/30 border border-slate-600/50">
-                    <div className="text-sm text-white font-semibold mb-1">Auto Scene Detection</div>
-                    <p className="text-xs text-gray-400">The system automatically detects scene transitions based on narrative keywords &mdash; shifting from tavern warmth to forest unease to battle fury without manual input.</p>
+                  <div className="p-3 rounded-lg bg-slate-700/30 border" style={{ borderColor: COLORS.deepPurple + '20' }}>
+                    <div className="text-sm font-semibold mb-1" style={{ fontFamily: FONTS.subheading, color: COLORS.gold }}>Auto Scene Detection</div>
+                    <p className="text-xs" style={{ fontFamily: FONTS.body, color: COLORS.parchment, opacity: 0.7 }}>The system automatically detects scene transitions based on narrative keywords &mdash; shifting from tavern warmth to forest unease to battle fury without manual input.</p>
                   </div>
                 </div>
               </CardContent>
