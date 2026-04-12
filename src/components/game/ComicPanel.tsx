@@ -24,11 +24,13 @@ export default function ComicPanel({ panels, artStyle = 'larry-elmore' }: ComicP
   const [loadingMap, setLoadingMap] = React.useState<Record<string, boolean>>({})
   if (!panels || panels.length === 0) return null;
 
-  const gridClass = panels.length <= 2
-    ? 'comic-grid comic-grid-2'
-    : panels.length === 3
-      ? 'comic-grid comic-grid-3'
-      : 'comic-grid comic-grid-4';
+  const gridClass = panels.length === 1
+    ? 'comic-grid comic-grid-1'
+    : panels.length <= 2
+      ? 'comic-grid comic-grid-2'
+      : panels.length === 3
+        ? 'comic-grid comic-grid-3'
+        : 'comic-grid comic-grid-4';
 
   return (
     <>

@@ -133,10 +133,12 @@ button, .btn, [role='button'] { font-family: 'MedievalSharp', sans-serif; }
 .sidebar-sheet { padding-top: var(--safe-top); padding-bottom: var(--safe-bottom); }
 
 .comic-grid { display: grid; gap: 6px; margin: 8px 0; }
+.comic-grid-1 { grid-template-columns: 1fr; }
 .comic-grid-2 { grid-template-columns: 1fr; }
 .comic-grid-3 { grid-template-columns: 1fr; }
 .comic-grid-4 { grid-template-columns: 1fr 1fr; }
 @media (min-width: 640px) {
+  .comic-grid-1 { grid-template-columns: 1fr; }
   .comic-grid-2 { grid-template-columns: 1fr 1fr; }
   .comic-grid-3 { grid-template-columns: 1fr 1fr; }
   .comic-grid-4 { grid-template-columns: 1fr 1fr; }

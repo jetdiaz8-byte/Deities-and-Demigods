@@ -4189,32 +4189,32 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     // ═════════════════════════════════════════════════════════════════════════
     ttsNarrationRef.current = displayedText
     console.log(`🔊 TTS narration saved: ${displayedText.length} chars, ready for speech`)
-    if (comicMode) {
-      try {
-        const isCombatScene =
-          (gs.activeNPCs || []).some(n => n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS') ||
-          ((res.dice_rolls || []).length > 0) ||
-          ((res.damage_dealt || []).length > 0)
-        const seededPanels = await generateComicPanels(displayedText || narr, isCombatScene, { artStyle: comicArtStyle, maxPanels: 1 })
-        const cachedTurnImage = sceneImageByTurn[gs.turn]
-        if (cachedTurnImage) {
-          setComicPanels(seededPanels.map(panel => ({ ...panel, imageUrl: cachedTurnImage, isGenerating: false, error: undefined })))
-          return
-        }
-        setComicPanels(seededPanels)
-        const renderedPanels = await Promise.all(
-          seededPanels.map(panel => generatePanelImage(panel, displayedText || narr, comicArtStyle, gs.turn)),
-        )
-        setComicPanels(renderedPanels)
-        const firstImage = renderedPanels.find(p => p.imageUrl)?.imageUrl
-        if (firstImage) {
-          setSceneImageByTurn(prev => ({ ...prev, [gs.turn]: firstImage }))
-        }
-      } catch (comicErr) {
-        console.warn('Comic panel generation failed:', comicErr)
-        setComicPanels([])
+    // ═════════════════════════════════════════════════════════════════════════
+    // SCENE IMAGE GENERATION — Always generate a fantasy scene illustration
+    // for each DM turn. Uses AI image gen with SVG fallback.
+    // ═════════════════════════════════════════════════════════════════════════
+    try {
+      const isCombatScene =
+        (gs.activeNPCs || []).some(n => n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS') ||
+        ((res.dice_rolls || []).length > 0) ||
+        ((res.damage_dealt || []).length > 0)
+      const seededPanels = await generateComicPanels(displayedText || narr, isCombatScene, { artStyle: comicArtStyle, maxPanels: 1 })
+      const cachedTurnImage = sceneImageByTurn[gs.turn]
+      if (cachedTurnImage) {
+        setComicPanels(seededPanels.map(panel => ({ ...panel, imageUrl: cachedTurnImage, isGenerating: false, error: undefined })))
+        return
       }
-    } else if (comicPanels.length) {
+      setComicPanels(seededPanels)
+      const renderedPanels = await Promise.all(
+        seededPanels.map(panel => generatePanelImage(panel, displayedText || narr, comicArtStyle, gs.turn)),
+      )
+      setComicPanels(renderedPanels)
+      const firstImage = renderedPanels.find(p => p.imageUrl)?.imageUrl
+      if (firstImage) {
+        setSceneImageByTurn(prev => ({ ...prev, [gs.turn]: firstImage }))
+      }
+    } catch (sceneErr) {
+      console.warn('Scene image generation failed:', sceneErr)
       setComicPanels([])
     }
 
