@@ -173,19 +173,6 @@ export default function MythworldEngine() {
   // Act-dependent atmosphere class
   const atmosphereClass = gameState?.act === 'act1' ? 'atmosphere-act1' : gameState?.act === 'act2' ? 'atmosphere-act2' : 'atmosphere-act3'
 
-  // Smart skip: fade out speech when player interacts
-  useEffect(() => {
-    if (gameState?.waitingForHuman && narratorMode === 'auto') {
-      // Small delay to let narration render first
-      const timer = setTimeout(() => {
-        if (isSpeaking) {
-          // Don't auto-stop — let the player hear it, they can skip manually
-        }
-      }, 2000)
-      return () => clearTimeout(timer)
-    }
-  }, [gameState?.waitingForHuman, narratorMode, isSpeaking])
-
   // Day/night cycle based on turn count
   const timeOfDay = useMemo(() => {
     const cycle = (gameState?.turn ?? 0) % 40 // Full cycle every 40 turns

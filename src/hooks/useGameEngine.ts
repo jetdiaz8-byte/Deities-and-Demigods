@@ -306,7 +306,7 @@ export function useGameEngine() {
   const [ttsVoice, setTtsVoice] = useState('guy') // Edge TTS voice key
   const [ttsEngine, setTtsEngine] = useState<'browser' | 'edge'>('browser') // Browser is primary — reliable, instant
   const [ttsSpeed, setTtsSpeed] = useState(0.9)
-  const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')
+  // narratorMode removed — TTS auto-speak is always on
   const [ttsPending, setTtsPending] = useState(false)
   const ttsPendingRef = useRef(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -1569,7 +1569,7 @@ export function useGameEngine() {
   }
 
   const triggerPendingTTSFromUserGesture = () => {
-    if (!ttsPending || narratorMode !== 'auto' || isSpeaking) return
+    if (!ttsPending || isSpeaking) return
     warmupBrowserTTS()
     ttsPendingRef.current = false
     setTtsPending(false)
@@ -3949,7 +3949,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       // All React re-renders are done. TTS can start safely.
       // Uses requestAnimationFrame to ensure DOM is fully settled.
       // ═════════════════════════════════════════════════════════════════════════
-      if (narratorMode === 'auto' && !document.hidden) {
+      if (!document.hidden) {
         const ttsText = ttsNarrationRef.current
         if (ttsText && ttsText.length > 10) {
           console.log(`🔊 TTS auto-speak triggered (post-render): ${ttsText.length} chars`)
@@ -5152,7 +5152,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       // TTS AUTO-SPEAK — NOW triggers AFTER setGameState has committed.
       // All React re-renders are done. TTS can start safely.
       // ═════════════════════════════════════════════════════════════════════════
-      if (narratorMode === 'auto' && !document.hidden) {
+      if (!document.hidden) {
         const ttsText = ttsNarrationRef.current
         if (ttsText && ttsText.length > 10) {
           console.log(`🔊 TTS auto-speak triggered (post-render): ${ttsText.length} chars`)
@@ -5527,7 +5527,6 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     ttsEngine, setTtsEngine,
     browserVoices, browserVoiceName, setBrowserVoiceName,
     ttsSpeed, setTtsSpeed,
-    narratorMode, setNarratorMode,
     currentSpeechSentenceIndex,
     isSpeaking, setIsSpeaking,
     audioCache, setAudioCache,
