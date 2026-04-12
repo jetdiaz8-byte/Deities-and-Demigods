@@ -1,39 +1,18 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   BookOpen, ScrollText, Volume2, VolumeX, Menu, X, Clock,
-  VolumeOff, Volume1, Swords, Trophy, Skull
+  VolumeOff, Volume1, Swords, Trophy
 } from 'lucide-react'
-import { HealthBar, NarrativeSection, TokenCounter } from '@/components/game/GameComponents'
+import { NarrativeSection, TokenCounter } from '@/components/game/GameComponents'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
 import { ACTS } from '@/lib/gameTypes'
-import { getEntityPortrait, getAntagonist } from '@/lib/gameHelpers'
+import { getAntagonist } from '@/lib/gameHelpers'
 import type { GameState } from '@/lib/gameTypes'
-
-function getClassIcon(pc: any) {
-  const abs = (pc.abilities || []).join(' ').toLowerCase()
-  if (abs.includes('divine') || abs.includes('paladin') || abs.includes('smite')) return <span className="class-icon-paladin text-xs">⚔️</span>
-  if (abs.includes('arcane') || abs.includes('wizard') || abs.includes('spell')) return <span className="class-icon-mage text-xs">🔮</span>
-  if (abs.includes('heal') || abs.includes('cleric') || abs.includes('restore')) return <span className="class-icon-cleric text-xs">✝️</span>
-  if (abs.includes('stealth') || abs.includes('rogue') || abs.includes('sneak')) return <span className="class-icon-rogue text-xs">🗡️</span>
-  if (abs.includes('nature') || abs.includes('ranger') || abs.includes('bow')) return <span className="class-icon-ranger text-xs">🏹</span>
-  return <span className="class-icon-warrior text-xs">⚔️</span>
-}
-
-function getPantheonFrame(pantheon: string): string {
-  const p = (pantheon || '').toLowerCase()
-  if (p.includes('greek') || p.includes('olympian') || p.includes('mount olympus')) return 'portrait-frame-greek'
-  if (p.includes('norse') || p.includes('asgardian') || p.includes('aesir') || p.includes('vanir')) return 'portrait-frame-norse'
-  if (p.includes('egyptian') || p.includes('pharaoh') || p.includes('heliopolitan')) return 'portrait-frame-egyptian'
-  if (p.includes('celtic') || p.includes('fey') || p.includes('sidhe') || p.includes('tuatha')) return 'portrait-frame-celtic'
-  if (p.includes('asian') || p.includes('chinese') || p.includes('japanese') || p.includes('celestial')) return 'portrait-frame-asian'
-  return 'portrait-frame-default'
-}
 
 export interface GameHeaderProps {
   gameState: GameState
@@ -393,131 +372,7 @@ export function GameHeader({
         </button>
       </div>
 
-      {/* Party Bar - Sticky */}
-      <div className="flex gap-1 p-2 overflow-x-auto scrollbar-hide bg-[#0d0a08] md:pr-80">
-        {gameState.pcs.map(pc => {
-          const isActive = pc.id === gameState.humanPCId
-          const injuries = gameState.injuries[pc.id] || []
-          return (
-            <div
-              key={pc.id}
-              onClick={() => {
-                setSelectedPortrait(pc as CharacterPortrait)
-                setPortraitModalOpen(true)
-              }}
-              className={`
-                flex-shrink-0 w-20 md:w-28 p-1.5 md:p-2 rounded text-xs cursor-pointer
-                hover:ring-2 hover:ring-[#d4af37]/50 transition-all
-                ${pc.dead ? 'opacity-30' : ''} 
-                ${isActive ? 'border-2 border-[#d4af37] pulse-glow' : 'border border-[#3a3020]'}
-              `}
-              style={{ 
-                background: 'linear-gradient(145deg, #1a1814 0%, #12100e 100%)', 
-                borderTop: `3px solid ${pc.type === 'hero' ? '#4a90c0' : '#a050a0'}` 
-              }}
-            >
-              {/* Portrait thumbnail */}
-              <div className={`portrait-frame ${getPantheonFrame(pc.pantheon || pc.category || '')}`}>
-              <div className={`relative w-full rounded overflow-hidden bg-[#0d0a08] border border-[#3a3020] mb-1 ${isActive ? 'portrait-locket portrait-locket-active' : 'portrait-locket'}`} style={{ aspectRatio: '3/4' }}>
-                <Image
-                  src={getEntityPortrait(pc)}
-                  alt={pc.name}
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
-                {/* Damage/Death overlay */}
-                {pc.dead && (
-                  <div className="absolute inset-0 bg-black/70 grayscale" />
-                )}
-                {!pc.dead && pc.hp > 0 && pc.hp < pc.maxHp * 0.3 && (
-                  <div className="absolute inset-0 bg-red-900/30 animate-pulse pointer-events-none" />
-                )}
-                {!pc.dead && injuries.length > 0 && (
-                  <div className="absolute top-0.5 right-0.5 flex flex-col gap-0.5 pointer-events-none">
-                    {injuries.slice(0, 3).map((inj, i) => (
-                      <span key={i} className="text-[10px] leading-none drop-shadow-lg">{inj.icon}</span>
-                    ))}
-                  </div>
-                )}
-              </div>
-              </div>
-              <div className="font-bold text-[#d4af37] truncate font-name text-[10px] md:text-xs text-center">
-                {getClassIcon(pc)}
-                {pc.name.replace(/\s*\([^)]*\)/g, '').split(/\s+/).slice(-1)[0]}
-              </div>
-              <HealthBar current={pc.hp} max={pc.maxHp} size="sm" showLabel={false} />
-              <div className="text-[9px] text-center text-gray-400 mt-0.5">
-                {Math.max(0, pc.hp)}/{pc.maxHp}
-              </div>
-              {injuries.length > 0 && (
-                <div className="mt-0.5 space-y-0.5">
-                  {injuries.slice(0, 2).map((inj, i) => (
-                    <div key={i} className="text-[9px] md:text-[10px] text-center truncate px-1 rounded" style={{ 
-                      background: 'rgba(180,60,40,0.15)', 
-                      color: '#cc8060',
-                      border: '1px solid rgba(180,60,40,0.2)'
-                    }}>
-                      {inj.icon} {inj.name} ({inj.turnsLeft}t)
-                    </div>
-                  ))}
-                  {injuries.length > 2 && (
-                    <div className="text-[9px] text-center text-[#806050]">+{injuries.length - 2} more</div>
-                  )}
-                </div>
-              )}
-              {isActive && !pc.dead && (
-                <div className="text-[10px] text-center text-[#d4af37] uppercase mt-0.5">You</div>
-              )}
-            </div>
-          )
-        })}
 
-        {/* Antagonist Card — Identity hidden until Act III reveal */}
-        {gameState.act !== ACTS.ONE && gameState.antagonistId && (() => {
-          const antagonist = getAntagonist(gameState.antagonistId)
-          return (
-          <div
-            onClick={() => {
-              if (antagonist && revealed) {
-                setSelectedPortrait(antagonist as CharacterPortrait)
-                setPortraitModalOpen(true)
-              }
-            }}
-            className={`flex-shrink-0 w-20 md:w-28 p-1.5 md:p-2 rounded text-xs border cursor-pointer hover:ring-2 transition-all ${revealed ? `border-red-900/50 hover:ring-red-500/50 ${antagonistRevealPlayed ? 'antagonist-reveal' : ''}` : 'border-[#2a2020] hover:ring-[#4a3030]'}`}
-            style={{ background: 'linear-gradient(145deg, #1a1010 0%, #120808 100%)', borderTop: `3px solid ${revealed ? '#8b0000' : '#3a2020'}` }}
-          >
-            {/* Portrait thumbnail — shadow silhouette until Act III */}
-            <div className={`portrait-frame ${revealed && antagonist ? getPantheonFrame(antagonist.pantheon || (antagonist as any).category || '') : 'portrait-frame-default'}`}>
-            <div className="relative w-full rounded overflow-hidden bg-[#0d0a08] mb-1" style={{ aspectRatio: '3/4' }}>
-              {revealed && antagonist ? (
-                <Image
-                  src={getEntityPortrait(antagonist)}
-                  alt={antagonist.name}
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Skull className="w-8 h-8 text-[#3a2020]" />
-                </div>
-              )}
-            </div>
-            </div>
-            <div className={`font-bold truncate font-name text-[10px] md:text-xs text-center ${revealed ? 'text-[#c04040]' : 'text-[#4a3030]'}`}>
-              {revealed ? antagonist?.name : 'The Shadow'}
-            </div>
-            <HealthBar current={gameState.antagonistHp} max={gameState.antagonistMaxHp} size="sm" showLabel={false} />
-            <div className="text-[9px] text-center text-gray-400 mt-0.5">
-              {revealed ? `${gameState.antagonistHp}/${gameState.antagonistMaxHp}` : '???'}
-            </div>
-            <div className={`text-[8px] text-center uppercase mt-0.5 ${revealed ? 'text-red-400' : 'text-[#3a2020]'}`}>
-              {revealed ? `Phase ${gameState.antagonistPhase}/3` : 'Unknown'}
-            </div>
-          </div>
-        )})()}
-      </div>
       
       {/* Story Summary - Moved to narrative panel to avoid sidebar overlap */}
       {gameState.storySummary && (
