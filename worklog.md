@@ -192,3 +192,30 @@ Stage Summary:
 - Modified: src/app/MythworldPage.tsx (added mobile bottom padding)
 - Commit: 3266f2d pushed to GitHub
 - Every section now opens in its own popup Dialog on both mobile and desktop
+---
+Task ID: 11
+Agent: Main Agent
+Task: Push pending changes — TTS overhaul, layout redesign, dead code cleanup
+
+Work Log:
+- Investigated 3 unpushed local commits (d9c1011, 2e9ac08, ba9cacf)
+- Verified ba9cacf contains all changes from previous session:
+  - TTS: Replaced 'neural' engine with 'edge' (Microsoft Neural Voices), increased timeout to 45s, fixed voice maps, auto-fallback to browser
+  - TTS: Browser TTS auto-unlock (removed gesture requirement), silent error handling (no disruptive toasts)
+  - Layout: Moved TurnCardShowcase from narrative area to dedicated right panel (320px, fixed)
+  - Layout: Added SidebarDiceArea to right panel alongside portrait gallery
+  - Layout: Removed duplicate dice tray from GameSidebar icon strip
+  - UI: Removed dead Smart Narrator Controls (auto/manual/off toggle) from narrative area
+  - UI: Cleaned up GameHeader voice controls — replaced 'Neural' with 'Edge', fixed voice selector dropdowns
+  - Fixed GameSidebar: <Image> tag (undefined) → <img> tag, removed SidebarDiceArea import
+  - TurnCardShowcase: Redesigned for portrait-first layout (480px height, full picture, compact name bar)
+- Verified lint passes with no new source errors
+- Pushed 3 commits to origin/main (3266f2d..ba9cacf)
+
+Stage Summary:
+- Pushed: 3 local commits to GitHub
+- 6 files modified: tts/route.ts, useGameEngine.ts, GameHeader.tsx, MythworldPage.tsx, GameSidebar.tsx, TurnCardShowcase.tsx
+- 186 insertions, 307 deletions (net -121 lines)
+- TTS: Browser primary with Edge TTS option, no more disruptive error toasts
+- Layout: Right panel with portrait gallery + dice tray replaces wasted 320px margin
+- Dead code removed: narrator controls, duplicate dice tray, wrong <Image> tag
