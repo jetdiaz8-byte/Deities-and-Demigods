@@ -1262,11 +1262,9 @@ export function useGameEngine() {
   // ═══════════════════════════════════════════════════════════════════════════
 
   // ── BROWSER TTS (Primary) ────────────────────────────────────────────
-  // v2.27.0: Ultra-clean TTS — no silence timer, no retry logic, no race conditions.
-  // Root cause of repeating TTS: the old silence timer (10s) and "interrupted" retry
-  // logic were racing against each other, creating multiple simultaneous speech chains.
-  // Fix: speak each chunk exactly once. On any error, skip to next chunk. No retries.
-  // Smaller chunks (200 chars) reduce Chrome restart bugs.
+  // v2.28.0: Fix first-words cutoff — Chrome needs 250ms after cancel() and a
+  // warmup utterance to fully initialize its audio pipeline before real speech.
+  // v2.27.0: No silence timer, no retry logic, no race conditions.
   const speakWithBrowser = async (text: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (typeof window === 'undefined' || !window.speechSynthesis) {
@@ -1282,76 +1280,106 @@ export function useGameEngine() {
       // Cancel any ongoing speech BEFORE scheduling new speech
       window.speechSynthesis.cancel()
 
-      // Chrome needs a brief delay after cancel() before speak()
+      // Chrome needs 250ms after cancel() to fully flush its audio pipeline.
+      // 100ms was too short — the first utterance's opening words got dropped.
       window.setTimeout(() => {
         if (abortSpeakRef.current) {
           resolve()
           return
         }
 
-        // Use 200-char chunks — small enough to avoid Chrome's 15s pause/restart bug
-        const chunks = splitTextIntoChunks(text, 200)
-        let idx = 0
-        let settled = false // Prevents resolve/reject from being called multiple times
+        // Select voice once (shared across all chunks)
+        const allVoices = window.speechSynthesis.getVoices()
+        const voice = allVoices.find(v => v.name === browserVoiceName) || browserVoices.find(v => v.name === browserVoiceName)
 
-        const finish = () => {
-          if (settled) return
-          settled = true
-          browserUtteranceRef.current = null
-          resolve()
+        // Warmup: speak a tiny silent utterance to force Chrome to fully
+        // initialize its audio pipeline. Without this, the first real chunk
+        // loses its first 3-4 words (Chrome starts playing before buffer is ready).
+        const warmup = new SpeechSynthesisUtterance('')
+        warmup.volume = 0
+        if (voice) warmup.voice = voice
+        window.speechSynthesis.speak(warmup)
+
+        // After warmup completes, start the real chunks
+        warmup.onend = () => {
+          startRealChunks()
+        }
+        warmup.onerror = () => {
+          // If warmup fails, start real chunks anyway
+          startRealChunks()
         }
 
-        const speakNext = () => {
-          if (abortSpeakRef.current || idx >= chunks.length) {
-            finish()
+        // Fallback: if warmup hangs, start after 200ms anyway
+        const warmupTimer = window.setTimeout(() => {
+          startRealChunks()
+        }, 200)
+
+        let warmupDone = false
+        const startRealChunks = () => {
+          if (warmupDone) return
+          warmupDone = true
+          clearTimeout(warmupTimer)
+
+          if (abortSpeakRef.current) {
+            resolve()
             return
           }
 
-          const chunk = chunks[idx]?.trim()
-          idx += 1
+          // Use 200-char chunks — small enough to avoid Chrome's 15s pause/restart bug
+          const chunks = splitTextIntoChunks(text, 200)
+          let idx = 0
+          let settled = false
 
-          if (!chunk) {
-            // Empty chunk — skip immediately
-            speakNext()
-            return
+          const finish = () => {
+            if (settled) return
+            settled = true
+            browserUtteranceRef.current = null
+            resolve()
           }
 
-          const utterance = new SpeechSynthesisUtterance(chunk)
-          browserUtteranceRef.current = utterance
-
-          // Select voice
-          const allVoices = window.speechSynthesis.getVoices()
-          const voice = allVoices.find(v => v.name === browserVoiceName) || browserVoices.find(v => v.name === browserVoiceName)
-          if (voice) utterance.voice = voice
-
-          utterance.rate = Math.max(0.5, Math.min(2, ttsSpeed))
-          utterance.pitch = 0.9
-          utterance.volume = 0.9
-
-          utterance.onend = () => {
-            // Chunk finished normally — move to next after brief pause
-            window.setTimeout(speakNext, 80)
-          }
-
-          utterance.onerror = (e) => {
-            const errStr = (e.error || '').toLowerCase()
-            // "interrupted" or "canceled" — means speech was externally stopped
-            // (e.g., user clicked, or abortSpeakRef was set). Don't retry.
-            if (errStr.includes('interrupt') || errStr.includes('cancel') || abortSpeakRef.current) {
-              console.log(`🔊 TTS chunk ${idx}/${chunks.length}: ${e.error} — skipping`)
+          const speakNext = () => {
+            if (abortSpeakRef.current || idx >= chunks.length) {
               finish()
               return
             }
-            // Any other error — log and skip to next chunk (no retry)
-            console.warn(`🔊 TTS chunk ${idx}/${chunks.length} error: ${e.error} — skipping`)
-            window.setTimeout(speakNext, 80)
+
+            const chunk = chunks[idx]?.trim()
+            idx += 1
+
+            if (!chunk) {
+              speakNext()
+              return
+            }
+
+            const utterance = new SpeechSynthesisUtterance(chunk)
+            browserUtteranceRef.current = utterance
+
+            if (voice) utterance.voice = voice
+            utterance.rate = Math.max(0.5, Math.min(2, ttsSpeed))
+            utterance.pitch = 0.9
+            utterance.volume = 0.9
+
+            utterance.onend = () => {
+              window.setTimeout(speakNext, 80)
+            }
+
+            utterance.onerror = (e) => {
+              const errStr = (e.error || '').toLowerCase()
+              if (errStr.includes('interrupt') || errStr.includes('cancel') || abortSpeakRef.current) {
+                console.log(`🔊 TTS chunk ${idx}/${chunks.length}: ${e.error} — done`)
+                finish()
+                return
+              }
+              console.warn(`🔊 TTS chunk ${idx}/${chunks.length} error: ${e.error} — skipping`)
+              window.setTimeout(speakNext, 80)
+            }
+
+            window.speechSynthesis.speak(utterance)
           }
 
-          window.speechSynthesis.speak(utterance)
+          speakNext()
         }
-
-        speakNext()
-      }, 100)
+      }, 250)
     })
   }
 

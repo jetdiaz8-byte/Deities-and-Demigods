@@ -493,7 +493,7 @@ export default function MythworldEngine() {
           {/* Narrative Panel */}
           <div
             ref={narrRef}
-            className={`flex-1 min-w-0 overflow-y-auto p-2 sm:p-3 md:p-4 pb-6 md:pb-8 scroll-smooth md:mr-80 ${atmosphereClass}`}
+            className={`flex-1 min-w-0 overflow-y-auto p-2 sm:p-3 md:p-4 pb-6 md:pb-8 scroll-smooth ${atmosphereClass}`}
             style={{
               background: gameState?.act === 'act1'
                 ? 'rgba(6,4,3,.98)'
@@ -604,7 +604,7 @@ export default function MythworldEngine() {
           />
 
           {/* Right Panel — Portrait Gallery + Dice Tray (desktop only) */}
-          <div className="hidden md:flex flex-col w-80 flex-shrink-0 border-l border-[#2e2008] bg-[#0a0806]/95 overflow-y-auto">
+          <div className="hidden md:flex flex-col w-80 flex-shrink-0 mr-14 border-l border-[#2e2008] bg-[#0a0806]/95 overflow-y-auto">
             <TurnCardShowcase turn={gameState?.turn ?? 0} gameState={gameState} />
             <SidebarDiceArea diceRolls={diceRollsForDisplay ?? []} />
           </div>
