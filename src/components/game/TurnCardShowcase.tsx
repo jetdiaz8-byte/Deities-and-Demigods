@@ -222,7 +222,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
           transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
         }}
       >
-        <div className="flex flex-row" style={{ maxHeight: '300px' }}>
+        <div className="flex flex-row" style={{ minHeight: '288px' }}>
           {/* ── LEFT PANEL: Name + info (vertically centered) ──────── */}
           <div
             className="flex flex-col justify-center items-start py-2 pl-3 pr-2 shrink-0"
@@ -283,10 +283,10 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             </div>
           </div>
 
-          {/* ── CENTER: Portrait (showcase size — big enough for wow factor) ─────── */}
+          {/* ── CENTER: Portrait (~480x288 showcase size — wow factor) ─────── */}
           <div
             className="relative overflow-hidden flex-1 flex items-center justify-center"
-            style={{ maxHeight: '280px' }}
+            style={{ minHeight: '288px' }}
           >
             <PortraitImage key={portrait} portrait={portrait} charName={charName} fading={fading} />
 
@@ -397,8 +397,8 @@ function PortraitImage({ portrait, charName, fading }: { portrait: string; charN
     <img
       src={portrait}
       alt={charName}
-      className="w-full h-full object-contain"
-      style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.4s' }}
+      className="object-contain"
+      style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.4s', maxWidth: '480px', maxHeight: '288px', width: '100%', height: 'auto' }}
       onError={() => setImgError(true)}
       loading="eager"
     />

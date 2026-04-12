@@ -1249,6 +1249,13 @@ export function useGameEngine() {
   // ═══════════════════════════════════════════════════════════════════════════
 
   // ── BROWSER TTS (Primary) ────────────────────────────────────────────
+  // v2.23.3: Resilient TTS — immune to React re-renders killing Chrome SpeechSynthesis.
+  // Key changes:
+  //   - Uses larger chunks (500 chars) instead of individual sentences for fewer transitions
+  //   - No pause/resume watchdog (that was causing the "blink" + cutoff)
+  //   - 10s silence timer instead of 2s (allows for slow starts after re-renders)
+  //   - On "interrupted" error: retries SAME chunk up to 2 times instead of skipping
+  //   - Guard flag prevents re-entrancy from React state updates
   const speakWithBrowser = async (text: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (typeof window === 'undefined' || !window.speechSynthesis) {
@@ -1270,29 +1277,30 @@ export function useGameEngine() {
           return
         }
 
-      const sentences = splitTextIntoSentences(text)
+      // Use larger chunks (500 chars) for resilience — fewer transitions = fewer failure points
+      const chunks = splitTextIntoChunks(text, 500)
       let idx = 0
-      let watchdogTimer: ReturnType<typeof setInterval> | null = null
       let silenceTimer: ReturnType<typeof setTimeout> | null = null
       let retryCountForChunk = 0
+      const MAX_RETRIES = 2
+      let isSpeakingActive = true // Guard flag — prevents double-entry from React re-renders
+
+        const cleanup = () => {
+          isSpeakingActive = false
+          if (silenceTimer) {
+            clearTimeout(silenceTimer)
+            silenceTimer = null
+          }
+        }
 
         const speakNext = () => {
-          if (abortSpeakRef.current || idx >= sentences.length) {
+          if (abortSpeakRef.current || idx >= chunks.length) {
             browserUtteranceRef.current = null
-            // TTS highlight removed
-            if (watchdogTimer) {
-              clearInterval(watchdogTimer)
-              watchdogTimer = null
-            }
-            if (silenceTimer) {
-              clearTimeout(silenceTimer)
-              silenceTimer = null
-            }
+            cleanup()
             resolve()
             return
           }
-          const chunk = sentences[idx]?.trim()
-          const sentenceIndex = idx
+          const chunk = chunks[idx]?.trim()
           idx += 1
           retryCountForChunk = 0
           if (!chunk) {
@@ -1310,39 +1318,27 @@ export function useGameEngine() {
           utterance.pitch = 0.9
           utterance.volume = 0.9
           utterance.onstart = () => {
-            // TTS highlight removed — Chrome SpeechSynthesis interrupts on ANY React re-render during speech
-            if (watchdogTimer) clearInterval(watchdogTimer)
             if (silenceTimer) clearTimeout(silenceTimer)
-            // Chrome workaround: nudge speech engine every ~10s.
-            watchdogTimer = setInterval(() => {
-              try {
-                if (window.speechSynthesis.speaking && !window.speechSynthesis.paused) {
-                  window.speechSynthesis.pause()
-                  window.setTimeout(() => window.speechSynthesis.resume(), 100)
-                } else if (!window.speechSynthesis.speaking && !abortSpeakRef.current) {
-                  // Engine got stuck between chunks; restart current chunk once.
-                  window.speechSynthesis.cancel()
-                  window.setTimeout(() => window.speechSynthesis.speak(utterance), 200)
-                }
-              } catch {
-                // ignore watchdog errors
-              }
-            }, 10000)
+            // 10s silence timer — generous to allow for slow starts after React re-renders.
+            // If speech engine gets stuck, retry the same chunk rather than skipping.
             silenceTimer = setTimeout(() => {
-              if (!abortSpeakRef.current) {
-                if (retryCountForChunk < 1) {
+              if (!abortSpeakRef.current && isSpeakingActive) {
+                console.warn('🔊 TTS silence timer fired — retrying current chunk')
+                if (retryCountForChunk < MAX_RETRIES) {
                   retryCountForChunk += 1
                   try {
                     window.speechSynthesis.cancel()
                     window.setTimeout(() => window.speechSynthesis.speak(utterance), 200)
                   } catch {
-                    speakNext()
+                    // If retry fails, move to next chunk
+                    window.setTimeout(speakNext, 40)
                   }
                 } else {
-                  speakNext()
+                  // Max retries exceeded, skip to next chunk
+                  window.setTimeout(speakNext, 40)
                 }
               }
-            }, 2000)
+            }, 10000)
           }
 
           utterance.onend = () => {
@@ -1350,46 +1346,57 @@ export function useGameEngine() {
               clearTimeout(silenceTimer)
               silenceTimer = null
             }
-            if (watchdogTimer) {
-              clearInterval(watchdogTimer)
-              watchdogTimer = null
-            }
-            // iOS Safari is more stable with a brief pause between utterances.
-            window.setTimeout(speakNext, 80)
+            retryCountForChunk = 0
+            // Brief pause between chunks for stability
+            window.setTimeout(speakNext, 100)
           }
           utterance.onerror = (e) => {
-            // Chrome frequently fires 'interrupted' on cancel()/pause()/resume() — not a real error
             const errStr = (e.error || '').toLowerCase()
+            // "interrupted" is Chrome's way of saying something cancelled the speech
+            // (usually a React re-render). RETRY the same chunk instead of skipping.
             if (errStr.includes('interrupt') || errStr.includes('cancel')) {
-              // Silently skip — these are Chrome quirks, not failures
               if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null }
-              if (watchdogTimer) { clearInterval(watchdogTimer); watchdogTimer = null }
-              if (abortSpeakRef.current) return resolve()
-              window.setTimeout(speakNext, 40)
+              if (abortSpeakRef.current || !isSpeakingActive) {
+                cleanup()
+                resolve()
+                return
+              }
+              // Retry same chunk — go back one index since we already incremented
+              idx -= 1
+              if (retryCountForChunk < MAX_RETRIES) {
+                retryCountForChunk += 1
+                console.log(`🔊 TTS interrupted — retrying chunk (attempt ${retryCountForChunk}/${MAX_RETRIES})`)
+                window.setTimeout(speakNext, 300)
+              } else {
+                // Max retries exceeded, skip this chunk and move on
+                console.warn('🔊 TTS chunk max retries exceeded — moving to next')
+                retryCountForChunk = 0
+                idx += 1 // skip past the failed chunk
+                window.setTimeout(speakNext, 100)
+              }
               return
             }
+            // Real errors
             console.warn('Browser speech chunk error:', e.error)
             if (silenceTimer) {
               clearTimeout(silenceTimer)
               silenceTimer = null
             }
-            if (watchdogTimer) {
-              clearInterval(watchdogTimer)
-              watchdogTimer = null
+            if (abortSpeakRef.current) {
+              cleanup()
+              resolve()
+              return
             }
-            if (abortSpeakRef.current) return resolve()
-            if (retryCountForChunk < 1) {
+            // Retry on error too
+            idx -= 1
+            if (retryCountForChunk < MAX_RETRIES) {
               retryCountForChunk += 1
-              try {
-                window.speechSynthesis.cancel()
-                window.setTimeout(() => window.speechSynthesis.speak(utterance), 200)
-                return
-              } catch {
-                // continue to skip
-              }
+              window.setTimeout(speakNext, 300)
+            } else {
+              retryCountForChunk = 0
+              idx += 1
+              window.setTimeout(speakNext, 100)
             }
-            // Skip failed chunk after single retry.
-            window.setTimeout(speakNext, 40)
           }
           window.speechSynthesis.speak(utterance)
         }
@@ -1451,9 +1458,15 @@ export function useGameEngine() {
       await sleep(100) // Brief pause for clean transition
     }
 
-    setIsSpeaking(true)
+    // Set speaking flag via ref FIRST (synchronous, no re-render)
+    // Then batch the React state updates — they'll render after speech has started
     abortSpeakRef.current = false
-    setStatusMessage(ttsEngine === 'browser' ? 'Speaking...' : 'Generating neural voice...')
+    // Use requestAnimationFrame to ensure state updates don't coincide with speech start
+    // This prevents React re-renders from killing Chrome SpeechSynthesis
+    window.requestAnimationFrame(() => {
+      setIsSpeaking(true)
+      setStatusMessage(ttsEngine === 'browser' ? 'Speaking...' : 'Generating neural voice...')
+    })
 
     try {
       if (ttsEngine === 'browser') {
@@ -3890,28 +3903,9 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       await renderResult(res, isFirst, gs)
 
       // ═════════════════════════════════════════════════════════════════════════
-      // TTS AUTO-SPEAK — Only triggers AFTER full JSON is parsed and narration saved.
-      // ttsNarrationRef is set inside renderResult, guaranteed clean & complete.
+      // TTS AUTO-SPEAK is now DEFERRED until after setGameState commits.
+      // See below — after the final setGameState call.
       // ═════════════════════════════════════════════════════════════════════════
-      if (narratorMode === 'auto' && !document.hidden) {
-        const ttsText = ttsNarrationRef.current
-        if (ttsText && ttsText.length > 10) {
-          console.log(`🔊 TTS auto-speak triggered: ${ttsText.length} chars`)
-          ttsPendingRef.current = false
-          setTtsPending(false)
-          if (!isSpeaking) {
-            window.setTimeout(() => {
-              if (!abortSpeakRef.current) {
-                speakText(ttsText)
-              }
-            }, 300)
-          }
-        } else {
-          // Narration not ready yet — mark pending for user gesture trigger
-          ttsPendingRef.current = true
-          setTtsPending(true)
-        }
-      }
 
       gs.humanPCId = humanPCId
       gs.isProcessing = false
@@ -3941,6 +3935,34 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       } else {
         setGameState(deepClone(gs))
         setStatusMessage(`T${gs.turn} complete — ${living.length} standing`)
+      }
+
+      // ═════════════════════════════════════════════════════════════════════════
+      // TTS AUTO-SPEAK — NOW triggers AFTER setGameState has committed.
+      // All React re-renders are done. TTS can start safely.
+      // Uses requestAnimationFrame to ensure DOM is fully settled.
+      // ═════════════════════════════════════════════════════════════════════════
+      if (narratorMode === 'auto' && !document.hidden) {
+        const ttsText = ttsNarrationRef.current
+        if (ttsText && ttsText.length > 10) {
+          console.log(`🔊 TTS auto-speak triggered (post-render): ${ttsText.length} chars`)
+          ttsPendingRef.current = false
+          setTtsPending(false)
+          if (!isSpeaking) {
+            // Use double-RAF to ensure all pending React renders are flushed
+            window.requestAnimationFrame(() => {
+              window.requestAnimationFrame(() => {
+                if (!abortSpeakRef.current) {
+                  speakText(ttsText)
+                }
+              })
+            })
+          }
+        } else {
+          // Narration not ready yet — mark pending for user gesture trigger
+          ttsPendingRef.current = true
+          setTtsPending(true)
+        }
       }
     } catch (e) {
       gs.isProcessing = false
@@ -5062,25 +5084,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
 
       await renderResult(res, false, newGS)
 
-      // TTS AUTO-SPEAK — Only triggers AFTER full JSON is parsed and narration saved.
-      if (narratorMode === 'auto' && !document.hidden) {
-        const ttsText = ttsNarrationRef.current
-        if (ttsText && ttsText.length > 10) {
-          console.log(`🔊 TTS auto-speak triggered: ${ttsText.length} chars`)
-          ttsPendingRef.current = false
-          setTtsPending(false)
-          if (!isSpeaking) {
-            window.setTimeout(() => {
-              if (!abortSpeakRef.current) {
-                speakText(ttsText)
-              }
-            }, 300)
-          }
-        } else {
-          ttsPendingRef.current = true
-          setTtsPending(true)
-        }
-      }
+      // TTS AUTO-SPEAK is DEFERRED — triggers after final setGameState (see below)
 
       // ── ACHIEVEMENT CHECK ───────────────────────────────────────────
       const damageThisTurn = (res.damage_dealt?.length || 0) > 0
@@ -5135,6 +5139,31 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
         newGS.isProcessing = false
         setGameState({ ...newGS })
         setStatusMessage(`T${newGS.turn} done — ${living.length} alive`)
+      }
+
+      // ═════════════════════════════════════════════════════════════════════════
+      // TTS AUTO-SPEAK — NOW triggers AFTER setGameState has committed.
+      // All React re-renders are done. TTS can start safely.
+      // ═════════════════════════════════════════════════════════════════════════
+      if (narratorMode === 'auto' && !document.hidden) {
+        const ttsText = ttsNarrationRef.current
+        if (ttsText && ttsText.length > 10) {
+          console.log(`🔊 TTS auto-speak triggered (post-render): ${ttsText.length} chars`)
+          ttsPendingRef.current = false
+          setTtsPending(false)
+          if (!isSpeaking) {
+            window.requestAnimationFrame(() => {
+              window.requestAnimationFrame(() => {
+                if (!abortSpeakRef.current) {
+                  speakText(ttsText)
+                }
+              })
+            })
+          }
+        } else {
+          ttsPendingRef.current = true
+          setTtsPending(true)
+        }
       }
     } catch (e) {
       gs.isProcessing = false

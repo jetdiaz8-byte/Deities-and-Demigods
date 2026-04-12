@@ -653,8 +653,8 @@ export default function MythworldEngine() {
 
             {/* Scroll anchor — auto-scroll targets this */}
             <div id="narrative-bottom" />
-            {/* Spacer for fixed bottom bars (PartyBar ~90px + BottomBar ~50px) */}
-            <div style={{ height: '140px', flexShrink: 0 }} />
+            {/* Spacer for fixed bottom bars (PartyBar ~110px + BottomBar ~50px) */}
+            <div style={{ height: '170px', flexShrink: 0 }} />
             {/* Fog of War Overlay */}
             <div className="fog-overlay" />
           </div>
@@ -753,7 +753,7 @@ export default function MythworldEngine() {
         )}
 
         {/* Bottom Bar — fixed above PartyBar */}
-        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap safe-bottom" style={{ position: 'fixed', bottom: '90px', left: 0, right: 0, zIndex: 79, marginRight: undefined }}>
+        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap safe-bottom" style={{ position: 'fixed', bottom: '110px', left: 0, right: 0, zIndex: 79, marginRight: undefined }}>
           <Button
             onClick={() => setSidebarOpen(true)}
             variant="outline"
