@@ -265,9 +265,9 @@ export default function MythworldEngine() {
     lastAchievementCount.current = achievementUnlocks?.length ?? 0
   }, [achievementUnlocks, showToast])
 
-  const handleConfirmChoice = React.useCallback(() => {
+  const handleConfirmChoice = React.useCallback((customText?: string) => {
     triggerPendingTTSFromUserGesture()
-    confirmChoice()
+    confirmChoice(customText)
   }, [triggerPendingTTSFromUserGesture, confirmChoice])
 
   const handleAdvanceTurn = React.useCallback(() => {

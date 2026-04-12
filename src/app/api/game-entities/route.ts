@@ -14,7 +14,7 @@ function getFallbackEntities(type: string, limit: number, excludeIds: string[]) 
     const data = MASTER_DB
 
     let entities: any[] = []
-    const categories = {
+    const categories: Record<string, string[]> = {
       heroes: ['heroes', 'demigods'],
       antagonist: ['greater_gods', 'monsters'],
       npcs: ['heroes', 'demigods', 'lesser_gods', 'greater_gods', 'monsters'],

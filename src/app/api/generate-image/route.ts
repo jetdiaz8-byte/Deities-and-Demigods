@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     const zai = await ZAI.create();
     const response = await zai.images.generations.create({
       prompt,
-      size: size || '1344x768',
+      size: (size || '1344x768') as '1344x768' | '1024x1024' | '768x1344',
     });
 
     const imageBase64 = response.data[0]?.base64;

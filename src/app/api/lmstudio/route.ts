@@ -6,8 +6,18 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export const runtime = 'edge'
 
+// Security: Only allow requests to localhost/private network (SSRF prevention)
+function isAllowedLocalhost(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    const allowed = ['localhost', '127.0.0.1', '::1', '0.0.0.0']
+    return allowed.includes(parsed.hostname)
+  } catch {
+    return false
+  }
+}
+
 const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 }
@@ -25,8 +35,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required field: userMessage or messages' }, { status: 400, headers: CORS_HEADERS })
     }
 
-    // Default to localhost:1234 (LM Studio default)
+    // Default to localhost:1234 (LM Studio default) — SSRF-protected
     const baseUrl = (lmStudioUrl || 'http://localhost:1234').replace(/\/+$/, '')
+    if (!isAllowedLocalhost(baseUrl)) {
+      return NextResponse.json({ error: 'URL must be a localhost address (SSRF protection)' }, { status: 403, headers: CORS_HEADERS })
+    }
     const endpoint = `${baseUrl}/v1/chat/completions`
 
     // Build OpenAI-compatible messages array
@@ -134,6 +147,9 @@ export async function GET(request: NextRequest) {
   try {
     const url = new URL(request.url)
     const baseUrl = (url.searchParams.get('url') || 'http://localhost:1234').replace(/\/+$/, '')
+    if (!isAllowedLocalhost(baseUrl)) {
+      return NextResponse.json({ connected: false, error: 'URL must be a localhost address (SSRF protection)' }, { status: 403, headers: CORS_HEADERS })
+    }
 
     const response = await fetch(`${baseUrl}/v1/models`, {
       method: 'GET',

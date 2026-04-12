@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
   // self-hosted deployments (Docker/bare-metal), not Vercel.
   output: process.env.DEPLOY_TARGET === "standalone" ? "standalone" : undefined,
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
-  reactStrictMode: false,
+  reactStrictMode: true,
   // External packages — don't bundle into serverless functions
   serverExternalPackages: ['z-ai-web-dev-sdk', 'sharp', 'ws'],
   // Fixed: removed swcMinify (unrecognized in Next.js 16 / Turbopack)
