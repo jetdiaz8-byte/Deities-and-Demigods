@@ -396,11 +396,16 @@ export function useGameEngine() {
   // Guard: hash of the last spoken TTS text — prevents re-speaking identical narration
   const lastSpokenHashRef = useRef('')
   const ttsTurnGuardRef = useRef(-1) // track which turn's TTS was last spoken
+  const ttsCooldownUntilRef = useRef(0) // global cooldown: no new speech until this timestamp
 
   // Store player's chosen actions for display in turn history
   const lastPlayerChoiceRef = useRef<{ pcName: string; pcAction: string; pcAbility: string; compName?: string; compAction?: string; isFreeText: boolean } | null>(null)
 
   const combatQuietTurnsRef = useRef(0)
+
+  // Accumulated dice rolls for the SidebarDiceArea component
+  const allDiceRollsRef = useRef<DiceRoll[]>([])
+  const [diceRollsForDisplay, setDiceRollsForDisplay] = useState<DiceRoll[]>([])
 
   // Achievement System State
   const achievementTrackerRef = useRef<AchievementTracker>(createAchievementTracker())
@@ -1460,6 +1465,13 @@ export function useGameEngine() {
   const speakText = async (text: string, voice?: string) => {
     if (!text) return
 
+    // Global cooldown guard: prevent rapid re-speak from race conditions
+    const now = Date.now()
+    if (now < ttsCooldownUntilRef.current) {
+      console.log('🔊 TTS cooldown active, skipping')
+      return
+    }
+
     // Dedup guard: skip if we just spoke this exact same text
     const textHash = text.length + ':' + text.slice(0, 80)
     if (lastSpokenHashRef.current === textHash) {
@@ -1510,6 +1522,8 @@ export function useGameEngine() {
       audioRef.current = null
       browserUtteranceRef.current = null
       setCurrentSpeechSentenceIndex(null)
+      // Set 5-second cooldown after speech completes to prevent repeat loops
+      ttsCooldownUntilRef.current = Date.now() + 5000
     }
   }
 
@@ -1938,6 +1952,9 @@ export function useGameEngine() {
     prevGameStateRef.current = null
     ttsTurnGuardRef.current = -1
     lastSpokenHashRef.current = ''
+    ttsCooldownUntilRef.current = 0
+    allDiceRollsRef.current = []
+    setDiceRollsForDisplay([])
 
     // Run first turn
     setStatusMessage('Opening scene loading...')
@@ -3037,6 +3054,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     // ── DICE TRAY — Populate lastDiceRolls for sidebar dice display ─────
     if (res.dice_rolls?.length) {
       newGS.lastDiceRolls = [...(newGS.lastDiceRolls || []), ...res.dice_rolls].slice(-20)
+      // Also accumulate for SidebarDiceArea component
+      allDiceRollsRef.current = [...allDiceRollsRef.current, ...res.dice_rolls].slice(-50)
+      setDiceRollsForDisplay([...allDiceRollsRef.current])
     }
 
     // ── CHRONICLE LOG — Add a regular entry for every turn ──────────────
@@ -5180,32 +5200,8 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
         setStatusMessage(`T${newGS.turn} done — ${living.length} alive`)
       }
 
-      // ═════════════════════════════════════════════════════════════════════════
-      // TTS AUTO-SPEAK — guarded by turn number to prevent repeat
-      // ═════════════════════════════════════════════════════════════════════════
-      if (!document.hidden) {
-        const ttsText = ttsNarrationRef.current
-        const currentTurnNum = newGS.turn || 0
-        if (ttsText && ttsText.length > 10 && ttsTurnGuardRef.current !== currentTurnNum) {
-          ttsTurnGuardRef.current = currentTurnNum
-          console.log(`🔊 TTS auto-speak triggered (confirmChoice): ${ttsText.length} chars, turn=${currentTurnNum}`)
-          ttsPendingRef.current = false
-          setTtsPending(false)
-          lastSpokenHashRef.current = ''
-          if (!isSpeaking) {
-            window.requestAnimationFrame(() => {
-              window.requestAnimationFrame(() => {
-                if (!abortSpeakRef.current) {
-                  speakText(ttsText)
-                }
-              })
-            })
-          }
-        } else {
-          ttsPendingRef.current = true
-          setTtsPending(true)
-        }
-      }
+      // TTS auto-speak removed from confirmChoice — only runTurn triggers auto-speak.
+      // This prevents double-speaking the same narration (runTurn + confirmChoice racing).
     } catch (e) {
       gs.isProcessing = false
       setGameState(deepClone(gs))
@@ -5552,6 +5548,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     sidebarOpen, setSidebarOpen,
     statusMessage, setStatusMessage,
     lastDMNarrative, setLastDMNarrative,
+    diceRollsForDisplay,
     lastTurnReadyTime, setLastTurnReadyTime,
     portraitModalOpen, setPortraitModalOpen,
     selectedPortrait, setSelectedPortrait,

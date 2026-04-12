@@ -225,10 +225,10 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
       >
         {/* Portrait-first layout for right panel — portrait is dominant */}
         <div className="flex flex-col">
-          {/* PORTRAIT: Full picture, 5" height (480px), object-contain, NO CROPPING */}
+          {/* PORTRAIT: Full picture, 6" height (576px), object-contain, NO CROPPING */}
           <div
             className="relative overflow-hidden flex items-center justify-center bg-[#0a0806]"
-            style={{ minHeight: '480px', maxHeight: '520px' }}
+            style={{ minHeight: '576px', maxHeight: '620px' }}
           >
             <PortraitImage key={portrait} portrait={portrait} charName={charName} fading={fading} />
             {/* Vignette */}
@@ -320,7 +320,7 @@ function PortraitImage({ portrait, charName, fading }: { portrait: string; charN
       src={portrait}
       alt={charName}
       className="object-contain"
-      style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.4s', maxWidth: '480px', maxHeight: '288px', width: '100%', height: 'auto' }}
+      style={{ opacity: fading ? 0 : 1, transition: 'opacity 0.4s', maxWidth: '576px', maxHeight: '346px', width: '100%', height: 'auto' }}
       onError={() => setImgError(true)}
       loading="eager"
     />
