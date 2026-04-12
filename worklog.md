@@ -240,3 +240,29 @@ Stage Summary:
 - Fixed: ReferenceError crash that broke the entire app on Vercel
 - Commit: d570495 pushed to GitHub
 - 2 files changed, 4 insertions, 18 deletions
+
+---
+Task ID: 13
+Agent: Main Agent
+Task: v2.25.2 — Fix narration/TTS repeating loop
+
+Work Log:
+- Investigated user report: narration text + audio "kept repeating" after Turn 0
+- Analyzed screenshot: red arrow pointed to narration area, red circle around portrait
+- Traced all appendNarrative calls — confirmed no double-append in normal flow
+- Traced all TTS auto-speak triggers — found two blocks (runTurn + confirmChoice) without turn-level dedup
+- Root cause analysis: TTS auto-speak could fire multiple times for the same turn if:
+  1. React re-renders cause the double-RAF to re-execute
+  2. Browser SpeechSynthesis onend fires prematurely, re-triggering speakText
+  3. confirmChoice and runTurn both have independent TTS auto-speak blocks
+- Added ttsTurnGuardRef: tracks which turn's TTS was last spoken, blocks repeat for same turn
+- Added lastSpokenHashRef: prevents speakText from speaking identical text consecutively
+- Added narrativeContentRef: appendNarrative dedup guard prevents identical HTML blocks
+- Reset all guards on new campaign start
+
+Stage Summary:
+- Modified: src/hooks/useGameEngine.ts — 3 new refs, 2 guarded TTS blocks, 1 deduped appendNarrative
+- Turn-level TTS guard ensures each turn's narration is spoken exactly once
+- Text hash guard prevents re-speaking identical content
+- Narrative dedup prevents visual duplication of HTML blocks
+- Commit: 15c6e7c pushed to GitHub
