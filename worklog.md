@@ -316,3 +316,28 @@ Stage Summary:
 - Single panel layout uses comic-grid-1 (1fr) instead of comic-grid-2 (1fr 1fr on desktop)
 - ComicMode sidebar toggle still exists but no longer gates image generation
 - Pushed as v2.29.0
+---
+Task ID: v2.30.0
+Agent: Main Agent
+Task: Redesign CombatOverlay with full combat context
+
+Work Log:
+- Found CombatOverlay.tsx — a generic combat overlay with hardcoded Attack/Defend/Spell/Heal buttons
+- Identified it was disconnected from real game data — no enemy portraits, no DM narration, no ability context
+- Rewrote CombatOverlay from scratch with:
+  - **Battle Context panel**: Shows last DM narration excerpt so player knows what's happening
+  - **Enemies section**: Real portraits from getEntityPortrait, HP bars with color coding, conditions, AC, boss crown icon, antagonist phase indicator
+  - **Allies section**: Real portraits, YOU/ALLY badges, HP bars, AC, conditions
+  - **Contextual action buttons**: Only shows abilities the PC actually has (spell only if PC has magical abilities, heal only if healing ability exists or ally is wounded, ranged only if PC has bow/crossbow)
+  - **Improved combat log**: Color-coded by result (heal=green, miss=red, critical=gold), shows damage type
+  - **Phase indicator**: Shows "Your Move", "Enemy Turn", "Resolution", "Initiative" based on combat phase
+- Updated MythworldPage.tsx to pass lastDMNarrative prop
+- Updated gameState interface to accept full Entity type for pcs and activeNPCs
+- Removed unused X import from lucide-react (was unused in original)
+
+Stage Summary:
+- CombatOverlay is now fully contextual with real game data
+- Enemy portraits, HP bars, conditions, and boss indicators all show real data from gameState
+- Action buttons are context-aware — only shows relevant abilities for the current PC
+- DM narration provides battle context at the top of the overlay
+- Pushed as v2.30.0
