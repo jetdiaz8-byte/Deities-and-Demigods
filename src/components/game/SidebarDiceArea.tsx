@@ -176,6 +176,7 @@ function BG3DieFace({ sides, value, isRolling, isCritical, isFumble }: {
 export function SidebarDiceArea({ diceRolls }: SidebarDiceAreaProps) {
   const [visibleRolls, setVisibleRolls] = useState<DiceRoll[]>([])
   const [animatingKeys, setAnimatingKeys] = useState<Set<number>>(new Set())
+  const animatingKeysRef = useRef<Set<number>>(new Set())
   const prevLengthRef = useRef(0)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -185,21 +186,19 @@ export function SidebarDiceArea({ diceRolls }: SidebarDiceAreaProps) {
       const newStart = prevLengthRef.current
       const newRolls = diceRolls.slice(newStart)
 
-      // Set animating state for new rolls
-      const newKeys = new Set(animatingKeys)
+      // Set animating state for new rolls (via ref to avoid dependency cycle)
+      const newKeys = new Set(animatingKeysRef.current)
       for (let i = newStart; i < diceRolls.length; i++) {
         newKeys.add(i)
       }
+      animatingKeysRef.current = newKeys
       setAnimatingKeys(newKeys)
 
       // After tumble animation, reveal result
       const tumbleTimers = newRolls.map((_, idx) =>
         setTimeout(() => {
-          setAnimatingKeys(prev => {
-            const next = new Set(prev)
-            next.delete(newStart + idx)
-            return next
-          })
+          animatingKeysRef.current.delete(newStart + idx)
+          setAnimatingKeys(new Set(animatingKeysRef.current))
         }, 1200)
       )
 
@@ -209,7 +208,8 @@ export function SidebarDiceArea({ diceRolls }: SidebarDiceAreaProps) {
       return () => tumbleTimers.forEach(clearTimeout)
     }
     prevLengthRef.current = diceRolls.length
-  }, [diceRolls.length, diceRolls, animatingKeys])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [diceRolls.length, diceRolls])
 
   // Auto-scroll to bottom on new rolls
   useEffect(() => {

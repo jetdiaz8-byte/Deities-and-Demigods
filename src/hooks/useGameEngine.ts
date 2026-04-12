@@ -300,12 +300,11 @@ export function useGameEngine() {
   const [conversationHistory, setConversationHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([])
 
   // ── TTS STATE ────────────────────────────────────────────────────────
-  // Neural TTS (server-side, React-immune) is now the default.
-  // Browser SpeechSynthesis is kept as fallback but disabled by default
-  // because Chrome aborts speech on ANY React state change during playback.
+  // Browser SpeechSynthesis is the default — works everywhere, no server needed.
+  // Neural TTS (z-ai-web-dev-sdk) requires internal infrastructure and won't work on Vercel.
   const [ttsEnabled, setTtsEnabled] = useState(false)
-  const [ttsVoice, setTtsVoice] = useState('guy') // Edge TTS neural voice key
-  const [ttsEngine, setTtsEngine] = useState<'browser' | 'neural'>('neural') // Neural (server-side) is default
+  const [ttsVoice, setTtsVoice] = useState('guy') // Neural voice key (fallback)
+  const [ttsEngine, setTtsEngine] = useState<'browser' | 'neural'>('browser') // Browser is default — works on Vercel
   const [ttsSpeed, setTtsSpeed] = useState(0.9)
   const [narratorMode, setNarratorMode] = useState<'auto' | 'manual' | 'off'>('auto')
   const [ttsPending, setTtsPending] = useState(false)
@@ -538,9 +537,13 @@ export function useGameEngine() {
     const saved = safeLocalStorageGetItem('ddg_browser_voice')
     if (saved) setBrowserVoiceName(saved)
     const savedEngine = safeLocalStorageGetItem('ddg_tts_engine') as 'browser' | 'neural' | null
-    // Always default to neural — browser SpeechSynthesis is broken with React re-renders
-    setTtsEngine('neural')
-    safeLocalStorageSetItem('ddg_tts_engine', 'neural')
+    // Default to browser — works on Vercel without server infrastructure
+    if (savedEngine && savedEngine === 'neural') {
+      setTtsEngine('neural')
+    } else {
+      setTtsEngine('browser')
+      safeLocalStorageSetItem('ddg_tts_engine', 'browser')
+    }
     return () => { window.speechSynthesis.removeEventListener('voiceschanged', loadVoices) }
   }, [])
 
@@ -1484,15 +1487,17 @@ export function useGameEngine() {
     } catch (error) {
       console.error('TTS Error:', error)
 
-      // If browser TTS fails, try Edge TTS as auto-fallback
-      if (ttsEngine === 'browser') {
-        console.warn('🔄 Browser TTS failed, falling back to Neural voice...')
+      // If neural TTS fails, auto-switch to browser for future calls
+      if (ttsEngine === 'neural') {
+        console.warn('🔄 Neural TTS failed, switching to Browser voice...')
+        setTtsEngine('browser')
+        safeLocalStorageSetItem('ddg_tts_engine', 'browser')
         try {
-          await speakWithEdgeTTS(text, voice)
+          await speakWithBrowser(text)
           setStatusMessage('Ready')
-        } catch (fallbackError) {
-          console.error('TTS Fallback also failed:', fallbackError)
-          toast({ title: 'Voice Error', description: fallbackError instanceof Error ? fallbackError.message : 'Speech failed', variant: 'destructive' })
+        } catch (browserError) {
+          console.error('TTS Browser fallback also failed:', browserError)
+          toast({ title: 'Voice Error', description: browserError instanceof Error ? browserError.message : 'Speech failed', variant: 'destructive' })
           setStatusMessage('Voice error')
         }
       } else {
