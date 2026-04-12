@@ -266,3 +266,28 @@ Stage Summary:
 - Text hash guard prevents re-speaking identical content
 - Narrative dedup prevents visual duplication of HTML blocks
 - Commit: 15c6e7c pushed to GitHub
+
+---
+Task ID: 14
+Agent: Main Agent
+Task: v2.26.0 — Restore card showcase + dice tray, fix TTS repeat loop
+
+Work Log:
+- Investigated TTS repeating: found two auto-speak trigger points (runTurn + confirmChoice) racing
+- Removed auto-speak from confirmChoice — only runTurn triggers auto-speak now
+- Added 5-second global cooldown (ttsCooldownUntilRef) in speakText to prevent race conditions
+- TTS now has triple protection: turn-level guard + text hash dedup + cooldown timer
+- Restored right panel (320px) in MythworldPage.tsx with TurnCardShowcase + SidebarDiceArea
+- Restored md:mr-80 margin on narrative panel for right panel clearance
+- Increased portrait height to 6 inches (576px) in TurnCardShowcase.tsx
+- Added diceRollsForDisplay state + allDiceRollsRef to accumulate dice rolls for sidebar
+- Passed diceRollsForDisplay to SidebarDiceArea component
+- Reset dice rolls and cooldown on new campaign start
+
+Stage Summary:
+- Modified: src/app/MythworldPage.tsx — restored right panel, imports, dice rolls prop
+- Modified: src/components/game/TurnCardShowcase.tsx — 6" portrait height (480→576px)
+- Modified: src/hooks/useGameEngine.ts — TTS cooldown, removed confirmChoice auto-speak, dice roll accumulation
+- Commit: 6f4ed36 pushed to GitHub
+- TTS triple-guard system prevents all known repeat scenarios
+- Right panel with portrait gallery + dice tray restored on desktop
