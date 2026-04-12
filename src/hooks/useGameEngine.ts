@@ -397,6 +397,7 @@ export function useGameEngine() {
   const lastSpokenHashRef = useRef('')
   const ttsTurnGuardRef = useRef(-1) // track which turn's TTS was last spoken
   const ttsCooldownUntilRef = useRef(0) // global cooldown: no new speech until this timestamp
+  const speakingLockRef = useRef(false) // v2.27.0: prevents concurrent speakText calls (race condition fix)
 
   // Store player's chosen actions for display in turn history
   const lastPlayerChoiceRef = useRef<{ pcName: string; pcAction: string; pcAbility: string; compName?: string; compAction?: string; isFreeText: boolean } | null>(null)
@@ -1261,13 +1262,11 @@ export function useGameEngine() {
   // ═══════════════════════════════════════════════════════════════════════════
 
   // ── BROWSER TTS (Primary) ────────────────────────────────────────────
-  // v2.23.3: Resilient TTS — immune to React re-renders killing Chrome SpeechSynthesis.
-  // Key changes:
-  //   - Uses larger chunks (500 chars) instead of individual sentences for fewer transitions
-  //   - No pause/resume watchdog (that was causing the "blink" + cutoff)
-  //   - 10s silence timer instead of 2s (allows for slow starts after re-renders)
-  //   - On "interrupted" error: retries SAME chunk up to 2 times instead of skipping
-  //   - Guard flag prevents re-entrancy from React state updates
+  // v2.27.0: Ultra-clean TTS — no silence timer, no retry logic, no race conditions.
+  // Root cause of repeating TTS: the old silence timer (10s) and "interrupted" retry
+  // logic were racing against each other, creating multiple simultaneous speech chains.
+  // Fix: speak each chunk exactly once. On any error, skip to next chunk. No retries.
+  // Smaller chunks (200 chars) reduce Chrome restart bugs.
   const speakWithBrowser = async (text: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (typeof window === 'undefined' || !window.speechSynthesis) {
@@ -1275,54 +1274,52 @@ export function useGameEngine() {
         return
       }
 
-      // Auto-unlock on first call — the root div has onClickCapture that triggers unlockTTS
-      // so by the time auto-narration fires, the user has already interacted with the page
+      // Auto-unlock on first call
       if (!ttsUnlockedRef.current) {
         ttsUnlockedRef.current = true
       }
-      // Cancel any ongoing speech
+
+      // Cancel any ongoing speech BEFORE scheduling new speech
       window.speechSynthesis.cancel()
-      // Chrome/Safari can drop speech if speak() happens immediately after cancel().
-      // Queue speaking with a small delay.
+
+      // Chrome needs a brief delay after cancel() before speak()
       window.setTimeout(() => {
         if (abortSpeakRef.current) {
           resolve()
           return
         }
 
-      // Use larger chunks (500 chars) for resilience — fewer transitions = fewer failure points
-      const chunks = splitTextIntoChunks(text, 500)
-      let idx = 0
-      let silenceTimer: ReturnType<typeof setTimeout> | null = null
-      let retryCountForChunk = 0
-      const MAX_RETRIES = 2
-      let isSpeakingActive = true // Guard flag — prevents double-entry from React re-renders
+        // Use 200-char chunks — small enough to avoid Chrome's 15s pause/restart bug
+        const chunks = splitTextIntoChunks(text, 200)
+        let idx = 0
+        let settled = false // Prevents resolve/reject from being called multiple times
 
-        const cleanup = () => {
-          isSpeakingActive = false
-          if (silenceTimer) {
-            clearTimeout(silenceTimer)
-            silenceTimer = null
-          }
+        const finish = () => {
+          if (settled) return
+          settled = true
+          browserUtteranceRef.current = null
+          resolve()
         }
 
         const speakNext = () => {
           if (abortSpeakRef.current || idx >= chunks.length) {
-            browserUtteranceRef.current = null
-            cleanup()
-            resolve()
+            finish()
             return
           }
+
           const chunk = chunks[idx]?.trim()
           idx += 1
-          retryCountForChunk = 0
+
           if (!chunk) {
-            window.setTimeout(speakNext, 40)
+            // Empty chunk — skip immediately
+            speakNext()
             return
           }
+
           const utterance = new SpeechSynthesisUtterance(chunk)
           browserUtteranceRef.current = utterance
 
+          // Select voice
           const allVoices = window.speechSynthesis.getVoices()
           const voice = allVoices.find(v => v.name === browserVoiceName) || browserVoices.find(v => v.name === browserVoiceName)
           if (voice) utterance.voice = voice
@@ -1330,91 +1327,31 @@ export function useGameEngine() {
           utterance.rate = Math.max(0.5, Math.min(2, ttsSpeed))
           utterance.pitch = 0.9
           utterance.volume = 0.9
-          utterance.onstart = () => {
-            if (silenceTimer) clearTimeout(silenceTimer)
-            // 10s silence timer — generous to allow for slow starts after React re-renders.
-            // If speech engine gets stuck, retry the same chunk rather than skipping.
-            silenceTimer = setTimeout(() => {
-              if (!abortSpeakRef.current && isSpeakingActive) {
-                console.warn('🔊 TTS silence timer fired — retrying current chunk')
-                if (retryCountForChunk < MAX_RETRIES) {
-                  retryCountForChunk += 1
-                  try {
-                    window.speechSynthesis.cancel()
-                    window.setTimeout(() => window.speechSynthesis.speak(utterance), 200)
-                  } catch {
-                    // If retry fails, move to next chunk
-                    window.setTimeout(speakNext, 40)
-                  }
-                } else {
-                  // Max retries exceeded, skip to next chunk
-                  window.setTimeout(speakNext, 40)
-                }
-              }
-            }, 10000)
-          }
 
           utterance.onend = () => {
-            if (silenceTimer) {
-              clearTimeout(silenceTimer)
-              silenceTimer = null
-            }
-            retryCountForChunk = 0
-            // Brief pause between chunks for stability
-            window.setTimeout(speakNext, 100)
+            // Chunk finished normally — move to next after brief pause
+            window.setTimeout(speakNext, 80)
           }
+
           utterance.onerror = (e) => {
             const errStr = (e.error || '').toLowerCase()
-            // "interrupted" is Chrome's way of saying something cancelled the speech
-            // (usually a React re-render). RETRY the same chunk instead of skipping.
-            if (errStr.includes('interrupt') || errStr.includes('cancel')) {
-              if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null }
-              if (abortSpeakRef.current || !isSpeakingActive) {
-                cleanup()
-                resolve()
-                return
-              }
-              // Retry same chunk — go back one index since we already incremented
-              idx -= 1
-              if (retryCountForChunk < MAX_RETRIES) {
-                retryCountForChunk += 1
-                console.log(`🔊 TTS interrupted — retrying chunk (attempt ${retryCountForChunk}/${MAX_RETRIES})`)
-                window.setTimeout(speakNext, 300)
-              } else {
-                // Max retries exceeded, skip this chunk and move on
-                console.warn('🔊 TTS chunk max retries exceeded — moving to next')
-                retryCountForChunk = 0
-                idx += 1 // skip past the failed chunk
-                window.setTimeout(speakNext, 100)
-              }
+            // "interrupted" or "canceled" — means speech was externally stopped
+            // (e.g., user clicked, or abortSpeakRef was set). Don't retry.
+            if (errStr.includes('interrupt') || errStr.includes('cancel') || abortSpeakRef.current) {
+              console.log(`🔊 TTS chunk ${idx}/${chunks.length}: ${e.error} — skipping`)
+              finish()
               return
             }
-            // Real errors
-            console.warn('Browser speech chunk error:', e.error)
-            if (silenceTimer) {
-              clearTimeout(silenceTimer)
-              silenceTimer = null
-            }
-            if (abortSpeakRef.current) {
-              cleanup()
-              resolve()
-              return
-            }
-            // Retry on error too
-            idx -= 1
-            if (retryCountForChunk < MAX_RETRIES) {
-              retryCountForChunk += 1
-              window.setTimeout(speakNext, 300)
-            } else {
-              retryCountForChunk = 0
-              idx += 1
-              window.setTimeout(speakNext, 100)
-            }
+            // Any other error — log and skip to next chunk (no retry)
+            console.warn(`🔊 TTS chunk ${idx}/${chunks.length} error: ${e.error} — skipping`)
+            window.setTimeout(speakNext, 80)
           }
+
           window.speechSynthesis.speak(utterance)
         }
+
         speakNext()
-      }, 120)
+      }, 100)
     })
   }
 
@@ -1465,6 +1402,13 @@ export function useGameEngine() {
   const speakText = async (text: string, voice?: string) => {
     if (!text) return
 
+    // v2.27.0: Speaking lock — prevents concurrent speakText calls entirely.
+    // This is the primary defense against TTS repetition.
+    if (speakingLockRef.current) {
+      console.log('🔊 TTS locked (already speaking), skipping')
+      return
+    }
+
     // Global cooldown guard: prevent rapid re-speak from race conditions
     const now = Date.now()
     if (now < ttsCooldownUntilRef.current) {
@@ -1479,6 +1423,11 @@ export function useGameEngine() {
       return
     }
     lastSpokenHashRef.current = textHash
+
+    // Lock immediately — no other speakText call can enter while this is true
+    speakingLockRef.current = true
+    // Set cooldown immediately on START (not just on finish) to prevent any re-entry
+    ttsCooldownUntilRef.current = Date.now() + 8000
 
     // Stop any current speech
     if (isSpeaking) {
@@ -1514,21 +1463,21 @@ export function useGameEngine() {
     } catch (error) {
       console.error('TTS Error:', error)
       // Don't show error toasts for TTS failures — they're disruptive during gameplay
-      // Instead, just silently fail and update status
       setIsSpeaking(false)
       setStatusMessage('Ready')
     } finally {
+      // Release the speaking lock — new speakText calls can now proceed
+      speakingLockRef.current = false
       setIsSpeaking(false)
       audioRef.current = null
       browserUtteranceRef.current = null
       setCurrentSpeechSentenceIndex(null)
-      // Set 5-second cooldown after speech completes to prevent repeat loops
-      ttsCooldownUntilRef.current = Date.now() + 5000
     }
   }
 
   const stopSpeaking = () => {
     abortSpeakRef.current = true
+    speakingLockRef.current = false // v2.27.0: release lock so new speech can start
 
     if (fadeIntervalRef.current) {
       clearInterval(fadeIntervalRef.current)
@@ -1953,6 +1902,7 @@ export function useGameEngine() {
     ttsTurnGuardRef.current = -1
     lastSpokenHashRef.current = ''
     ttsCooldownUntilRef.current = 0
+    speakingLockRef.current = false
     allDiceRollsRef.current = []
     setDiceRollsForDisplay([])
 
