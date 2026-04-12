@@ -169,3 +169,26 @@ Stage Summary:
 - Desktop: Added Settings and DM Notes buttons to icon strip
 - Logs: Cleaned up to show only Chronicle of Events timeline
 - All existing Dialog content preserved, no breaking changes
+
+---
+Task ID: 10
+Agent: Main Agent
+Task: v2.25.0 — Redesign sidebar: each section in its own popup dialog
+
+Work Log:
+- Investigated GameSidebar.tsx (1538 lines) — identified 10 desktop Dialog panels, 8 mobile tabs crammed in Sheet, tiny Settings Popover
+- Delegated mobile refactor + Settings upgrade + DM Notes creation to full-stack developer subagent
+- Subagent replaced Sheet drawer + MobileTabs (348 lines) with fixed bottom icon dock (12 icons in 2-row grid)
+- Subagent converted Settings Popover → full Dialog with Comic Panels + Voice sections
+- Subagent created DM Notes Dialog with Session Stats + DM System Notes + Conversation Log
+- Subagent added Settings + DM Notes icons to desktop icon strip
+- Subagent removed Session Stats + DM Conversation from Logs Dialog (moved to DM Notes)
+- Cleaned up unused imports: Image, Popover, Sheet, Tabs, CheckCircle, RegionIndicator
+- Added pb-28 md:pb-0 to MythworldPage.tsx main container for mobile dock clearance
+- Lint: no new errors (all 10 are pre-existing)
+
+Stage Summary:
+- Modified: src/components/game/GameSidebar.tsx (1538→1209 lines, -329 lines)
+- Modified: src/app/MythworldPage.tsx (added mobile bottom padding)
+- Commit: 3266f2d pushed to GitHub
+- Every section now opens in its own popup Dialog on both mobile and desktop
