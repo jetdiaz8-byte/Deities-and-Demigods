@@ -222,7 +222,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
           transition: 'border-color 0.6s ease, box-shadow 0.6s ease',
         }}
       >
-        <div className="flex flex-row" style={{ maxHeight: '140px' }}>
+        <div className="flex flex-row" style={{ maxHeight: '300px' }}>
           {/* ── LEFT PANEL: Name + info (vertically centered) ──────── */}
           <div
             className="flex flex-col justify-center items-start py-2 pl-3 pr-2 shrink-0"
@@ -235,7 +235,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             }}
           >
             <div
-              className="text-base font-bold tracking-wide leading-tight"
+              className="text-lg font-bold tracking-wide leading-tight"
               style={{
                 fontFamily: 'Cinzel, serif',
                 color: '#f0c860',
@@ -246,7 +246,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             </div>
             {(charTitle || charDivineRank) && (
               <div
-                className="text-[9px] tracking-wider mt-0.5 leading-tight"
+                className="text-[11px] tracking-wider mt-0.5 leading-tight"
                 style={{
                   fontFamily: 'Cinzel, serif',
                   color: '#9a8860',
@@ -258,7 +258,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             )}
             {displayCharacter?.pantheon && (
               <div
-                className="text-[8px] uppercase tracking-widest mt-1"
+                className="text-[9px] uppercase tracking-widest mt-1"
                 style={{ fontFamily: 'Cinzel, serif', color: '#d4af37' }}
               >
                 {displayCharacter.pantheon}
@@ -267,9 +267,9 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             {/* Mini stat pills */}
             {displayCharacter && (
               <div className="flex flex-wrap gap-1 mt-1.5">
-                {displayCharacter.hp != null && <span className="text-[8px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">HP {displayCharacter.hp}</span>}
-                {displayCharacter.AC != null && <span className="text-[8px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">AC {displayCharacter.AC}</span>}
-                {displayCharacter.align && <span className="text-[8px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">{displayCharacter.align}</span>}
+                {displayCharacter.hp != null && <span className="text-[9px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">HP {displayCharacter.hp}</span>}
+                {displayCharacter.AC != null && <span className="text-[9px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">AC {displayCharacter.AC}</span>}
+                {displayCharacter.align && <span className="text-[9px] px-1 py-0.5 rounded bg-[#1a1510] border border-[#2e2008] text-[#9a8860]">{displayCharacter.align}</span>}
               </div>
             )}
             <div className="flex items-center gap-1.5 mt-1.5">
@@ -283,10 +283,10 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             </div>
           </div>
 
-          {/* ── CENTER: Portrait (capped height, object-contain) ─────── */}
+          {/* ── CENTER: Portrait (showcase size — big enough for wow factor) ─────── */}
           <div
             className="relative overflow-hidden flex-1 flex items-center justify-center"
-            style={{ maxHeight: '140px' }}
+            style={{ maxHeight: '280px' }}
           >
             <PortraitImage key={portrait} portrait={portrait} charName={charName} fading={fading} />
 

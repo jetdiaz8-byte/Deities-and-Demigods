@@ -388,6 +388,10 @@ export function useGameEngine() {
   // Synchronous ref — TTS can read this immediately after renderResult sets it
   const renderedNarrationRef = useRef('')
 
+  // Dedicated TTS narration ref — ONLY set AFTER full JSON is parsed and DM narration is extracted.
+  // This is the single source of truth for TTS. Never set during streaming.
+  const ttsNarrationRef = useRef('')
+
   // Store player's chosen actions for display in turn history
   const lastPlayerChoiceRef = useRef<{ pcName: string; pcAction: string; pcAbility: string; compName?: string; compAction?: string; isFreeText: boolean } | null>(null)
 
@@ -1538,9 +1542,9 @@ export function useGameEngine() {
   const speakNarrative = () => {
     // Ensures first manual click unlocks Web Speech on Chrome/Safari.
     warmupBrowserTTS()
-    // Use the EXACT displayed narrative text for TTS sync
-    // This ensures TTS reads exactly what's shown on screen
-    const textToSpeak = displayedNarrative || lastDMNarrative
+    // Use the dedicated TTS narration ref — guaranteed clean & complete
+    // (only set after full JSON parse in renderResult, never during streaming)
+    const textToSpeak = ttsNarrationRef.current || displayedNarrative || lastDMNarrative
     if (textToSpeak) {
       ttsPendingRef.current = false
       setTtsPending(false)
@@ -1559,7 +1563,9 @@ export function useGameEngine() {
     warmupBrowserTTS()
     ttsPendingRef.current = false
     setTtsPending(false)
-    const ttsText = renderedNarrationRef.current || displayedNarrative || lastDMNarrative
+    // Primary: ttsNarrationRef (set after full JSON parse, guaranteed clean)
+    // Fallback: renderedNarrationRef or displayed state
+    const ttsText = ttsNarrationRef.current || renderedNarrationRef.current || displayedNarrative || lastDMNarrative
     if (ttsText) {
       window.setTimeout(() => {
         if (!abortSpeakRef.current) speakText(ttsText)
@@ -2377,9 +2383,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
                   ?? ''
                 if (delta) {
                   text += delta
-                  // Progressive narration in UI while stream arrives.
-                  setDisplayedNarrative(text)
-                  setLastDMNarrative(text)
+                  // NOTE: Do NOT set displayedNarrative or lastDMNarrative during streaming.
+                  // The raw streaming text contains JSON garbage and partial content.
+                  // TTS and display will be set properly AFTER the full JSON is parsed in renderResult.
                 }
               } catch {
                 // ignore malformed SSE line
@@ -3883,20 +3889,27 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       gs = await applyMechanics(res, gs)
       await renderResult(res, isFirst, gs)
 
-      // Mark narration ready for TTS; actual speak starts on NEXT user gesture.
+      // ═════════════════════════════════════════════════════════════════════════
+      // TTS AUTO-SPEAK — Only triggers AFTER full JSON is parsed and narration saved.
+      // ttsNarrationRef is set inside renderResult, guaranteed clean & complete.
+      // ═════════════════════════════════════════════════════════════════════════
       if (narratorMode === 'auto' && !document.hidden) {
-        ttsPendingRef.current = true
-        setTtsPending(true)
-        // Attempt immediate auto-speak — may work if within gesture timeout
-        const autoText = renderedNarrationRef.current || displayedNarrative || lastDMNarrative
-        if (autoText && !isSpeaking) {
-          window.setTimeout(() => {
-            if (!abortSpeakRef.current && ttsPendingRef.current) {
-              ttsPendingRef.current = false
-              setTtsPending(false)
-              speakText(autoText)
-            }
-          }, 200)
+        const ttsText = ttsNarrationRef.current
+        if (ttsText && ttsText.length > 10) {
+          console.log(`🔊 TTS auto-speak triggered: ${ttsText.length} chars`)
+          ttsPendingRef.current = false
+          setTtsPending(false)
+          if (!isSpeaking) {
+            window.setTimeout(() => {
+              if (!abortSpeakRef.current) {
+                speakText(ttsText)
+              }
+            }, 300)
+          }
+        } else {
+          // Narration not ready yet — mark pending for user gesture trigger
+          ttsPendingRef.current = true
+          setTtsPending(true)
         }
       }
 
@@ -4118,7 +4131,15 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const paragraphs = [narr].filter(Boolean)
     const displayedText = paragraphs[0] || ''
     setDisplayedNarrative(displayedText)
+    setLastDMNarrative(displayedText)
     renderedNarrationRef.current = displayedText
+    // ═════════════════════════════════════════════════════════════════════════
+    // TTS NARRATION SAVE — This is the ONLY place ttsNarrationRef gets set.
+    // The narration is now fully parsed, cleaned, and ready for TTS.
+    // This guarantees TTS always reads complete, clean DM narration.
+    // ═════════════════════════════════════════════════════════════════════════
+    ttsNarrationRef.current = displayedText
+    console.log(`🔊 TTS narration saved: ${displayedText.length} chars, ready for speech`)
     if (comicMode) {
       try {
         const isCombatScene =
@@ -5041,19 +5062,23 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
 
       await renderResult(res, false, newGS)
 
-      // Mark narration ready for TTS; actual speak starts on NEXT user gesture.
+      // TTS AUTO-SPEAK — Only triggers AFTER full JSON is parsed and narration saved.
       if (narratorMode === 'auto' && !document.hidden) {
-        ttsPendingRef.current = true
-        setTtsPending(true)
-        const autoText = renderedNarrationRef.current || displayedNarrative || lastDMNarrative
-        if (autoText && !isSpeaking) {
-          window.setTimeout(() => {
-            if (!abortSpeakRef.current && ttsPendingRef.current) {
-              ttsPendingRef.current = false
-              setTtsPending(false)
-              speakText(autoText)
-            }
-          }, 200)
+        const ttsText = ttsNarrationRef.current
+        if (ttsText && ttsText.length > 10) {
+          console.log(`🔊 TTS auto-speak triggered: ${ttsText.length} chars`)
+          ttsPendingRef.current = false
+          setTtsPending(false)
+          if (!isSpeaking) {
+            window.setTimeout(() => {
+              if (!abortSpeakRef.current) {
+                speakText(ttsText)
+              }
+            }, 300)
+          }
+        } else {
+          ttsPendingRef.current = true
+          setTtsPending(true)
         }
       }
 
