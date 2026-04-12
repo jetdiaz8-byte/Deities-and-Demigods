@@ -143,3 +143,29 @@ Stage Summary:
 - Modified: src/components/game/SidebarDiceArea.tsx — fixed animation dependency cycle bug
 - Commit: 59c9735 pushed to GitHub
 - Both issues now work correctly on Vercel deployment
+---
+Task ID: sidebar-redesign
+Agent: Main Agent
+Task: Redesign GameSidebar — mobile icon dock, Settings Dialog, DM Notes panel
+Work Log:
+- Read and analyzed 1538-line GameSidebar.tsx to understand all sections and dependencies
+- Removed imports for Sheet, Tabs, Popover components (no longer needed)
+- Added FileText icon from lucide-react for DM Notes
+- Replaced desktop Settings Popover (w-56) with proper Tooltip button using openPanel state
+- Added DM Notes button (FileText icon) to desktop icon strip
+- Removed Session Statistics and DM Conversation History from Logs Dialog (moved to DM Notes)
+- Created new Settings Dialog (sm:max-w-lg) with Comic Panels section (toggle + art style selector) and Voice & Narration section (TTS engine status, voice speed)
+- Created new DM Notes Dialog (sm:max-w-2xl) with Session Statistics, DM System Notes (turn, act, shard, pantheon, system prompt), and DM Conversation Log with player/DM icons
+- Replaced entire mobile Sheet drawer + MobileTabs (348 lines) with a compact icon dock (28 lines) — fixed bottom-0, 2-row grid of 12 icon buttons, slides away when dialog opens
+- File reduced from 1538 to 1209 lines
+- Verified no new lint errors (existing errors are in useGameAudio.ts, pre-existing)
+- Dev server compiles and runs successfully
+
+Stage Summary:
+- Modified: src/components/game/GameSidebar.tsx
+- Mobile: Replaced Sheet+Tabs with icon dock + Dialog popups (better UX, more screen space)
+- Settings: Upgraded from Popover to full Dialog with organized sections
+- DM Notes: New dedicated panel with session stats, system notes, conversation log
+- Desktop: Added Settings and DM Notes buttons to icon strip
+- Logs: Cleaned up to show only Chronicle of Events timeline
+- All existing Dialog content preserved, no breaking changes

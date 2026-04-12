@@ -1,16 +1,16 @@
 'use client'
 
-import React from 'react'
-import Image from 'next/image'
+import React, { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+// Sheet/Tabs removed — mobile now uses Dialog popups via icon dock
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, ScrollText, Star, Crown, Skull, Sparkles, CheckCircle, Swords } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+// Popover removed — Settings now uses Dialog
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { BookOpen, ScrollText, Star, Crown, Skull, Sparkles, Swords, Users, Map as MapIcon, ClipboardList, Image as ImageIcon, Settings as SettingsIcon, MapPin, FileText } from 'lucide-react'
 import { NarrativeSection } from '@/components/game/GameComponents'
 import CharacterCard from '@/components/game/CharacterCard'
 import { PortraitModal, CharacterPortrait } from '@/components/game/PortraitModal'
-import { RegionIndicator } from '@/components/game/RegionIndicator'
 import { SidebarDiceArea } from '@/components/game/SidebarDiceArea'
 import { hpCls, aCol, getEntityPortrait, getAbilityBonus } from '@/lib/gameHelpers'
 import { getProphecyById } from '@/lib/prophecyData'
@@ -80,6 +80,18 @@ export function GameSidebar({
   onTravelToLocation,
   quickeningState,
 }: GameSidebarProps) {
+  const [openPanel, setOpenPanel] = useState<string | null>(null)
+  const [questFilter, setQuestFilter] = useState<'all' | 'active' | 'completed' | 'failed'>('all')
+  const [expandedChoiceHistory, setExpandedChoiceHistory] = useState(false)
+  const [selectedMapPin, setSelectedMapPin] = useState<string | null>(null)
+
+  const location = (gameState as unknown as Record<string, unknown>).location as string || ''
+  const scene = (gameState as unknown as Record<string, unknown>).currentScene as string || ''
+  const locText = location || scene || 'Unknown Realm'
+
+  const iconBtnBase = 'w-10 h-10 rounded-lg flex items-center justify-center text-[#7a5f20] hover:text-[#d4af37] hover:bg-[#1a1510] transition-all cursor-pointer'
+  const iconBtnActive = 'text-[#d4af37] bg-[#1a1510] border border-[#2e2008]'
+
   return (
     <>
       {/* Timeline animation keyframe injection */}
@@ -90,995 +102,788 @@ export function GameSidebar({
         }
       `}</style>
 
-      {/* Desktop Sidebar */}
-      <div className="fixed right-0 top-[190px] h-[calc(100vh-190px)] w-80 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col z-10 hidden md:flex sidebar-parchment">
-        {/* Scrollable content area */}
-        <div className="flex-1 overflow-y-auto pb-24 scroll-parchment">
-        <div className="border-b border-[#2e2008] p-3">
-          <div className="text-[11px] text-[#c9a84c] uppercase tracking-wider mb-2" style={{ fontFamily: 'Cinzel, serif' }}>Settings</div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-[#a08060]">Comic Panels</span>
-            <button
-              onClick={() => setComicMode(!comicMode)}
-              className={`px-2 py-1 text-[10px] rounded border ${comicMode ? 'bg-[#1f2a1a] text-[#60c080] border-[#2f5a3a]' : 'bg-[#1a1510] text-[#8a7040] border-[#3a3020]'}`}
-            >
-              {comicMode ? 'ON' : 'OFF'}
-            </button>
-          </div>
-          <select
-            value={comicArtStyle}
-            onChange={e => setComicArtStyle(e.target.value as 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor')}
-            className="w-full bg-[#110d07] border border-[#2e2008] text-[#e8d9b0] text-xs rounded px-2 py-1.5"
-          >
-            <option value="larry-elmore">Larry Elmore</option>
-            <option value="classic-comic">Classic Comic</option>
-            <option value="manga">Manga</option>
-            <option value="watercolor">Watercolor</option>
-          </select>
-        </div>
-        {gameState.storySummary && (
-          <div className="border-b border-[#2e2008] p-3 flex-shrink-0">
-            <NarrativeSection 
-              title="The Story So Far" 
-              content={gameState.storySummary} 
-              icon={<BookOpen className="w-5 h-5 text-[#d4af37]" />}
-              variant="gold"
-              defaultOpen={false}
-            />
-          </div>
-        )}
-        {/* Region Indicator — below Story So Far, above dice area */}
-        <div className="px-3 pt-2 pb-1 flex-shrink-0">
-          <RegionIndicator gameState={gameState} />
-        </div>
-        {/* BG3-Style Dice Tray — visible in sidebar, always accessible */}
-        <SidebarDiceArea diceRolls={gameState.lastDiceRolls} />
-        <DesktopTabs
-          gameState={gameState}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          expandedPC={expandedPC}
-          setExpandedPC={setExpandedPC}
-          expandedNPC={expandedNPC}
-          setExpandedNPC={setExpandedNPC}
-          setSelectedPortrait={setSelectedPortrait}
-          setPortraitModalOpen={setPortraitModalOpen}
-          tokenUsage={tokenUsage}
-          conversationHistory={conversationHistory}
-          dmSystemPrompt={dmSystemPrompt}
-          galleryCharacter={galleryCharacter}
-          galleryPlaying={galleryPlaying}
-          onGalleryTogglePlay={onGalleryTogglePlay}
-          onGalleryNext={onGalleryNext}
-          onGalleryPrev={onGalleryPrev}
-          questJournal={questJournal}
-          consequenceState={consequenceState}
-          onTravelToLocation={onTravelToLocation}
-          quickeningState={quickeningState}
-        />
-        </div>
-      </div>
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* DESKTOP ICON STRIP */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <TooltipProvider delayDuration={200}>
+        <div className="fixed right-0 top-0 h-full w-14 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col items-center py-2 gap-1 z-10 hidden md:flex">
+          {/* ── Section Icons ── */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'story' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'story' ? null : 'story')}>
+                <BookOpen className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">Story</TooltipContent>
+          </Tooltip>
 
-      {/* Mobile Sheet Drawer */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-[85%] max-w-sm bg-[#110d07] border-[#2e2008] p-0 overflow-y-auto">
-          <SheetHeader className="p-3 border-b border-[#2e2008]">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <SheetTitle className="text-[#d4af37] font-title">Game Info</SheetTitle>
-              <div className="flex items-center gap-2">
-                <a 
-                  href="/rulebook" 
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-gradient-to-r from-[#1a2a20] to-[#0d1510] border border-[#2a5038] rounded hover:border-[#40c080] hover:text-[#60e0a0] text-[#40a070] transition-all"
-                  style={{ fontFamily: 'Cinzel, serif' }}
-                >
-                  <BookOpen className="w-3 h-3" />
-                  Guide
-                </a>
-                <button
-                  onClick={() => {
-                    setSidebarOpen(false)
-                    onOpenQuestJournal?.()
-                  }}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-gradient-to-r from-[#1a2010] to-[#101510] border border-[#3a5018] rounded hover:border-[#4a9060] hover:text-[#60e0a0] text-[#4a9060] transition-all"
-                  style={{ fontFamily: 'Cinzel, serif' }}
-                >
-                  <ScrollText className="w-3 h-3" />
-                  Journal
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'pcs' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'pcs' ? null : 'pcs')}>
+                <Users className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">PCs</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'npcs' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'npcs' ? null : 'npcs')}>
+                <Crown className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">NPCs</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'quests' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'quests' ? null : 'quests')}>
+                <ScrollText className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">Quests</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'map' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'map' ? null : 'map')}>
+                <MapIcon className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">Map</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'soul' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'soul' ? null : 'soul')}>
+                <Sparkles className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">Soul</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'graveyard' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'graveyard' ? null : 'graveyard')}>
+                <Skull className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">Graveyard</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'prophecies' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'prophecies' ? null : 'prophecies')}>
+                <Star className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">Prophecies</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'logs' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'logs' ? null : 'logs')}>
+                <ClipboardList className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">Logs</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'gallery' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'gallery' ? null : 'gallery')}>
+                <ImageIcon className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">Gallery</TooltipContent>
+          </Tooltip>
+
+          {/* ── Settings ── */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'settings' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'settings' ? null : 'settings')}>
+                <SettingsIcon className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">Settings</TooltipContent>
+          </Tooltip>
+
+          {/* ── DM Notes ── */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button className={`${iconBtnBase} ${openPanel === 'dmnotes' ? iconBtnActive : ''}`} onClick={() => setOpenPanel(openPanel === 'dmnotes' ? null : 'dmnotes')}>
+                <FileText className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs">DM Notes</TooltipContent>
+          </Tooltip>
+
+          {/* ── Spacer ── */}
+          <div className="flex-1" />
+
+          {/* ── Bottom: Region indicator + Dice tray ── */}
+          <div className="w-full flex flex-col items-center gap-1 pb-2 relative flex-shrink-0">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button className="w-10 h-8 rounded-lg flex items-center justify-center text-[#7a5f20] hover:text-[#d4af37] hover:bg-[#1a1510] transition-all">
+                  <MapPin className="w-4 h-4" />
                 </button>
-                <a 
-                  href="/codex" 
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs bg-gradient-to-r from-[#2a2010] to-[#1a1510] border border-[#5a4018] rounded hover:border-[#d4af37] hover:text-[#f0c860] text-[#c9a84c] transition-all"
-                  style={{ fontFamily: 'Cinzel, serif' }}
-                >
-                  <BookOpen className="w-3 h-3" />
-                  Codex
-                </a>
-              </div>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="bg-[#1a1510] text-[#c9a84c] border-[#2e2008] text-xs max-w-[180px]">{locText}</TooltipContent>
+            </Tooltip>
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center text-[#7a5f20] opacity-60">
+              <span className="text-lg">🎲</span>
             </div>
-          </SheetHeader>
-          
-          {/* Story So Far - Mobile */}
-          {gameState.storySummary && (
-            <div className="border-b border-[#2e2008] p-3">
-              <NarrativeSection 
-                title="The Story So Far" 
-                content={gameState.storySummary} 
-                icon={<BookOpen className="w-4 h-4 text-[#d4af37]" />}
+            {/* Dice tray — floats to the left of the icon strip */}
+            <div className="absolute bottom-0 right-full z-20" style={{ paddingRight: 4, width: 220 }}>
+              <SidebarDiceArea diceRolls={gameState.lastDiceRolls} />
+            </div>
+          </div>
+        </div>
+      </TooltipProvider>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* DESKTOP POPUP DIALOG PANELS */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+
+      {/* ── Story Dialog ── */}
+      <Dialog open={openPanel === 'story'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <BookOpen className="w-5 h-5" /> The Story So Far
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4 scroll-parchment">
+            {gameState.storySummary ? (
+              <NarrativeSection
+                title="The Story So Far"
+                content={gameState.storySummary}
+                icon={<BookOpen className="w-5 h-5 text-[#d4af37]" />}
                 variant="gold"
                 defaultOpen={true}
               />
-            </div>
-          )}
-          
-          <MobileTabs
-            gameState={gameState}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            expandedNPC={expandedNPC}
-            setExpandedNPC={setExpandedNPC}
-            setSelectedPortrait={setSelectedPortrait}
-            setPortraitModalOpen={setPortraitModalOpen}
-            tokenUsage={tokenUsage}
-            conversationHistory={conversationHistory}
-            galleryCharacter={galleryCharacter}
-            galleryPlaying={galleryPlaying}
-            onGalleryTogglePlay={onGalleryTogglePlay}
-            onGalleryNext={onGalleryNext}
-            onGalleryPrev={onGalleryPrev}
-            questJournal={questJournal}
-            consequenceState={consequenceState}
-            onTravelToLocation={onTravelToLocation}
-            quickeningState={quickeningState}
-          />
-          <div className="border-t border-[#2e2008] p-3">
-            <div className="text-[11px] text-[#c9a84c] uppercase tracking-wider mb-2" style={{ fontFamily: 'Cinzel, serif' }}>Settings</div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-[#a08060]">Comic Panels</span>
-              <button
-                onClick={() => setComicMode(!comicMode)}
-                className={`px-2 py-1 text-[10px] rounded border ${comicMode ? 'bg-[#1f2a1a] text-[#60c080] border-[#2f5a3a]' : 'bg-[#1a1510] text-[#8a7040] border-[#3a3020]'}`}
-              >
-                {comicMode ? 'ON' : 'OFF'}
-              </button>
-            </div>
-            <select
-              value={comicArtStyle}
-              onChange={e => setComicArtStyle(e.target.value as 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor')}
-              className="w-full bg-[#110d07] border border-[#2e2008] text-[#e8d9b0] text-xs rounded px-2 py-1.5"
-            >
-              <option value="larry-elmore">Larry Elmore</option>
-              <option value="classic-comic">Classic Comic</option>
-              <option value="manga">Manga</option>
-              <option value="watercolor">Watercolor</option>
-            </select>
-          </div>
-        </SheetContent>
-      </Sheet>
-    </>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// DESKTOP TABS — Full detail view
-// ═══════════════════════════════════════════════════════════════════════════
-
-function DesktopTabs({ gameState, activeTab, setActiveTab, expandedPC, setExpandedPC, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, dmSystemPrompt, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev, questJournal, consequenceState, onTravelToLocation, quickeningState }: {
-  gameState: GameState
-  activeTab: string
-  setActiveTab: (tab: string) => void
-  expandedPC: string | null
-  setExpandedPC: (id: string | null) => void
-  expandedNPC: string | null
-  setExpandedNPC: (id: string | null) => void
-  setSelectedPortrait: (portrait: CharacterPortrait | null) => void
-  setPortraitModalOpen: (open: boolean) => void
-  tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
-  conversationHistory?: { role: string; content: string }[]
-  dmSystemPrompt?: string
-  galleryCharacter?: Character | null
-  galleryPlaying?: boolean
-  onGalleryTogglePlay?: () => void
-  onGalleryNext?: () => void
-  onGalleryPrev?: () => void
-  questJournal?: any
-  consequenceState?: any
-  onTravelToLocation?: (name: string) => void
-  quickeningState?: any
-}) {
-  const [questFilter, setQuestFilter] = React.useState<'all' | 'active' | 'completed' | 'failed'>('all')
-  const [expandedChoiceHistory, setExpandedChoiceHistory] = React.useState(false)
-  const [selectedMapPin, setSelectedMapPin] = React.useState<string | null>(null)
-  return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col flex-1 min-h-0">
-      <TabsList className="flex border-b border-[#2e2008] bg-transparent flex-shrink-0">
-        <TabsTrigger value="pcs" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">PCs</TabsTrigger>
-        <TabsTrigger value="npcs" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">NPCs</TabsTrigger>
-        <TabsTrigger value="quests" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Quests</TabsTrigger>
-        <TabsTrigger value="map" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Map</TabsTrigger>
-        <TabsTrigger value="soul" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Soul</TabsTrigger>
-        <TabsTrigger value="graveyard" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Graveyard</TabsTrigger>
-        <TabsTrigger value="prophecies" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">📜</TabsTrigger>
-        <TabsTrigger value="logs" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Logs</TabsTrigger>
-        <TabsTrigger value="gallery" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Gallery</TabsTrigger>
-        <TabsTrigger value="dm" className="flex-1 text-base py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">DM</TabsTrigger>
-      </TabsList>
-
-      {/* PCs Tab */}
-      <TabsContent value="pcs" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
-        {gameState.pcs.map(pc => {
-          const mapped = {
-            id: pc.id,
-            name: pc.name,
-            category: pc.category || (pc.type === 'monster' ? 'monsters' : 'heroes'),
-            title: pc.title || pc.epithet || 'Adventurer',
-            pantheon: pc.pantheon || 'Unknown',
-            align: pc.align || 'Neutral',
-            hp: pc.hp,
-            AC: pc.AC,
-            MR: pc.MR,
-            abilities: pc.abilities || [],
-            personality: pc.personality || '',
-            divineRank: pc.type === 'greater_god' ? 'Greater God' : pc.type === 'lesser_god' ? 'Lesser God' : pc.type === 'demigod' ? 'Demigod' : pc.type === 'monster' ? 'Monster' : 'Hero',
-          }
-          return (
-          <React.Fragment key={pc.id}>
-            <div className="mb-3">
-              <CharacterCard character={mapped as any} />
-            </div>
-            {pc.id === gameState.companionId && gameState.companionMood && (
-              <div className="mb-3 px-3 py-1.5 rounded-lg text-[10px]" style={{
-                background: 'rgba(100,140,200,0.1)',
-                border: '1px solid rgba(100,140,200,0.15)',
-                color: '#8090b0'
-              }}>
-                💭 Mood: {gameState.companionMood}
-                <span className="ml-1 text-[#607090]">
-                  (Affinity: {gameState.companionAffinity >= 25 ? '🤝' : gameState.companionAffinity < 0 ? '😠' : '😐'} {gameState.companionAffinity})
-                </span>
-              </div>
+            ) : (
+              <p className="text-[#5a4d30] italic text-sm">The tale has yet to begin…</p>
             )}
-          </React.Fragment>
-        )})}
-
-        {/* Combat Status — Active Enemies */}
-        {gameState.activeNPCs.filter(n => !n.dead).length > 0 && (
-          <div className="mt-3 p-3 rounded-lg border border-red-900/30 bg-gradient-to-b from-[#1a0f0f] to-[#120808]">
-            <div className="flex items-center gap-2 mb-2">
-              <Swords className="w-4 h-4 text-red-400" />
-              <span className="font-title text-xs text-red-400 uppercase tracking-wider">Active Combatants</span>
-            </div>
-            {gameState.activeNPCs.filter(n => !n.dead).map(npc => (
-              <div key={npc.id} className="flex items-center gap-2 p-2 rounded bg-[#0d0808] border border-red-900/20 mb-1.5">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1">
-                    {(npc as any).encounter_type === 'BOSS' && <span className="text-xs">👑</span>}
-                    <span className="text-xs text-red-300 font-title truncate">{npc.name}</span>
-                  </div>
-                  <div className="mt-1 h-1.5 bg-[#1a1010] rounded-full overflow-hidden">
-                    <div 
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{ 
-                        width: `${Math.max(0, Math.round(((npc.hp || 0) / (npc.maxHp || 1)) * 100))}%`,
-                        background: (npc.hp || 0) / (npc.maxHp || 1) <= 0.2 ? '#cc3030' : '#cc5050'
-                      }}
-                    />
-                  </div>
-                  <div className="text-[9px] text-gray-500 mt-0.5">
-                    HP: {Math.max(0, npc.hp || 0)}/{npc.maxHp || '?'}
-                    {(npc as any).encounter_type === 'BOSS' && ` · Phase ${(gameState.antagonistId === npc.id) ? gameState.antagonistPhase : '?'}/3`}
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
-        )}
+        </DialogContent>
+      </Dialog>
 
-        {/* Battle Log — Recent Events */}
-        {gameState.log.length > 0 && (
-          <div className="mt-3">
-            <NarrativeSection 
-              title="Battle Log" 
-              content={gameState.log.slice(0, 15).map(l => {
-                if (l.msg.startsWith('__')) return null // Skip special log entries
-                return l.msg
-              }).filter(Boolean).join('\n\n') || 'No events yet.'}
-              icon={<ScrollText className="w-4 h-4 text-[#a08060]" />}
-              variant="default"
-              defaultOpen={false}
-            />
-          </div>
-        )}
-      </TabsContent>
-
-      {/* NPCs Tab */}
-      <TabsContent value="npcs" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
-        {gameState.activeNPCs.length === 0 ? (
-          <p className="text-base text-[#5a4d30] italic p-3">No gods in current scene</p>
-        ) : (
-          gameState.activeNPCs.map(npc => (
-            <NPCDetailCard
-              key={npc.id}
-              npc={npc}
-              expanded={expandedNPC === npc.id}
-              onToggle={() => setExpandedNPC(expandedNPC === npc.id ? null : npc.id)}
-              onPortraitClick={() => {
-                setSelectedPortrait(npc as CharacterPortrait)
-                setPortraitModalOpen(true)
-              }}
-            />
-          ))
-        )}
-      </TabsContent>
-
-      {/* Quests Tab */}
-      <TabsContent value="quests" className="flex-1 overflow-y-auto p-3 m-0 min-h-0 quest-journal">
-        <div className="quest-journal-header">
-          <h3>Quest Journal</h3>
-          <div className="quest-stats">Active: {(questJournal?.quests || []).filter((q: any) => q.status === 'active').length} | Done: {questJournal?.totalQuestsCompleted || 0} | Locations: {questJournal?.totalLocationsDiscovered || 0}</div>
-        </div>
-        <div className="quest-filter-bar">
-          {(['all', 'active', 'completed', 'failed'] as const).map(f => <button key={f} className={`quest-filter-btn ${questFilter === f ? 'active' : ''}`} onClick={() => setQuestFilter(f)}>{f[0].toUpperCase() + f.slice(1)}</button>)}
-        </div>
-        <div className="quest-list">
-          {(questJournal?.quests || [])
-            .filter((q: any) => questFilter === 'all' ? true : q.status === questFilter)
-            .sort((a: any, b: any) => (a.type === 'main' ? -1 : 1) - (b.type === 'main' ? -1 : 1) || ((a.turnGiven || 0) - (b.turnGiven || 0)))
-            .map((q: any) => {
-              const completed = (q.objectives || []).filter((o: any) => o.isCompleted).length
-              const total = Math.max(1, (q.objectives || []).length)
-              return <div key={q.id} className={`quest-card quest-${q.type} quest-${q.status}`}>
-                <div className="quest-card-title">{q.type === 'main' ? '⭐' : q.type === 'side' ? '📋' : q.type === 'faction' ? '⚔️' : '💎'} {q.title}</div>
-                <div className="quest-card-desc">{q.description}</div>
-                <div className="quest-card-meta">{q.givenBy ? `Given by: ${q.givenBy}` : ''} {q.location ? `• 📍 ${q.location}` : ''}</div>
-                {(q.objectives || []).map((o: any, i: number) => <div key={i} className={`quest-objective ${o.isCompleted ? 'completed' : ''} ${o.isOptional ? 'optional' : ''}`}><span className="quest-objective-check">{o.isCompleted ? '☑' : '☐'}</span>{o.text}{o.isOptional ? ' (optional)' : ''}</div>)}
-                <div className="quest-progress-bar"><div className="quest-progress-fill" style={{ width: `${Math.round((completed / total) * 100)}%` }} /></div>
-                {q.reward && <div className="quest-card-details"><span className="reward">Reward: {q.reward}</span></div>}
-              </div>
-            })}
-        </div>
-      </TabsContent>
-
-      <TabsContent value="map" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
-        <div className="world-map-container">
-          <div className="world-map-grid" />
-          {(questJournal?.locations || []).flatMap((loc: any) => (loc.connections || []).map((toId: string) => {
-            const to = (questJournal?.locations || []).find((l: any) => l.id === toId)
-            if (!to) return null
-            const dx = (to.x || 0) - (loc.x || 0)
-            const dy = (to.y || 0) - (loc.y || 0)
-            const len = Math.sqrt(dx * dx + dy * dy)
-            const angle = Math.atan2(dy, dx) * (180 / Math.PI)
-            return <div key={`${loc.id}-${toId}`} className="map-connection-line" style={{ left: `${loc.x}%`, top: `${loc.y}%`, width: `${len}%`, transform: `rotate(${angle}deg)` }} />
-          }))}
-          {(questJournal?.locations || []).map((loc: any) => (
-            <button key={loc.id} className={`map-pin ${loc.isCurrentlyAt ? 'current' : ''} ${loc.isDiscovered ? '' : 'undiscovered'}`} style={{ left: `${loc.x}%`, top: `${loc.y}%` }} onClick={() => setSelectedMapPin(prev => prev === loc.id ? null : loc.id)}>
-              <span className="map-pin-icon">{loc.icon || '📍'}</span>
-              <span className="map-pin-name">{loc.name}</span>
-            </button>
-          ))}
-          {selectedMapPin && (() => {
-            const loc = (questJournal?.locations || []).find((l: any) => l.id === selectedMapPin)
-            if (!loc) return null
-            const canTravel = !loc.isCurrentlyAt && !!onTravelToLocation
-            return <div className="map-tooltip" style={{ left: `min(calc(${loc.x}% + 10px), calc(100% - 190px))`, top: `min(calc(${loc.y}% + 10px), calc(100% - 120px))` }}>
-              <div className="map-tooltip-name">{loc.icon || '📍'} {loc.name}</div>
-              <div className="map-tooltip-desc">{loc.description || 'Unknown region.'}</div>
-              <div className="map-tooltip-danger">{'☠'.repeat(Math.max(1, Number(loc.dangerLevel || 1)))}</div>
-              <button className="map-travel-btn" disabled={!canTravel} onClick={() => canTravel && onTravelToLocation?.(loc.name)}>Travel Here</button>
-            </div>
-          })()}
-        </div>
-      </TabsContent>
-
-      <TabsContent value="soul" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
-        <div className="choice-stats">Choices: {consequenceState?.totalChoicesMade || 0} | Alignment: {consequenceState?.alignment?.dominant || 'True Neutral'}</div>
-        <div className="alignment-meter">
-          <div className="alignment-title">Your Path: {consequenceState?.alignment?.title || 'Undecided Soul'}</div>
-          <div className="text-xs text-[#a98d63]">Law/Chaos: {consequenceState?.alignment?.axis_law_chaos || 0} · Good/Evil: {consequenceState?.alignment?.axis_good_evil || 0}</div>
-        </div>
-        <div className="mt-2">
-          {(consequenceState?.npcRelations || []).slice().sort((a: any, b: any) => b.affinity - a.affinity).map((r: any) => (
-            <div key={r.npcId} className="npc-relation-card"><div className={`npc-relation-name ${r.affinity > 0 ? 'positive' : r.affinity < 0 ? 'negative' : 'neutral'}`}>{r.npcName}</div><div className={`npc-status-badge ${r.status}`}>{r.status}</div></div>
-          ))}
-        </div>
-        <button className="quest-filter-btn mt-2" onClick={() => setExpandedChoiceHistory(v => !v)}>Choices {expandedChoiceHistory ? '▾' : '▸'}</button>
-        {expandedChoiceHistory && (
-          <div>
-            {(consequenceState?.choices || []).map((c: any, idx: number) => (
-              <div key={idx} className="choice-entry"><div className="turn-num">Turn {c.turn}</div><div>{c.situation}</div><div className="chosen-text">{c.chosen}</div><div className="alt-text">{(c.alternatives || []).join(' · ')}</div><div className={c.rippleTriggered ? 'ripple-done' : 'ripple-pending'}>{c.rippleTriggered ? 'Ripple resolved' : `Ripple pending (turn ${c.rippleTurn || '?'})`}</div></div>
-            ))}
-          </div>
-        )}
-      </TabsContent>
-
-      {/* Graveyard Tab */}
-      <TabsContent value="graveyard" className="flex-1 overflow-y-auto p-0 m-0 min-h-0">
-        <div className="graveyard-header">
-          <h3>The Graveyard</h3>
-          <div className="graveyard-stats">
-            <span>Fallen: {quickeningState?.absorptionHistory?.length || 0}</span>
-            <span>Deities: {quickeningState?.totalDeityKills || 0}</span>
-            <span>Monsters: {quickeningState?.totalMonstersAbsorbed || 0}</span>
-          </div>
-          <div className="graveyard-legend">Your Legend: {quickeningState?.currentLegendTitle || 'Mortal'}</div>
-        </div>
-        {(quickeningState?.absorptionHistory?.length || 0) > 0 ? (
-          <>
-            <div className="graveyard-grid">
-              {(quickeningState?.absorptionHistory || []).map((record: any, idx: number) => (
-                <div key={`${record.deityId}-${idx}`} className="graveyard-card">
-                  {record.portrait ? (
-                    <img src={record.portrait} alt={record.deityName} className="graveyard-card-portrait" onError={(e: any) => { e.target.style.display = 'none' }} />
-                  ) : (
-                    <div className="graveyard-card-portrait" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a1a', color: '#555', fontSize: 24 }}>{record.deityName?.charAt(0) || '?'}</div>
-                  )}
-                  <div className="graveyard-card-name">{record.deityName}</div>
-                  <div className="graveyard-card-turn">Turn {record.turn}</div>
-                  <div className="graveyard-card-power">{record.powerAbsorbed}</div>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="graveyard-empty">
-            <div className="graveyard-empty-icon">💀</div>
-            <div className="graveyard-empty-text">The graveyard is empty. The gods still reign.</div>
-            <div className="graveyard-empty-hint">Slay a deity to begin the Quickening.</div>
-          </div>
-        )}
-      </TabsContent>
-
-      {/* Prophecies Tab */}
-      <TabsContent value="prophecies" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
-        {gameState.shardEntry && (
-          <Card className="mb-3 bg-gradient-to-r from-[rgba(60,40,80,.3)] to-[rgba(30,20,40,.2)] border-2" style={{ borderColor: gameState.shardEntry.color || '#808080' }}>
-            <CardHeader className="p-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5" style={{ color: gameState.shardEntry.color || '#c080ff' }} />
-                <CardTitle className="text-sm" style={{ color: gameState.shardEntry.color || '#c080ff', fontFamily: 'Cinzel, serif' }}>
-                  {gameState.shardEntry.name}
-                </CardTitle>
-                <Badge className="ml-auto text-[10px] bg-[rgba(60,40,80,.5)] text-[#c090d0]" style={{ borderColor: gameState.shardEntry.color || '#808080' }}>
-                  {gameState.shardEntry.pantheon || 'Unknown'}
-                </Badge>
-              </div>
-              <CardDescription className="text-[10px] text-[#a08060] mt-2 italic">
-                {gameState.shardEntry.power}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-3 pt-0 text-xs">
-              <div className="text-[#7a5f20] mb-2">Charges: {gameState.shardCharges}/2</div>
-              <div className="text-[10px] text-[#a08060] italic leading-relaxed">
-                The shard contains the prophecy. It chose its bearer. They cannot escape destiny.
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <h3 className="text-[#c9a84c] mb-3 text-base flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
-          <ScrollText className="w-4 h-4" /> Bound Destinies
-        </h3>
-        {gameState.prophecies.length === 0 ? (
-          <p className="text-[#5a4d30] italic text-sm">No prophecies have been revealed yet...</p>
-        ) : (
-          <div className="space-y-3">
-            {gameState.prophecies.map((prophecy, index) => {
-              const pc = gameState.pcs.find(p => p.id === prophecy.pc_id)
-              const prophecyData = getProphecyById(prophecy.prophecyId)
-              const isMainPC = index === 0 && !pc?.dead
+      {/* ── PCs Dialog ── */}
+      <Dialog open={openPanel === 'pcs'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <Users className="w-5 h-5" /> Player Characters
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4">
+            {gameState.pcs.map(pc => {
+              const mapped = {
+                id: pc.id,
+                name: pc.name,
+                category: pc.category || (pc.type === 'monster' ? 'monsters' : 'heroes'),
+                title: pc.title || pc.epithet || 'Adventurer',
+                pantheon: pc.pantheon || 'Unknown',
+                align: pc.align || 'Neutral',
+                hp: pc.hp,
+                AC: pc.AC,
+                MR: pc.MR,
+                abilities: pc.abilities || [],
+                personality: pc.personality || '',
+                divineRank: pc.type === 'greater_god' ? 'Greater God' : pc.type === 'lesser_god' ? 'Lesser God' : pc.type === 'demigod' ? 'Demigod' : pc.type === 'monster' ? 'Monster' : 'Hero',
+              }
               return (
-                <Card key={prophecy.pc_id} className={`bg-[#1a1510] ${isMainPC ? 'border-2 border-[#d4af37]' : 'border-[#3a3020]'} ${pc?.dead ? 'opacity-50' : ''}`}>
-                  <CardHeader className="p-3 bg-gradient-to-r from-[rgba(80,40,100,.3)] to-[rgba(40,30,50,.2)]">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-sm text-[#d4af37]">
-                        {pc?.name || 'Unknown Hero'}
-                        {isMainPC && <span className="text-[#f0c860] ml-2 text-[10px]">★ MAIN BEARER</span>}
-                        {pc?.dead && <span className="text-[#c05050] ml-2 text-xs">(FALLEN)</span>}
-                      </CardTitle>
-                      <Badge className="bg-[#2a1a30] text-[#c090d0] border-[#5a4060] text-[10px]">
-                        {prophecy.state}
-                      </Badge>
-                    </div>
-                    {prophecy.previous_holders.length > 0 && (
-                      <CardDescription className="text-[10px] text-[#7a5f20] mt-1">
-                        {prophecy.previous_holders.length} previous bearer(s) - the shard remembers
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent className="p-3">
-                    <div className="text-xs text-[#a08060] italic leading-relaxed font-narrative" style={{ fontFamily: '"IM Fell English", serif' }}>
-                      &ldquo;{prophecy.riddle}&rdquo;
-                    </div>
-                    {prophecyData && (
-                      <div className="mt-2 pt-2 border-t border-[#3a3020]">
-                        <div className="text-[10px] text-[#7a5f20] uppercase tracking-wider">
-                          Theme: {prophecyData.theme}
-                        </div>
+              <React.Fragment key={pc.id}>
+                <div className="mb-3">
+                  <CharacterCard character={mapped as any} />
+                </div>
+                {pc.id === gameState.companionId && gameState.companionMood && (
+                  <div className="mb-3 px-3 py-1.5 rounded-lg text-[10px]" style={{
+                    background: 'rgba(100,140,200,0.1)',
+                    border: '1px solid rgba(100,140,200,0.15)',
+                    color: '#8090b0'
+                  }}>
+                    💭 Mood: {gameState.companionMood}
+                    <span className="ml-1 text-[#607090]">
+                      (Affinity: {gameState.companionAffinity >= 25 ? '🤝' : gameState.companionAffinity < 0 ? '😠' : '😐'} {gameState.companionAffinity})
+                    </span>
+                  </div>
+                )}
+              </React.Fragment>
+            )})}
+
+            {/* Combat Status — Active Enemies */}
+            {gameState.activeNPCs.filter(n => !n.dead).length > 0 && (
+              <div className="mt-3 p-3 rounded-lg border border-red-900/30 bg-gradient-to-b from-[#1a0f0f] to-[#120808]">
+                <div className="flex items-center gap-2 mb-2">
+                  <Swords className="w-4 h-4 text-red-400" />
+                  <span className="font-title text-xs text-red-400 uppercase tracking-wider">Active Combatants</span>
+                </div>
+                {gameState.activeNPCs.filter(n => !n.dead).map(npc => (
+                  <div key={npc.id} className="flex items-center gap-2 p-2 rounded bg-[#0d0808] border border-red-900/20 mb-1.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1">
+                        {(npc as any).encounter_type === 'BOSS' && <span className="text-xs">👑</span>}
+                        <span className="text-xs text-red-300 font-title truncate">{npc.name}</span>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-        )}
-        <div className="mt-4 pt-3 border-t border-[#3a3020]">
-          <p className="text-[10px] text-[#5a4d30] italic">
-            The prophecy is bound to the SHARD, not just the hero. If the main bearer falls, the shard summons a replacement and the destiny transfers - heavier each time.
-          </p>
-        </div>
-      </TabsContent>
-
-      {/* Logs Tab — Visual Timeline */}
-      <TabsContent value="logs" className="flex-1 overflow-y-auto p-3 m-0 min-h-0 scroll-parchment">
-        <h3 className="text-[#c9a84c] mb-3 text-base flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
-          <BookOpen className="w-4 h-4" /> Chronicle of Events
-        </h3>
-        {gameState.log.length === 0 ? (
-          <p className="text-[#5a4d30] italic text-sm">The story has not yet begun...</p>
-        ) : (
-          <div>
-            {gameState.log.slice().reverse().map((entry, idx) => {
-              const dotColor = getLogDotColor(entry.type)
-              const glowColor = getLogGlowColor(entry.type)
-              return (
-                <div key={idx} className="flex gap-3" style={{ animation: 'timelineFadeIn 0.3s ease-out' }}>
-                  {/* Timeline line + dot */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5"
-                      style={{ background: dotColor, boxShadow: `0 0 6px ${glowColor}` }}
-                    />
-                    <div className="w-px flex-1 bg-[#3a3020]" />
+                      <div className="mt-1 h-1.5 bg-[#1a1010] rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${Math.max(0, Math.round(((npc.hp || 0) / (npc.maxHp || 1)) * 100))}%`,
+                            background: (npc.hp || 0) / (npc.maxHp || 1) <= 0.2 ? '#cc3030' : '#cc5050'
+                          }}
+                        />
+                      </div>
+                      <div className="text-[9px] text-gray-500 mt-0.5">
+                        HP: {Math.max(0, npc.hp || 0)}/{npc.maxHp || '?'}
+                        {(npc as any).encounter_type === 'BOSS' && ` · Phase ${(gameState.antagonistId === npc.id) ? gameState.antagonistPhase : '?'}/3`}
+                      </div>
+                    </div>
                   </div>
-                  {/* Content */}
-                  <div className="flex-1 pb-4 min-w-0">
-                    <div className="text-[10px] text-[#7a5f20] uppercase tracking-wider font-title">Turn {entry.turn}</div>
-                    <div className="text-xs text-[#c9a84c] font-narrative leading-relaxed mt-0.5">{entry.msg}</div>
-                  </div>
-                </div>
-              )
-            })}
-            {/* Campaign Begin marker */}
-            <div className="flex gap-3 items-center">
-              <div className="flex flex-col items-center flex-shrink-0">
-                <div className="text-sm text-[#d4af37]" style={{ textShadow: '0 0 8px rgba(212,175,55,0.5)' }}>✦</div>
-              </div>
-              <div className="text-xs text-[#d4af37] font-title italic" style={{ fontFamily: 'Cinzel, serif' }}>
-                Campaign Begin
-              </div>
-            </div>
-          </div>
-        )}
-        
-        {/* Token Usage Summary */}
-        <div className="mt-4 pt-3 border-t border-[#3a3020]">
-          <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">Session Statistics</h4>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2 bg-[#1a1510] rounded">
-              <div className="text-[#7a5f20]">Cloud Tokens</div>
-              <div className="text-blue-400 font-bold">{tokenUsage.gemini.total.toLocaleString()}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* DM Conversation History */}
-        {conversationHistory && conversationHistory.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-[#3a3020]">
-            <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">DM Memory Log</h4>
-            <div className="space-y-1.5">
-              {conversationHistory.map((entry, idx) => (
-                <div key={idx} className="p-1.5 bg-[#1a1510] rounded text-xs">
-                  <div className="text-[9px] uppercase tracking-wider mb-0.5" style={{ color: entry.role === 'user' ? '#c0a060' : '#6090c0' }}>
-                    {entry.role === 'user' ? '🗡️ Player Action' : '📜 DM Response'}
-                  </div>
-                  <div className="text-[#a09080] leading-relaxed" style={{ maxHeight: '60px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {entry.content.length > 120 ? entry.content.slice(0, 120) + '...' : entry.content}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="rules" className="flex-1 overflow-y-auto p-3 m-0 text-sm text-[#9a8860] leading-relaxed min-h-0">
-        <h3 className="text-[#c9a84c] mb-2 text-base" style={{ fontFamily: 'Cinzel, serif' }}>HOW IT WORKS</h3>
-        <p><strong className="text-[#9a8860]">Cloud AI</strong> is your DM — narrates in Neil Gaiman style, controls all NPCs, enforces D&D 5e + DDG rules.</p>
-        <p className="mt-2"><strong className="text-[#9a8860]">You</strong> control one PC per turn — the one the story determines is most relevant.</p>
-
-        <h3 className="text-[#c9a84c] mt-4 mb-2 text-base" style={{ fontFamily: 'Cinzel, serif' }}>ALIGNMENT RULES</h3>
-        <p>Lawful Good: Cannot deceive, betray, or harm innocents.</p>
-        <p>Chaotic Evil: Always acts in self-interest first.</p>
-        <p>Neutral: Weighs cost vs. benefit each turn.</p>
-
-        <h3 className="text-[#c9a84c] mt-4 mb-2" style={{ fontFamily: 'Cinzel, serif' }}>NEW FEATURES</h3>
-        <p>• <strong>Party Selection</strong>: Choose your starting heroes</p>
-        <p>• <strong>Inventory</strong>: Collect and use items</p>
-        <p>• <strong>Quest Tracking</strong>: Follow objectives</p>
-        <p>• <strong>Save/Load</strong>: Multiple save slots</p>
-      </TabsContent>
-
-      <TabsContent value="dm" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
-        <h3 className="text-[#c9a84c] mb-2 text-base" style={{ fontFamily: 'Cinzel, serif' }}>DM Notes</h3>
-        <div className="text-xs text-[#d8ccb8] mb-2 whitespace-pre-wrap leading-relaxed p-3 rounded border border-[#5a4018] bg-[rgba(42,35,24,0.75)]">
-          Turn: {gameState.turn} · Act: {gameState.act}{'\n'}
-          Shard: {gameState.shardEntry?.name || 'None'} · Pantheon: {gameState.shardEntry?.pantheon || 'Unknown'}{'\n'}
-          Party: {(gameState.pcs || []).map(p => p.name).join(', ')}{'\n'}
-          Active Quests: {(gameState.quests || []).filter(q => q.status === 'active').map(q => q.title).join(', ') || 'None'}
-        </div>
-        <div className="text-xs text-[#d8ccb8] whitespace-pre-wrap leading-relaxed p-3 rounded border border-[#5a4018] bg-[rgba(42,35,24,0.75)] max-h-[60vh] overflow-y-auto scroll-parchment">
-          {dmSystemPrompt || 'No DM prompt available.'}
-        </div>
-      </TabsContent>
-
-      <TabsContent value="gallery" className="flex-1 overflow-y-auto p-3 m-0 min-h-0">
-        {galleryCharacter ? (
-          <>
-            <CharacterCard character={galleryCharacter as any} />
-            <div className="gallery-controls">
-              <button onClick={onGalleryPrev}>‹</button>
-              <button onClick={onGalleryTogglePlay}>{galleryPlaying ? 'Pause' : 'Play'}</button>
-              <button onClick={onGalleryNext}>›</button>
-            </div>
-          </>
-        ) : (
-          <div className="text-xs text-[#9a8860]">No gallery character loaded.</div>
-        )}
-      </TabsContent>
-    </Tabs>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MOBILE TABS — Compact view
-// ═══════════════════════════════════════════════════════════════════════════
-
-function MobileTabs({ gameState, activeTab, setActiveTab, expandedNPC, setExpandedNPC, setSelectedPortrait, setPortraitModalOpen, tokenUsage, conversationHistory, galleryCharacter, galleryPlaying, onGalleryTogglePlay, onGalleryNext, onGalleryPrev, questJournal, consequenceState, onTravelToLocation, quickeningState }: {
-  gameState: GameState
-  activeTab: string
-  setActiveTab: (tab: string) => void
-  expandedNPC: string | null
-  setExpandedNPC: (id: string | null) => void
-  setSelectedPortrait: (portrait: CharacterPortrait | null) => void
-  setPortraitModalOpen: (open: boolean) => void
-  tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
-  conversationHistory?: { role: string; content: string }[]
-  galleryCharacter?: Character | null
-  galleryPlaying?: boolean
-  onGalleryTogglePlay?: () => void
-  onGalleryNext?: () => void
-  onGalleryPrev?: () => void
-  questJournal?: any
-  consequenceState?: any
-  onTravelToLocation?: (name: string) => void
-}) {
-  return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col">
-      <TabsList className="flex border-b border-[#2e2008] bg-transparent">
-        <TabsTrigger value="pcs" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">PCs</TabsTrigger>
-        <TabsTrigger value="npcs" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">NPCs</TabsTrigger>
-        <TabsTrigger value="quests" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Quests</TabsTrigger>
-        <TabsTrigger value="map" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Map</TabsTrigger>
-        <TabsTrigger value="soul" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Soul</TabsTrigger>
-        <TabsTrigger value="prophecies" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">📜</TabsTrigger>
-        <TabsTrigger value="logs" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">Logs</TabsTrigger>
-        <TabsTrigger value="gallery" className="flex-1 text-sm py-3 data-[state=active]:text-[#c9a84c] data-[state=active]:border-b-2 data-[state=active]:border-[#c9a84c]">🎴</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="pcs" className="p-3 m-0">
-        {gameState.pcs.map(pc => (
-          <React.Fragment key={pc.id}>
-            <Card className={`mb-3 ${pc.dead ? 'opacity-30' : ''} ${pc.id === gameState.humanPCId ? 'border-2 border-[#d4af37]' : 'border border-[#4a4030]'}`}>
-              <CardHeader className="p-3 bg-gradient-to-r from-[rgba(60,45,15,.5)] to-[rgba(30,25,15,.3)]">
-                <CardTitle className="text-base text-[#d4af37] font-name">
-                  {pc.name.replace(/\s*\([^)]*\)/g, '')} {pc.id === gameState.humanPCId && <span className="text-xs text-[#f0c860]">[YOU]</span>}
-                </CardTitle>
-                <CardDescription className="text-xs text-[#a08060]">{pc.epithet || pc.pantheon}</CardDescription>
-              </CardHeader>
-              <CardContent className="p-3 text-sm space-y-2">
-                <div className="flex justify-between"><span className="text-[#8a7040]">HP</span><span className={`font-bold ${hpCls(Number(pc.hp), Number(pc.maxHp))}`}>{Math.max(0, Number(pc.hp) || 0)}/{Number(pc.maxHp) || '?'}</span></div>
-                <div className="flex justify-between"><span className="text-[#8a7040]">AC</span><span className="text-[#f0e0c0] font-bold">{pc.AC}</span></div>
-                <div className="flex justify-between"><span className="text-[#8a7040]">Align</span><span className="text-sm" style={{ color: aCol(pc.align) }}>{pc.align}</span></div>
-                <div className="flex justify-between">
-                  <span className="text-[#8a7040]">Fight?</span>
-                  <span className="font-bold text-sm" style={{ color: gameState.pcAgreements[pc.id] === true ? '#50c050' : gameState.pcAgreements[pc.id] === false ? '#c05050' : '#8a7040' }}>
-                    {gameState.pcAgreements[pc.id] === true ? 'Agreed' : gameState.pcAgreements[pc.id] === false ? 'Refused' : 'Undecided'}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-            {pc.id === gameState.companionId && gameState.companionMood && (
-              <div className="mb-3 px-3 py-1.5 rounded-lg text-[10px]" style={{
-                background: 'rgba(100,140,200,0.1)',
-                border: '1px solid rgba(100,140,200,0.15)',
-                color: '#8090b0'
-              }}>
-                💭 Mood: {gameState.companionMood}
-                <span className="ml-1 text-[#607090]">
-                  (Affinity: {gameState.companionAffinity >= 25 ? '🤝' : gameState.companionAffinity < 0 ? '😠' : '😐'} {gameState.companionAffinity})
-                </span>
+                ))}
               </div>
             )}
-          </React.Fragment>
-        ))}
-      </TabsContent>
 
-      <TabsContent value="npcs" className="p-3 m-0">
-        {gameState.activeNPCs.length === 0 ? (
-          <p className="text-sm text-[#5a4d30] italic">No gods in current scene</p>
-        ) : (
-          gameState.activeNPCs.map(npc => {
-            const npcColor = npc.category === 'greater_gods' ? '#e8b040' : npc.category === 'lesser_gods' ? '#b0a060' : '#a06060'
-            const npcType = npc.category === 'greater_gods' ? 'Greater God' : npc.category === 'lesser_gods' ? 'Lesser God' : npc.type === 'monster' ? 'Monster' : 'Entity'
-            return (
-              <Card 
-                key={npc.id} 
-                className={`mb-3 cursor-pointer transition-all border border-[#4a4030] ${npc.dead ? 'opacity-30' : ''}`}
-                style={{ borderLeftWidth: '4px', borderLeftColor: npcColor }}
-                onClick={() => setExpandedNPC(expandedNPC === npc.id ? null : npc.id)}
-              >
-                <CardHeader className="p-3 bg-gradient-to-r from-[rgba(60,45,15,.5)] to-[rgba(30,25,15,.3)]">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      {npc.category === 'greater_gods' && <Crown className="w-4 h-4" style={{ color: npcColor }} />}
-                      {npc.category === 'lesser_gods' && <Star className="w-4 h-4" style={{ color: npcColor }} />}
-                      {npc.type === 'monster' && <Skull className="w-4 h-4" style={{ color: npcColor }} />}
-                      <CardTitle className="text-sm font-name" style={{ color: npcColor }}>
-                        {npc.name}
-                      </CardTitle>
+            {/* Battle Log — Recent Events */}
+            {gameState.log.length > 0 && (
+              <div className="mt-3">
+                <NarrativeSection
+                  title="Battle Log"
+                  content={gameState.log.slice(0, 15).map(l => {
+                    if (l.msg.startsWith('__')) return null // Skip special log entries
+                    return l.msg
+                  }).filter(Boolean).join('\n\n') || 'No events yet.'}
+                  icon={<ScrollText className="w-4 h-4 text-[#a08060]" />}
+                  variant="default"
+                  defaultOpen={false}
+                />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── NPCs Dialog ── */}
+      <Dialog open={openPanel === 'npcs'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <Crown className="w-5 h-5" /> Active NPCs
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4">
+            {gameState.activeNPCs.length === 0 ? (
+              <p className="text-base text-[#5a4d30] italic p-3">No gods in current scene</p>
+            ) : (
+              gameState.activeNPCs.map(npc => (
+                <NPCDetailCard
+                  key={npc.id}
+                  npc={npc}
+                  expanded={expandedNPC === npc.id}
+                  onToggle={() => setExpandedNPC(expandedNPC === npc.id ? null : npc.id)}
+                  onPortraitClick={() => {
+                    setSelectedPortrait(npc as CharacterPortrait)
+                    setPortraitModalOpen(true)
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Quests Dialog ── */}
+      <Dialog open={openPanel === 'quests'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <ScrollText className="w-5 h-5" /> Quest Journal
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4 quest-journal">
+            <div className="quest-journal-header">
+              <h3>Quest Journal</h3>
+              <div className="quest-stats">Active: {(questJournal?.quests || []).filter((q: any) => q.status === 'active').length} | Done: {questJournal?.totalQuestsCompleted || 0} | Locations: {questJournal?.totalLocationsDiscovered || 0}</div>
+            </div>
+            <div className="quest-filter-bar">
+              {(['all', 'active', 'completed', 'failed'] as const).map(f => <button key={f} className={`quest-filter-btn ${questFilter === f ? 'active' : ''}`} onClick={() => setQuestFilter(f)}>{f[0].toUpperCase() + f.slice(1)}</button>)}
+            </div>
+            <div className="quest-list">
+              {(questJournal?.quests || [])
+                .filter((q: any) => questFilter === 'all' ? true : q.status === questFilter)
+                .sort((a: any, b: any) => (a.type === 'main' ? -1 : 1) - (b.type === 'main' ? -1 : 1) || ((a.turnGiven || 0) - (b.turnGiven || 0)))
+                .map((q: any) => {
+                  const completed = (q.objectives || []).filter((o: any) => o.isCompleted).length
+                  const total = Math.max(1, (q.objectives || []).length)
+                  return <div key={q.id} className={`quest-card quest-${q.type} quest-${q.status}`}>
+                    <div className="quest-card-title">{q.type === 'main' ? '⭐' : q.type === 'side' ? '📋' : q.type === 'faction' ? '⚔️' : '💎'} {q.title}</div>
+                    <div className="quest-card-desc">{q.description}</div>
+                    <div className="quest-card-meta">{q.givenBy ? `Given by: ${q.givenBy}` : ''} {q.location ? `• 📍 ${q.location}` : ''}</div>
+                    {(q.objectives || []).map((o: any, i: number) => <div key={i} className={`quest-objective ${o.isCompleted ? 'completed' : ''} ${o.isOptional ? 'optional' : ''}`}><span className="quest-objective-check">{o.isCompleted ? '☑' : '☐'}</span>{o.text}{o.isOptional ? ' (optional)' : ''}</div>)}
+                    <div className="quest-progress-bar"><div className="quest-progress-fill" style={{ width: `${Math.round((completed / total) * 100)}%` }} /></div>
+                    {q.reward && <div className="quest-card-details"><span className="reward">Reward: {q.reward}</span></div>}
+                  </div>
+                })}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Map Dialog ── */}
+      <Dialog open={openPanel === 'map'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-3xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <MapIcon className="w-5 h-5" /> World Map
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4">
+            <div className="world-map-container">
+              <div className="world-map-grid" />
+              {(questJournal?.locations || []).flatMap((loc: any) => (loc.connections || []).map((toId: string) => {
+                const to = (questJournal?.locations || []).find((l: any) => l.id === toId)
+                if (!to) return null
+                const dx = (to.x || 0) - (loc.x || 0)
+                const dy = (to.y || 0) - (loc.y || 0)
+                const len = Math.sqrt(dx * dx + dy * dy)
+                const angle = Math.atan2(dy, dx) * (180 / Math.PI)
+                return <div key={`${loc.id}-${toId}`} className="map-connection-line" style={{ left: `${loc.x}%`, top: `${loc.y}%`, width: `${len}%`, transform: `rotate(${angle}deg)` }} />
+              }))}
+              {(questJournal?.locations || []).map((loc: any) => (
+                <button key={loc.id} className={`map-pin ${loc.isCurrentlyAt ? 'current' : ''} ${loc.isDiscovered ? '' : 'undiscovered'}`} style={{ left: `${loc.x}%`, top: `${loc.y}%` }} onClick={() => setSelectedMapPin(prev => prev === loc.id ? null : loc.id)}>
+                  <span className="map-pin-icon">{loc.icon || '📍'}</span>
+                  <span className="map-pin-name">{loc.name}</span>
+                </button>
+              ))}
+              {selectedMapPin && (() => {
+                const loc = (questJournal?.locations || []).find((l: any) => l.id === selectedMapPin)
+                if (!loc) return null
+                const canTravel = !loc.isCurrentlyAt && !!onTravelToLocation
+                return <div className="map-tooltip" style={{ left: `min(calc(${loc.x}% + 10px), calc(100% - 190px))`, top: `min(calc(${loc.y}% + 10px), calc(100% - 120px))` }}>
+                  <div className="map-tooltip-name">{loc.icon || '📍'} {loc.name}</div>
+                  <div className="map-tooltip-desc">{loc.description || 'Unknown region.'}</div>
+                  <div className="map-tooltip-danger">{'☠'.repeat(Math.max(1, Number(loc.dangerLevel || 1)))}</div>
+                  <button className="map-travel-btn" disabled={!canTravel} onClick={() => canTravel && onTravelToLocation?.(loc.name)}>Travel Here</button>
+                </div>
+              })()}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Soul Dialog ── */}
+      <Dialog open={openPanel === 'soul'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <Sparkles className="w-5 h-5" /> Soul & Consequences
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4">
+            <div className="choice-stats">Choices: {consequenceState?.totalChoicesMade || 0} | Alignment: {consequenceState?.alignment?.dominant || 'True Neutral'}</div>
+            <div className="alignment-meter">
+              <div className="alignment-title">Your Path: {consequenceState?.alignment?.title || 'Undecided Soul'}</div>
+              <div className="text-xs text-[#a98d63]">Law/Chaos: {consequenceState?.alignment?.axis_law_chaos || 0} · Good/Evil: {consequenceState?.alignment?.axis_good_evil || 0}</div>
+            </div>
+            <div className="mt-2">
+              {(consequenceState?.npcRelations || []).slice().sort((a: any, b: any) => b.affinity - a.affinity).map((r: any) => (
+                <div key={r.npcId} className="npc-relation-card"><div className={`npc-relation-name ${r.affinity > 0 ? 'positive' : r.affinity < 0 ? 'negative' : 'neutral'}`}>{r.npcName}</div><div className={`npc-status-badge ${r.status}`}>{r.status}</div></div>
+              ))}
+            </div>
+            <button className="quest-filter-btn mt-2" onClick={() => setExpandedChoiceHistory(v => !v)}>Choices {expandedChoiceHistory ? '▾' : '▸'}</button>
+            {expandedChoiceHistory && (
+              <div>
+                {(consequenceState?.choices || []).map((c: any, idx: number) => (
+                  <div key={idx} className="choice-entry"><div className="turn-num">Turn {c.turn}</div><div>{c.situation}</div><div className="chosen-text">{c.chosen}</div><div className="alt-text">{(c.alternatives || []).join(' · ')}</div><div className={c.rippleTriggered ? 'ripple-done' : 'ripple-pending'}>{c.rippleTriggered ? 'Ripple resolved' : `Ripple pending (turn ${c.rippleTurn || '?'})`}</div></div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Graveyard Dialog ── */}
+      <Dialog open={openPanel === 'graveyard'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <Skull className="w-5 h-5" /> The Graveyard
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-0">
+            <div className="graveyard-header">
+              <h3>The Graveyard</h3>
+              <div className="graveyard-stats">
+                <span>Fallen: {quickeningState?.absorptionHistory?.length || 0}</span>
+                <span>Deities: {quickeningState?.totalDeityKills || 0}</span>
+                <span>Monsters: {quickeningState?.totalMonstersAbsorbed || 0}</span>
+              </div>
+              <div className="graveyard-legend">Your Legend: {quickeningState?.currentLegendTitle || 'Mortal'}</div>
+            </div>
+            {(quickeningState?.absorptionHistory?.length || 0) > 0 ? (
+              <>
+                <div className="graveyard-grid">
+                  {(quickeningState?.absorptionHistory || []).map((record: any, idx: number) => (
+                    <div key={`${record.deityId}-${idx}`} className="graveyard-card">
+                      {record.portrait ? (
+                        <img src={record.portrait} alt={record.deityName} className="graveyard-card-portrait" onError={(e: any) => { e.target.style.display = 'none' }} />
+                      ) : (
+                        <div className="graveyard-card-portrait" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a1a', color: '#555', fontSize: 24 }}>{record.deityName?.charAt(0) || '?'}</div>
+                      )}
+                      <div className="graveyard-card-name">{record.deityName}</div>
+                      <div className="graveyard-card-turn">Turn {record.turn}</div>
+                      <div className="graveyard-card-power">{record.powerAbsorbed}</div>
                     </div>
-                    <span className="text-xs text-[#5a4d30]">{expandedNPC === npc.id ? '▼' : '▶'}</span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="graveyard-empty">
+                <div className="graveyard-empty-icon">💀</div>
+                <div className="graveyard-empty-text">The graveyard is empty. The gods still reign.</div>
+                <div className="graveyard-empty-hint">Slay a deity to begin the Quickening.</div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Prophecies Dialog ── */}
+      <Dialog open={openPanel === 'prophecies'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <Star className="w-5 h-5" /> Prophecies & Shards
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4">
+            {gameState.shardEntry && (
+              <Card className="mb-3 bg-gradient-to-r from-[rgba(60,40,80,.3)] to-[rgba(30,20,40,.2)] border-2" style={{ borderColor: gameState.shardEntry.color || '#808080' }}>
+                <CardHeader className="p-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5" style={{ color: gameState.shardEntry.color || '#c080ff' }} />
+                    <CardTitle className="text-sm" style={{ color: gameState.shardEntry.color || '#c080ff', fontFamily: 'Cinzel, serif' }}>
+                      {gameState.shardEntry.name}
+                    </CardTitle>
+                    <Badge className="ml-auto text-[10px] bg-[rgba(60,40,80,.5)] text-[#c090d0]" style={{ borderColor: gameState.shardEntry.color || '#808080' }}>
+                      {gameState.shardEntry.pantheon || 'Unknown'}
+                    </Badge>
                   </div>
-                  <CardDescription className="text-xs text-[#a08060] font-narrative">{npc.title || npcType} · {npc.pantheon}</CardDescription>
+                  <CardDescription className="text-[10px] text-[#a08060] mt-2 italic">
+                    {gameState.shardEntry.power}
+                  </CardDescription>
                 </CardHeader>
-                
-                {/* Always visible stats */}
-                <CardContent className="p-3 text-sm space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-[#8a7040] font-narrative">HP</span>
-                    <span className={`font-bold ${hpCls(Number(npc.hp), Number(npc.maxHp))}`}>{Math.max(0, Number(npc.hp) || 0)}/{Number(npc.maxHp) || '?'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#8a7040] font-narrative">AC</span>
-                    <span className="text-[#f0e0c0] font-bold">{npc.AC}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#8a7040] font-narrative">MR</span>
-                    <span className="text-[#f0e0c0]">{npc.MR}{typeof npc.MR === 'number' ? '%' : ''}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#8a7040] font-narrative">Align</span>
-                    <span className="font-title text-sm" style={{ color: aCol(npc.align) }}>{npc.align}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[#8a7040] font-narrative">Pantheon</span>
-                    <span className="text-[#c9a84c]">{npc.pantheon}</span>
+                <CardContent className="p-3 pt-0 text-xs">
+                  <div className="text-[#7a5f20] mb-2">Charges: {gameState.shardCharges}/2</div>
+                  <div className="text-[10px] text-[#a08060] italic leading-relaxed">
+                    The shard contains the prophecy. It chose its bearer. They cannot escape destiny.
                   </div>
                 </CardContent>
-                
-                {/* Expanded abilities section */}
-                {expandedNPC === npc.id && (
-                  <div className="border-t border-[#3a3020] p-3 bg-[#0d0a08]/50">
-                    {/* Character Description */}
-                    {npc.personality && (
-                      <>
-                        <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2 font-title">📜 Character Description</div>
-                        <div className="text-xs text-[#a08060] italic font-narrative mb-3 p-2 bg-[#1a1510] rounded">
-                          {npc.personality}
-                        </div>
-                      </>
-                    )}
-                    
-                    {/* Full Stats */}
-                    <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2 font-title">📊 Complete Stats</div>
-                    <div className="grid grid-cols-2 gap-1 text-xs mb-3 p-2 bg-[#1a1510] rounded">
-                      <div className="flex justify-between pr-2"><span className="text-[#8a7040]">Type:</span><span style={{ color: npcColor }}>{npcType}</span></div>
-                      <div className="flex justify-between pr-2"><span className="text-[#8a7040]">Max HP:</span><span className="text-[#f0e0c0]">{npc.maxHp}</span></div>
-                      <div className="flex justify-between pr-2"><span className="text-[#8a7040]">AC:</span><span className="text-[#f0e0c0]">{npc.AC}</span></div>
-                      <div className="flex justify-between pr-2"><span className="text-[#8a7040]">MR:</span><span className="text-[#f0e0c0]">{npc.MR}{typeof npc.MR === 'number' ? '%' : ''}</span></div>
-                      <div className="flex justify-between pr-2"><span className="text-[#8a7040]">Pantheon:</span><span className="text-[#c9a84c]">{npc.pantheon}</span></div>
-                      <div className="flex justify-between pr-2"><span className="text-[#8a7040]">Alignment:</span><span style={{ color: aCol(npc.align) }}>{npc.align}</span></div>
-                    </div>
-                    
-                    {/* Abilities */}
-                    <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2 font-title">⚡ Abilities & Powers</div>
-                    {npc.abilities && npc.abilities.length > 0 ? (
-                      <div className="space-y-1 mb-3">
-                        {npc.abilities.map((ability, idx) => (
-                          <div key={idx} className="text-xs text-[#c9a84c] bg-[#1a1510] p-2 rounded border-l-2" style={{ borderLeftColor: npcColor }}>
-                            {ability}
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-xs text-[#5a4d30] italic mb-3">No abilities recorded</div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Conditions - always visible if present */}
-                {npc.conditions && npc.conditions.length > 0 && (
-                  <div className="px-3 pb-3 pt-0">
-                    <div className="pt-2 border-t border-[#3a3020]">
-                      {npc.conditions.map((cond, idx) => (
-                        <div key={idx} className="text-xs text-[#f08040] font-narrative">
-                          ⚠ {cond}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
               </Card>
-            )
-          })
-        )}
-      </TabsContent>
+            )}
 
-      <TabsContent value="quests" className="p-3 m-0">
-        {gameState.quests.map(quest => (
-          <Card key={quest.id} className={`mb-3 ${quest.status === 'completed' ? 'opacity-50' : ''}`} style={{ borderColor: quest.type === 'main' ? '#c9a84c' : '#5a4018' }}>
-            <CardHeader className="p-3">
-              <div className="flex items-center gap-2">
-                {quest.type === 'main' ? <Star className="w-4 h-4 text-[#c9a84c]" /> : <ScrollText className="w-4 h-4 text-[#5a4018]" />}
-                <CardTitle className="text-base text-[#c9a84c]">{quest.title}</CardTitle>
+            <h3 className="text-[#c9a84c] mb-3 text-base flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <ScrollText className="w-4 h-4" /> Bound Destinies
+            </h3>
+            {gameState.prophecies.length === 0 ? (
+              <p className="text-[#5a4d30] italic text-sm">No prophecies have been revealed yet...</p>
+            ) : (
+              <div className="space-y-3">
+                {gameState.prophecies.map((prophecy, index) => {
+                  const pc = gameState.pcs.find(p => p.id === prophecy.pc_id)
+                  const prophecyData = getProphecyById(prophecy.prophecyId)
+                  const isMainPC = index === 0 && !pc?.dead
+                  return (
+                    <Card key={prophecy.pc_id} className={`bg-[#1a1510] ${isMainPC ? 'border-2 border-[#d4af37]' : 'border-[#3a3020]'} ${pc?.dead ? 'opacity-50' : ''}`}>
+                      <CardHeader className="p-3 bg-gradient-to-r from-[rgba(80,40,100,.3)] to-[rgba(40,30,50,.2)]">
+                        <div className="flex justify-between items-center">
+                          <CardTitle className="text-sm text-[#d4af37]">
+                            {pc?.name || 'Unknown Hero'}
+                            {isMainPC && <span className="text-[#f0c860] ml-2 text-[10px]">★ MAIN BEARER</span>}
+                            {pc?.dead && <span className="text-[#c05050] ml-2 text-xs">(FALLEN)</span>}
+                          </CardTitle>
+                          <Badge className="bg-[#2a1a30] text-[#c090d0] border-[#5a4060] text-[10px]">
+                            {prophecy.state}
+                          </Badge>
+                        </div>
+                        {prophecy.previous_holders.length > 0 && (
+                          <CardDescription className="text-[10px] text-[#7a5f20] mt-1">
+                            {prophecy.previous_holders.length} previous bearer(s) - the shard remembers
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent className="p-3">
+                        <div className="text-xs text-[#a08060] italic leading-relaxed font-narrative" style={{ fontFamily: '"IM Fell English", serif' }}>
+                          &ldquo;{prophecy.riddle}&rdquo;
+                        </div>
+                        {prophecyData && (
+                          <div className="mt-2 pt-2 border-t border-[#3a3020]">
+                            <div className="text-[10px] text-[#7a5f20] uppercase tracking-wider">
+                              Theme: {prophecyData.theme}
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )
+                })}
               </div>
-            </CardHeader>
-            <CardContent className="p-3 text-sm space-y-2">
-              <p className="text-[#9a8860]">{quest.description}</p>
-              {quest.objectives.map((obj, idx) => (
-                <div key={idx} className={`flex items-center gap-2 text-sm ${obj.completed ? 'text-[#4a9060]' : 'text-[#5a4d30]'}`}>
-                  {obj.completed ? <CheckCircle className="w-4 h-4" /> : <div className="w-4 h-4 rounded-full border border-[#5a4d30]" />}
-                  {obj.text}
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        ))}
-      </TabsContent>
-      <TabsContent value="map" className="p-3 m-0">
-        <div className="world-map-container">
-          {(questJournal?.locations || []).map((loc: any) => (
-            <button key={loc.id} className={`map-pin ${loc.isCurrentlyAt ? 'current' : ''}`} style={{ left: `${loc.x}%`, top: `${loc.y}%` }} onClick={() => !loc.isCurrentlyAt && onTravelToLocation?.(loc.name)}>
-              <span className="map-pin-icon">{loc.icon || '📍'}</span>
-              <span className="map-pin-name">{loc.name}</span>
-            </button>
-          ))}
-        </div>
-      </TabsContent>
-      <TabsContent value="soul" className="p-3 m-0">
-        <div className="choice-stats">Choices: {consequenceState?.totalChoicesMade || 0}</div>
-        {(consequenceState?.npcRelations || []).map((r: any) => <div key={r.npcId} className="npc-relation-card"><div className="npc-relation-name">{r.npcName}</div></div>)}
-      </TabsContent>
-      
-      {/* Mobile Prophecies Tab */}
-      <TabsContent value="prophecies" className="p-3 m-0">
-        <h3 className="text-[#c9a84c] mb-3 text-sm flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
-          <ScrollText className="w-4 h-4" /> Prophecies
-        </h3>
-        {gameState.prophecies.length === 0 ? (
-          <p className="text-[#5a4d30] italic text-sm">No prophecies have been revealed yet...</p>
-        ) : (
-          <div className="space-y-3">
-            {gameState.prophecies.map(prophecy => {
-              const pc = gameState.pcs.find(p => p.id === prophecy.pc_id)
-              return (
-                <Card key={prophecy.pc_id} className={`bg-[#1a1510] border-[#3a3020] ${pc?.dead ? 'opacity-50' : ''}`}>
-                  <CardHeader className="p-3">
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-sm text-[#d4af37]">
-                        {pc?.name || 'Unknown'}
-                        {pc?.dead && <span className="text-[#c05050] ml-2 text-xs">(DEAD)</span>}
-                      </CardTitle>
-                      <Badge className="bg-[#2a1a30] text-[#c090d0] text-[10px]">{prophecy.state}</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-3 pt-0">
-                    <div className="text-xs text-[#a08060] italic leading-relaxed">
-                      &ldquo;{prophecy.riddle.slice(0, 150)}{prophecy.riddle.length > 150 ? '...' : ''}&rdquo;
-                    </div>
-                    {prophecy.previous_holders.length > 0 && (
-                      <div className="text-[10px] text-[#7a5f20] mt-2">
-                        Previously held by {prophecy.previous_holders.length} fallen hero(s)
+            )}
+            <div className="mt-4 pt-3 border-t border-[#3a3020]">
+              <p className="text-[10px] text-[#5a4d30] italic">
+                The prophecy is bound to the SHARD, not just the hero. If the main bearer falls, the shard summons a replacement and the destiny transfers - heavier each time.
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Logs Dialog ── */}
+      <Dialog open={openPanel === 'logs'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <ClipboardList className="w-5 h-5" /> Chronicle of Events
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4 scroll-parchment">
+            {gameState.log.length === 0 ? (
+              <p className="text-[#5a4d30] italic text-sm">The story has not yet begun...</p>
+            ) : (
+              <div>
+                {gameState.log.slice().reverse().map((entry, idx) => {
+                  const dotColor = getLogDotColor(entry.type)
+                  const glowColor = getLogGlowColor(entry.type)
+                  return (
+                    <div key={idx} className="flex gap-3" style={{ animation: 'timelineFadeIn 0.3s ease-out' }}>
+                      {/* Timeline line + dot */}
+                      <div className="flex flex-col items-center flex-shrink-0">
+                        <div
+                          className="w-2.5 h-2.5 rounded-full flex-shrink-0 mt-0.5"
+                          style={{ background: dotColor, boxShadow: `0 0 6px ${glowColor}` }}
+                        />
+                        <div className="w-px flex-1 bg-[#3a3020]" />
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-        )}
-      </TabsContent>
-      
-      {/* Mobile Logs Tab — Compact Timeline */}
-      <TabsContent value="logs" className="p-3 m-0">
-        <h3 className="text-[#c9a84c] mb-3 text-sm flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
-          <BookOpen className="w-4 h-4" /> Chronicle
-        </h3>
-        {gameState.log.length === 0 ? (
-          <p className="text-[#5a4d30] italic text-sm">The story has not yet begun...</p>
-        ) : (
-          <div>
-            {gameState.log.slice().reverse().slice(0, 20).map((entry, idx) => {
-              const dotColor = getLogDotColor(entry.type)
-              const glowColor = getLogGlowColor(entry.type)
-              return (
-                <div key={idx} className="flex gap-2">
-                  {/* Timeline line + dot — compact */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <div
-                      className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1"
-                      style={{ background: dotColor, boxShadow: `0 0 4px ${glowColor}` }}
-                    />
-                    <div className="w-px flex-1 bg-[#3a3020]" />
-                  </div>
-                  {/* Content — compact */}
-                  <div className="flex-1 pb-3 min-w-0">
-                    <div className="text-[9px] text-[#7a5f20] uppercase tracking-wider font-title">Turn {entry.turn}</div>
-                    <div className="text-[11px] text-[#c9a84c] font-narrative leading-relaxed mt-0.5">
-                      {entry.msg.length > 80 ? entry.msg.slice(0, 80) + '...' : entry.msg}
+                      {/* Content */}
+                      <div className="flex-1 pb-4 min-w-0">
+                        <div className="text-[10px] text-[#7a5f20] uppercase tracking-wider font-title">Turn {entry.turn}</div>
+                        <div className="text-xs text-[#c9a84c] font-narrative leading-relaxed mt-0.5">{entry.msg}</div>
+                      </div>
                     </div>
+                  )
+                })}
+                {/* Campaign Begin marker */}
+                <div className="flex gap-3 items-center">
+                  <div className="flex flex-col items-center flex-shrink-0">
+                    <div className="text-sm text-[#d4af37]" style={{ textShadow: '0 0 8px rgba(212,175,55,0.5)' }}>✦</div>
+                  </div>
+                  <div className="text-xs text-[#d4af37] font-title italic" style={{ fontFamily: 'Cinzel, serif' }}>
+                    Campaign Begin
                   </div>
                 </div>
-              )
-            })}
-            {/* Campaign Begin marker */}
-            <div className="flex gap-2 items-center">
-              <div className="flex flex-col items-center flex-shrink-0">
-                <div className="text-xs text-[#d4af37]" style={{ textShadow: '0 0 6px rgba(212,175,55,0.5)' }}>✦</div>
               </div>
-              <div className="text-[11px] text-[#d4af37] font-title italic" style={{ fontFamily: 'Cinzel, serif' }}>
-                Campaign Begin
+            )}
+
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Gallery Dialog ── */}
+      <Dialog open={openPanel === 'gallery'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <ImageIcon className="w-5 h-5" /> Gallery
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4">
+            {galleryCharacter ? (
+              <>
+                <CharacterCard character={galleryCharacter as any} />
+                <div className="gallery-controls">
+                  <button onClick={onGalleryPrev}>‹</button>
+                  <button onClick={onGalleryTogglePlay}>{galleryPlaying ? 'Pause' : 'Play'}</button>
+                  <button onClick={onGalleryNext}>›</button>
+                </div>
+              </>
+            ) : (
+              <div className="text-xs text-[#9a8860]">No gallery character loaded.</div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* SETTINGS DIALOG */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <Dialog open={openPanel === 'settings'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <SettingsIcon className="w-5 h-5" /> Settings
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4 space-y-5">
+            {/* ── Comic Panels ── */}
+            <div>
+              <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-3 font-title">Comic Panels</h4>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-[#a08060]">Enable Comic Panels</span>
+                <button
+                  onClick={() => setComicMode(!comicMode)}
+                  className={`px-3 py-1.5 text-xs rounded-md border transition-all ${comicMode ? 'bg-[#1f2a1a] text-[#60c080] border-[#2f5a3a] shadow-[0_0_8px_rgba(96,192,128,0.15)]' : 'bg-[#1a1510] text-[#8a7040] border-[#3a3020]'}`}
+                >
+                  {comicMode ? '✓ ON' : 'OFF'}
+                </button>
+              </div>
+              <div>
+                <label className="text-xs text-[#7a5f20] uppercase tracking-wider block mb-1.5">Art Style</label>
+                <select
+                  value={comicArtStyle}
+                  onChange={e => setComicArtStyle(e.target.value as 'larry-elmore' | 'classic-comic' | 'manga' | 'watercolor')}
+                  className="w-full bg-[#1a1510] border border-[#2e2008] text-[#e8d9b0] text-sm rounded-md px-3 py-2 focus:outline-none focus:border-[#d4af37]/50 transition-colors"
+                >
+                  <option value="larry-elmore">Larry Elmore</option>
+                  <option value="classic-comic">Classic Comic</option>
+                  <option value="manga">Manga</option>
+                  <option value="watercolor">Watercolor</option>
+                </select>
+              </div>
+            </div>
+
+            {/* ── Voice & Narration ── */}
+            <div>
+              <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-3 font-title">Voice & Narration</h4>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="p-3 bg-[#1a1510] rounded-lg border border-[#2e2008]">
+                  <div className="text-[#7a5f20] text-xs">TTS Engine</div>
+                  <div className="text-[#e8d9b0] font-bold mt-0.5">Browser</div>
+                </div>
+                <div className="p-3 bg-[#1a1510] rounded-lg border border-[#2e2008]">
+                  <div className="text-[#7a5f20] text-xs">Voice Speed</div>
+                  <div className="text-[#e8d9b0] font-bold mt-0.5">1.0×</div>
+                </div>
+              </div>
+              <div className="mt-2 text-[10px] text-[#5a4d30] italic">
+                Text-to-speech uses your browser&apos;s built-in speech synthesis engine. Neural voices are available in supported browsers.
               </div>
             </div>
           </div>
-        )}
-        
-        {/* Token Usage Summary - Mobile */}
-        <div className="mt-4 pt-3 border-t border-[#3a3020]">
-          <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">Session Stats</h4>
-          <div className="text-xs">
-            <div className="p-2 bg-[#1a1510] rounded">
-              <div className="text-[#7a5f20]">Cloud</div>
-              <div className="text-blue-400 font-bold">{tokenUsage.gemini.total.toLocaleString()}</div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* DM NOTES DIALOG */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <Dialog open={openPanel === 'dmnotes'} onOpenChange={(open) => { if (!open) setOpenPanel(null) }}>
+        <DialogContent className="sm:max-w-2xl max-h-[85vh] bg-[#110d07] border-[#2e2008] text-[#e8d9b0] p-0 gap-0">
+          <DialogHeader className="p-4 pb-3 border-b border-[#2e2008] flex-shrink-0">
+            <DialogTitle className="text-[#d4af37] flex items-center gap-2" style={{ fontFamily: 'Cinzel, serif' }}>
+              <FileText className="w-5 h-5" /> DM Notes
+            </DialogTitle>
+          </DialogHeader>
+          <div className="overflow-y-auto max-h-[calc(85vh-5rem)] p-4 space-y-4">
+            {/* ── Session Statistics ── */}
+            <div>
+              <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2 font-title">Session Statistics</h4>
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div className="p-2.5 bg-[#1a1510] rounded-lg border border-[#2e2008]">
+                  <div className="text-[#7a5f20] text-[10px]">Cloud Tokens</div>
+                  <div className="text-blue-400 font-bold mt-0.5">{tokenUsage.gemini.total.toLocaleString()}</div>
+                </div>
+                <div className="p-2.5 bg-[#1a1510] rounded-lg border border-[#2e2008]">
+                  <div className="text-[#7a5f20] text-[10px]">Turn</div>
+                  <div className="text-[#e8d9b0] font-bold mt-0.5">{gameState.turn || 0}</div>
+                </div>
+                <div className="p-2.5 bg-[#1a1510] rounded-lg border border-[#2e2008]">
+                  <div className="text-[#7a5f20] text-[10px]">Act</div>
+                  <div className="text-[#e8d9b0] font-bold mt-0.5">{(gameState as unknown as Record<string, unknown>).act as string || 'I'}</div>
+                </div>
+              </div>
             </div>
+
+            {/* ── DM System Notes ── */}
+            <div>
+              <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2 font-title">DM System Notes</h4>
+              <div className="p-3 bg-[#1a1510] rounded-lg border border-[#2e2008] text-sm space-y-1">
+                <div className="flex justify-between"><span className="text-[#7a5f20]">Turn</span><span className="text-[#e8d9b0]">{gameState.turn || 0}</span></div>
+                <div className="flex justify-between"><span className="text-[#7a5f20]">Act</span><span className="text-[#e8d9b0]">{(gameState as unknown as Record<string, unknown>).act as string || 'I'}</span></div>
+                <div className="flex justify-between"><span className="text-[#7a5f20]">Shard</span><span className="text-[#e8d9b0]">{gameState.shardEntry?.name || 'None'}</span></div>
+                <div className="flex justify-between"><span className="text-[#7a5f20]">Pantheon</span><span className="text-[#e8d9b0]">{(gameState as unknown as Record<string, unknown>).pantheon as string || 'Unknown'}</span></div>
+              </div>
+              {dmSystemPrompt && (
+                <div className="mt-2 p-3 bg-[#0d0a08] rounded-lg border border-[#2e2008]">
+                  <div className="text-[10px] text-[#7a5f20] uppercase tracking-wider mb-1">DM System Prompt</div>
+                  <div className="text-xs text-[#a08060] leading-relaxed max-h-32 overflow-y-auto">{dmSystemPrompt}</div>
+                </div>
+              )}
+            </div>
+
+            {/* ── DM Conversation Log ── */}
+            {conversationHistory && conversationHistory.length > 0 && (
+              <div>
+                <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2 font-title">DM Conversation Log</h4>
+                <div className="space-y-2">
+                  {conversationHistory.map((entry, idx) => (
+                    <div key={idx} className="p-3 bg-[#1a1510] rounded-lg border border-[#2e2008]">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        {entry.role === 'user' ? (
+                          <span className="text-sm">🗡️</span>
+                        ) : (
+                          <span className="text-sm">📜</span>
+                        )}
+                        <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: entry.role === 'user' ? '#c0a060' : '#6090c0' }}>
+                          {entry.role === 'user' ? 'Player Action' : 'DM Response'}
+                        </span>
+                      </div>
+                      <div className="text-xs text-[#a09080] leading-relaxed" style={{ maxHeight: '80px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {entry.content.length > 200 ? entry.content.slice(0, 200) + '…' : entry.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      {/* MOBILE ICON DOCK */}
+      {/* ═══════════════════════════════════════════════════════════════════════ */}
+      <div className={`fixed bottom-0 left-0 right-0 z-30 md:hidden transition-transform duration-300 ${openPanel ? 'translate-y-full' : 'translate-y-0'}`}>
+        <div className="bg-[#110d07]/98 border-t border-[#2e2008] px-1 pt-2 pb-[env(safe-area-inset-bottom,4px)]">
+          <div className="grid grid-cols-6 gap-0.5">
+            {[
+              { key: 'story', icon: <BookOpen className="w-5 h-5" />, label: 'Story' },
+              { key: 'pcs', icon: <Users className="w-5 h-5" />, label: 'PCs' },
+              { key: 'npcs', icon: <Crown className="w-5 h-5" />, label: 'NPCs' },
+              { key: 'quests', icon: <ScrollText className="w-5 h-5" />, label: 'Quests' },
+              { key: 'map', icon: <MapIcon className="w-5 h-5" />, label: 'Map' },
+              { key: 'soul', icon: <Sparkles className="w-5 h-5" />, label: 'Soul' },
+              { key: 'graveyard', icon: <Skull className="w-5 h-5" />, label: '☠️' },
+              { key: 'prophecies', icon: <Star className="w-5 h-5" />, label: '📜' },
+              { key: 'logs', icon: <ClipboardList className="w-5 h-5" />, label: 'Logs' },
+              { key: 'gallery', icon: <ImageIcon className="w-5 h-5" />, label: '🎴' },
+              { key: 'settings', icon: <SettingsIcon className="w-5 h-5" />, label: '⚙️' },
+              { key: 'dmnotes', icon: <FileText className="w-5 h-5" />, label: 'DM' },
+            ].map(item => (
+              <button
+                key={item.key}
+                onClick={() => setOpenPanel(openPanel === item.key ? null : item.key)}
+                className="flex flex-col items-center justify-center py-1.5 min-h-[44px] rounded-lg text-[#7a5f20] active:text-[#d4af37] active:bg-[#1a1510]/60 transition-all"
+              >
+                {item.icon}
+                <span className="text-[9px] mt-0.5 leading-none">{item.label}</span>
+              </button>
+            ))}
           </div>
         </div>
-        {/* DM Conversation History — Mobile */}
-        {conversationHistory && conversationHistory.length > 0 && (
-          <div className="mt-3 pt-3 border-t border-[#3a3020]">
-            <h4 className="text-[#c9a84c] text-xs uppercase tracking-wider mb-2">DM Memory</h4>
-            <div className="space-y-1">
-              {conversationHistory.map((entry, idx) => (
-                <div key={idx} className="p-1.5 bg-[#1a1510] rounded">
-                  <div className="text-[8px] uppercase tracking-wider" style={{ color: entry.role === 'user' ? '#c0a060' : '#6090c0' }}>
-                    {entry.role === 'user' ? '🗡️ Player' : '📜 DM'}
-                  </div>
-                  <div className="text-[10px] text-[#a09080]" style={{ maxHeight: '40px', overflow: 'hidden' }}>
-                    {entry.content.length > 80 ? entry.content.slice(0, 80) + '...' : entry.content}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="gallery" className="p-3 m-0">
-        {galleryCharacter ? (
-          <>
-            <CharacterCard character={galleryCharacter as any} />
-            <div className="gallery-controls">
-              <button onClick={onGalleryPrev}>‹</button>
-              <button onClick={onGalleryTogglePlay}>{galleryPlaying ? 'Pause' : 'Play'}</button>
-              <button onClick={onGalleryNext}>›</button>
-            </div>
-          </>
-        ) : (
-          <div className="text-xs text-[#9a8860]">No gallery character loaded.</div>
-        )}
-      </TabsContent>
-    </Tabs>
+      </div>
+    </>
   )
 }
 
@@ -1124,7 +929,7 @@ function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
   onToggle: () => void
 }) {
   return (
-    <Card 
+    <Card
       className={`mb-3 cursor-pointer transition-all ${pc.dead ? 'opacity-30' : ''} ${isHumanPC ? 'border-2 border-[#d4af37]' : 'border border-[#4a4030]'}`}
       onClick={onToggle}
     >
@@ -1137,7 +942,7 @@ function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
         </div>
         <CardDescription className="text-xs text-[#a08060] font-narrative">{pc.title || pc.epithet || pc.pantheon}</CardDescription>
       </CardHeader>
-      
+
       {/* Always visible stats */}
       <CardContent className="p-3 text-sm space-y-1">
         <div className="flex justify-between"><span className="text-[#8a7040] font-narrative">HP</span><span className={`font-bold ${hpCls(Number(pc.hp), Number(pc.maxHp))}`}>{Math.max(0, Number(pc.hp) || 0)}/{Number(pc.maxHp) || '?'}</span></div>
@@ -1146,7 +951,7 @@ function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
         <div className="flex justify-between"><span className="text-[#8a7040] font-narrative">Align</span><span className="font-title text-sm" style={{ color: aCol(pc.align) }}>{pc.align}</span></div>
         <div className="flex justify-between"><span className="text-[#8a7040] font-narrative">Pantheon</span><span className="text-[#c9a84c]">{pc.pantheon}</span></div>
       </CardContent>
-      
+
       {/* Expanded abilities section */}
       {expanded && (
         <div className="border-t border-[#3a3020] p-3 bg-[#0d0a08]/50">
@@ -1172,7 +977,7 @@ function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
               )
             })}
           </div>
-          
+
           {/* Character Description */}
           {pc.personality && (
             <>
@@ -1182,7 +987,7 @@ function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
               </div>
             </>
           )}
-          
+
           {/* Full Stats */}
           <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2 font-title">📊 Complete Stats</div>
           <div className="grid grid-cols-2 gap-1 text-xs mb-3 p-2 bg-[#1a1510] rounded">
@@ -1196,7 +1001,7 @@ function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
             {pc.move && <div className="flex justify-between pr-2"><span className="text-[#8a7040]">Move:</span><span className="text-[#f0e0c0]">{pc.move}</span></div>}
             <div className="flex justify-between pr-2 col-span-2"><span className="text-[#8a7040]">Alignment:</span><span style={{ color: aCol(pc.align) }}>{pc.align}</span></div>
           </div>
-          
+
           {/* Abilities */}
           <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2 font-title">⚡ Abilities & Powers</div>
           {pc.abilities && pc.abilities.length > 0 ? (
@@ -1210,7 +1015,7 @@ function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
           ) : (
             <div className="text-xs text-[#5a4d30] italic mb-3">No abilities recorded</div>
           )}
-          
+
           {/* Inventory */}
           {pc.inventory && pc.inventory.length > 0 && (
             <>
@@ -1226,7 +1031,7 @@ function PCDetailCard({ pc, isHumanPC, expanded, injuries, onToggle }: {
           )}
         </div>
       )}
-      
+
       {/* Injuries - always visible if present */}
       {injuries.length > 0 && (
         <div className="px-3 pb-3 pt-0">
@@ -1251,9 +1056,9 @@ function NPCDetailCard({ npc, expanded, onToggle, onPortraitClick }: {
 }) {
   const npcColor = npc.category === 'greater_gods' ? '#e8b040' : npc.category === 'lesser_gods' ? '#b0a060' : '#a06060'
   const npcType = npc.category === 'greater_gods' ? 'Greater God' : npc.category === 'lesser_gods' ? 'Lesser God' : npc.type === 'monster' ? 'Monster' : 'Entity'
-  
+
   return (
-    <Card 
+    <Card
       className={`mb-3 cursor-pointer transition-all border border-[#4a4030] ${npc.dead ? 'opacity-30' : ''}`}
       style={{ borderLeftWidth: '4px', borderLeftColor: npcColor }}
       onClick={onToggle}
@@ -1262,7 +1067,7 @@ function NPCDetailCard({ npc, expanded, onToggle, onPortraitClick }: {
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-2">
             {/* NPC Portrait - Full portrait (768x1344 aspect ratio) */}
-            <div 
+            <div
               className="relative w-14 rounded overflow-hidden flex-shrink-0 bg-[#1a1510] border border-[#4a4030] cursor-pointer hover:ring-2 hover:ring-[#d4af37]/50 transition-all"
               style={{ aspectRatio: '768/1344' }}
               onClick={(e) => {
@@ -1293,7 +1098,7 @@ function NPCDetailCard({ npc, expanded, onToggle, onPortraitClick }: {
           <span className="text-xs text-[#5a4d30]">{expanded ? '▼' : '▶'}</span>
         </div>
       </CardHeader>
-      
+
       {/* Always visible stats */}
       <CardContent className="p-3 text-sm space-y-1">
         <div className="flex justify-between">
@@ -1317,7 +1122,7 @@ function NPCDetailCard({ npc, expanded, onToggle, onPortraitClick }: {
           <span className="text-[#c9a84c]">{npc.pantheon}</span>
         </div>
       </CardContent>
-      
+
       {/* Expanded abilities section */}
       {expanded && (
         <div className="border-t border-[#3a3020] p-3 bg-[#0d0a08]/50">
@@ -1343,7 +1148,7 @@ function NPCDetailCard({ npc, expanded, onToggle, onPortraitClick }: {
               )
             })}
           </div>
-          
+
           {/* Character Description */}
           {npc.personality && (
             <>
@@ -1353,7 +1158,7 @@ function NPCDetailCard({ npc, expanded, onToggle, onPortraitClick }: {
               </div>
             </>
           )}
-          
+
           {/* Full Stats */}
           <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2 font-title">📊 Complete Stats</div>
           <div className="grid grid-cols-2 gap-1 text-xs mb-3 p-2 bg-[#1a1510] rounded">
@@ -1368,7 +1173,7 @@ function NPCDetailCard({ npc, expanded, onToggle, onPortraitClick }: {
             {npc.damage && <div className="flex justify-between pr-2"><span className="text-[#8a7040]">Damage:</span><span className="text-[#f0e0c0]">{npc.damage}</span></div>}
             {npc.move && <div className="flex justify-between pr-2"><span className="text-[#8a7040]">Move:</span><span className="text-[#f0e0c0]">{npc.move}</span></div>}
           </div>
-          
+
           {/* Abilities */}
           <div className="text-xs text-[#7a5f20] uppercase tracking-wider mb-2 font-title">⚡ Abilities & Powers</div>
           {npc.abilities && npc.abilities.length > 0 ? (
@@ -1384,7 +1189,7 @@ function NPCDetailCard({ npc, expanded, onToggle, onPortraitClick }: {
           )}
         </div>
       )}
-      
+
       {/* Conditions - always visible if present */}
       {npc.conditions && npc.conditions.length > 0 && (
         <div className="px-3 pb-3 pt-0">

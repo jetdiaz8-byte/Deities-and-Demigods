@@ -404,7 +404,7 @@ export default function MythworldEngine() {
     <TooltipProvider>
       <EquipmentTooltipProvider>
       <LoreGlossaryProvider pcs={gameState?.pcs ?? []} activeNPCs={gameState?.activeNPCs ?? []} npcHistory={gameState?.npcHistory ?? []}>
-      <div className="min-h-screen bg-[#060403] flex flex-col" data-screen-root onClickCapture={triggerPendingTTSFromUserGesture}>
+      <div className="min-h-screen bg-[#060403] flex flex-col pb-28 md:pb-0" data-screen-root onClickCapture={triggerPendingTTSFromUserGesture}>
         {/* Screen Effects */}
         <style>{`
           @keyframes screen-flash-red {
