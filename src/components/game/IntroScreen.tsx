@@ -361,7 +361,45 @@ export function IntroScreen({
                     if (quickeningState?.activeEcho?.deityId === activeCharacter?.id) return { borderColor: '#d4a843', boxShadow: '0 0 15px rgba(212,168,67,0.6)' }
                     return undefined
                   })()}>
-                    <CharacterCard character={activeCharacter} />
+                    {/* Name + Title overlay on top of portrait */}
+                    <div style={{
+                      position: 'relative',
+                    }}>
+                      <div style={{
+                        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 5,
+                        padding: '8px 12px 16px',
+                        background: 'linear-gradient(to bottom, rgba(10,8,6,0.9), rgba(10,8,6,0.5), transparent)',
+                        pointerEvents: 'none',
+                        opacity: cardFading ? 0 : 1,
+                        transition: 'opacity 0.5s',
+                      }}>
+                        <div style={{
+                          fontFamily: 'Cinzel, serif',
+                          fontSize: '1.1rem',
+                          fontWeight: 700,
+                          color: '#f0c860',
+                          textShadow: '0 0 10px rgba(212,175,55,0.3), 0 2px 4px rgba(0,0,0,0.9)',
+                          letterSpacing: '0.04em',
+                          lineHeight: 1.2,
+                        }}>
+                          {activeCharacter.name}
+                        </div>
+                        {(activeCharacter.title || activeCharacter.divineRank) && (
+                          <div style={{
+                            fontFamily: 'Cinzel, serif',
+                            fontSize: '0.7rem',
+                            color: '#7a5f20',
+                            marginTop: 2,
+                            letterSpacing: '0.03em',
+                            opacity: 0.9,
+                          }}>
+                            {activeCharacter.title || activeCharacter.divineRank}
+                            {activeCharacter.pantheon ? ` · ${activeCharacter.pantheon}` : ''}
+                          </div>
+                        )}
+                      </div>
+                      <CharacterCard character={activeCharacter} />
+                    </div>
                     {((quickeningState?.absorptionHistory || []).some((r: any) => r.deityId === activeCharacter?.id)) && <span style={{ position: 'absolute', top: 6, right: 6, fontSize: 16, zIndex: 6 }}>☠</span>}
                   </div>
                   <div className="flex justify-end mt-2">

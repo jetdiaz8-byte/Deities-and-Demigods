@@ -67,17 +67,29 @@ export function extractSceneKeywords(narration: string): string[] {
 
 export function buildImagePrompt(narration: string, caption: string, artStyle: string): string {
   const stylePrompt = STYLE_PROMPTS[artStyle] || STYLE_PROMPTS['larry-elmore']
-  const source = `${caption || ''} ${narration || ''}`.toLowerCase()
-  let mapped = 'fantasy landscape, dramatic sky, mysterious atmosphere'
-  if (/\bocean|water|sea\b/.test(source)) mapped = 'ship, waves, sea cliff, stormy horizon'
-  else if (/\bforest|trees|woods\b/.test(source)) mapped = 'enchanted forest, ancient ruins, glowing runes'
-  else if (/\bdungeon|cave|underground\b/.test(source)) mapped = 'stone corridors, torches, shadows'
-  else if (/\bcity|town|village\b/.test(source)) mapped = 'medieval town, marketplace, tavern'
-  else if (/\bcombat|fight|battle\b/.test(source)) mapped = 'battlefield, dramatic action, weapons'
-  else if (/\btower|castle|fortress\b/.test(source)) mapped = 'medieval fortress, spires, banners'
 
-  const keywords = extractSceneKeywords(caption || narration).slice(0, 8).join(', ')
-  return `dark fantasy illustration of ${keywords}, ${mapped}, dramatic lighting, oil painting style, D&D fantasy art, atmospheric, detailed, ${stylePrompt}`
+  // Use the actual DM narration as the primary prompt — it's rich, evocative
+  // descriptive prose that paints a vivid picture for the image generator.
+  // Truncate to ~500 chars to stay within model limits while keeping key details.
+  const sceneText = (narration || caption || '').trim()
+  const truncated = sceneText.length > 500 ? sceneText.slice(0, 500) : sceneText
+
+  // Strip any dice notation, turn markers, or meta-text that wouldn't make sense visually
+   const cleaned = truncated
+    .replace(/\[.*?\]/g, '')           // Remove [dice notation]
+    .replace(/\d+d\d+[^\s]*/g, '')    // Remove dice rolls
+    .replace(/Turn \d+/gi, '')        // Remove turn markers
+    .replace(/HP:?\s*\d+/gi, '')     // Remove HP mentions
+    .replace(/AC:?\s*\d+/gi, '')     // Remove AC mentions
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  if (!cleaned) {
+    return `dark fantasy landscape, dramatic lighting, oil painting style, atmospheric, detailed, ${stylePrompt}`
+  }
+
+  // The narration itself is the scene description — let the image model interpret it
+  return `Illustrate this fantasy scene: ${cleaned}. ${stylePrompt}`
 }
 
 export async function generateComicPanels(

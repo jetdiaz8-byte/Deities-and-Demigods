@@ -224,7 +224,7 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
         }}
       >
         <div className="flex flex-col">
-          {/* PORTRAIT: Fills available width, controls overlaid at bottom */}
+          {/* PORTRAIT: Fills available width, name/title overlaid on top, controls on bottom */}
           <div
             className="relative overflow-hidden flex items-center justify-center bg-[#0a0806]"
           >
@@ -234,6 +234,38 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
             <div className="absolute inset-0 pointer-events-none" style={{
               boxShadow: 'inset 0 0 30px rgba(10,8,6,0.4)',
             }} />
+
+            {/* NAME + TITLE — overlaid on top of portrait */}
+            <div
+              className="absolute top-0 left-0 right-0 px-3 pt-2 pb-3"
+              style={{
+                opacity: fading ? 0 : 1,
+                transition: 'opacity 0.4s',
+                background: 'linear-gradient(to bottom, rgba(10,8,6,0.85), rgba(10,8,6,0.4), transparent)',
+                pointerEvents: 'none',
+              }}
+            >
+              <div
+                className="text-sm font-bold tracking-wide leading-tight"
+                style={{
+                  fontFamily: 'Cinzel, serif',
+                  color: '#f0c860',
+                  textShadow: '0 0 10px rgba(212,175,55,0.3), 0 2px 4px rgba(0,0,0,0.9)',
+                }}
+              >
+                {charName}
+              </div>
+              {(charTitle || charDivineRank) && (
+                <div className="flex items-center gap-2 mt-0.5">
+                  <span className="text-[10px] text-[#7a5f20] truncate" style={{ fontFamily: 'Cinzel, serif' }}>
+                    {charTitle || charDivineRank}
+                  </span>
+                  {displayCharacter?.pantheon && (
+                    <Badge className="text-[8px] px-1 py-0 bg-[#1a1510] text-[#d4af37] border-[#3a3020] flex-shrink-0">{displayCharacter.pantheon}</Badge>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Controls overlaid on portrait — bottom-right, semi-transparent */}
             <div
@@ -250,37 +282,6 @@ export function TurnCardShowcase({ turn, gameState }: TurnCardShowcaseProps) {
               {bossEntity && <span className="ml-1 text-[7px] px-1 py-0.5 rounded bg-red-900/70 text-red-300 border border-red-700/40 backdrop-blur-sm" style={{ fontFamily: 'Cinzel, serif' }}>Boss</span>}
               <button onClick={(e) => { e.stopPropagation(); toggleHidden() }} className="ml-1 w-5 h-5 flex items-center justify-center rounded text-[#5a4d30]/80 hover:text-[#8a7040] bg-black/50 hover:bg-black/70 transition-all text-[10px] backdrop-blur-sm">{'\u2715'}</button>
             </div>
-          </div>
-
-          {/* NAME + TITLE — full card width, no controls competing for space */}
-          <div
-            className="px-3 py-2 border-t border-[#2e2008]/60"
-            style={{
-              opacity: fading ? 0 : 1,
-              transition: 'opacity 0.4s',
-              background: 'rgba(13,10,7,0.6)',
-            }}
-          >
-            <div
-              className="text-sm font-bold tracking-wide leading-tight"
-              style={{
-                fontFamily: 'Cinzel, serif',
-                color: '#f0c860',
-                textShadow: '0 0 10px rgba(212,175,55,0.3), 0 2px 4px rgba(0,0,0,0.8)',
-              }}
-            >
-              {charName}
-            </div>
-            {(charTitle || charDivineRank) && (
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[10px] text-[#7a5f20] truncate" style={{ fontFamily: 'Cinzel, serif' }}>
-                  {charTitle || charDivineRank}
-                </span>
-                {displayCharacter?.pantheon && (
-                  <Badge className="text-[8px] px-1 py-0 bg-[#1a1510] text-[#d4af37] border-[#3a3020] flex-shrink-0">{displayCharacter.pantheon}</Badge>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
