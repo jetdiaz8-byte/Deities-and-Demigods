@@ -286,6 +286,7 @@ export function useGameEngine() {
   const [expandedPC, setExpandedPC] = useState<string | null>(null) // For expandable PC cards
   const [expandedNPC, setExpandedNPC] = useState<string | null>(null) // For expandable NPC cards
   const [narrativeContent, setNarrativeContent] = useState<{ html: string }[]>([])
+  const narrativeContentRef = useRef<{ html: string }[]>([]) // sync ref for dedup checks
   const [diceAnimation, setDiceAnimation] = useState<{ value: number; spinning: boolean } | null>(null)
   const [shardDialogOpen, setShardDialogOpen] = useState(false)
   const [shardSummonName, setShardSummonName] = useState('')
@@ -392,6 +393,9 @@ export function useGameEngine() {
   // Dedicated TTS narration ref — ONLY set AFTER full JSON is parsed and DM narration is extracted.
   // This is the single source of truth for TTS. Never set during streaming.
   const ttsNarrationRef = useRef('')
+  // Guard: hash of the last spoken TTS text — prevents re-speaking identical narration
+  const lastSpokenHashRef = useRef('')
+  const ttsTurnGuardRef = useRef(-1) // track which turn's TTS was last spoken
 
   // Store player's chosen actions for display in turn history
   const lastPlayerChoiceRef = useRef<{ pcName: string; pcAction: string; pcAbility: string; compName?: string; compAction?: string; isFreeText: boolean } | null>(null)
@@ -809,6 +813,7 @@ export function useGameEngine() {
         setGameState(deepClone({ ...createInitialState(), ...parsed.gameState }))
         setGamePhase('playing')
         setNarrativeContent([])
+        narrativeContentRef.current = []
         setShowLoadDialog(false)
         // Restore DM memory so narration stays connected to past events
         if (Array.isArray(parsed.conversationHistory)) {
@@ -1455,6 +1460,14 @@ export function useGameEngine() {
   const speakText = async (text: string, voice?: string) => {
     if (!text) return
 
+    // Dedup guard: skip if we just spoke this exact same text
+    const textHash = text.length + ':' + text.slice(0, 80)
+    if (lastSpokenHashRef.current === textHash) {
+      console.log('🔊 TTS dedup: skipping identical text')
+      return
+    }
+    lastSpokenHashRef.current = textHash
+
     // Stop any current speech
     if (isSpeaking) {
       stopSpeaking()
@@ -1882,6 +1895,7 @@ export function useGameEngine() {
     setGameState(newGameState)
     setGamePhase('playing')
     setNarrativeContent([])
+    narrativeContentRef.current = []
 
     // Render shard card with new party composition
     const companionLine = companion
@@ -1916,11 +1930,14 @@ export function useGameEngine() {
       `
     }
     setNarrativeContent([shardCard])
+    narrativeContentRef.current = [shardCard]
     soundEvents.emit({ type: 'ambient_start', act: 'act1' })
     // Reset achievement tracker for new campaign
     achievementTrackerRef.current = createAchievementTracker()
     setAchievementUnlocks([])
     prevGameStateRef.current = null
+    ttsTurnGuardRef.current = -1
+    lastSpokenHashRef.current = ''
 
     // Run first turn
     setStatusMessage('Opening scene loading...')
@@ -3951,10 +3968,15 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       // ═════════════════════════════════════════════════════════════════════════
       if (!document.hidden) {
         const ttsText = ttsNarrationRef.current
-        if (ttsText && ttsText.length > 10) {
-          console.log(`🔊 TTS auto-speak triggered (post-render): ${ttsText.length} chars`)
+        // Turn-level guard: only auto-speak once per turn
+        const currentTurnNum = gs.turn || 0
+        if (ttsText && ttsText.length > 10 && ttsTurnGuardRef.current !== currentTurnNum) {
+          ttsTurnGuardRef.current = currentTurnNum
+          console.log(`🔊 TTS auto-speak triggered (post-render): ${ttsText.length} chars, turn=${currentTurnNum}`)
           ttsPendingRef.current = false
           setTtsPending(false)
+          // Clear dedup hash so new turn's narration can be spoken
+          lastSpokenHashRef.current = ''
           if (!isSpeaking) {
             // Use double-RAF to ensure all pending React renders are flushed
             window.requestAnimationFrame(() => {
@@ -4519,8 +4541,18 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
   }
 
   const appendNarrative = (html: string) => {
+    // Dedup guard: prevent appending identical HTML blocks (e.g., from React re-renders)
+    const lastItem = narrativeContentRef.current[narrativeContentRef.current.length - 1]
+    if (lastItem && lastItem.html === html) {
+      console.warn('📖 Narrative dedup: skipping identical block')
+      return
+    }
     // Trim to last 100 entries to prevent unbounded memory growth
-    setNarrativeContent(prev => [...prev, { html }].slice(-100))
+    setNarrativeContent(prev => {
+      const next = [...prev, { html }].slice(-100)
+      narrativeContentRef.current = next
+      return next
+    })
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -5149,15 +5181,17 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       }
 
       // ═════════════════════════════════════════════════════════════════════════
-      // TTS AUTO-SPEAK — NOW triggers AFTER setGameState has committed.
-      // All React re-renders are done. TTS can start safely.
+      // TTS AUTO-SPEAK — guarded by turn number to prevent repeat
       // ═════════════════════════════════════════════════════════════════════════
       if (!document.hidden) {
         const ttsText = ttsNarrationRef.current
-        if (ttsText && ttsText.length > 10) {
-          console.log(`🔊 TTS auto-speak triggered (post-render): ${ttsText.length} chars`)
+        const currentTurnNum = newGS.turn || 0
+        if (ttsText && ttsText.length > 10 && ttsTurnGuardRef.current !== currentTurnNum) {
+          ttsTurnGuardRef.current = currentTurnNum
+          console.log(`🔊 TTS auto-speak triggered (confirmChoice): ${ttsText.length} chars, turn=${currentTurnNum}`)
           ttsPendingRef.current = false
           setTtsPending(false)
+          lastSpokenHashRef.current = ''
           if (!isSpeaking) {
             window.requestAnimationFrame(() => {
               window.requestAnimationFrame(() => {
