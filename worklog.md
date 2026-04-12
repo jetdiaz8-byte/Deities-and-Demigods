@@ -365,3 +365,29 @@ Stage Summary:
 - Card showcase name/title now appears overlaid on top of portrait in both intro screen and gameplay
 - Image generation now produces much richer scenes by using the full DM narration as the prompt
 - Pushed as v2.31.0
+---
+Task ID: v2.32.0
+Agent: Main Agent
+Task: Full fantasy typography system + unlimited image prompts
+
+Work Log:
+- Removed 500-char truncation on image prompts — full DM narration now sent to image generator
+- Consolidated all Google Fonts imports into globals.css (was duplicated in IntroScreen, MythworldPage)
+- Added Fantasya, Pinyon Script, Cinzel Decorative, Cinzel, IM Fell English, Special Elite to font imports
+- Defined 14 CSS custom properties for font roles: --font-title, --font-heading, --font-subheading, --font-narrative, --font-body, --font-ui, --font-button, --font-caption, --font-dialogue, --font-script, --font-fantasy, --font-combat, --font-myth
+- Defined fantasy color palette CSS vars: --gold, --gold-dim, --gold-muted, --cream, --purple, --emerald, --crimson, etc.
+- Added new CSS utility classes: .font-heading, .font-subheading, .font-narrative, .font-dialogue, .font-script, .font-fantasy, .font-combat, .font-button
+- Replaced 43 hardcoded font-family references in globals.css with CSS variables
+- Replaced 94 inline fontFamily references across 19 TSX component files
+- Fixed intro screen character title color (was #7a5f20 invisible on dark bg → now #d4c8a0 with text-shadow)
+- Updated body font-family from system-ui to var(--font-body) for consistent fantasy feel
+- All h1/h2/h3/section-title now use var(--font-heading) = Cinzel
+- All buttons use var(--font-button) = MedievalSharp
+- DM narration uses var(--font-narrative) = Almendra
+
+Stage Summary:
+- Complete fantasy typography system with 13 fonts and 14 CSS custom properties
+- 137 total font references modernized from hardcoded to CSS variables
+- Intro screen character title now readable (cream on dark with text-shadow)
+- Image generation uses full DM narration with no character limit
+- Pushed as v2.32.0
