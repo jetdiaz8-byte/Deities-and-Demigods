@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   // H-13: Server-side only — never use NEXT_PUBLIC_ prefix for secrets
   const apiKey = process.env.OPENROUTER_API_KEY || ''
   if (!apiKey) {
-    return NextResponse.json({ error: 'No OpenRouter API key configured' }, { status: 500 })
+    return NextResponse.json({ error: 'OpenRouter API key not configured. Add OPENROUTER_API_KEY to your Vercel environment variables.' }, { status: 503 })
   }
 
   try {

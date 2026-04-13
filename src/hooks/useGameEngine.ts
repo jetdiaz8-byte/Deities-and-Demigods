@@ -2378,6 +2378,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         if (!r.ok) {
           const errData = await r.json().catch(() => ({} as { error?: { message?: string } }))
           const errMsg = errData?.error?.message || `HTTP ${r.status}`
+          // Fast-fail on 500 — no point retrying a server/config error
+          if (r.status === 500) {
+            console.error('[OpenRouter] 500 error — likely missing API key or provider outage:', errMsg)
+            return getNarrationPreservationFallback(gs, 'API key not configured or provider error')
+          }
           throw new Error(`OpenRouter ${r.status}: ${errMsg}`)
         }
         let text = ''
