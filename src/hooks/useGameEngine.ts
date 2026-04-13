@@ -2370,9 +2370,16 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           continue
         }
         if (r.status === 503) {
+          // Check if it's a missing API key — fail fast, no retries
+          const errBody = await r.json().catch(() => ({}))
+          if ((errBody as any).errorType === 'no_api_key') {
+            setStatusMessage('The voices have gone silent — the oracle cannot reach this realm.')
+            toast({ title: 'Connection Severed', description: 'The thread between worlds is broken. Seek the keeper of keys to restore it.', variant: 'destructive' })
+            return getNarrationPreservationFallback(gs, 'no_api_key')
+          }
           if (attempt === MAX_RETRIES - 1) return getNarrationPreservationFallback(gs, 'service_unavailable')
           const wait = RATE_LIMIT_DELAY + (attempt * 15000)
-          setStatusMessage('OpenRouter overloaded - waiting ' + Math.round(wait / 1000) + 's...')
+          setStatusMessage('The oracle is overwhelmed — waiting ' + Math.round(wait / 1000) + 's...')
           await new Promise(r => setTimeout(r, wait))
           continue
         }
@@ -3163,8 +3170,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
               continue
             }
           }
-            // Create new object to avoid mutating the lookupEntity cache
-            const resolvedNpc = {
+
+          // Create new object to avoid mutating the lookupEntity cache
+          const resolvedNpc = {
               ...npc,
               category: npc.category || getNPCCategory(id),
               hp: npc.hp || 150,
@@ -3176,7 +3184,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           }
         }
       }
-    }
 
     // State updates
     if (res.state_updates) {
@@ -3990,14 +3997,14 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
             console.warn(`🛡️ EARLY ACT I GUARD: Stripped ${stripped} combat choice(s) before turn 8`)
           }
           // Pad to 3 with exploration alternatives so validation passes
-          while (filteredPCChoices.length < 3) {
-            const padIndex = filteredPCChoices.length
-            const pads: AIChoice[] = [
-              { narrative: '🔍 Examine your surroundings for hidden details', ability: 'investigation', align_note: 'perception check' },
-              { narrative: '🚶 Move deeper into the area, staying alert', ability: 'exploration', align_note: 'exploration' },
-              { narrative: '👁️ Observe the shard — is it reacting to something nearby?', ability: 'perception', align_note: 'arcana check' },
-            ]
-            filteredPCChoices = [...filteredPCChoices, pads[padIndex] || pads[0]]
+          const pads: AIChoice[] = [
+            { narrative: '🔍 Examine your surroundings for hidden details', ability: 'investigation', align_note: 'perception check' },
+            { narrative: '🚶 Move deeper into the area, staying alert', ability: 'exploration', align_note: 'exploration' },
+            { narrative: '👁️ Observe the shard — is it reacting to something nearby?', ability: 'perception', align_note: 'arcana check' },
+          ]
+          const needed = 3 - filteredPCChoices.length
+          for (let i = 0; i < needed; i++) {
+            filteredPCChoices = [...filteredPCChoices, pads[filteredPCChoices.length] || pads[0]]
           }
         }
 
@@ -5536,17 +5543,113 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     setShowInventoryDialog(false)
   }
 
-  // ── EXPORT STORY ───────────────────────────────────────────────────────
+  // ── EXPORT CHRONICLE ──────────────────────────────────────────────────
+  // Clean, formatted story export — no AI, no dice, no mechanics.
+  // Groups narration by act, strips HTML, adds chapter headings from player choices.
   const exportStory = () => {
-    const storyText = narrativeContent.map(n => n.html.replace(/<[^>]*>/g, '')).join('\n\n')
-    const blob = new Blob([storyText], { type: 'text/plain' })
+    const gs = gameState
+    if (!gs) return
+    const heroName = gs.pcs[0]?.name || 'The Wanderer'
+    const antName = getAntagonist(gs.antagonistId)?.name || 'The Forgotten One'
+    const victory = gs.ended === true
+    const defeat = gs.ended === false
+
+    // Strip HTML, clean whitespace
+    const clean = (html: string) => html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
+
+    // Group narrative by acts
+    const actNames: Record<string, string> = { act1: 'The Gathering', act2: 'Rising Tension', act3: 'The Final Test' }
+    const sections: string[] = []
+
+    // Build chronicle
+    sections.push(`${'═'.repeat(60)}`)
+    sections.push(`  THE CHRONICLE OF ${heroName.toUpperCase()}`)
+    sections.push(`  ${victory ? '— Victory —' : defeat ? '— Defeat —' : '— An Ongoing Tale —'}`)
+    sections.push(`${'═'.repeat(60)}`)
+    sections.push('')
+
+    // Build player choice timeline from consequenceState
+    const choices = consequenceState.choices || []
+    const choiceByTurn: Record<number, string> = {}
+    choices.forEach((c: any) => {
+      choiceByTurn[c.turn] = c.chosen
+    })
+
+    // Narrative entries
+    const entries = narrativeContent.map(n => clean(n.html)).filter(t => t.length > 20)
+
+    let currentAct = ''
+    let turnCounter = 0
+    entries.forEach((text, idx) => {
+      // Approximate turn number (entries are sequential)
+      turnCounter++
+      const act = idx < entries.length * 0.4 ? 'act1' : idx < entries.length * 0.75 ? 'act2' : 'act3'
+      const actLabel = actNames[act] || act
+
+      if (actLabel !== currentAct) {
+        sections.push('')
+        sections.push(`${'─'.repeat(40)}`)
+        sections.push(`  ACT ${act === 'act1' ? 'I' : act === 'act2' ? 'II' : 'III'}: ${actLabel.toUpperCase()}`)
+        sections.push(`${'─'.repeat(40)}`)
+        sections.push('')
+        currentAct = actLabel
+      }
+
+      // Show player's choice as a chapter heading if available
+      const choice = choiceByTurn[turnCounter]
+      if (choice) {
+        sections.push(`  ❖ "${choice}"`)
+        sections.push('')
+      }
+
+      // Wrap narration in readable paragraphs
+      const paragraphs = text.split(/\n+/).filter(p => p.trim().length > 10)
+      paragraphs.forEach(p => {
+        sections.push(`  ${p}`)
+      })
+      sections.push('')
+    })
+
+    // Epilogue
+    if (victory) {
+      sections.push(`${'─'.repeat(40)}`)
+      sections.push(`  EPILOGUE`)
+      sections.push(`${'─'.repeat(40)}`)
+      sections.push('')
+      sections.push(`  And so it was that ${heroName} stood where gods had fallen,`)
+      sections.push(`  and the world remembered. The shard grew quiet — not silent,`)
+      sections.push(`  but patient. Waiting, as it always had, for the next hand`)
+      sections.push(`  brave enough, or foolish enough, to reach into the dark.`)
+      sections.push('')
+    } else if (defeat) {
+      sections.push(`${'─'.repeat(40)}`)
+      sections.push(`  EPILOGUE`)
+      sections.push(`${'─'.repeat(40)}`)
+      sections.push('')
+      sections.push(`  ${heroName} fell, as all mortals must. The shard dimmed,`)
+      sections.push(`  then waited. Somewhere, in the space between breaths,`)
+      sections.push(`  it began to hum again — for there is always another seeker.`)
+      sections.push('')
+    }
+
+    // Campaign stats
+    const totalTurns = gs.turn || turnCounter
+    const godsMet = gs.encounteredIds?.length || 0
+    sections.push(`${'═'.repeat(60)}`)
+    sections.push(`  Campaign: ${totalTurns} turns | Beings encountered: ${godsMet}`)
+    sections.push(`  ${heroName} ${victory ? 'triumphed over' : defeat ? `fell to` : 'faces'} ${antName}`)
+    sections.push(`${'═'.repeat(60)}`)
+
+    const chronicle = sections.join('\n')
+    const blob = new Blob([chronicle], { type: 'text/markdown;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `mythworld_campaign_turn${gameState.turn}.txt`
+    const status = victory ? 'victory' : defeat ? 'defeat' : `turn${totalTurns}`
+    a.download = `chronicle_of_${heroName.toLowerCase().replace(/\s+/g, '_')}_${status}.md`
     a.click()
     URL.revokeObjectURL(url)
-    toast({ title: 'Story Exported', description: 'Campaign narrative downloaded' })
+    toast({ title: 'Chronicle Exported', description: `The tale of ${heroName} has been preserved.` })
   }
 
   return {

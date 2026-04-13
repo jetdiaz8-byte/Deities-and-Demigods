@@ -789,15 +789,7 @@ export default function MythworldEngine() {
             size="sm"
             className="hidden md:flex border-[#5a4018] text-[#9a8860]"
           >
-            <Download className="w-4 h-4 mr-1" /> Export
-          </Button>
-          <Button
-            onClick={() => setGalleryModalOpen(true)}
-            variant="outline"
-            size="sm"
-            className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
-          >
-            🎴 Gallery
+            <Download className="w-4 h-4 mr-1" /> Export Chronicle
           </Button>
 
           {/* API key is now server-side — no client input needed */}
