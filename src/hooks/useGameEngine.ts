@@ -4192,8 +4192,21 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       }
     }
     if (Object.keys(combatParsed.combatData).length) {
-      setCombatState(prev => ({ ...prev, ...combatParsed.combatData }))
-      combatQuietTurnsRef.current = 0
+      // EARLY ACT I GUARD: Suppress keyword-based combat activation before turn 8.
+      // AI narration in Act I often contains combat-flavored words (attack, spell, hit, etc.)
+      // that trigger false-positive combat mode. Only allow structured <combat_data> with turnOrder.
+      const isEarlyActI = gs.act === ACTS.ONE && gs.turn < 8
+      const hasStructuredCombat = !!(combatParsed.combatData.turnOrder && combatParsed.combatData.turnOrder.length > 0)
+      if (isEarlyActI && !hasStructuredCombat) {
+        console.warn('🛡️ EARLY ACT I GUARD: Suppressing keyword-based combat activation before turn 8')
+        // Also deactivate if combat was spuriously active
+        if (combatState.isActive) {
+          setCombatState(prev => ({ ...prev, isActive: false, victory: null }))
+        }
+      } else {
+        setCombatState(prev => ({ ...prev, ...combatParsed.combatData }))
+        combatQuietTurnsRef.current = 0
+      }
     } else if (combatState.isActive) {
       const combatKeywords = /\b(attack|slash|spell|hit|damage|hp|initiative|round|strike|blast)\b/i.test(narr)
       combatQuietTurnsRef.current = combatKeywords ? 0 : combatQuietTurnsRef.current + 1

@@ -143,3 +143,21 @@ Stage Summary:
 - All 14 HIGH severity bugs fixed
 - DOMPurify added as dependency for XSS protection
 - Zero new compilation errors introduced
+
+---
+Task ID: 1
+Agent: Main Agent
+Task: Fix combat appearing in Act I and scene image letterbox sizing
+
+Work Log:
+- Investigated why combat UI (⚔ COMBAT — Round 1) was appearing in Act I despite the EARLY ACT I GUARD stripping combat choices before turn 8
+- Found root cause: `parseCombatData()` at line 982 uses keyword-based activation (`attack`, `spell`, `hit`, etc.) that sets `combatState.isActive = true` independently of the guard
+- Applied fix at line 4194: Added EARLY ACT I GUARD to suppress keyword-based combat activation (no turnOrder) before turn 8 in Act I
+- Fixed scene image sizing: Removed `max-height: 250px` (and 350px desktop) cap from `.comic-panel` CSS, added `width: 100%` to let the 21:9 aspect ratio determine height from full available width
+- Added `display: block` to `.comic-panel img` to prevent inline element spacing issues
+- Verified lint passes (no new errors from our changes)
+
+Stage Summary:
+- Combat in early Act I: Fixed by adding guard at combat state application (useGameEngine.ts:4194-4209)
+- Scene image letterbox: Fixed by removing max-height cap from globals.css:245-250
+- Both fixes are hot-reloaded, no build errors
