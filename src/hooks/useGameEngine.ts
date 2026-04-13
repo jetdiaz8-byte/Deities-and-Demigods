@@ -3941,8 +3941,9 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         setStatusMessage(`Generating options for ${humanPC.name}...`)
 
         const aiPCChoices = res.pc_choices
-        const aiCompChoices = res.companion_choices
-        console.log(`🎯 AI choices — pc_choices: ${aiPCChoices?.length || 0}, companion_choices: ${aiCompChoices?.length || 0}`)
+        // HARD GUARD: Turn 0 NEVER has companion choices — strip even if AI returns them
+        const aiCompChoices = gs.turn === 0 ? [] : res.companion_choices
+        console.log(`🎯 AI choices — pc_choices: ${aiPCChoices?.length || 0}, companion_choices: ${aiCompChoices?.length || 0}${gs.turn === 0 && res.companion_choices?.length ? ' (STRIPPED — turn 0)' : ''}`)
         if (aiPCChoices?.length) console.log('  pc_choices:', JSON.stringify(aiPCChoices).slice(0, 300))
         if (aiCompChoices?.length) console.log('  companion_choices:', JSON.stringify(aiCompChoices).slice(0, 300))
 

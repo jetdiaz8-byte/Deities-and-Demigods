@@ -65,29 +65,36 @@ export async function POST(request: NextRequest) {
 
     // Pollinations AI: free, no API key, generates image from prompt via URL
     const encodedPrompt = encodeURIComponent(enhancedPrompt);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${dims.width}&height=${dims.height}&nologo=true&model=flux`;
+    const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${dims.width}&height=${dims.height}&nologo=true&model=flux`;
 
-    // Verify the image is accessible by making a HEAD request
+    // Fetch the actual image bytes through our server (avoids CORS/client issues)
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30_000);
+    const timeoutId = setTimeout(() => controller.abort(), 45_000);
 
     try {
-      const res = await fetch(imageUrl, {
-        method: 'HEAD',
+      const imgRes = await fetch(pollinationsUrl, {
         signal: controller.signal,
+        redirect: 'follow',
       });
 
-      if (!res.ok) {
-        throw new Error(`Pollinations returned ${res.status}`);
+      if (!imgRes.ok) {
+        throw new Error(`Pollinations returned ${imgRes.status}`);
       }
 
-      const contentType = res.headers.get('content-type') || '';
+      const contentType = imgRes.headers.get('content-type') || '';
       if (!contentType.startsWith('image/')) {
         throw new Error(`Unexpected content type: ${contentType}`);
       }
 
-      console.log(`🖼️ [generate-image] SUCCESS — Pollinations image ready, type: ${contentType}`);
-      return NextResponse.json({ imageUrl });
+      // Convert image to base64 data URL for the client
+      const arrayBuffer = await imgRes.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      const base64 = buffer.toString('base64');
+      const mimeType = contentType.split(';')[0].trim();
+      const dataUrl = `data:${mimeType};base64,${base64}`;
+
+      console.log(`🖼️ [generate-image] SUCCESS — Pollinations image proxied, type: ${mimeType}, size: ${(buffer.length / 1024).toFixed(0)}KB`);
+      return NextResponse.json({ imageUrl: dataUrl });
     } finally {
       clearTimeout(timeoutId);
     }
