@@ -244,7 +244,11 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 
 .comic-panel {
   position: relative; border-radius: var(--radius); overflow: hidden;
-  aspect-ratio: 4/3; border: 1px solid var(--border-color); background: var(--bg-secondary);
+  aspect-ratio: 21/9; border: 1px solid var(--border-color); background: var(--bg-secondary);
+  max-height: 250px;
+}
+@media (min-width: 640px) {
+  .comic-panel { max-height: 350px; }
 }
 .comic-panel img { width: 100%; height: 100%; object-fit: cover; }
 
@@ -276,7 +280,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
-  .comic-panel { aspect-ratio: 16/9; }
+  .comic-panel { aspect-ratio: 21/9; max-height: 200px; }
   .speech-bubble { font-size: 0.5rem; padding: 2px 4px; }
   .caption { font-size: 0.5rem; padding: 4px 4px 2px; }
 }

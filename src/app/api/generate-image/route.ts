@@ -49,11 +49,12 @@ export async function POST(request: NextRequest) {
 
     // Map our size format to Pollinations dimensions
     const sizeMap: Record<string, { width: number; height: number }> = {
+      '1920x816': { width: 1920, height: 816 },
       '1344x768': { width: 1344, height: 768 },
       '1024x1024': { width: 1024, height: 1024 },
       '768x1344': { width: 768, height: 1344 },
     };
-    const dims = sizeMap[size || '1344x768'] || sizeMap['1344x768'];
+    const dims = sizeMap[size || '1920x816'] || sizeMap['1920x816'];
 
     // Build enhanced prompt with art style
     let enhancedPrompt = prompt;

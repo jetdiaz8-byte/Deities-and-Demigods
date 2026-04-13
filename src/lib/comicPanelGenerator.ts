@@ -85,8 +85,9 @@ export function buildImagePrompt(narration: string, caption: string, artStyle: s
     return `dark fantasy landscape, dramatic lighting, oil painting style, atmospheric, detailed, ${stylePrompt}`
   }
 
-  // The narration itself is the scene description — let the image model interpret it
-  return `Illustrate this fantasy scene: ${cleaned}. ${stylePrompt}`
+  // Scene-only: no named characters, no faces, no portraits.
+  // Distant silhouettes and shadows are OK for sense of scale.
+  return `Create an environmental scene illustration from this narrative prose. Focus on the landscape and atmosphere — no named characters, no faces, no portraits. Distant silhouettes and shadows are OK for scale. Scene: ${cleaned}. ${stylePrompt}`
 }
 
 export async function generateComicPanels(
@@ -126,7 +127,7 @@ export async function generatePanelImage(
     const res = await fetch('/api/generate-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: builtPrompt, artStyle, size: '1344x768' }),
+      body: JSON.stringify({ prompt: builtPrompt, artStyle, size: '1920x816' }),
     });
     if (res.ok) {
       const data = await res.json();
