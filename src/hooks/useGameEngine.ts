@@ -7,7 +7,7 @@ import type {
   GreaterGodData, ShardType, InjuryTemplate, PlayerSkills, Aspect
 } from '@/lib/gameTypes'
 import { ACTS, SKILL_ABILITY_MAP } from '@/lib/gameTypes'
-import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES, OPENROUTER_MODEL, OPENROUTER_FALLBACK_MODELS } from '@/lib/gameConstants'
+import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES, OPENROUTER_MODEL, OPENROUTER_FALLBACK_MODELS, NPC_NAMES } from '@/lib/gameConstants'
 import { createInitialState } from '@/lib/gameState'
 import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, fullStaminaRestore, assignSkillProficiencies, inferClassesFromCharacter, clearEntityCache } from '@/lib/gameHelpers'
 import { getRandomHeroes } from '@/lib/fallbackEntities'
@@ -2012,6 +2012,7 @@ CRITICAL RULES:
    - For COMBAT actions: keep one paragraph and maintain literary pacing.
 4. Permadeath. No stat/alignment changes mid-game.
 5. PCs=Heroes/Demigods (including Krynn). NPCs=Lesser/Greater Gods (including Krynn gods).
+5a. **CODEX-ONLY ENTITIES** — You may ONLY use entities from the DDG codex roster (heroes, demigods, gods, monsters from characterData and krynnCharacters). DO NOT invent entities. No "Shadow Wisp", no "Cave Goblin", no custom monsters. If it's not in the codex with stats, it DOES NOT EXIST in this world. For early Act I hazards, use traps/puzzles/environmental obstacles instead of monsters.
 6. Gods avoid direct combat. WIS>15=cannot be deceived. Ancient enmities override all.
 7. In Act I and II, DO NOT include the Antagonist in the "npc_encounters" array.
 ${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
@@ -3125,11 +3126,43 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     newGS.pendingShardQuestion = null
 
     // New NPCs
+    // v2.33.0: HARD GUARD — Validate entities against DDG codex whitelist.
+    // Only entities from NPC_NAMES (characterData, krynnCharacters) are valid.
+    // No invented monsters, no placeholder entities, no "Shadow Wisp" nonsense.
+    const CODEX_ENTITY_IDS = new Set<string>(
+      Object.values(NPC_NAMES).flat().map(id => id.toLowerCase().replace(/[^a-z0-9_]/g, ''))
+    )
+    // Also allow the antagonist and PCs in the current party
+    const validEntityIds = new Set(CODEX_ENTITY_IDS)
+    if (newGS.antagonistId) validEntityIds.add(newGS.antagonistId.toLowerCase().replace(/[^a-z0-9_]/g, ''))
+    newGS.pcs.forEach(p => validEntityIds.add(p.id.toLowerCase().replace(/[^a-z0-9_]/g, '')))
+
+    // EARLY ACT I GUARD: Before turn 8, strip ENEMY/BOSS encounters entirely.
+    // The DM ignores the pacing guide → we enforce it at runtime.
+    const isEarlyActI = newGS.act === ACTS.ONE && newGS.turn < 8
+
     if (res.new_active_npcs?.length) {
       for (const id of res.new_active_npcs) {
+        const normalizedId = id.toLowerCase().replace(/[^a-z0-9_]/g, '')
+
+        // Guard 1: Entity must exist in the codex (or be the antagonist)
+        if (!validEntityIds.has(normalizedId)) {
+          console.warn(`🛡️ CODEX GUARD: Rejected non-codex entity "${id}" — not found in DDG roster`)
+          continue
+        }
+
         if (!newGS.activeNPCs.find(n => n.id === id)) {
           const npc = await lookupEntity(id)
-          if (npc) {
+          if (!npc) continue  // lookupEntity returns null for invalid IDs
+
+          // Guard 2: Early Act I — block enemies entirely
+          if (isEarlyActI) {
+            const cat = (npc.category || getNPCCategory(id) || '').toLowerCase()
+            if (cat === 'monsters' || cat === 'monster') {
+              console.warn(`🛡️ EARLY ACT I GUARD: Blocked enemy "${npc.name}" [${id}] before turn 8`)
+              continue
+            }
+          }
             // Create new object to avoid mutating the lookupEntity cache
             const resolvedNpc = {
               ...npc,
@@ -3943,12 +3976,23 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         const aiPCChoices = res.pc_choices
         // HARD GUARD: Turn 0 NEVER has companion choices — strip even if AI returns them
         const aiCompChoices = gs.turn === 0 ? [] : res.companion_choices
-        console.log(`🎯 AI choices — pc_choices: ${aiPCChoices?.length || 0}, companion_choices: ${aiCompChoices?.length || 0}${gs.turn === 0 && res.companion_choices?.length ? ' (STRIPPED — turn 0)' : ''}`)
+
+        // HARD GUARD: Early Act I — strip combat-oriented PC choices (melee_attack, ranged)
+        // The DM should only offer exploration/trap/social choices before turn 8
+        const isEarlyAct1 = gs.act === ACTS.ONE && gs.turn < 8
+        const filteredPCChoices = isEarlyAct1 && aiPCChoices
+          ? aiPCChoices.filter(c => !['melee_attack', 'ranged_attack'].includes(c.ability || ''))
+          : aiPCChoices
+        if (isEarlyAct1 && aiPCChoices?.length !== filteredPCChoices?.length) {
+          console.warn(`🛡️ EARLY ACT I GUARD: Stripped ${aiPCChoices.length - filteredPCChoices.length} combat choice(s) before turn 8`)
+        }
+
+        console.log(`🎯 AI choices — pc_choices: ${filteredPCChoices?.length || 0}, companion_choices: ${aiCompChoices?.length || 0}${gs.turn === 0 && res.companion_choices?.length ? ' (STRIPPED — turn 0)' : ''}`)
         if (aiPCChoices?.length) console.log('  pc_choices:', JSON.stringify(aiPCChoices).slice(0, 300))
         if (aiCompChoices?.length) console.log('  companion_choices:', JSON.stringify(aiCompChoices).slice(0, 300))
 
         const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(humanPC, {
-          pc_choices: aiPCChoices,
+          pc_choices: filteredPCChoices,
           companion_choices: aiCompChoices
         })
         gs.humanOptions = [...pcOptions, ...extraOptions]

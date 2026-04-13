@@ -296,24 +296,10 @@ export const lookupEntity = async (nameOrId: string): Promise<Entity | null> => 
     console.warn('Entity lookup failed:', nameOrId, e)
   }
 
-  // Fallback entity
-  return {
-    id: key,
-    name: nameOrId.toUpperCase(),
-    title: 'Unknown Hero',
-    pantheon: 'Unknown',
-    align: 'Neutral',
-    hp: 150,
-    maxHp: 150,
-    AC: 5,
-    MR: 0,
-    abilities: ['Basic Strike', 'Defend', 'Heroic Surge'],
-    personality: 'Brave and mysterious.',
-    category: getNPCCategory(key),
-    conditions: [],
-    dead: false,
-    inventory: []
-  }
+  // No fallback entity — if it's not in the codex, it doesn't exist.
+  // This prevents the DM from inventing entities that get 150 HP placeholders.
+  console.warn(`lookupEntity: "${nameOrId}" not found in codex — returning null`)
+  return null
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
