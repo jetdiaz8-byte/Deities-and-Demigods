@@ -37,30 +37,38 @@ export async function POST(request: Request) {
     const tokenLimit = OPENROUTER_MODEL_TOKEN_LIMITS[requestedModel] ?? 8192
     const maxTokens = Math.min(max_tokens ?? tokenLimit, tokenLimit)
 
+    console.log(`[openrouter] model=${requestedModel}, maxTokens=${maxTokens}, messages=${messages.length}, stream=${stream}`)
+
     // H-10: 60-second timeout on external AI API call
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 60_000)
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://deities-and-demigods.vercel.app',
-        'X-Title': 'Deities & Demigods - Mythworld Engine',
-      },
-      body: JSON.stringify({
-        model: requestedModel,
-        messages,
-        max_tokens: maxTokens,
-        temperature: temperature ?? 0.9,
-        stream,
-      }),
-    })
+    let res: Response
+    try {
+      res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://deities-and-demigods.vercel.app',
+          'X-Title': 'Deities & Demigods - Mythworld Engine',
+        },
+        body: JSON.stringify({
+          model: requestedModel,
+          messages,
+          max_tokens: maxTokens,
+          temperature: temperature ?? 0.9,
+          stream,
+        }),
+      })
+    } finally {
+      clearTimeout(timeoutId)
+    }
 
     if (stream) {
       if (!res.ok) {
         const text = await res.text().catch(() => '')
+        console.error(`[openrouter] Stream error: status=${res.status}, model=${requestedModel}, body=${text.slice(0, 500)}`)
         return new Response(text || JSON.stringify({ error: 'Stream request failed' }), {
           status: res.status,
           headers: {
@@ -81,15 +89,14 @@ export async function POST(request: Request) {
     const data = await res.json()
 
     if (!res.ok) {
-      if (res.status === 429 || res.status === 502 || res.status === 503) {
-        return NextResponse.json(data, { status: res.status })
-      }
+      console.error(`[openrouter] Error: status=${res.status}, model=${requestedModel}, body=${JSON.stringify(data).slice(0, 500)}`)
       return NextResponse.json(data, { status: res.status })
     }
 
     return NextResponse.json(data)
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e)
+    console.error(`[openrouter] Exception: ${msg}`)
     return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
