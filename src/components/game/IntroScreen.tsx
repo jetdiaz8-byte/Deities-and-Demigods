@@ -2,10 +2,8 @@
 
 import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2, Monitor, Cloud, RefreshCw, Zap } from 'lucide-react'
+import { BookOpen, Users, Package, ScrollText, Save, Upload, Flame, Award, Heart, Sparkles, Skull, Volume2 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { version } from '../../../package.json'
 import { ALL_CHARACTERS } from '@/lib/characterData'
@@ -41,10 +39,6 @@ export function IntroScreen({
   quickeningState,
 }: IntroScreenProps) {
 
-  // LM Studio connection check
-  const [lmConnected, setLmConnected] = useState<boolean | null>(null)
-  const [lmModels, setLmModels] = useState<{ id: string }[]>([])
-  const [lmChecking, setLmChecking] = useState(false)
   const [cardQueue, setCardQueue] = useState<Character[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
   const [cardFading, setCardFading] = useState(false)
@@ -52,37 +46,7 @@ export function IntroScreen({
   const [cardModalOpen, setCardModalOpen] = useState(false)
   const touchStartYRef = React.useRef<number | null>(null)
 
-  const checkLmConnection = async () => {
-    setLmChecking(true)
-    try {
-      const r = await fetch(`/api/lmstudio?url=${encodeURIComponent(lmStudioUrl)}`)
-      const data = await r.json()
-      setLmConnected(data.connected)
-      if (data.models?.length > 0) {
-        setLmModels(data.models)
-        // Auto-select first model if still on default
-        if (lmStudioModel === 'default') {
-          setLmStudioModel(data.models[0].id)
-        }
-      } else {
-        setLmModels([])
-      }
-    } catch {
-      setLmConnected(false)
-      setLmModels([])
-    }
-    setLmChecking(false)
-  }
 
-  // Auto-check LM Studio connection when engine mode uses LM Studio
-  useEffect(() => {
-    if (engineMode === 'lmstudio' || engineMode === 'dual') {
-      const t = window.setTimeout(() => {
-        checkLmConnection()
-      }, 0)
-      return () => window.clearTimeout(t)
-    }
-  }, [engineMode, lmStudioUrl])
 
   const titleText = 'DEITIES & DEMIGODS'
   const titleLetters = titleText.split('')
@@ -512,111 +476,7 @@ export function IntroScreen({
                 <span className="text-[#5a4d30] text-[10px] ml-2">v{version}</span>
               </div>
 
-              {/* AI Engine Mode Selector */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                transition={{ delay: 1.5, duration: 0.4 }} className="space-y-3">
 
-                {/* Engine mode toggle — 3 options */}
-                <div className="flex gap-1.5 justify-center">
-                  <button
-                    onClick={() => { setEngineMode('gemini'); setAiProvider('gemini'); }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] uppercase tracking-wider transition-all ${
-                      engineMode === 'gemini'
-                        ? 'bg-[rgba(212,175,55,.15)] text-[#d4af37] border border-[#d4af37]'
-                        : 'text-[#5a4d30] border border-[#2e2008] hover:text-[#8a7a50]'
-                    }`}
-                    style={{ fontFamily: 'var(--font-heading)' }}>
-                    <Cloud className="w-3 h-3" /> Cloud AI
-                  </button>
-                  <button
-                    onClick={() => { setEngineMode('dual'); setAiProvider('lmstudio'); }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] uppercase tracking-wider transition-all ${
-                      engineMode === 'dual'
-                        ? 'bg-[rgba(100,180,255,.12)] text-[#60a0f0] border border-[#60a0f0]'
-                        : 'text-[#5a4d30] border border-[#2e2008] hover:text-[#8a7a50]'
-                    }`}
-                    style={{ fontFamily: 'var(--font-heading)' }}>
-                    <Zap className="w-3 h-3" /> Hybrid
-                  </button>
-                  <button
-                    onClick={() => { setEngineMode('lmstudio'); setAiProvider('lmstudio'); }}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[10px] uppercase tracking-wider transition-all ${
-                      engineMode === 'lmstudio'
-                        ? 'bg-[rgba(212,175,55,.15)] text-[#d4af37] border border-[#d4af37]'
-                        : 'text-[#5a4d30] border border-[#2e2008] hover:text-[#8a7a50]'
-                    }`}
-                    style={{ fontFamily: 'var(--font-heading)' }}>
-                    <Monitor className="w-3 h-3" /> Local
-                  </button>
-                </div>
-
-
-
-                {engineMode === 'gemini' ? (
-                  <div className="flex gap-2 items-center">
-                    <span className="text-[10px] uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'var(--font-heading)', color: '#C9A84C' }}>OpenRouter Key</span>
-                    <Input type="password" placeholder="sk-or-v1-..." value={geminiKey}
-                      onChange={e => setGeminiKey(e.target.value)}
-                      className="flex-1 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] h-8 text-xs" />
-                    <Badge className="bg-[#0a2820] text-[#40c0a0] border-[#208060] text-[10px]">AI</Badge>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {/* LM Studio URL */}
-                    <div className="flex gap-2 items-center">
-                      <span className="text-[10px] uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'var(--font-heading)', color: '#C9A84C' }}>URL</span>
-                      <Input type="text" placeholder="http://localhost:1234" value={lmStudioUrl}
-                        onChange={e => setLmStudioUrl(e.target.value)}
-                        className="flex-1 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] h-8 text-xs" />
-                      <button
-                        onClick={checkLmConnection}
-                        disabled={lmChecking}
-                        className="p-1.5 rounded bg-[#110d07] border border-[#2e2008] text-[#9a8860] hover:text-[#d4af37] transition-colors disabled:opacity-40"
-                        title="Test connection">
-                        <RefreshCw className={`w-3 h-3 ${lmChecking ? 'animate-spin' : ''}`} />
-                      </button>
-                    </div>
-
-                    {/* Connection status */}
-                    <div className="flex items-center gap-1.5 px-1">
-                      <div className={`w-1.5 h-1.5 rounded-full ${
-                        lmConnected === null ? 'bg-[#5a4d30]' :
-                        lmConnected ? 'bg-[#40c080]' : 'bg-[#c04040]'
-                      }`} />
-                      <span className="text-[9px] text-[#5a4d30]">
-                        {lmChecking ? 'Checking...' :
-                         lmConnected === null ? 'Not tested' :
-                         lmConnected ? `Connected — ${lmModels.length} model${lmModels.length !== 1 ? 's' : ''} loaded` :
-                         'LM Studio not running or wrong URL'}
-                      </span>
-                    </div>
-
-                    {/* Model selector (only when connected) */}
-                    {lmConnected && lmModels.length > 0 && (
-                      <div className="flex gap-2 items-center">
-                        <span className="text-[10px] uppercase tracking-wider whitespace-nowrap" style={{ fontFamily: 'var(--font-heading)', color: '#C9A84C' }}>Model</span>
-                        <select
-                          value={lmStudioModel}
-                          onChange={e => setLmStudioModel(e.target.value)}
-                          className="flex-1 bg-[#110d07] border border-[#2e2008] text-[#e8d9b0] text-xs rounded px-2 py-1.5 h-8"
-                        >
-                          {lmModels.map(m => (
-                            <option key={m.id} value={m.id}>{m.id}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </motion.div>
-
-              <p className="text-[#5a4d30] text-[10px] text-center mt-1 italic">
-                {engineMode === 'gemini'
-                  ? 'Server proxy mode \u00b7 OpenRouter key optional'
-                  : engineMode === 'dual'
-                    ? 'Hybrid Engine \u00b7 Mechanics locally + narration via cloud AI'
-                    : 'Local LLM \u00b7 No API key needed \u00b7 Runs on your machine'}
-              </p>
 
               {/* Links */}
               <div className="flex items-center justify-center gap-3 mt-3">
@@ -635,7 +495,7 @@ export function IntroScreen({
 
               {/* Begin button */}
               <div className="flex gap-2 mt-4 justify-center flex-wrap">
-                <Button onClick={startNewCampaign} disabled={engineMode !== 'gemini' && !lmConnected}
+                <Button onClick={startNewCampaign}
                   className="btn-begin-legend bg-gradient-to-b from-[#4e3300] to-[#2b1800] hover:from-[#6e4800] hover:to-[#422600] text-[#D4AF37] border border-[#7a5f20] px-6 sm:px-10 py-2.5 sm:py-3 text-sm transition-all disabled:opacity-40 disabled:animate-none"
                   style={{ fontFamily: 'var(--font-button)', letterSpacing: '.17em' }}>
                   {'\u2694'} Begin Your Legend {'\u2694'}
