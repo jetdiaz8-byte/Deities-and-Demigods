@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-// v2.24.0: Real AI image generation via z-ai-web-dev-sdk
+import { writeFileSync, mkdirSync } from 'fs';
+import { join } from 'path';
 import ZAI from 'z-ai-web-dev-sdk';
 
 function buildFallbackSvg(prompt?: string): string {
@@ -25,6 +26,48 @@ function buildFallbackSvg(prompt?: string): string {
   return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
 }
 
+/**
+ * Ensure .z-ai-config exists for z-ai-web-dev-sdk.
+ * In local dev, the file already exists. On Vercel / serverless,
+ * we create it at runtime from environment variables.
+ */
+function ensureConfig(): boolean {
+  try {
+    // If config already exists in CWD, we're good
+    const { existsSync } = require('fs');
+    if (existsSync('.z-ai-config')) return true;
+  } catch {}
+
+  // Build config from env vars (for Vercel / serverless)
+  const baseUrl = process.env.Z_AI_BASE_URL;
+  const apiKey = process.env.Z_AI_API_KEY;
+  if (!baseUrl || !apiKey) {
+    console.warn('[generate-image] No Z_AI_BASE_URL / Z_AI_API_KEY env vars — image gen unavailable on this host');
+    return false;
+  }
+
+  try {
+    const configDir = '/tmp';
+    const configPath = join(configDir, '.z-ai-config');
+    const config = {
+      baseUrl,
+      apiKey,
+      chatId: process.env.Z_AI_CHAT_ID || undefined,
+      userId: process.env.Z_AI_USER_ID || undefined,
+      token: process.env.Z_AI_TOKEN || undefined,
+    };
+    // Clean undefined values
+    Object.keys(config).forEach(k => (config as Record<string, unknown>)[k] === undefined && delete (config as Record<string, unknown>)[k]);
+
+    writeFileSync(configPath, JSON.stringify(config, null, 2));
+    console.log('[generate-image] Wrote .z-ai-config to /tmp from env vars');
+    return true;
+  } catch (e) {
+    console.error('[generate-image] Failed to write config:', e);
+    return false;
+  }
+}
+
 export async function POST(request: NextRequest) {
   let prompt = '';
   let artStyle: string | undefined;
@@ -42,22 +85,41 @@ export async function POST(request: NextRequest) {
 
     console.log(`🖼️ [generate-image] prompt length: ${prompt.length}, style: ${artStyle}, size: ${size}`);
 
-    // v2.24.0: Real AI image generation via z-ai-web-dev-sdk
-    // H-10: 90-second timeout for image generation
-    const zai = await ZAI.create();
-    const response = await zai.images.generations.create({
-      prompt,
-      size: (size || '1344x768') as '1344x768' | '1024x1024' | '768x1344',
-    });
-
-    const imageBase64 = response.data[0]?.base64;
-    if (!imageBase64) {
-      throw new Error('No image data returned from generation API');
+    // Ensure config exists — returns false on Vercel if env vars not set
+    const hasConfig = ensureConfig();
+    if (!hasConfig) {
+      console.warn('[generate-image] No config available — returning placeholder');
+      const imageUrl = buildFallbackSvg(prompt);
+      return NextResponse.json({ imageUrl, placeholder: true, error: 'AI image generation not configured' });
     }
 
-    const imageUrl = `data:image/png;base64,${imageBase64}`;
-    console.log(`🖼️ [generate-image] SUCCESS — image size: ${imageBase64.length} chars`);
-    return NextResponse.json({ imageUrl });
+    // If we wrote config to /tmp, we need CWD there for SDK to find it
+    const originalCwd = process.cwd();
+    if (require('fs').existsSync('/tmp/.z-ai-config') && !require('fs').existsSync('.z-ai-config')) {
+      process.chdir('/tmp');
+    }
+
+    try {
+      const zai = await ZAI.create();
+      const response = await zai.images.generations.create({
+        prompt,
+        size: (size || '1344x768') as '1344x768' | '1024x1024' | '768x1344',
+      });
+
+      const imageBase64 = response.data[0]?.base64;
+      if (!imageBase64) {
+        throw new Error('No image data returned from generation API');
+      }
+
+      const imageUrl = `data:image/png;base64,${imageBase64}`;
+      console.log(`🖼️ [generate-image] SUCCESS — image size: ${imageBase64.length} chars`);
+      return NextResponse.json({ imageUrl });
+    } finally {
+      // Restore original CWD
+      if (process.cwd() !== originalCwd) {
+        process.chdir(originalCwd);
+      }
+    }
   } catch (error) {
     console.error('Image generation failed:', error);
 
