@@ -3978,13 +3978,27 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         const aiCompChoices = gs.turn === 0 ? [] : res.companion_choices
 
         // HARD GUARD: Early Act I — strip combat-oriented PC choices (melee_attack, ranged)
-        // The DM should only offer exploration/trap/social choices before turn 8
+        // The DM should only offer exploration/trap/social choices before turn 8.
+        // If stripping leaves < 3 choices, pad with exploration options to prevent
+        // the fallback system from injecting combat templates.
         const isEarlyAct1 = gs.act === ACTS.ONE && gs.turn < 8
-        const filteredPCChoices = isEarlyAct1 && aiPCChoices
-          ? aiPCChoices.filter(c => !['melee_attack', 'ranged_attack'].includes(c.ability || ''))
-          : aiPCChoices
-        if (isEarlyAct1 && aiPCChoices?.length !== filteredPCChoices?.length) {
-          console.warn(`🛡️ EARLY ACT I GUARD: Stripped ${aiPCChoices.length - filteredPCChoices.length} combat choice(s) before turn 8`)
+        let filteredPCChoices = aiPCChoices
+        if (isEarlyAct1 && aiPCChoices) {
+          filteredPCChoices = aiPCChoices.filter(c => !['melee_attack', 'ranged_attack'].includes(c.ability || ''))
+          const stripped = aiPCChoices.length - filteredPCChoices.length
+          if (stripped > 0) {
+            console.warn(`🛡️ EARLY ACT I GUARD: Stripped ${stripped} combat choice(s) before turn 8`)
+          }
+          // Pad to 3 with exploration alternatives so validation passes
+          while (filteredPCChoices.length < 3) {
+            const padIndex = filteredPCChoices.length
+            const pads: AIChoice[] = [
+              { narrative: '🔍 Examine your surroundings for hidden details', ability: 'investigation', align_note: 'perception check' },
+              { narrative: '🚶 Move deeper into the area, staying alert', ability: 'exploration', align_note: 'exploration' },
+              { narrative: '👁️ Observe the shard — is it reacting to something nearby?', ability: 'perception', align_note: 'arcana check' },
+            ]
+            filteredPCChoices = [...filteredPCChoices, pads[padIndex] || pads[0]]
+          }
         }
 
         console.log(`🎯 AI choices — pc_choices: ${filteredPCChoices?.length || 0}, companion_choices: ${aiCompChoices?.length || 0}${gs.turn === 0 && res.companion_choices?.length ? ' (STRIPPED — turn 0)' : ''}`)
