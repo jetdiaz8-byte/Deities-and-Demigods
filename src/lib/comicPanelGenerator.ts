@@ -68,9 +68,8 @@ export function extractSceneKeywords(narration: string): string[] {
 export function buildImagePrompt(narration: string, caption: string, artStyle: string): string {
   const stylePrompt = STYLE_PROMPTS[artStyle] || STYLE_PROMPTS['larry-elmore']
 
-  // Use the FULL DM narration as the prompt — no truncation.
-  // The DM narration is rich, evocative prose that paints a vivid picture.
-  // Strip dice notation, turn markers, and meta-text that don't make sense visually.
+  // Start with the DM narration and aggressively strip character references
+  // so the image model only sees environmental/scene description.
   const sceneText = (narration || caption || '').trim()
   const cleaned = sceneText
     .replace(/\[.*?\]/g, '')           // Remove [dice notation]
@@ -85,9 +84,33 @@ export function buildImagePrompt(narration: string, caption: string, artStyle: s
     return `dark fantasy landscape, dramatic lighting, oil painting style, atmospheric, detailed, ${stylePrompt}`
   }
 
-  // Scene-only: no named characters, no faces, no portraits.
-  // Distant silhouettes and shadows are OK for sense of scale.
-  return `Create an environmental scene illustration from this narrative prose. Focus on the landscape and atmosphere — no named characters, no faces, no portraits. Distant silhouettes and shadows are OK for scale. Scene: ${cleaned}. ${stylePrompt}`
+  // Strip sentences/clauses that reference characters, people, or actions
+  // Split into sentences, keep only the ones that describe environment/scenery
+  const sentences = cleaned.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10)
+  const sceneSentences = sentences.filter(s => {
+    const lower = s.toLowerCase()
+    // Remove sentences dominated by character/person references
+    const characterPatterns = [
+      /\b(he|she|they|him|her|them|his|their)\b.*\b(said|whispered|shouted|cried|spoke|replied|asked|screamed)\b/,
+      /\b(I|you|we)\b.*\b(felt|saw|heard|knew|thought|remembered|wondered)\b/,
+      /\b(the seeker|the hero|the thief|the rogue|the warrior|the mage|the priest|the cleric|the knight|the companion)\b/i,
+      /\b(someone|anyone|everybody|nobody)\b.*\b(did|said|went|came|walked|ran)\b/,
+      /\b(footstep|footsteps|hand|hands|finger|fingers|voice|voices)\b/i,
+      /\b(clink of|flash of|taste of|touch of)\b/i,
+    ]
+    // Sentence must NOT match any character pattern
+    return !characterPatterns.some(p => p.test(lower))
+  })
+
+  // Build the scene description from environment-only sentences
+  const sceneOnly = sceneSentences.length >= 2
+    ? sceneSentences.join(' ').trim()
+    : cleaned  // Fallback: use full cleaned text if too many sentences were stripped
+
+  // Also extract keywords for atmosphere
+  const keywords = extractSceneKeywords(cleaned).slice(0, 6).join(', ')
+
+  return `Create an environmental scene illustration only. No characters, no people, no faces, no portraits, no figures. Focus entirely on the landscape, atmosphere, and setting. ${sceneOnly} ${keywords}. ${stylePrompt}`
 }
 
 export async function generateComicPanels(
