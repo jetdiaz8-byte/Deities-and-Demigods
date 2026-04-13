@@ -551,7 +551,7 @@ export default function MythworldEngine() {
                 </div>
               )}
               {(comicPanels ?? []).length > 0 && (
-                <div className="mt-4 w-full">
+                <div className="-mx-2 sm:-mx-3 md:-mx-4 mt-4">
                   <ComicPanel panels={comicPanels} artStyle={comicArtStyle} />
                 </div>
               )}

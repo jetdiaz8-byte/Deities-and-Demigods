@@ -2480,7 +2480,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     if (narrative.length > 30) setLastDMNarrative(narrative)
 
     if (!jsonStr) {
-      console.warn('⚠️ No JSON in Gemini response, using narrative-preservation fallback')
+      console.warn('⚠️ No JSON in response, using narrative-preservation fallback')
       // If we have pre-JSON prose, use it instead of losing everything to template
       if (preJsonNarrativeRef.current && preJsonNarrativeRef.current.length > 30) {
         const extracted = extractDiceRollsFromRaw(raw)
