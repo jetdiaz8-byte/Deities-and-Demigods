@@ -307,7 +307,7 @@ export function useGameEngine() {
   const [ttsVoice, setTtsVoice] = useState('guy') // Edge TTS voice key
   const [ttsEngine, setTtsEngine] = useState<'browser' | 'edge'>('browser') // Browser is primary — reliable, instant
   const [ttsSpeed, setTtsSpeed] = useState(0.9)
-  // narratorMode removed — TTS auto-speak is always on
+  // TTS is opt-in — user clicks the floating Speak button to hear narration
   const [ttsPending, setTtsPending] = useState(false)
   const ttsPendingRef = useRef(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -2027,7 +2027,7 @@ ${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
 9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. NEVER auto-resolve PC actions.
 9a. **NARRATIVE-DRIVEN CHOICES** — CRITICAL: Your choices MUST be contextual, story-driven, and flow from the narration's final paragraph.
     - The last paragraph of your narration MUST present a fork — 2-3 natural paths that feel like they emerge from the story.
-    - Generate "pc_choices" (3 options) and "companion_choices" (3 options) in the JSON response.
+    - Generate "pc_choices" (3 options) in the JSON response.${isFirstTurn ? '' : ' Also generate "companion_choices" (3 options) for the companion character.'}
     - Each choice MUST have:
       • "narrative": A contextual, story-specific action label with emoji (max 80 chars). NOT generic templates.
         BAD: "🔍 Investigate — Search the area for clues, hidden paths, or items of interest"
@@ -2236,7 +2236,7 @@ Power: ${shard?.power || 'Unknown'}
 Charges: ${gs.shardCharges}/3 | Shield Used: ${(gs as any).shardShieldUsed ? 'YES' : 'no'}
 ${actCtx}
 Turn: ${gs.turn} | Act I Limit: ${gs.act1TurnLimit} | Act II Duration: ${gs.act2TurnLimit}
-${isFirstTurn ? `\n⚠️ TURN 0 — SHARD INTRODUCTION ONLY. NO characters, NO PCs, NO companions.\n` : ''}
+${isFirstTurn ? `\n⚠️ TURN 0 — SHARD INTRODUCTION ONLY. NO characters, NO PCs, NO companions.\n- Do NOT include "companion_choices" in your JSON — set "companion_choices": []\n- Only include "pc_choices" for exploring the shard's origin.\n` : ''}
 
 THE MAIN PC — CHOSEN BY THE SHARD
 ═══════════════════════════════════════════════════════════════════════════
@@ -2314,7 +2314,7 @@ QUICKENING RULES:
 ` : ''}`}
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — Turn 0 shard intro: ~600 chars max. Turn 1 full intro: 3000-3500 chars (4-5 paragraphs). Regular turns: 150-300 words, 2-3 paragraphs (RESULTS / REACTIONS / HOOK structure). REST/SLEEP: 2-3 sentences. COMBAT: weave into paragraphs 1-2, up to 300 words total. EXCEEDING THE WORD LIMIT IS A CRITICAL FAILURE.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","shard_insight_used":false,"pc_choices":[{"narrative":"string (CONTEXTUAL story-specific action with emoji, max 80 chars — NEVER generic like 'Search the area')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}],"companion_choices":[{"narrative":"string (CONTEXTUAL companion action with emoji, max 80 chars — reference current scene)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — Turn 0 shard intro: ~600 chars max. Turn 1 full intro: 3000-3500 chars (4-5 paragraphs). Regular turns: 150-300 words, 2-3 paragraphs (RESULTS / REACTIONS / HOOK structure). REST/SLEEP: 2-3 sentences. COMBAT: weave into paragraphs 1-2, up to 300 words total. EXCEEDING THE WORD LIMIT IS A CRITICAL FAILURE.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","shard_insight_used":false,"pc_choices":[{"narrative":"string (CONTEXTUAL story-specific action with emoji, max 80 chars — NEVER generic like 'Search the area')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}]${isFirstTurn ? '' : ',"companion_choices":[{"narrative":"string (CONTEXTUAL companion action with emoji, max 80 chars — reference current scene)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]'}"}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -3965,35 +3965,20 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
       }
 
       // ═════════════════════════════════════════════════════════════════════════
-      // TTS AUTO-SPEAK — NOW triggers AFTER setGameState has committed.
-      // All React re-renders are done. TTS can start safely.
-      // Uses requestAnimationFrame to ensure DOM is fully settled.
+      // TTS — narration saved for on-demand playback via the Speak button.
+      // No autoplay. User clicks the floating Speak button to hear narration.
       // ═════════════════════════════════════════════════════════════════════════
-      if (!document.hidden) {
+      {
         const ttsText = ttsNarrationRef.current
-        // Turn-level guard: only auto-speak once per turn
         const currentTurnNum = gs.turn || 0
+        // Mark pending so the Speak button knows narration is ready
         if (ttsText && ttsText.length > 10 && ttsTurnGuardRef.current !== currentTurnNum) {
           ttsTurnGuardRef.current = currentTurnNum
-          console.log(`🔊 TTS auto-speak triggered (post-render): ${ttsText.length} chars, turn=${currentTurnNum}`)
-          ttsPendingRef.current = false
-          setTtsPending(false)
-          // Clear dedup hash so new turn's narration can be spoken
-          lastSpokenHashRef.current = ''
-          if (!isSpeaking) {
-            // Use double-RAF to ensure all pending React renders are flushed
-            window.requestAnimationFrame(() => {
-              window.requestAnimationFrame(() => {
-                if (!abortSpeakRef.current) {
-                  speakText(ttsText)
-                }
-              })
-            })
-          }
-        } else {
-          // Narration not ready yet — mark pending for user gesture trigger
           ttsPendingRef.current = true
           setTtsPending(true)
+          // Clear dedup hash so new turn's narration can be spoken when user clicks
+          lastSpokenHashRef.current = ''
+          console.log(`🔊 TTS narration ready (on-demand): ${ttsText.length} chars, turn=${currentTurnNum}`)
         }
       }
     } catch (e) {

@@ -685,6 +685,35 @@ export default function MythworldEngine() {
           </div>
         )}
 
+        {/* Floating Speak Button — always visible during gameplay */}
+        {lastDMNarrative && !gameState?.isProcessing && (
+          <button
+            onClick={() => {
+              if (isSpeaking) {
+                stopSpeaking()
+              } else {
+                unlockTTS()
+                speakNarrative()
+              }
+            }}
+            className={`fixed bottom-[180px] right-4 z-[100] w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 ${
+              isSpeaking
+                ? 'bg-gradient-to-br from-red-800 to-red-900 border-2 border-red-500 shadow-[0_0_20px_rgba(220,50,50,0.4)]'
+                : 'bg-gradient-to-br from-[#1a3040] to-[#0f2030] border-2 border-[#3a7a9a] shadow-[0_0_15px_rgba(60,140,180,0.3)] hover:shadow-[0_0_25px_rgba(60,140,180,0.5)]'
+            }`}
+            title={isSpeaking ? 'Stop narration' : 'Speak narration'}
+          >
+            {isSpeaking ? (
+              <span className="text-red-200 text-xl">⏹</span>
+            ) : (
+              <span className="text-[#7ac0e0] text-xl">🔊</span>
+            )}
+            {isSpeaking && (
+              <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-ping" />
+            )}
+          </button>
+        )}
+
         {/* Bottom Bar — fixed above PartyBar */}
         <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap safe-bottom" style={{ position: 'fixed', bottom: '110px', left: 0, right: 0, zIndex: 79, marginRight: undefined }}>
           <Button
