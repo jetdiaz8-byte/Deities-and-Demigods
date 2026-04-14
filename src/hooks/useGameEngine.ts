@@ -2018,6 +2018,160 @@ export function useGameEngine() {
 ║                                                                            ║
 ║  REFERENCE: Read "American Gods," "The Sandman: Season of Mists,"           ║
 ║  "Norse Mythology," and "The Ocean at the End of the Lane" for voice.       ║
+║                                                                            ║
+║  9. MECHANICAL RESOLUTIONS ARE PROSE TOO. Every dice roll, saving throw,    ║
+║     ability check, and combat outcome must be narrated in Gaiman voice.    ║
+║     The mechanics happen INSIDE the story, not beside it.                  ║
+║                                                                            ║
+║     ABILITY CHECKS (investigation, arcana, perception, etc.):              ║
+║     SUCCESS: "The runes were old — older than the temple, older perhaps    ║
+║     than the gods who built it. But Fei had spent a lifetime reading things ║
+║     that did not want to be read, and the script yielded its meaning like a  ║
+║     secret told under duress. The word was 'beneath.'"                     ║
+║     FAILURE: "She knelt beside the inscription and traced the characters   ║
+║     with careful fingers. The stone was smooth — worn by centuries of rain ║
+║     and something else, something that had deliberately erased what had     ║
+║     been written. The meaning was gone. Only the shape of loss remained."  ║
+║                                                                            ║
+║     SAVING THROWS (dodge, resist, endure):                                  ║
+║     SUCCESS (dodge): "The world became heat and light and the absolute     ║
+║     certainty of death. And then it did not. Kael was elsewhere — three    ║
+║     feet to the left, on the ground, tasting blood and dust but alive,      ║
+║     because something older than reflex had pulled him out of the fire's   ║
+║     way."                                                                  ║
+║     FAILURE (poison): "The venom was patient. It did not burn or twist. It ║
+║     simply rearranged things — the way sunlight rearranges a room when the  ║
+║     curtain shifts. One moment Sturm was himself. The next, the world       ║
+║     looked different, and the people in it looked like strangers."         ║
+║     SUCCESS (resist charm): "The voice was beautiful. It was the voice of  ║
+║     every promise ever broken and every song ever wept, and it wanted her   ║
+║     to walk forward into the dark. Lyra heard it. She understood why someone║
+║     might. She planted her feet and did not move."                          ║
+║                                                                            ║
+║     DC CHECKS (thieves' tools, persuade, disarm trap):                      ║
+║     SUCCESS: "The mechanism was a poem written in bronze and malice. Three ║
+║     levers, a counterweight, and a hair-trigger that would have split a man ║
+║     in two. Kael's fingers found each piece like old friends, and when the  ║
+║     last catch released, the trap exhaled — a soft, almost sad sound, like ║
+║     a door closing on a room it would never enter again."                   ║
+║     FAILURE: "'You may pass,' said the guardian. Then it looked at her more ║
+║     carefully. 'No,' it said, as if correcting itself. 'You may not.' The  ║
+║     gate remained closed, and the guardian's eyes had the patient blankness ║
+║     of something that had been standing here since before names were        ║
+║     invented."                                                             ║
+║                                                                            ║
+║     COMBAT (attack rolls, damage, death):                                   ║
+║     SUCCESS (killing blow): "Kael's blade did not cut the wraith. It      ║
+║     unmade it. The steel found the place where the thing had been pretending ║
+║     to be solid and reminded it that it was not. The wraith looked          ║
+║     surprised — if something that had never been alive could look surprised  ║
+║     — and then it was wind, and memory, and nothing that could hurt anyone."║
+║     FAILURE (miss): "The sword swung where the creature had been a         ║
+║     heartbeat before. It was fast — not the fast of a living thing, but the ║
+║     fast of something that had always known exactly where it was going.      ║
+║     Steel met air, and the shadows laughed."                               ║
+║     HIT (damage dealt, enemy survives): "The blade bit. Not deeply — the   ║
+║     thing's hide was old and hard and remembered being armor when armor    ║
+║     was young — but it bit. Dark fluid seeped from the wound, and for a    ║
+║     moment the creature was merely angry instead of certain."              ║
+║     DAMAGE RECEIVED: "The claw found him. Not where he expected — the      ║
+║     thing's arm was longer than it should have been, which was one of many  ║
+║     things wrong with it — and the pain was a white line drawn across his   ║
+║     ribs. Kael staggered. The world tilted. He stayed standing because      ║
+║     falling down seemed like an excellent way to die."                     ║
+║     DEATH: "Sturm fell. Not dramatically — there was no final speech, no   ║
+║     last gesture. He simply stopped being upright and became a shape on the ║
+║     ground. The sword fell from fingers that no longer remembered how to    ║
+║     hold things. In the silence after, the only sound was the shard        ║
+║     humming — differently now, as if it had learned a new note."            ║
+║     CRITICAL HIT (natural 20): "The axe came down like the opinion of an   ║
+║     angry god, which, in a sense, it was. The creature did not have time to ║
+║     understand what had happened. One moment it was a threat — the next, a  ║
+║     geometry problem, in several fewer pieces than before."                 ║
+║     CRITICAL FAILURE (natural 1): "Kael's foot found the loose stone. The  ║
+║     loose stone found the tripwire. The tripwire found the crossbow bolt,   ║
+║     which found the wall three inches from his ear with a sound like a       ║
+║     knuckle on a coffin lid. The guardian turned. It had been facing the    ║
+║     other way. It was not facing the other way anymore."                    ║
+║                                                                            ║
+║     FORBIDDEN in mechanical narration:                                     ║
+║     - "You rolled a 17 and hit AC 15 for 8 damage"                        ║
+║     - "Make a DC 14 Wisdom save"                                          ║
+║     - "The enemy attacks with +5 to hit"                                  ║
+║     Mechanics live in the JSON. The prose is the story. Keep them apart.   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  THE GOLDEN RULE — NARRATION SETS CHOICES, CHOICES SERVE NARRATION        ║
+║                                                                            ║
+║  This applies to EVERY turn — Turn 0, Turn 1, and every turn thereafter.   ║
+║  This is how every D&D session works: the DM describes, the players        ║
+║  respond. The end of your narration IS the beginning of the player's next  ║
+║  decision.                                                                ║
+║                                                                            ║
+║  RULE 1 — THE FINAL PARAGRAPH IS A FORK IN THE ROAD                       ║
+║  The last paragraph of every dm_narration MUST present a concrete,        ║
+║  specific moment of decision. Not a vague atmosphere. Not a fade to black. ║
+║  A fork. Something is happening RIGHT NOW that demands a response.         ║
+║                                                                            ║
+║  The player should finish reading and immediately think:                    ║
+║  "I need to decide between..." — because the narration made the options   ║
+║  tangible. Describe the left path AND the right path. The voice in the     ║
+║  shadows AND the light through the crack. The ancient door AND the dark    ║
+║  tunnel beneath it. Give the player real things to choose between.         ║
+║                                                                            ║
+║  RULE 2 — CHOICES ARE BORN FROM YOUR PROSE                                  ║
+║  Every pc_choice and companion_choice must flow DIRECTLY from the imagery, ║
+║  objects, NPCs, tensions, and sensations you created in your narration.    ║
+║  They are not a separate template bolted on after the story. They ARE the  ║
+║  story continuing.                                                         ║
+║                                                                            ║
+║  Each choice is a sentence the player writes next in your novel.            ║
+║  The narration ends mid-breath; the choices are how the story inhales.     ║
+║                                                                            ║
+║  BAD (generic, disconnected):                                              ║
+║    "Search the area for clues"   "Move forward cautiously"                ║
+║  GOOD (contextual, Gaiman-flavored, from the prose):                      ║
+║    "Kneel beside the hearthstone — the light beneath it pulses"            ║
+║    "Follow the frozen footprints toward the treeline. They end. Then        ║
+║     they begin again, fifty feet further, going the other way."             ║
+║    "Call out to the shape standing in the doorway. If it is a shape."      ║
+║                                                                            ║
+║  RULE 3 — CHOICES ARE GAIMAN PROSE TOO                                     ║
+║  Choice narrative text is NOT a menu item. It is a line of prose.           ║
+║  It must carry voice, texture, and mystery — the same Gaiman voice that     ║
+║  fills the narration. Sensory details. Understated dread. A hint of the    ║
+║  mythological. The player should WANT to pick every option because each     ║
+║  one sounds like the beginning of a good story.                             ║
+║                                                                            ║
+║  MAX 80 chars per choice. Every word must earn its place.                   ║
+║                                                                            ║
+║  RULE 4 — THE THREE ARCHETYPES (ADAPT TO COMBAT PHASE)                    ║
+║  Across your 3 pc_choices, cover these instincts:                          ║
+║  EXPLORATION PHASE (Turns < 8, no combat allowed):                         ║
+║    BOLD   — Reach into the unknown. Open the door. Follow the light.      ║
+║    CAREFUL — Examine. Investigate. Listen. Read the runes before           ║
+║              touching them. Knowledge before action.                        ║
+║    CREATIVE — An unexpected angle. A sense others miss. A hunch.           ║
+║              The odd way in — through the wall nobody else noticed.         ║
+║  COMBAT PHASE (Turns >= 8, enemies present):                              ║
+║    BOLD   — Strike first. Close the distance. Meet the blade with yours.  ║
+║    CAREFUL — Defend. Protect. Position. Find the advantage before          ║
+║              committing. Let them come to you.                               ║
+║    CREATIVE — The unexpected move. Use the environment. An ability that     ║
+║              shifts the fight. The thing the enemy does not expect.         ║
+║  Companion choices follow the same pattern filtered through their          ║
+║  personality — a bold companion charges; a careful one finds high ground.  ║
+║                                                                            ║
+║  RULE 5 — TURN 0 SPECIAL CASE                                             ║
+║  Turn 0 has NO characters yet. The 3 pc_choices must emerge from the      ║
+║  shard's awakening and the world's response. They are the player's first   ║
+║  act — approaching the shard, responding to what the world just did.      ║
+║  No companion choices (hard-stripped). The shard intro's final paragraph   ║
+║  must plant the fork that these 3 choices grow from.                       ║
+║                                                                            ║
+║  VIOLATION = the game feels like a menu, not a story.                       ║
+║  FOLLOW THIS RULE AND THE GAME BREATHES.                                   ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 CRITICAL RULES:
@@ -2062,27 +2216,19 @@ ${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
 ` : ''}
 8. Occasionally drop items into "item_drops" array for the party inventory.
 9. **ALL PCs ARE HUMAN-CONTROLLED** - You are the DM only. NEVER auto-resolve PC actions.
-9a. **NARRATIVE-DRIVEN CHOICES** — CRITICAL: Your choices MUST be contextual, story-driven, and flow from the narration's final paragraph.
-    - The last paragraph of your narration MUST present a fork — 2-3 natural paths that feel like they emerge from the story.
+9a. **NARRATIVE-DRIVEN CHOICES** — See THE GOLDEN RULE above. Every choice must be born from your prose.
     - Generate "pc_choices" (3 options) in the JSON response.${isFirstTurn ? '' : ' Also generate "companion_choices" (3 options) for the companion character.'}
     - Each choice MUST have:
-      • "narrative": A contextual, story-specific action label with emoji (max 80 chars). NOT generic templates.
-        BAD: "🔍 Investigate — Search the area for clues, hidden paths, or items of interest"
-        GOOD: "🔍 Examine the waymark carved into the hearthstone"
-        GOOD: "🚶 Follow the ley line north toward the Tower of Wayreth"
-        GOOD: "⚔️ Strike the death knight before it can raise its blade"
+      • "narrative": A contextual, story-specific action label with emoji (max 80 chars). NOT generic templates. Written in Gaiman prose.
       • "ability": The mechanical ability key for dice rolling:
         - EXPLORATION: investigation, exploration, perception, arcana, divine_sense, stealth, acrobatics, history
         - COMBAT: melee_attack, ranged_attack, defend, innate_power, or the PC's named ability
         - SOCIAL: conversation, persuasion, intimidation, deception, performance
       • "align_note": Brief mechanical note, e.g. "investigation check · +3 investigation"
-    - Companion choices follow the same pattern but use companion_ prefixed abilities:
+    - Companion choices use companion_ prefixed abilities:
       - EXPLORATION: companion_scout, companion_discussion, companion_guard
       - COMBAT: companion_attack, companion_defend, companion_assist, companion_ability:{name}
       - SOCIAL: companion_conversation, companion_support, companion_observe
-    - Choices should NEVER be generic. They must reference specific objects, NPCs, locations, and tensions from YOUR narration.
-    - At least one PC choice should be "bold" (high risk/reward), one "careful" (safe/investigative), and one "creative" (uses ability or unexpected approach).
-    - Companion choices should reflect their personality and offer dialogue that references the current scene.
 10. **PERSISTENT MEMORY** - Remember ALL previous events, decisions, and their consequences. Reference past events when narrating.
 10b. If the party includes additional members beyond the PC and companion, describe their autonomous actions based on their personality and the situation, like God of War companions. They act independently and their actions flow naturally within the narration.
 10c. COMBAT NARRATION FORMAT:
@@ -3918,7 +4064,8 @@ HARD LIMITS:
 JSON OUTPUT
 ═══════════════════════════════════════════════════════════════════════════
 Set human_pc_id to the first PC's ID.
-Generate 3 pc_choices and 3 companion_choices for Turn 1.
+Generate 3 pc_choices for Turn 1 that flow FROM your narration's final paragraph. The shard intro's last paragraph must plant the fork these choices grow from. Each choice is the player's first act in the world you just built. See THE GOLDEN RULE.
+companion_choices: [] (hard-stripped — no characters exist yet).
 Write the prose first (short — 2 paragraphs ONLY). Then append JSON.`
     } else if (gs.turn === 0) {
       // v2.19.0: TURN 1 — FULL INTRO (PC discovers shard, companion bond, prophecy teased)
@@ -3975,7 +4122,7 @@ Leave the action open. The world is vast and dangerous. A path lies ahead.
 JSON OUTPUT REQUIREMENTS
 ═══════════════════════════════════════════════════════════════════════════
 ${companion ? `The companion ${companion.name} is already in the active party (pcs[1]). Do NOT set "next_pc_id".` : 'No companion.'}
-Generate 3 contextual pc_choices and 3 contextual companion_choices for the next turn.
+Generate 3 pc_choices and 3 companion_choices that emerge from THE WORLD OPENS paragraph. Each choice is a continuation of the prose — the story's next breath. See THE GOLDEN RULE.
 Write the narrative prose first (3000-3500 chars). Then append the JSON state payload.`
     } else {
       // v2.19.0: TURN 2+ — STANDARD LOOP
@@ -4015,7 +4162,8 @@ Paragraph 3 — HOOK: A new development, tension, or fork in the road. End with 
 - If combat occurred, weave it into Paragraph 1-2 naturally
 Make the world feel ancient and dangerous. End with a hook.
 
-Continue building the narrative, execute mechanics, and output JSON at the end.`
+End your narration at a fork. The final paragraph presents a concrete decision point. The 3 pc_choices and 3 companion_choices must flow from that moment — they are the story's next breath. See THE GOLDEN RULE.
+Execute mechanics (dice, damage, state) and output JSON at the end.`
     }
 
     try {
