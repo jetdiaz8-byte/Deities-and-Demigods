@@ -2869,8 +2869,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         })
       })
     } else if (inCombat) {
-      // ── COMBAT MODE ──────────────────────────────────────────────
-      // Tactical options when enemies are present (with stamina costs)
+      // ── COMBAT MODE (Gaiman fallback) ─────────────────────────────
       const stam = gameState.stamina
       const canAttack = stam >= 2
       const canDefend = stam >= 1
@@ -2880,8 +2879,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         { 
           num: 1, 
           action: canAttack 
-            ? `⚔️ Attack — Strike at the nearest enemy with your weapon (⚡2)` 
-            : `⚔️ Attack — Too exhausted to attack [Stamina: ${stam}]`, 
+            ? 'Close the distance and let the blade speak — some conversations end in steel (⚡2)' 
+            : 'Your arms ache for it, but your body has nothing left to give', 
           ability: 'melee_attack',
           align_note: canAttack ? 'standard attack · ⚡2 stamina' : '[Not enough stamina]',
           source: 'pc'
@@ -2890,11 +2889,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           num: 2, 
           action: companion 
             ? (canDefend
-              ? `🛡️ Defend — Protect ${companion.name.split(' ')[0]} and brace for incoming attacks (⚡1)`
-              : `🛡️ Defend — Too exhausted to defend [Stamina: ${stam}]`)
+              ? `Plant yourself between the darkness and ${companion.name.split(' ')[0]} — not all shields are made of iron (⚡1)`
+              : 'Every muscle screams against holding the line — but you hold it anyway')
             : (canDefend
-              ? '🛡️ Defend — Raise your guard and brace for impact (⚡1)'
-              : '🛡️ Defend — Too exhausted to defend [Stamina: ${stam}]'),
+              ? 'Raise what you have — blade, arm, will — and let them break against it (⚡1)'
+              : 'Your body has forgotten how to guard — the stamina is gone'),
           ability: 'defend',
           align_note: canDefend ? 'protective stance +2 AC · ⚡1 stamina' : '[Not enough stamina]',
           source: 'pc'
@@ -2903,24 +2902,23 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           num: 3, 
           action: canSpecial
             ? (ab.length > 0
-              ? `✨ ${ab[0].split('(')[0].trim()} — Unleash your signature power (⚡3)`
-              : '✨ Channel Power — Draw on your divine essence (⚡3)')
+              ? `Reach deep — ${ab[0].split('(')[0].trim()} stirs, and the air knows it (⚡3)`
+              : 'Draw on the thing that lives inside you — the divine does not tire as mortals do (⚡3)')
             : (ab.length > 0
-              ? `✨ ${ab[0].split('(')[0].trim()} — Too exhausted for special abilities [Stamina: ${stam}]`
-              : `✨ Channel Power — Too exhausted [Stamina: ${stam}]`),
+              ? `The ${ab[0].split('(')[0].trim()} flickers in your chest but cannot ignite`
+              : 'The divine spark sputters — nothing left to burn'),
           ability: ab[0] || 'innate_power',
           align_note: canSpecial ? 'special ability · ⚡3 stamina' : '[Not enough stamina]',
           source: 'pc'
         }
       )
     } else if (hasActiveNPC) {
-      // ── SOCIAL MODE ─────────────────────────────────────────────
-      // Conversation and interaction when friendly/neutral NPCs are present
+      // ── SOCIAL MODE (Gaiman fallback) ─────────────────────────────
       const npcName = neutrals.length > 0 ? neutrals[0].name : allies.length > 0 ? allies[0].name : 'the stranger'
       pcOptions.push(
         { 
           num: 1, 
-          action: `💬 Talk to ${npcName} — Ask who they are and what brings them here`,
+          action: `Step closer and study ${npcName} — the eyes will tell you what the mouth will not`,
           ability: 'conversation',
           align_note: 'social interaction',
           source: 'pc'
@@ -2928,8 +2926,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         { 
           num: 2, 
           action: evil
-            ? `🎭 Intimidate ${npcName} — Demand information through fear`
-            : `🤝 Diplomacy — Attempt to persuade or negotiate with ${npcName}`,
+            ? `Let the silence stretch — ${npcName} will fill it, and what fills it will be truth or surrender`
+            : `Speak first. In the oldest stories, the one who names themselves first holds the power`,
           ability: evil ? 'intimidation' : 'persuasion',
           align_note: evil ? `CHA check (intimidation${skillMod('intimidation') ? ' · ' + skillMod('intimidation') : ''})` : `CHA check (persuasion${skillMod('persuasion') ? ' · ' + skillMod('persuasion') : ''})`,
           source: 'pc'
@@ -2937,20 +2935,19 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         { 
           num: 3, 
           action: ab.length > 0
-            ? `✨ ${ab[0].split('(')[0].trim()} — Ready your power, just in case`
-            : '👁️ Observe — Study the situation carefully before acting',
+            ? `Feel the ${ab[0].split('(')[0].trim()} stir — not yet, but ready, the way a cat is ready before it moves`
+          : 'Watch ${npcName} hands — in the old tales, the truth lives in the gestures, never in the words',
           ability: ab.length > 0 ? ab[0] : 'investigation',
           align_note: ab.length > 0 ? 'special ability (ready)' : `perception check${skillMod('perception') ? ' · ' + skillMod('perception') : ''}`,
           source: 'pc'
         }
       )
     } else {
-      // ── EXPLORATION MODE ────────────────────────────────────────
-      // Open-world discovery — this is the default for most of Act I
+      // ── EXPLORATION MODE (Gaiman fallback) ─────────────────────────
       pcOptions.push(
         { 
           num: 1, 
-          action: '🔍 Investigate — Search the area for clues, hidden paths, or items of interest',
+          action: 'Crouch low and study the ground — the earth remembers every footfall',
           ability: 'investigation',
           align_note: `investigation check${skillMod('investigation') ? ' · ' + skillMod('investigation') : ''}`,
           source: 'pc'
@@ -2958,8 +2955,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         { 
           num: 2, 
           action: evil
-            ? '🗡️ Seize — Take what you want and assert your dominance'
-            : '🚶 Travel — Press onward to new territory',
+            ? 'Take what the world has left here — the strong write the laws of ownership'
+            : 'Walk until the familiar ends and something else begins',
           ability: evil ? 'aggression' : 'exploration',
           align_note: evil ? 'bold action' : 'movement + discovery',
           source: 'pc'
@@ -2967,8 +2964,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         { 
           num: 3, 
           action: ab.length > 0
-            ? `✨ ${ab[0].split('(')[0].trim()} — Use your divine power to sense the world around you`
-            : '🔮 Sense — Reach out with your awareness, feel for divine or arcane presence',
+            ? `Close your eyes and let the ${ab[0].split('(')[0].trim()} taste the air — it sees what you cannot`
+            : 'Reach out with something older than sight — the divine has a way of finding what is hidden',
           ability: ab[0] || 'divine_sense',
           align_note: 'special ability / magical detection',
           source: 'pc'
@@ -3000,23 +2997,23 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       
       if (inCombat) {
         compOptions = [
-          { num: 1, action: `⚔️ Attack — ${compName} strikes with their weapon`, ability: 'companion_attack', align_note: 'standard attack', source: 'companion', companion_name: companion.name },
-          { num: 2, action: compAbility1 ? `✨ ${compAbility1} — ${compName} unleashes their power` : `🛡️ Defend — ${compName} guards against incoming attacks`, ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_defend', align_note: compAbility1 ? 'special ability' : 'defensive stance', source: 'companion', companion_name: companion.name },
-          { num: 3, action: compAbility2 ? `✨ ${compAbility2} — ${compName}'s secondary power` : `💪 Assist — ${compName} aids your attack for a coordinated strike`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_assist', align_note: compAbility2 ? 'secondary ability' : 'coordinated assault', source: 'companion', companion_name: companion.name }
+          { num: 1, action: `${compName} moves like water finding a crack — weapon first, questions never`, ability: 'companion_attack', align_note: 'standard attack', source: 'companion', companion_name: companion.name },
+          { num: 2, action: compAbility1 ? `${compName} reaches for the ${compAbility1} — the air around them bends` : `${compName} plants their feet and becomes something immovable`, ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_defend', align_note: compAbility1 ? 'special ability' : 'defensive stance', source: 'companion', companion_name: companion.name },
+          { num: 3, action: compAbility2 ? `${compName} unwinds the ${compAbility2} like a promise kept too late` : `${compName} finds the angle you cannot — the one that makes the difference`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_assist', align_note: compAbility2 ? 'secondary ability' : 'coordinated assault', source: 'companion', companion_name: companion.name }
         ]
       } else if (hasActiveNPC) {
-        // Social mode companion — conversation and support
+        // Social mode companion
         compOptions = [
-          { num: 1, action: `💬 Talk — ${compName} joins the conversation`, ability: 'companion_conversation', align_note: 'social interaction', source: 'companion', companion_name: companion.name },
-          { num: 2, action: compAbility1 ? `✨ ${compAbility1} — ${compName} readies their power` : `🤝 Support — ${companionEvil ? `${compName} watches for an opening` : `${compName} backs you up diplomatically`}`, ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_support', align_note: compAbility1 ? 'special ability' : (companionEvil ? 'calculated support' : 'loyal backing'), source: 'companion', companion_name: companion.name },
-          { num: 3, action: compAbility2 ? `✨ ${compAbility2} — ${compName}'s secondary power` : `🔍 Observe — ${compName} studies the stranger carefully`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_observe', align_note: compAbility2 ? 'secondary ability' : 'perception check', source: 'companion', companion_name: companion.name }
+          { num: 1, action: `${compName} steps forward — they have always been better at the words that matter`, ability: 'companion_conversation', align_note: 'social interaction', source: 'companion', companion_name: companion.name },
+          { num: 2, action: compAbility1 ? `${compName} fingers the ${compAbility1} — not using it, but remembering it is there` : companionEvil ? `${compName} says nothing. Their silence is a language of its own` : `${compName} moves to your shoulder — not speaking, just being there`, ability: compAbility1 ? `companion_ability:${compAbility1}` : 'companion_support', align_note: compAbility1 ? 'special ability' : (companionEvil ? 'calculated support' : 'loyal backing'), source: 'companion', companion_name: companion.name },
+          { num: 3, action: compAbility2 ? `${compName} lets the ${compAbility2} taste the air, reading what cannot be seen` : `${compName} watches the stranger the way a hawk watches a field — still, absolute, patient`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_observe', align_note: compAbility2 ? 'secondary ability' : 'perception check', source: 'companion', companion_name: companion.name }
         ]
       } else {
-        // Exploration mode companion — scouting and dialogue
+        // Exploration mode companion
         compOptions = [
-          { num: 1, action: `🔍 Scout — ${compName} checks the area ahead for danger or points of interest`, ability: 'companion_scout', align_note: 'exploration / perception', source: 'companion', companion_name: companion.name },
-          { num: 2, action: `🗣️ Discuss — "What do you make of all this, ${compName}?"`, ability: 'companion_discussion', align_note: 'character dialogue / bonding', source: 'companion', companion_name: companion.name },
-          { num: 3, action: compAbility2 ? `✨ ${compAbility2} — ${compName}'s secondary power` : `🔍 Observe — ${compName} studies the surroundings in careful silence`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_observe', align_note: compAbility2 ? 'secondary ability' : 'perception check', source: 'companion', companion_name: companion.name }
+          { num: 1, action: `${compName} vanishes ahead into the dark — you hear their footsteps pause, then continue`, ability: 'companion_scout', align_note: 'exploration / perception', source: 'companion', companion_name: companion.name },
+          { num: 2, action: `${compName} stops. Tilts their head. When they speak, their voice is quieter than before: "Someone has been here. Recently."`, ability: 'companion_discussion', align_note: 'character dialogue / bonding', source: 'companion', companion_name: companion.name },
+          { num: 3, action: compAbility2 ? `${compName} unwinds the ${compAbility2}, letting it taste the unknown` : `${compName} crouches and traces a mark in the dust — old. Older than you. Older than the road`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_observe', align_note: compAbility2 ? 'secondary ability' : 'perception check', source: 'companion', companion_name: companion.name }
         ]
       }
       } // end hardcoded companion fallback (else branch)
@@ -3033,7 +3030,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       if (injuredPCs.length > 0) {
         extraOptions.push({
           num: 5,
-          action: `🏕️ Rest — Take a moment to tend wounds and recover strength (${injuredPCs.length} ${injuredPCs.length === 1 ? 'hero needs' : 'heroes need'} rest)`,
+          action: `Rest here. The world can wait — wounds cannot (${injuredPCs.length} ${injuredPCs.length === 1 ? 'hero needs' : 'heroes need'} rest)`,
           ability: 'rest',
           align_note: 'recover HP, reduce injury duration',
           source: 'pc'
@@ -4203,21 +4200,21 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
             const stripped = aiCompChoices.length - filteredCompChoices.length
             if (stripped > 0) { /* early act I guard */ }
           }
-          // Pad PC choices to 3 with exploration alternatives
+          // Pad PC choices to 3 with Gaiman-styled exploration alternatives
           const pcPads: AIChoice[] = [
-            { narrative: '🔍 Examine your surroundings for hidden details', ability: 'investigation', align_note: 'perception check' },
-            { narrative: '🚶 Move deeper into the area, staying alert', ability: 'exploration', align_note: 'exploration' },
-            { narrative: '👁️ Observe the shard — is it reacting to something nearby?', ability: 'perception', align_note: 'arcana check' },
+            { narrative: 'Kneel and press your palm to the stone — it is warmer than it should be', ability: 'investigation', align_note: 'perception check' },
+            { narrative: 'Follow the silence. Something here has stopped making sound', ability: 'exploration', align_note: 'exploration' },
+            { narrative: 'Listen. Not to the wind — to the absence of it', ability: 'perception', align_note: 'arcana check' },
           ]
           const pcNeeded = 3 - filteredPCChoices.length
           for (let i = 0; i < pcNeeded; i++) {
             filteredPCChoices = [...filteredPCChoices, pcPads[filteredPCChoices.length] || pcPads[0]]
           }
-          // Pad companion choices to 3 with exploration alternatives
+          // Pad companion choices to 3 with Gaiman-styled exploration alternatives
           const compPads: AIChoice[] = [
-            { narrative: '🔍 Scout — Check the area ahead for hidden paths', ability: 'companion_scout', align_note: 'perception check' },
-            { narrative: '🗣️ Discuss — Share thoughts on what you have found', ability: 'companion_discussion', align_note: 'character dialogue' },
-            { narrative: '👁️ Observe — Study the surroundings in careful silence', ability: 'companion_observe', align_note: 'investigation check' },
+            { narrative: 'Moves ahead, testing each stone before committing his weight', ability: 'companion_scout', align_note: 'perception check' },
+            { narrative: 'Stops and tilts his head — he has heard something you have not', ability: 'companion_observe', align_note: 'investigation check' },
+            { narrative: 'Traces a finger along the wall, reading it like a page no one else can see', ability: 'companion_discussion', align_note: 'character insight' },
           ]
           const compNeeded = 3 - filteredCompChoices.length
           for (let i = 0; i < compNeeded; i++) {
