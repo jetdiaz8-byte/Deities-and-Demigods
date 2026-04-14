@@ -2,18 +2,17 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import type {
-  ProphecyState, Ability, Item, Quest, Injury, Entity, ShardEvent, DiceRoll, DamageDealt,
-  StateUpdate, DMResponse, GameOption, AIChoice, SaveSlot, GameState, AntagonistClue, SuccessRateFactors,
-  GreaterGodData, ShardType, InjuryTemplate, PlayerSkills, Aspect
+  ProphecyState, Item, Injury, Entity, DiceRoll, DamageDealt,
+  DMResponse, GameOption, AIChoice, SaveSlot, GameState, PlayerSkills, Aspect
 } from '@/lib/gameTypes'
-import { ACTS, SKILL_ABILITY_MAP } from '@/lib/gameTypes'
-import { SHARD_NAMES, INJURY_TABLE, ITEM_TEMPLATES, ANTAGONIST_CLUES, OPENROUTER_MODEL, OPENROUTER_FALLBACK_MODELS, NPC_NAMES } from '@/lib/gameConstants'
+import { ACTS } from '@/lib/gameTypes'
+import { SHARD_NAMES, INJURY_TABLE, OPENROUTER_MODEL, OPENROUTER_FALLBACK_MODELS, NPC_NAMES } from '@/lib/gameConstants'
 import { createInitialState } from '@/lib/gameState'
-import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, fullStaminaRestore, assignSkillProficiencies, inferClassesFromCharacter, clearEntityCache } from '@/lib/gameHelpers'
+import { toAscii, hpCls, rollDice, sleep, getNPCCategory, getAntagonist, generateId, calculateSuccessRate, calculateAlignmentHarmony, lookupEntity, getAbilityScore, getSkillModifier, performSkillCheck, spendFatePoint, earnFatePoint, addAspect, generateStartingAspects, calculateStamina, regenStamina, assignSkillProficiencies, inferClassesFromCharacter, clearEntityCache } from '@/lib/gameHelpers'
 import { getRandomHeroes } from '@/lib/fallbackEntities'
 import { KRYNN_HEROES, KRYNN_DEMIGODS } from '@/lib/krynnCharacters'
-import { PROPHECIES, rollProphecies, getProphecyById, Prophecy } from '@/lib/prophecyData'
-import { rollAntagonist, getAntagonistById, getAntagonistRival, generateBanishmentNarration, generateRivalSummonNarration, AntagonistCandidate, AntagonistRival } from '@/lib/antagonistPool'
+import { rollProphecies } from '@/lib/prophecyData'
+import { rollAntagonist, getAntagonistRival, generateBanishmentNarration, generateRivalSummonNarration } from '@/lib/antagonistPool'
 import { ALL_CHARACTERS } from '@/lib/characterData'
 import { toast } from '@/hooks/use-toast'
 import type { CharacterPortrait } from '@/components/game/PortraitModal'
@@ -26,7 +25,6 @@ import {
   getTotalCount,
   serializeTracker,
   deserializeTracker,
-  getAchievementDef,
   ACHIEVEMENT_DEFS,
   TIER_CONFIG,
   type AchievementTracker,
@@ -262,7 +260,7 @@ export function useGameEngine() {
 
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [openrouterKey, setOpenrouterKey] = useState('')
-  const [serverKey, setServerKey] = useState('')
+  const [, setServerKey] = useState('')
   const [aiProvider, setAiProvider] = useState<'openrouter' | 'lmstudio'>('openrouter')
   const [engineMode, setEngineMode] = useState<'openrouter' | 'lmstudio' | 'dual'>('openrouter')
   const [lmStudioUrl, setLmStudioUrl] = useState('http://localhost:1234')
@@ -505,7 +503,7 @@ export function useGameEngine() {
           }))
         }
       }
-    } catch {}
+    } catch { /* no-op: quickening restore failure is non-critical */ }
   }, [])
 
   useEffect(() => {
@@ -517,7 +515,7 @@ export function useGameEngine() {
         totalDeityKills: quickeningState.totalDeityKills,
         totalMonstersAbsorbed: quickeningState.totalMonstersAbsorbed,
       }))
-    } catch {}
+    } catch { /* no-op: quickening persist failure is non-critical */ }
   }, [quickeningState.currentPower, quickeningState.activeEcho, quickeningState.absorptionHistory, quickeningState.totalDeityKills, quickeningState.totalMonstersAbsorbed])
 
   // ── BROWSER VOICE DETECTION ──────────────────────────────────────────
@@ -527,10 +525,6 @@ export function useGameEngine() {
       const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('en'))
       setBrowserVoices(voices)
       if (voices.length > 0) {
-        const preferred = [
-          'Google UK English Male', 'Microsoft George Online', 'Microsoft Mark Online',
-          'Daniel', 'Alex', 'Google US English', 'Microsoft David Desktop',
-        ]
         let pick: SpeechSynthesisVoice | undefined = undefined
         for (const pref of ['Google UK English Male', 'Microsoft George Online', 'Microsoft Mark Online', 'Daniel', 'Alex', 'Google US English', 'Microsoft David Desktop']) {
           pick = voices.find(v => v.name === pref)
@@ -579,7 +573,7 @@ export function useGameEngine() {
         .catch(() => {})
     }
     loadSaveSlots()
-  }, [])
+  }, [loadSaveSlots])
 
   useEffect(() => {
     if (openrouterKey && openrouterKey.trim()) {
@@ -645,6 +639,7 @@ export function useGameEngine() {
 
   const shouldTriggerQuickening = (characterId: string): boolean => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const char = ALL_CHARACTERS.find((c: any) => c.id === characterId)
       if (!char) return false
       const rank = (char.divineRank || '').toLowerCase()
@@ -656,6 +651,7 @@ export function useGameEngine() {
 
   const getPowerOptions = (characterId: string): PowerOption[] => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const char = ALL_CHARACTERS.find((c: any) => c.id === characterId)
       if (!char) return []
       const options: PowerOption[] = []
@@ -744,7 +740,7 @@ export function useGameEngine() {
 
 
   // ── SAVE/LOAD FUNCTIONS ────────────────────────────────────────────────
-  const loadSaveSlots = () => {
+  const loadSaveSlots = useCallback(() => {
     const slots: SaveSlot[] = []
     for (let i = 0; i < 5; i++) {
       const data = safeLocalStorageGetItem(`mythworld_save_${i}`)
@@ -765,7 +761,7 @@ export function useGameEngine() {
       }
     }
     setSaveSlots(slots)
-  }
+  }, [])
 
   const trimGameStateForSave = (gs: GameState): GameState => {
     // Keep gameplay-critical state; trim high-growth fields.
@@ -805,7 +801,7 @@ export function useGameEngine() {
       loadSaveSlots()
       toast({ title: 'Game Saved', description: `Saved to ${name}` })
       setShowSaveDialog(false)
-    } catch (e: any) {
+    } catch {
       toast({ title: 'Save Failed', description: 'Storage full. Try deleting old saves.', variant: 'destructive' })
     }
   }
@@ -869,7 +865,6 @@ export function useGameEngine() {
   const getNarrationPreservationFallback = (gs: GameState, reason: string, narrativeOverride?: string): DMResponse => {
     const prose = (narrativeOverride || preJsonNarrativeRef.current || '').trim()
     const narration = prose && prose.length > 30 ? prose.slice(0, 2000) : 'The story pauses as the threads of fate tangle. Choose your next action.'
-    console.warn('📝 Using narrative-preservation fallback:', reason)
     return {
       dm_narration: narration,
       story_summary: gs.storySummary || 'The adventure continues...',
@@ -900,42 +895,6 @@ export function useGameEngine() {
     }
     if (currentChunk) chunks.push(currentChunk.trim())
     return chunks.length > 0 ? chunks : [text.slice(0, maxLength)]
-  }
-
-  const splitTextIntoSentences = (text: string): string[] => {
-    const cleaned = text.replace(/\s+/g, ' ').trim()
-    if (!cleaned) return []
-    const split = cleaned
-      .split(/(?:\.\s+(?=[A-Z])|\.\n+)/g)
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map(s => (/[.!?]$/.test(s) ? s : `${s}.`))
-    const chunked: string[] = []
-    for (const sentence of (split.length ? split : [cleaned])) {
-      if (sentence.length <= 150) {
-        chunked.push(sentence)
-        continue
-      }
-      const parts = sentence
-        .split(/(?<=[,;—-])\s+/)
-        .map(p => p.trim())
-        .filter(Boolean)
-      let bucket = ''
-      for (const part of parts) {
-        if (!bucket.length) {
-          bucket = part
-          continue
-        }
-        if (`${bucket} ${part}`.length <= 150) {
-          bucket = `${bucket} ${part}`
-        } else {
-          chunked.push(bucket)
-          bucket = part
-        }
-      }
-      if (bucket) chunked.push(bucket)
-    }
-    return chunked.length ? chunked : [cleaned.slice(0, 150)]
   }
 
   const cleanNarrationForDisplay = (text: string): string => {
@@ -981,10 +940,12 @@ export function useGameEngine() {
       const combatKeywords = /\b(attack|slash|spell|hit|damage|hp|initiative|round|strike|blast)\b/i.test(text)
       return { cleanText: text, combatData: combatKeywords ? { isActive: combatState.isActive || true } : {} }
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsed: any = null
     try { parsed = JSON.parse(m[1]) } catch { parsed = null }
     const cleanText = text.replace(m[0], '').trim()
     if (!parsed) return { cleanText, combatData: {} }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const turnOrder: CombatantTurn[] = (parsed.turn_order || []).map((c: any) => ({
       id: c.id || c.portrait || c.name?.toLowerCase().replace(/\s+/g, '-') || generateId(),
       name: c.name || 'Unknown',
@@ -997,6 +958,7 @@ export function useGameEngine() {
       statusEffects: Array.isArray(c.status) ? c.status : [],
       isDead: Number(c.hp || 0) <= 0,
     }))
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const log: CombatLogEntry[] = (parsed.log || []).map((l: any) => ({
       round: Number(parsed.round || combatState.round || 1),
       actor: l.actor || 'Unknown',
@@ -1025,6 +987,7 @@ export function useGameEngine() {
   const parseQuestData = (text: string): { cleanText: string; questData: Partial<QuestJournalState> } => {
     const m = text.match(/<quest_data>([\s\S]*?)<\/quest_data>/i)
     if (!m) return { cleanText: text, questData: {} }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsed: any = null
     try { parsed = JSON.parse(m[1]) } catch { parsed = null }
     const cleanText = text.replace(m[0], '').trim()
@@ -1041,6 +1004,7 @@ export function useGameEngine() {
         description: q.description,
         type: q.type || 'side',
         status: q.status || 'active',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         objectives: (q.objectives || []).map((o: any) => ({ text: o.text, isCompleted: !!(o.completed ?? o.isCompleted), isOptional: !!(o.optional ?? o.isOptional) })),
         location: q.location,
         reward: q.reward,
@@ -1087,6 +1051,7 @@ export function useGameEngine() {
   const parseConsequenceData = (text: string, currentTurn: number): { cleanText: string; consequenceData: Partial<ConsequenceState>; rippleNarration?: string } => {
     const m = text.match(/<consequence_data>([\s\S]*?)<\/consequence_data>/i)
     if (!m) return { cleanText: text, consequenceData: {} }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let parsed: any = null
     try { parsed = JSON.parse(m[1]) } catch { parsed = null }
     const cleanText = text.replace(m[0], '').trim()
@@ -1171,6 +1136,7 @@ export function useGameEngine() {
           portrait,
           pantheon: parsed.pantheon || 'Unknown',
           divineRank: parsed.divine_rank || 1,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           powerOptions: (parsed.power_options || []).map((p: any) => ({
             name: p.name || 'Unknown Power',
             description: p.description || '',
@@ -1179,9 +1145,7 @@ export function useGameEngine() {
           })),
           phase: 'offer',
         }
-      } catch (e) {
-        console.error('Failed to parse quickening_data:', e)
-      }
+      } catch { /* quickening_data parse failed */ }
     }
 
     // Parse quickening_result (absorption result)
@@ -1248,8 +1212,7 @@ export function useGameEngine() {
           currentLegendTitle: legendTitle,
           pendingQuickening: null,
         }
-      } catch (e) {
-        console.error('Failed to parse quickening_result:', e)
+      } catch {
         quickeningUpdate = { pendingQuickening: null }
       }
     }
@@ -1369,11 +1332,9 @@ export function useGameEngine() {
             utterance.onerror = (e) => {
               const errStr = (e.error || '').toLowerCase()
               if (errStr.includes('interrupt') || errStr.includes('cancel') || abortSpeakRef.current) {
-                console.log(`🔊 TTS chunk ${idx}/${chunks.length}: ${e.error} — done`)
                 finish()
                 return
               }
-              console.warn(`🔊 TTS chunk ${idx}/${chunks.length} error: ${e.error} — skipping`)
               window.setTimeout(speakNext, 80)
             }
 
@@ -1436,21 +1397,18 @@ export function useGameEngine() {
     // v2.27.0: Speaking lock — prevents concurrent speakText calls entirely.
     // This is the primary defense against TTS repetition.
     if (speakingLockRef.current) {
-      console.log('🔊 TTS locked (already speaking), skipping')
       return
     }
 
     // Global cooldown guard: prevent rapid re-speak from race conditions
     const now = Date.now()
     if (now < ttsCooldownUntilRef.current) {
-      console.log('🔊 TTS cooldown active, skipping')
       return
     }
 
     // Dedup guard: skip if we just spoke this exact same text
     const textHash = text.length + ':' + text.slice(0, 80)
     if (lastSpokenHashRef.current === textHash) {
-      console.log('🔊 TTS dedup: skipping identical text')
       return
     }
     lastSpokenHashRef.current = textHash
@@ -1483,7 +1441,6 @@ export function useGameEngine() {
           await speakWithEdgeTTS(text, voice)
         } catch {
           // Edge TTS failed (network/timeout) — silently fall back to browser
-          console.warn('🔄 Edge TTS failed, falling back to Browser voice...')
           await speakWithBrowser(text)
         }
       } else {
@@ -1491,8 +1448,7 @@ export function useGameEngine() {
         await speakWithBrowser(text)
       }
       setStatusMessage('Ready')
-    } catch (error) {
-      console.error('TTS Error:', error)
+    } catch {
       // Don't show error toasts for TTS failures — they're disruptive during gameplay
       setIsSpeaking(false)
       setStatusMessage('Ready')
@@ -1600,6 +1556,7 @@ export function useGameEngine() {
       if (r.ok) {
         const data = await r.json()
         if (data.entities && data.entities.length > 0) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const validHeroes: Entity[] = data.entities.map((h: any) => ({
             id: h.id,
             name: h.name,
@@ -1676,9 +1633,7 @@ export function useGameEngine() {
           return
         }
       }
-    } catch (e) {
-      console.warn('Database fetch failed, using fallback:', e)
-    }
+    } catch { /* DB fetch failed, using fallback */ }
     
     // Fallback to embedded data — get all heroes, not just 12
     const fallbackEntities = getRandomHeroes(999)
@@ -1736,8 +1691,9 @@ export function useGameEngine() {
     }
 
     // Deep copy to avoid mutating availableHeroes state directly
-    const mainPC: Entity = { ...availableHeroes.find(h => h.id === selectedParty[0])! }
-    if (!mainPC) return
+    const mainPCHandle = availableHeroes.find(h => h.id === selectedParty[0])
+    if (!mainPCHandle) return
+    const mainPC: Entity = { ...mainPCHandle }
 
     // Infer class levels from character data (before skill assignment & aspect generation)
     const inferred = inferClassesFromCharacter(mainPC)
@@ -2416,7 +2372,7 @@ THE SHARD — ${shard?.name} [${shard?.pantheon || 'Unknown'} Pantheon]
 ═══════════════════════════════════════════════════════════════════════════
 ${toAscii(shard?.origin || '')}
 Power: ${shard?.power || 'Unknown'}
-Charges: ${gs.shardCharges}/3 | Shield Used: ${(gs as any).shardShieldUsed ? 'YES' : 'no'}
+Charges: ${gs.shardCharges}/3 | Shield Used: ${(gs as Record<string, unknown>).shardShieldUsed ? 'YES' : 'no'}
 ${actCtx}
 Turn: ${gs.turn} | Act I Limit: ${gs.act1TurnLimit} | Act II Duration: ${gs.act2TurnLimit}
 ${isFirstTurn ? `\n⚠️ TURN 0 — SHARD INTRODUCTION ONLY. NO characters, NO PCs, NO companions.\n- Do NOT include "companion_choices" in your JSON — set "companion_choices": []\n- Only include "pc_choices" for exploring the shard's origin.\n` : ''}
@@ -2561,6 +2517,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         if (r.status === 503) {
           // Check if it's a missing API key — fail fast, no retries
           const errBody = await r.json().catch(() => ({}))
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if ((errBody as any).errorType === 'no_api_key') {
             setStatusMessage('The voices have gone silent — the oracle cannot reach this realm.')
             toast({ title: 'Connection Severed', description: 'The thread between worlds is broken. Seek the keeper of keys to restore it.', variant: 'destructive' })
@@ -2577,7 +2534,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           const errMsg = errData?.error?.message || `HTTP ${r.status}`
           // Fast-fail on 500 — no point retrying a server/config error
           if (r.status === 500) {
-            console.error('[OpenRouter] 500 error — likely missing API key or provider outage:', errMsg)
             return getNarrationPreservationFallback(gs, 'API key not configured or provider error')
           }
           throw new Error(`OpenRouter ${r.status}: ${errMsg}`)
@@ -2624,11 +2580,9 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           text = data.choices?.[0]?.message?.content || ''
         }
         if (!text || text.trim().length < 10) throw new Error('OpenRouter returned empty response')
-        console.log('OpenRouter response: ' + text.length + ' chars, ' + (isFirstTurn ? 'OPENING' : 'TURN ' + gs.turn))
         updateTokenUsage(totalInput, text)
         return parseDMResponse(text, gs)
       } catch (e) {
-        console.error('OpenRouter fetch error (attempt ' + (attempt + 1) + '):', e)
         if (attempt < MAX_RETRIES - 1 && String(e).includes('fetch')) continue
         if (attempt === MAX_RETRIES - 1) return getNarrationPreservationFallback(gs, String(e))
       }
@@ -2676,7 +2630,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     if (narrative.length > 30) setLastDMNarrative(narrative)
 
     if (!jsonStr) {
-      console.warn('⚠️ No JSON in response, using narrative-preservation fallback')
       // If we have pre-JSON prose, use it instead of losing everything to template
       if (preJsonNarrativeRef.current && preJsonNarrativeRef.current.length > 30) {
         const extracted = extractDiceRollsFromRaw(raw)
@@ -2697,12 +2650,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     }
 
     // Repair JSON
-    let s = jsonStr.replace(/```json\s*/ig, '').replace(/```\s*/g, '').trim()
+    const s = jsonStr.replace(/```json\s*/ig, '').replace(/```\s*/g, '').trim()
     try {
       const parsed = JSON.parse(s)
       // Validate parsed result is a non-null object with dm_narration
       if (!parsed || typeof parsed !== 'object' || !parsed.dm_narration) {
-        console.warn('⚠️ Parsed JSON missing dm_narration, using template fallback')
         return getNarrationPreservationFallback(gs, 'Missing dm_narration field')
       }
       if (!Array.isArray(parsed.dice_rolls) || parsed.dice_rolls.length === 0) {
@@ -2772,10 +2724,11 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         try {
           const parsed = JSON.parse(repaired)
           if (parsed && typeof parsed === 'object' && parsed.dm_narration) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (!Array.isArray((parsed as any).dice_rolls) || (parsed as any).dice_rolls.length === 0) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               ;(parsed as any).dice_rolls = extractDiceRollsFromRaw(raw)
             }
-            console.warn(`⚠️ JSON truncation repaired — trimmed mid-string, added ${missingBraces} braces, ${missingBrackets} brackets`)
             return parsed
           }
         } catch { /* repair failed, try brace extraction */ }
@@ -2788,21 +2741,20 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       try {
         const parsed = JSON.parse(s.substring(firstBrace, lastBrace + 1))
         if (parsed && typeof parsed === 'object' && parsed.dm_narration) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (!Array.isArray((parsed as any).dice_rolls) || (parsed as any).dice_rolls.length === 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             ;(parsed as any).dice_rolls = extractDiceRollsFromRaw(raw)
           }
           return parsed
         }
-      } catch { }
+      } catch { /* repair failed, try brace extraction */ }
     }
-
-    console.warn('⚠️ JSON parse failed, using template fallback')
     // CRITICAL FIX: When truncation breaks JSON, we already have valid pre-JSON narrative.
     // Don't use template fallback (which loses game state) — instead build a safe response
     // that preserves the narrative text and returns current game state unchanged.
     const savedNarrative = preJsonNarrativeRef.current
     if (savedNarrative && savedNarrative.length > 30) {
-      console.warn('📝 Using narrative-preservation fallback (JSON lost, prose intact)')
       const extracted = extractDiceRollsFromRaw(raw)
       // Return a safe DMResponse that keeps game state stable while showing the prose
       return {
@@ -3090,7 +3042,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     
     // Fate Point invoke — one option per aspect so player can choose
     if (gameState.fatePoints > 0 && gameState.aspects.length > 0) {
-      gameState.aspects.forEach((aspect, idx) => {
+      gameState.aspects.forEach((aspect) => {
         const typeBadge = aspect.type === 'high_concept' ? '◆' : aspect.type === 'trouble' ? '⚡' : aspect.type === 'earned' ? '★' : '○'
         const descSnippet = aspect.description ? ` — ${aspect.description.slice(0, 50)}${aspect.description.length > 50 ? '…' : ''}` : ''
         extraOptions.push({
@@ -3280,7 +3232,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
               hpProcessedPcs.add(updatedPc.id)
               if (updatedPc.hp <= 0) {
                 // v2.19.0: Check Shard Shield FIRST, then Death Ward
-                let shieldResult = tryConsumeShardShield(
+                const shieldResult = tryConsumeShardShield(
                   { ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] },
                   updatedPc.id, gs.turn
                 )
@@ -3344,7 +3296,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
 
         // Guard 1: Entity must exist in the codex (or be the antagonist)
         if (!validEntityIds.has(normalizedId)) {
-          console.warn(`🛡️ CODEX GUARD: Rejected non-codex entity "${id}" — not found in DDG roster`)
           continue
         }
 
@@ -3356,7 +3307,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           if (isEarlyActI) {
             const cat = (npc.category || getNPCCategory(id) || '').toLowerCase()
             if (cat === 'monsters' || cat === 'monster') {
-              console.warn(`🛡️ EARLY ACT I GUARD: Blocked enemy "${npc.name}" [${id}] before turn 8`)
               continue
             }
           }
@@ -3452,9 +3402,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     // ── CLEANUP: Remove enemies with 0 HP that weren't caught by state_updates ──
     // The DM may narrate an enemy's defeat without including it in state_updates.
     // Also removes enemies from Act I turns 1-7 (no combat in Act I opening).
-    const currentEnemies = newGS.activeNPCs.filter(n => !n.dead && (
-      n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS'
-    ))
     // Auto-purge enemies that are at 0 HP but not marked dead
     const zeroHpEnemies = newGS.activeNPCs.filter(n => (
       !n.dead && (n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS') && n.hp <= 0
@@ -3812,8 +3759,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     // ═══════════════════════════════════════════════════════════════════════════
     // MASS EFFECT PARAGON/RENEGADE — Process morality from DM response
     // ═══════════════════════════════════════════════════════════════════════════
-    let paragonDelta = (res.paragon_delta ?? 0) as number
-    let renegadeDelta = (res.renegade_delta ?? 0) as number
+    const paragonDelta = (res.paragon_delta ?? 0) as number
+    const renegadeDelta = (res.renegade_delta ?? 0) as number
 
     if (paragonDelta > 0 || renegadeDelta > 0) {
       const newParagon = newGS.paragonPoints + paragonDelta
@@ -3909,20 +3856,19 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         }
         throw new Error('LM Studio ' + r.status + ': ' + errText.slice(0, 200))
       }
-      const { data, modelUsed } = await r.json()
+      const { data } = await r.json()
       const text: string = data?.candidates?.[0]?.content?.parts?.[0]?.text || ''
       if (!text) throw new Error('LM Studio returned empty response')
-      console.log('[LM Studio] OK ' + (modelUsed || 'local') + ' - ' + text.length + ' chars')
-      const jsonMatch = text.match(/\{[\s\S]*?\"dm_narration\"[\s\S]*\}/)
+      const jsonMatch = text.match(/\{[\s\S]*?"dm_narration"[\s\S]*\}/)
       if (jsonMatch) {
         try {
-          const cleaned = jsonMatch[0].replace(/\\\json\s*/ig, '').replace(/\\\\s*/g, '').trim()
+          const cleaned = jsonMatch[0].replace(/\\json\s*/ig, '').replace(/\\\s*/g, '').trim()
           const parsed = JSON.parse(cleaned)
           if (parsed && typeof parsed === 'object' && parsed.dm_narration) {
             if (parsed.dm_narration.length > 30) setLastDMNarrative(parsed.dm_narration)
             return parsed as DMResponse
           }
-        } catch (pe) { console.warn('[LM Studio] JSON parse failed:', pe) }
+        } catch { /* JSON parse failed */ }
       }
       const narrative = text.split(/\n*\{/)[0].trim()
       if (narrative.length > 30) {
@@ -3936,7 +3882,6 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       }
       throw new Error('LM Studio: Could not parse response into game data')
     } catch (e) {
-      console.error('[LM Studio] Error:', e)
       if (!opts?.noOpenRouterFallback) {
         setStatusMessage('LM Studio error - OpenRouter fallback...')
         return callOpenRouterDM(userMsg, gs, isFirst)
@@ -3969,16 +3914,13 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         journey_so_far: g.journey_so_far || lm.journey_so_far,
         dm_narration: g.dm_narration,
       }
-      console.log('[Dual Engine] Merged:', { lm: (lm.dice_rolls?.length || 0) + 'd/' + (lm.state_updates?.length || 0) + 's', g: (g.dm_narration?.length || 0) + ' chars' })
       return merged
     }
     if (openrouterOk) {
-      console.warn('[Dual Engine] LM Studio failed, OpenRouter-only')
       setStatusMessage('LM Studio unavailable - OpenRouter handling everything')
       return openrouterResult.value as DMResponse
     }
     if (lmOk) {
-      console.warn('[Dual Engine] OpenRouter failed, LM Studio-only')
       setStatusMessage('OpenRouter unavailable - LM Studio handling everything')
       return lmResult.value as DMResponse
     }
@@ -4210,12 +4152,12 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
           if (aiPCChoices) {
             filteredPCChoices = aiPCChoices.filter(c => !COMBAT_ABILITIES.includes(c.ability || ''))
             const stripped = aiPCChoices.length - filteredPCChoices.length
-            if (stripped > 0) console.warn(`🛡️ EARLY ACT I GUARD: Stripped ${stripped} combat PC choice(s) before turn 8`)
+            if (stripped > 0) { /* early act I guard */ }
           }
           if (aiCompChoices) {
             filteredCompChoices = aiCompChoices.filter(c => !COMBAT_ABILITIES.includes(c.ability || ''))
             const stripped = aiCompChoices.length - filteredCompChoices.length
-            if (stripped > 0) console.warn(`🛡️ EARLY ACT I GUARD: Stripped ${stripped} combat companion choice(s) before turn 8`)
+            if (stripped > 0) { /* early act I guard */ }
           }
           // Pad PC choices to 3 with exploration alternatives
           const pcPads: AIChoice[] = [
@@ -4239,9 +4181,6 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
           }
         }
 
-        console.log(`🎯 AI choices — pc_choices: ${filteredPCChoices?.length || 0}, companion_choices: ${filteredCompChoices?.length || 0}${gs.turn === 0 && res.companion_choices?.length ? ' (STRIPPED — turn 0)' : ''}${isEarlyAct1 ? ' (EARLY ACT I — combat filtered)' : ''}`)
-        if (aiPCChoices?.length) console.log('  pc_choices:', JSON.stringify(aiPCChoices).slice(0, 300))
-        if (aiCompChoices?.length) console.log('  companion_choices:', JSON.stringify(aiCompChoices).slice(0, 300))
 
         const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(humanPC, {
           pc_choices: filteredPCChoices,
@@ -4275,7 +4214,6 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
           setTtsPending(true)
           // Clear dedup hash so new turn's narration can be spoken when user clicks
           lastSpokenHashRef.current = ''
-          console.log(`🔊 TTS narration ready (on-demand): ${ttsText.length} chars, turn=${currentTurnNum}`)
         }
       }
     } catch (e) {
@@ -4395,9 +4333,7 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
       // Only fall back to pre-JSON prose if JSON is suspiciously short (< 50 chars)
       narr = jsonNarr.length >= 50 ? jsonNarr : (preJsonNarr || jsonNarr || 'The DM gathers thoughts...')
     }
-    if (preJsonNarr.length > 0 && jsonNarr.length > 0) {
-      console.log(`📝 Narration — pre-JSON prose: ${preJsonNarr.length} chars, JSON dm_narration: ${jsonNarr.length} chars, using: ${narr === preJsonNarr ? 'pre-JSON' : 'JSON'} (isFirst=${isFirst})`)
-    }
+    // narration comparison logged during development
     const combatParsed = parseCombatData(narr)
     const questParsed = parseQuestData(combatParsed.cleanText)
     const consequenceParsed = parseConsequenceData(questParsed.cleanText, gs.turn)
@@ -4429,7 +4365,6 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
       const isEarlyActI = gs.act === ACTS.ONE && gs.turn < 8
       const hasStructuredCombat = !!(combatParsed.combatData.turnOrder && combatParsed.combatData.turnOrder.length > 0)
       if (isEarlyActI && !hasStructuredCombat) {
-        console.warn('🛡️ EARLY ACT I GUARD: Suppressing keyword-based combat activation before turn 8')
         // Also deactivate if combat was spuriously active
         if (combatState.isActive) {
           setCombatState(prev => ({ ...prev, isActive: false, victory: null }))
@@ -4488,7 +4423,6 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
     // This guarantees TTS always reads complete, clean DM narration.
     // ═════════════════════════════════════════════════════════════════════════
     ttsNarrationRef.current = displayedText
-    console.log(`🔊 TTS narration saved: ${displayedText.length} chars, ready for speech`)
     // ═════════════════════════════════════════════════════════════════════════
     // SCENE IMAGE GENERATION — Always generate a fantasy scene illustration
     // for each DM turn. Uses AI image gen with SVG fallback.
@@ -4499,27 +4433,22 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
         ((res.dice_rolls || []).length > 0) ||
         ((res.damage_dealt || []).length > 0)
       const narrationForImage = displayedText || narr
-      console.log(`🖼️ Scene image gen — turn:${gs.turn}, narrLen:${narrationForImage?.length || 0}, combat:${isCombatScene}`)
       const seededPanels = await generateComicPanels(narrationForImage, isCombatScene, { artStyle: comicArtStyle, maxPanels: 1 })
       const cachedTurnImage = sceneImageByTurn[gs.turn]
       if (cachedTurnImage) {
-        console.log(`🖼️ Using cached image for turn ${gs.turn}`)
         setComicPanels(seededPanels.map(panel => ({ ...panel, imageUrl: cachedTurnImage, isGenerating: false, error: undefined })))
       } else {
-        console.log(`🖼️ Generating new AI image for turn ${gs.turn}...`)
         setComicPanels(seededPanels)
         const renderedPanels = await Promise.all(
           seededPanels.map(panel => generatePanelImage(panel, narrationForImage, comicArtStyle, gs.turn)),
         )
-        console.log(`🖼️ Image generated — panels: ${renderedPanels.length}, hasImage: ${!!renderedPanels[0]?.imageUrl}, isPlaceholder: ${renderedPanels[0]?.imageUrl?.startsWith('data:image/svg')}`)
         setComicPanels(renderedPanels)
         const firstImage = renderedPanels.find(p => p.imageUrl)?.imageUrl
         if (firstImage) {
           setSceneImageByTurn(prev => ({ ...prev, [gs.turn]: firstImage }))
         }
       }
-    } catch (sceneErr) {
-      console.warn('Scene image generation failed:', sceneErr)
+    } catch {
       setComicPanels([])
     }
 
@@ -4727,14 +4656,6 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
 
     // Dice Rolls - Visual display with actual dice data
     const renderDiceFace = (sides: number, value: number): string => {
-      const colors: { [key: number]: string } = {
-        4: 'from-red-700 to-red-500 border-red-400',
-        6: 'from-blue-700 to-blue-500 border-blue-400',
-        8: 'from-green-700 to-green-500 border-green-400',
-        10: 'from-purple-700 to-purple-500 border-purple-400',
-        12: 'from-amber-700 to-amber-500 border-amber-400',
-        20: 'from-yellow-600 to-yellow-400 border-yellow-300'
-      }
       const shapes: { [key: number]: string } = {
         4: 'clip-path: polygon(50% 0%, 0% 100%, 100% 100%)',
         8: 'clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
@@ -4742,7 +4663,6 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
         12: 'clip-path: polygon(50% 0%, 85% 15%, 100% 50%, 85% 85%, 50% 100%, 15% 85%, 0% 50%, 15% 15%)',
         20: 'clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%)'
       }
-      const color = colors[sides] || 'from-gray-700 to-gray-500 border-gray-400'
       const shape = shapes[sides] || 'border-radius: 8px'
       return `<div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,${sides === 20 ? '#b8860b,#ffd700' : sides === 12 ? '#92400e,#f59e0b' : sides === 10 ? '#6b21a8,#a855f7' : sides === 8 ? '#166534,#22c55e' : sides === 6 ? '#1e40af,#3b82f6' : '#b91c1c,#ef4444'});color:#fff;font-weight:bold;font-size:1.1rem;text-shadow:1px 1px 2px rgba(0,0,0,0.8);${shape};border:2px solid ${sides === 20 ? '#ffd700' : sides === 12 ? '#f59e0b' : sides === 10 ? '#a855f7' : sides === 8 ? '#22c55e' : sides === 6 ? '#3b82f6' : '#ef4444'}">${value}</div>`
     }
@@ -4760,7 +4680,7 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
           const isSuccess = d.success
           return `<div style="margin-bottom:12px;padding:12px;border-radius:8px;border:2px solid ${isSuccess ? '#22c55e' : '#ef4444'};background:linear-gradient(135deg,${isSuccess ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)'},${isSuccess ? 'rgba(34,197,94,0.05)' : 'rgba(239,68,68,0.05)'});box-shadow:0 0 15px ${isSuccess ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}">
             <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px">
-              ${Array.from({ length: count }).map((_, i) => renderDiceFace(sides, Math.max(1, Math.floor((d.roll || 1) / count)))).join('')}
+              ${Array.from({ length: count }).map(() => renderDiceFace(sides, Math.max(1, Math.floor((d.roll || 1) / count)))).join('')}
             </div>
             <div style="text-align:center">
               <div style="font-family:'Cinzel Decorative',serif;font-size:.9rem;color:#d4af37;margin-bottom:4px">${toAscii(d.roller || 'Unknown')} rolls ${d.die?.toUpperCase() || 'D20'}</div>
@@ -4847,7 +4767,6 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
     // Dedup guard: prevent appending identical HTML blocks (e.g., from React re-renders)
     const lastItem = narrativeContentRef.current[narrativeContentRef.current.length - 1]
     if (lastItem && lastItem.html === html) {
-      console.warn('📖 Narrative dedup: skipping identical block')
       return
     }
     // Trim to last 100 entries to prevent unbounded memory growth
@@ -5002,13 +4921,13 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
 
         // Restore prophecy to the revived PC if it was transferred to a successor
         const successorProphecy = newGS.prophecies.find(p =>
-          p.previous_holders.includes(ctx.pcId!) && p.pc_id !== ctx.pcId
+          p.previous_holders.includes(ctx.pcId) && p.pc_id !== ctx.pcId
         )
         if (successorProphecy) {
           const prevHolder = successorProphecy.pc_id
           newGS.prophecies = newGS.prophecies.map(p =>
             p.pc_id === prevHolder
-              ? { ...p, pc_id: ctx.pcId!, previous_holders: [...p.previous_holders.slice(0, -1)], state: p.state as 'awakening' | 'dormant' }
+              ? { ...p, pc_id: ctx.pcId, previous_holders: [...p.previous_holders.slice(0, -1)], state: p.state as 'awakening' | 'dormant' }
               : p
           )
           // Remove successor from party if they were added solely as a prophecy replacement
@@ -5252,7 +5171,6 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
     // ARCHRIVAL SUMMON — Special handling for Option 7 in Act III
     // ═══════════════════════════════════════════════════════════════════════════
     const isRivalSummon = chosen?.source === 'archrival_summon' && gs.antagonistBanished && gs.antagonistRival
-    let rivalSummoned = false
 
     setStatusMessage(`Resolving ${humanPC?.name}'s choice${compChosen ? ` + ${companion?.name?.split(' ')[0]}'s action` : ''}...`)
 
@@ -5463,7 +5381,6 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
 
       const nextPC = newGS.pcs.find(p => p.id === newGS.humanPCId && !p.dead) || living[0]
       if (nextPC) {
-        const sceneCtx = `Act ${newGS.act}, Turn ${newGS.turn}. SUMMARY: ${newGS.storySummary}\nRECENT: ` + newGS.log.slice(0, 3).map(l => l.msg).join(' | ')
         const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(nextPC, {
           pc_choices: res.pc_choices,
           companion_choices: res.companion_choices
@@ -5584,7 +5501,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     const targetPC = gameState.pcs.find(p => p.id === gameState.humanPCId && !p.dead) || gameState.pcs.find(p => !p.dead)
     if (!targetPC) return
 
-    let newGS = { ...gameState }
+    const newGS = { ...gameState }
 
     // Apply item effect immutably — never mutate original state objects
     if (item.modifier?.healing) {
@@ -5685,7 +5602,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     if (item.modifier?.str_set) {
       newGS.pcs = newGS.pcs.map(p => {
         if (p.id !== targetPC.id) return p
-        return { ...p, str: `${item.modifier!.str_set}/00` }
+        return { ...p, str: `${item.modifier?.str_set ?? '18'}/00` }
       })
       toast({ title: `${item.name} Used`, description: `${targetPC.name}'s STR surges to 18/00!` })
     }
@@ -5815,6 +5732,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     // Build player choice timeline from consequenceState
     const choices = consequenceState.choices || []
     const choiceByTurn: Record<number, string> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     choices.forEach((c: any) => {
       choiceByTurn[c.turn] = c.chosen
     })
