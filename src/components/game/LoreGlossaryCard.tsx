@@ -129,13 +129,16 @@ function LoreGlossaryCard({
 
   const { entry, x, y } = cardProps
 
-  // Intelligent positioning — avoid going off-screen
+  // Intelligent positioning — avoid going off-screen (SSR-safe)
   const cardWidth = 280
   const cardMaxHeight = 200
-  const adjustedX = Math.min(x, window.innerWidth - cardWidth - 16)
-  const adjustedY = y + cardMaxHeight > window.innerHeight
-    ? Math.max(8, y - cardMaxHeight - 40)
-    : Math.min(y, window.innerHeight - cardMaxHeight - 16)
+  const isClient = typeof window !== 'undefined'
+  const adjustedX = isClient ? Math.min(x, window.innerWidth - cardWidth - 16) : x
+  const adjustedY = isClient
+    ? (y + cardMaxHeight > window.innerHeight
+      ? Math.max(8, y - cardMaxHeight - 40)
+      : Math.min(y, window.innerHeight - cardMaxHeight - 16))
+    : y
 
   const typeColors: Record<string, string> = {
     hero: '#4a90c0',

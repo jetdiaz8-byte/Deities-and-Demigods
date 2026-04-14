@@ -1048,8 +1048,11 @@ export function useGameEngine() {
         turnGiven: gameState.turn,
       }
       if (idx === -1) quests.push(normalized)
-      else quests[idx] = { ...quests[idx], ...normalized }
-      if (normalized.status === 'completed' && idx > -1 && quests[idx].status !== 'completed') totalQuestsCompleted += 1
+      else {
+        const oldStatus = quests[idx].status
+        quests[idx] = { ...quests[idx], ...normalized }
+        if (normalized.status === 'completed' && oldStatus !== 'completed') totalQuestsCompleted += 1
+      }
     }
     for (const l of (parsed.locations || [])) {
       const idx = locations.findIndex(x => x.id === l.id)
@@ -1150,7 +1153,7 @@ export function useGameEngine() {
     return { cleanText, consequenceData: next, rippleNarration }
   }
 
-  const parseQuickeningData = (text: string, currentTurn: number): { cleanText: string; quickeningUpdate: Partial<QuickeningState> } => {
+  const parseQuickeningData = (text: string, currentTurn: number, prevQuickeningState: QuickeningState): { cleanText: string; quickeningUpdate: Partial<QuickeningState> } => {
     let cleanText = text
     let quickeningUpdate: Partial<QuickeningState> = {}
 
@@ -1187,7 +1190,7 @@ export function useGameEngine() {
       cleanText = cleanText.replace(resultMatch[0], '').trim()
       try {
         const parsed = JSON.parse(resultMatch[1])
-        const prev = quickeningState
+        const prev = prevQuickeningState
         const gambleResult = parsed.gamble_result || 'clean'
         const attunementStart = parsed.attunement_start || (gambleResult === 'resistant' ? 50 : 70)
 
@@ -2566,11 +2569,12 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       }
       // Step 2: Remove trailing comma
       repaired = repaired.replace(/,\s*$/, '')
-      // Step 3: Count and close unclosed braces/brackets
-      const openBraces = (repaired.match(/\{/g) || []).length
-      const closeBraces = (repaired.match(/\}/g) || []).length
-      const openBrackets = (repaired.match(/\[/g) || []).length
-      const closeBrackets = (repaired.match(/\]/g) || []).length
+      // Step 3: Count and close unclosed braces/brackets (strip quoted strings first)
+      const strippedForCounting = repaired.replace(/"(?:[^"\\]|\\.)*"/g, '')
+      const openBraces = (strippedForCounting.match(/\{/g) || []).length
+      const closeBraces = (strippedForCounting.match(/\}/g) || []).length
+      const openBrackets = (strippedForCounting.match(/\[/g) || []).length
+      const closeBrackets = (strippedForCounting.match(/\]/g) || []).length
       const missingBraces = openBraces - closeBraces
       const missingBrackets = openBrackets - closeBrackets
       if (missingBraces > 0 || missingBrackets > 0) {
@@ -3219,19 +3223,26 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
             pc.conditions = pc.conditions.filter(c => c !== u.remove_condition)
           }
           if (u.dead || pc.hp <= 0) {
-            // Check Death Ward before marking dead
-            const wardResult = tryConsumeDeathWard(newGS, pc.id, gs.turn)
-            if (wardResult.warded) {
-              newGS = wardResult.gs
-              // Skip death — the ward absorbed it
+            // Check Shard Shield FIRST, then Death Ward
+            const shieldResult = tryConsumeShardShield(newGS, pc.id, gs.turn)
+            if (shieldResult.shielded) {
+              newGS = shieldResult.gs
+              // Skip death — the shield absorbed it
             } else {
-              pc.dead = true
-              pc.hp = 0
-              soundEvents.emit({ type: 'death' })
-              triggerScreenEffect('screen-effect-shake')
+              // Check Death Ward before marking dead
+              const wardResult = tryConsumeDeathWard(newGS, pc.id, gs.turn)
+              if (wardResult.warded) {
+                newGS = wardResult.gs
+                // Skip death — the ward absorbed it
+              } else {
+                pc.dead = true
+                pc.hp = 0
+                soundEvents.emit({ type: 'death' })
+                triggerScreenEffect('screen-effect-shake')
 
-              // ═══ PROPHECY TRANSFER ON DEATH — Story-Driven Chain ═══
-              newGS = transferProphecyOnDeath(newGS, pc.id, gs.turn)
+                // ═══ PROPHECY TRANSFER ON DEATH — Story-Driven Chain ═══
+                newGS = transferProphecyOnDeath(newGS, pc.id, gs.turn)
+              }
             }
           }
           newGS.pcs = [...newGS.pcs.slice(0, pcIdx), pc, ...newGS.pcs.slice(pcIdx + 1)]
@@ -3316,16 +3327,23 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
             const updatedPc = { ...newGS.pcs[targetIdx] }
             updatedPc.hp = Math.max(0, updatedPc.hp - dmg)
             if (updatedPc.hp <= 0) {
-              // Check Death Ward before marking dead
-              const wardResult = tryConsumeDeathWard({ ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] }, updatedPc.id, newGS.turn)
-              if (wardResult.warded) {
-                newGS = wardResult.gs
-                // Skip death — the ward absorbed it. Update fellText.
-                // (The log message is already inside tryConsumeDeathWard)
+              // Check Shard Shield FIRST, then Death Ward
+              const shieldResult = tryConsumeShardShield({ ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] }, updatedPc.id, newGS.turn)
+              if (shieldResult.shielded) {
+                newGS = shieldResult.gs
+                // Skip death — the shield absorbed it
               } else {
-                updatedPc.dead = true; updatedPc.hp = 0; soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
-                // Prophecy transfer — same chain as state_updates death path
-                newGS = transferProphecyOnDeath({ ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] }, updatedPc.id, newGS.turn)
+                // Check Death Ward before marking dead
+                const wardResult = tryConsumeDeathWard({ ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] }, updatedPc.id, newGS.turn)
+                if (wardResult.warded) {
+                  newGS = wardResult.gs
+                  // Skip death — the ward absorbed it. Update fellText.
+                  // (The log message is already inside tryConsumeDeathWard)
+                } else {
+                  updatedPc.dead = true; updatedPc.hp = 0; soundEvents.emit({ type: 'death' }); triggerScreenEffect('screen-effect-shake')
+                  // Prophecy transfer — same chain as state_updates death path
+                  newGS = transferProphecyOnDeath({ ...newGS, pcs: [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)] }, updatedPc.id, newGS.turn)
+                }
               }
             }
             newGS.pcs = [...newGS.pcs.slice(0, targetIdx), updatedPc, ...newGS.pcs.slice(targetIdx + 1)]
@@ -4170,7 +4188,7 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
     const combatParsed = parseCombatData(narr)
     const questParsed = parseQuestData(combatParsed.cleanText)
     const consequenceParsed = parseConsequenceData(questParsed.cleanText, gs.turn)
-    const quickeningParsed = parseQuickeningData(consequenceParsed.cleanText, gs.turn)
+    const quickeningParsed = parseQuickeningData(consequenceParsed.cleanText, gs.turn, quickeningState)
     narr = quickeningParsed.cleanText
 
     // v2.24.0: Truncate long narrations — Turn 0: 200 words, Turn 1: 500 words, Regular: 350 words
@@ -5119,7 +5137,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
       }
       gs.injuries = newInjuries
 
-      const res = await callOpenRouterDM(userMsg, gs, false)
+      const res = await callDM(userMsg, gs, false)
 
       gs.turn++
 

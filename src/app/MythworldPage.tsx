@@ -54,6 +54,33 @@ import { version } from '../../package.json'
 const ComicPanel = dynamic(() => import('@/components/game/ComicPanel'), { ssr: false })
 
 // ═══════════════════════════════════════════════════════════════════════════
+// GAIMAN LOADING PAGE — Shown while engine initializes
+// ═══════════════════════════════════════════════════════════════════════════
+function GaimanLoadingPage() {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: 'linear-gradient(180deg, #0a0a0f 0%, #111118 50%, #0a0a0f 100%)' }}>
+      <div className="text-center px-8 max-w-lg">
+        <div className="mb-6">
+          <span className="text-4xl block mb-4" style={{ filter: 'brightness(0.8)' }}>✦</span>
+          <h1 className="text-2xl font-title tracking-widest mb-6" style={{ fontFamily: 'var(--font-title)', color: '#d4af37', textShadow: '0 0 30px rgba(212,175,55,0.3)' }}>
+            BETWEEN WORLDS
+          </h1>
+        </div>
+        <p className="text-base font-narrative italic leading-relaxed" style={{ color: '#6b5c4c', animation: 'pulse 3s ease-in-out infinite' }}>
+          The threads of fate are still being woven...
+        </p>
+        <p className="text-sm mt-6 font-narrative" style={{ color: '#3d3530' }}>
+          Between one world and the next, a story stirs...
+        </p>
+        <div className="mt-8 flex justify-center">
+          <div className="w-px h-16" style={{ background: 'linear-gradient(180deg, transparent, rgba(212,175,55,0.4), transparent)' }} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MYTHWORLD ENGINE — Loaded via next/dynamic ssr:false in page.tsx
 // No SSR guards needed — this component ONLY runs client-side.
 // All browser APIs (localStorage, speechSynthesis, etc.) are safe here.
@@ -61,6 +88,24 @@ const ComicPanel = dynamic(() => import('@/components/game/ComicPanel'), { ssr: 
 
 export default function MythworldEngine() {
   const gameEngineResult = useGameEngine()
+
+  // Null guard: if engine is not ready, show Gaiman-style loading page.
+  // We pass the result as a prop to an inner component so hooks in the
+  // inner component are always called in the same order regardless of
+  // whether the engine is ready on the first render.
+  if (!gameEngineResult) {
+    return <GaimanLoadingPage />
+  }
+
+  // Pass engine result to inner component that holds all game hooks & UI
+  return <MythworldEngineWithEngine result={gameEngineResult} />
+}
+
+/**
+ * Inner engine component — receives a guaranteed-non-null gameEngineResult
+ * so all hooks and destructuring run unconditionally on every render.
+ */
+function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<typeof useGameEngine>> }) {
   const {
     gameState,
     setGameState,
@@ -136,7 +181,7 @@ export default function MythworldEngine() {
     achievementUnlocks,
     showAchievementsDialog,
     setShowAchievementsDialog,
-  } = gameEngineResult!
+  } = result
 
   // ── AUDIO ENGINE ─────────────────────────────────────────────────────
   const audio = useGameAudio()
