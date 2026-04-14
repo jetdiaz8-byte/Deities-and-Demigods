@@ -2102,6 +2102,27 @@ export function useGameEngine() {
 ║                                                                            ║
 ║  MAX 80 chars per choice. Every word must earn its place.                   ║
 ║                                                                            ║
+║  REAL EXAMPLES — what the player sees on screen:                           ║
+║  BAD:  "Raise the torch higher and chant a binding rite"                   ║
+║  GOOD: "🕯️ Lift the torch — the flame bends toward the runes, hungry"     ║
+║                                                                            ║
+║  BAD:  "Examine the rune-etched stones for hidden sigils"                  ║
+║  GOOD: "🔍 Trace the runes with your fingertips — the stone is warm"       ║
+║                                                                            ║
+║  BAD:  "Smash the torch into the stone to shatter the shadows"             ║
+║  GOOD: "💥 Drive the torch into the flagstone — let fire answer shadow"   ║
+║                                                                            ║
+║  BAD:  "Mock the darkness, urging it to flee"                              ║
+║  GOOD: "🗣️ Laugh at the dark. It has never heard laughter before."        ║
+║                                                                            ║
+║  BAD:  "Dig a shallow trench around the courtyard's edge"                  ║
+║  GOOD: "🕳️ Scrape a line in the earth — old ground knows boundaries"     ║
+║                                                                            ║
+║  FORBIDDEN patterns:                                                       ║
+║  - "examine X for Y"    - "search the area"                                ║
+║  - "raise/lower the X"  - "prepare for combat"                             ║
+║  - Any choice that could appear in any other scene unchanged               ║
+║                                                                            ║
 ║  RULE 4 — THE THREE ARCHETYPES (ADAPT TO COMBAT PHASE)                    ║
 ║  Across your 3 pc_choices, cover these instincts:                          ║
 ║  EXPLORATION PHASE (Turns < 8, no combat allowed):                         ║
@@ -2452,15 +2473,18 @@ QUICKENING RULES:
 - LEGEND TITLE: Use ${quickeningState.currentLegendTitle} when NPCs reference the player.
 ` : ''}`}
 
-╔══════════════════════════════════════════════════════════════════════════════╗
-║  REMINDER: Your dm_narration MUST read like Neil Gaiman wrote it.            ║
-║  Open with mythic weight. Vary sentence rhythm. Sensory specifics.           ║
-║  Mythological asides. Understated dread. Laconic, wry dialogue.             ║
-║  End on an image. NO exclamation marks. NO game terms in prose.              ║
+╔══════════════════════════════════════════════════════════════════╗
+║  REMINDER: Your dm_narration AND your pc_choices AND your              ║
+║  companion_choices must ALL read like Neil Gaiman wrote them.        ║
+║  Narration: mythic weight, sentence rhythm, sensory specifics,        ║
+║  mythological asides, understated dread, laconic dialogue.           ║
+║  Choices: same voice. A choice IS a sentence of prose. Not a menu.   ║
+║  NO exclamation marks. NO game terms. NO generic templates.         ║
+║  See THE GOLDEN RULE — choices are born from your prose.              ║
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — Turn 0 shard intro: ~600 chars max. Turn 1 full intro: 3000-3500 chars (4-5 paragraphs). Regular turns: 150-300 words baseline, 2-3 paragraphs (RESULTS / REACTIONS / HOOK structure). For complex or pivotal actions, may expand up to 500 words. REST/SLEEP: 2-3 sentences. COMBAT: weave into paragraphs 1-2, up to 300 words total.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","shard_insight_used":false,"pc_choices":[{"narrative":"string (CONTEXTUAL story-specific action with emoji, max 80 chars — NEVER generic like 'Search the area')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}]${isFirstTurn ? '' : ',"companion_choices":[{"narrative":"string (CONTEXTUAL companion action with emoji, max 80 chars — reference current scene)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]'}"}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — Turn 0 shard intro: ~600 chars max. Turn 1 full intro: 3000-3500 chars (4-5 paragraphs). Regular turns: 150-300 words baseline, 2-3 paragraphs (RESULTS / REACTIONS / HOOK structure). For complex or pivotal actions, may expand up to 500 words. REST/SLEEP: 2-3 sentences. COMBAT: weave into paragraphs 1-2, up to 300 words total.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","shard_insight_used":false,"pc_choices":[{"narrative":"string (GAIMAN PROSE — contextual, story-specific, max 80 chars. NOT a menu item. Must read like a line from American Gods. Reference specific objects/NPCs/tensions from your narration. See THE GOLDEN RULE. BAD: 'Examine the area for clues' GOOD: 'Kneel beside the hearthstone — the light beneath it pulses')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}]${isFirstTurn ? `` : `,"companion_choices":[{"narrative":"string (GAIMAN PROSE - contextual companion action, max 80 chars. Same voice as narration. Reference the scene. BAD: Scout the area GOOD: Vaprak tastes the air - something old is close)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]`}"}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
