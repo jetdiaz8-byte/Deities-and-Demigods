@@ -551,6 +551,30 @@ export function useGameEngine() {
     return () => { window.speechSynthesis.removeEventListener('voiceschanged', loadVoices) }
   }, [])
 
+  // ── SAVE/LOAD FUNCTIONS (defined early — referenced in effects below) ──
+  const loadSaveSlots = useCallback(() => {
+    const slots: SaveSlot[] = []
+    for (let i = 0; i < 5; i++) {
+      const data = safeLocalStorageGetItem(`mythworld_save_${i}`)
+      if (data) {
+        try {
+          const parsed = JSON.parse(data)
+          slots.push({
+            id: `slot_${i}`,
+            name: parsed.name || `Save ${i + 1}`,
+            timestamp: parsed.timestamp || 0,
+            turn: parsed.gameState?.turn || 0,
+            act: parsed.gameState?.act || 'act1',
+            partyNames: (parsed.gameState?.pcs || []).map((p: Entity) => p.name)
+          })
+        } catch {
+          // Invalid save
+        }
+      }
+    }
+    setSaveSlots(slots)
+  }, [])
+
   // ── LOAD KEYS FROM STORAGE ─────────────────────────────────────────────
   useEffect(() => {
     const savedKey = safeLocalStorageGetItem('mythworld_openrouter_key')
@@ -739,29 +763,7 @@ export function useGameEngine() {
   }
 
 
-  // ── SAVE/LOAD FUNCTIONS ────────────────────────────────────────────────
-  const loadSaveSlots = useCallback(() => {
-    const slots: SaveSlot[] = []
-    for (let i = 0; i < 5; i++) {
-      const data = safeLocalStorageGetItem(`mythworld_save_${i}`)
-      if (data) {
-        try {
-          const parsed = JSON.parse(data)
-          slots.push({
-            id: `slot_${i}`,
-            name: parsed.name || `Save ${i + 1}`,
-            timestamp: parsed.timestamp || 0,
-            turn: parsed.gameState?.turn || 0,
-            act: parsed.gameState?.act || 'act1',
-            partyNames: (parsed.gameState?.pcs || []).map((p: Entity) => p.name)
-          })
-        } catch {
-          // Invalid save
-        }
-      }
-    }
-    setSaveSlots(slots)
-  }, [])
+  // ── SAVE/LOAD FUNCTIONS (moved above for TDZ fix) ─────────────────────
 
   const trimGameStateForSave = (gs: GameState): GameState => {
     // Keep gameplay-critical state; trim high-growth fields.
@@ -2411,7 +2413,7 @@ THE SHARD — ${shard?.name} [${shard?.pantheon || 'Unknown'} Pantheon]
 ═══════════════════════════════════════════════════════════════════════════
 ${toAscii(shard?.origin || '')}
 Power: ${shard?.power || 'Unknown'}
-Charges: ${gs.shardCharges}/3 | Shield Used: ${(gs as Record<string, unknown>).shardShieldUsed ? 'YES' : 'no'}
+Charges: ${gs.shardCharges}/3 | Shield Used: ${gs.shardShieldUsed ? 'YES' : 'no'}
 ${actCtx}
 Turn: ${gs.turn} | Act I Limit: ${gs.act1TurnLimit} | Act II Duration: ${gs.act2TurnLimit}
 ${isFirstTurn ? `\n⚠️ TURN 0 — SHARD INTRODUCTION ONLY. NO characters, NO PCs, NO companions.\n- Do NOT include "companion_choices" in your JSON — set "companion_choices": []\n- Only include "pc_choices" for exploring the shard's origin.\n` : ''}
@@ -4188,8 +4190,8 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
         // exploration/trap/social choices before turn 8.
         const isEarlyAct1 = gs.act === ACTS.ONE && gs.turn < 8
         const COMBAT_ABILITIES = ['melee_attack', 'ranged_attack', 'defend', 'companion_guard', 'companion_attack', 'companion_defend', 'companion_assist']
-        let filteredPCChoices = aiPCChoices
-        let filteredCompChoices = aiCompChoices
+        let filteredPCChoices: AIChoice[] = aiPCChoices ?? []
+        let filteredCompChoices: AIChoice[] = aiCompChoices ?? []
         if (isEarlyAct1) {
           if (aiPCChoices) {
             filteredPCChoices = aiPCChoices.filter(c => !COMBAT_ABILITIES.includes(c.ability || ''))
@@ -4959,17 +4961,18 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
       // Resolve miracle effects
       if (ctx.trigger === 'death_save' && ctx.pcId) {
         // Revive the dead PC at 1 HP
-        newGS.pcs = gs.pcs.map(p => p.id === ctx.pcId ? { ...p, dead: false, hp: 1 } : p)
+        const revivedId = ctx.pcId
+        newGS.pcs = gs.pcs.map(p => p.id === revivedId ? { ...p, dead: false, hp: 1 } : p)
 
         // Restore prophecy to the revived PC if it was transferred to a successor
         const successorProphecy = newGS.prophecies.find(p =>
-          p.previous_holders.includes(ctx.pcId) && p.pc_id !== ctx.pcId
+          p.previous_holders.includes(revivedId) && p.pc_id !== revivedId
         )
         if (successorProphecy) {
           const prevHolder = successorProphecy.pc_id
           newGS.prophecies = newGS.prophecies.map(p =>
             p.pc_id === prevHolder
-              ? { ...p, pc_id: ctx.pcId, previous_holders: [...p.previous_holders.slice(0, -1)], state: p.state as 'awakening' | 'dormant' }
+              ? { ...p, pc_id: revivedId, previous_holders: [...p.previous_holders.slice(0, -1)], state: p.state as 'awakening' | 'dormant' }
               : p
           )
           // Remove successor from party if they were added solely as a prophecy replacement
