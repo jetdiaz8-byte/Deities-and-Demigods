@@ -663,7 +663,7 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
           />
 
           {/* Right Panel — Portrait Gallery + Dice Tray (desktop only) */}
-          <div className="hidden md:flex flex-col w-80 flex-shrink-0 mr-14 border-l border-[#2e2008] bg-[#0a0806]/95 overflow-y-auto">
+          <div className="hidden md:flex flex-col w-80 flex-shrink-0 mr-14 border-l border-[#2e2008] bg-[#0a0806]/95 overflow-y-auto sticky top-0 h-screen">
             <TurnCardShowcase turn={gameState?.turn ?? 0} gameState={gameState} />
             <SidebarDiceArea diceRolls={diceRollsForDisplay ?? []} />
           </div>
