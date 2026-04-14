@@ -2874,7 +2874,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         compOptions = [
           { num: 1, action: `🔍 Scout — ${compName} checks the area ahead for danger or points of interest`, ability: 'companion_scout', align_note: 'exploration / perception', source: 'companion', companion_name: companion.name },
           { num: 2, action: `🗣️ Discuss — "What do you make of all this, ${compName}?"`, ability: 'companion_discussion', align_note: 'character dialogue / bonding', source: 'companion', companion_name: companion.name },
-          { num: 3, action: compAbility2 ? `✨ ${compAbility2} — ${compName}'s secondary power` : `🛡️ Guard — ${compName} stands watch while you investigate`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_guard', align_note: compAbility2 ? 'secondary ability' : 'defensive stance', source: 'companion', companion_name: companion.name }
+          { num: 3, action: compAbility2 ? `✨ ${compAbility2} — ${compName}'s secondary power` : `🔍 Observe — ${compName} studies the surroundings in careful silence`, ability: compAbility2 ? `companion_ability:${compAbility2}` : 'companion_observe', align_note: compAbility2 ? 'secondary ability' : 'perception check', source: 'companion', companion_name: companion.name }
         ]
       }
       } // end hardcoded companion fallback (else branch)
@@ -3980,7 +3980,16 @@ Write the narrative prose first (3000-3500 chars). Then append the JSON state pa
     } else {
       // v2.19.0: TURN 2+ — STANDARD LOOP
       const pacingGuide = gs.act === ACTS.ONE && gs.turn < 8
-        ? `\n**EARLY ACT I PACING** (Turn ${gs.turn}, < 8): This is EXPLORATION ONLY. Do NOT spawn enemies or introduce combat encounters. You MAY introduce traps, puzzles, and environmental roadblocks (collapsing bridges, flooded passages, enchanted barriers, riddle-locked doors, poison gas, illusionary walls, cursed objects). Focus on:\n- Describing the environment in rich detail (ancient ruins, mystical landscapes, divine realms)\n- Building the bond between ${living[0]?.name || 'the hero'} and their companion through dialogue\n- The shard reacting to the environment (pulsing near power sources, whispering warnings)\n- Dropping subtle clues about the antagonist through omens and environmental details\n- Creating MYSTERY — something the player wants to investigate further\n- Discovery: hidden paths, ancient inscriptions, forgotten lore, divine remnants\n- Traps and roadblocks that require clever thinking, not combat\n- DO NOT include any "npc_encounters" with type "ENEMY" or "BOSS" this early.\n`
+        ? `\n**EARLY ACT I PACING** (Turn ${gs.turn}, < 8): This is EXPLORATION ONLY. ABSOLUTELY NO COMBAT.
+⛔ HARDCORE RULE — VIOLATION = GAME RUINED:
+- Do NOT spawn enemies or introduce combat encounters
+- Do NOT generate ANY combat-flavored choices: no melee_attack, ranged_attack, defend, companion_guard, companion_attack, companion_defend
+- Do NOT describe the PC "readying a weapon" or "standing guard against encroaching shadows"
+- Do NOT frame any choice as preparing for combat or reacting to threats
+- ALL 3 pc_choices and ALL 3 companion_choices must be PURE EXPLORATION: investigate, examine, speak, explore, perceive, arcana, stealth, survival, conversation
+- Companion choices: companion_scout, companion_discussion, companion_conversation, companion_observe, companion_ability ONLY
+- You MAY introduce traps, puzzles, and environmental roadblocks (collapsing bridges, flooded passages, enchanted barriers, riddle-locked doors, poison gas, illusionary walls, cursed objects). These require CLEVER THINKING, not fighting.
+Focus on:\n- Describing the environment in rich detail (ancient ruins, mystical landscapes, divine realms)\n- Building the bond between ${living[0]?.name || 'the hero'} and their companion through dialogue\n- The shard reacting to the environment (pulsing near power sources, whispering warnings)\n- Dropping subtle clues about the antagonist through omens and environmental details\n- Creating MYSTERY — something the player wants to investigate further\n- Discovery: hidden paths, ancient inscriptions, forgotten lore, divine remnants\n- DO NOT include any "npc_encounters" with type "ENEMY" or "BOSS" this early.\n`
         : gs.act === ACTS.ONE
           ? `\n**LATE ACT I PACING** (Turn ${gs.turn}): Danger is now possible. You may introduce a minor threat (guardian creature, territorial spirit, rival adventurer) but NOT the antagonist. Combat should feel earned and meaningful.\n`
           : ''
@@ -4042,37 +4051,53 @@ Continue building the narrative, execute mechanics, and output JSON at the end.`
         // HARD GUARD: Turn 0 NEVER has companion choices — strip even if AI returns them
         const aiCompChoices = gs.turn === 0 ? [] : res.companion_choices
 
-        // HARD GUARD: Early Act I — strip combat-oriented PC choices (melee_attack, ranged)
-        // The DM should only offer exploration/trap/social choices before turn 8.
-        // If stripping leaves < 3 choices, pad with exploration options to prevent
-        // the fallback system from injecting combat templates.
+        // HARD GUARD: Early Act I (turns < 8) — strip ALL combat-oriented choices
+        // Both PC and companion choices. The DM should only offer
+        // exploration/trap/social choices before turn 8.
         const isEarlyAct1 = gs.act === ACTS.ONE && gs.turn < 8
+        const COMBAT_ABILITIES = ['melee_attack', 'ranged_attack', 'defend', 'companion_guard', 'companion_attack', 'companion_defend', 'companion_assist']
         let filteredPCChoices = aiPCChoices
-        if (isEarlyAct1 && aiPCChoices) {
-          filteredPCChoices = aiPCChoices.filter(c => !['melee_attack', 'ranged_attack'].includes(c.ability || ''))
-          const stripped = aiPCChoices.length - filteredPCChoices.length
-          if (stripped > 0) {
-            console.warn(`🛡️ EARLY ACT I GUARD: Stripped ${stripped} combat choice(s) before turn 8`)
+        let filteredCompChoices = aiCompChoices
+        if (isEarlyAct1) {
+          if (aiPCChoices) {
+            filteredPCChoices = aiPCChoices.filter(c => !COMBAT_ABILITIES.includes(c.ability || ''))
+            const stripped = aiPCChoices.length - filteredPCChoices.length
+            if (stripped > 0) console.warn(`🛡️ EARLY ACT I GUARD: Stripped ${stripped} combat PC choice(s) before turn 8`)
           }
-          // Pad to 3 with exploration alternatives so validation passes
-          const pads: AIChoice[] = [
+          if (aiCompChoices) {
+            filteredCompChoices = aiCompChoices.filter(c => !COMBAT_ABILITIES.includes(c.ability || ''))
+            const stripped = aiCompChoices.length - filteredCompChoices.length
+            if (stripped > 0) console.warn(`🛡️ EARLY ACT I GUARD: Stripped ${stripped} combat companion choice(s) before turn 8`)
+          }
+          // Pad PC choices to 3 with exploration alternatives
+          const pcPads: AIChoice[] = [
             { narrative: '🔍 Examine your surroundings for hidden details', ability: 'investigation', align_note: 'perception check' },
             { narrative: '🚶 Move deeper into the area, staying alert', ability: 'exploration', align_note: 'exploration' },
             { narrative: '👁️ Observe the shard — is it reacting to something nearby?', ability: 'perception', align_note: 'arcana check' },
           ]
-          const needed = 3 - filteredPCChoices.length
-          for (let i = 0; i < needed; i++) {
-            filteredPCChoices = [...filteredPCChoices, pads[filteredPCChoices.length] || pads[0]]
+          const pcNeeded = 3 - filteredPCChoices.length
+          for (let i = 0; i < pcNeeded; i++) {
+            filteredPCChoices = [...filteredPCChoices, pcPads[filteredPCChoices.length] || pcPads[0]]
+          }
+          // Pad companion choices to 3 with exploration alternatives
+          const compPads: AIChoice[] = [
+            { narrative: '🔍 Scout — Check the area ahead for hidden paths', ability: 'companion_scout', align_note: 'perception check' },
+            { narrative: '🗣️ Discuss — Share thoughts on what you have found', ability: 'companion_discussion', align_note: 'character dialogue' },
+            { narrative: '👁️ Observe — Study the surroundings in careful silence', ability: 'companion_observe', align_note: 'investigation check' },
+          ]
+          const compNeeded = 3 - filteredCompChoices.length
+          for (let i = 0; i < compNeeded; i++) {
+            filteredCompChoices = [...filteredCompChoices, compPads[filteredCompChoices.length] || compPads[0]]
           }
         }
 
-        console.log(`🎯 AI choices — pc_choices: ${filteredPCChoices?.length || 0}, companion_choices: ${aiCompChoices?.length || 0}${gs.turn === 0 && res.companion_choices?.length ? ' (STRIPPED — turn 0)' : ''}`)
+        console.log(`🎯 AI choices — pc_choices: ${filteredPCChoices?.length || 0}, companion_choices: ${filteredCompChoices?.length || 0}${gs.turn === 0 && res.companion_choices?.length ? ' (STRIPPED — turn 0)' : ''}${isEarlyAct1 ? ' (EARLY ACT I — combat filtered)' : ''}`)
         if (aiPCChoices?.length) console.log('  pc_choices:', JSON.stringify(aiPCChoices).slice(0, 300))
         if (aiCompChoices?.length) console.log('  companion_choices:', JSON.stringify(aiCompChoices).slice(0, 300))
 
         const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(humanPC, {
           pc_choices: filteredPCChoices,
-          companion_choices: aiCompChoices
+          companion_choices: filteredCompChoices
         })
         gs.humanOptions = [...pcOptions, ...extraOptions]
         gs.companionOptions = compOptions
