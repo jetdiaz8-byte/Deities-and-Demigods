@@ -2127,18 +2127,36 @@ export function useGameEngine() {
 ║  Across your 3 pc_choices, cover these instincts:                          ║
 ║  EXPLORATION PHASE (Turns < 8, no combat allowed):                         ║
 ║    BOLD   — Reach into the unknown. Open the door. Follow the light.      ║
+║              e.g. "Step through the curtain of moss — something breathes   ║
+║              beyond it, slow and vast"                                     ║
 ║    CAREFUL — Examine. Investigate. Listen. Read the runes before           ║
 ║              touching them. Knowledge before action.                        ║
+║              e.g. "Press your ear to the sarcophagus lid — there is a      ║
+║              sound inside, like a heartbeat that has forgotten how to stop" ║
 ║    CREATIVE — An unexpected angle. A sense others miss. A hunch.           ║
 ║              The odd way in — through the wall nobody else noticed.         ║
+║              e.g. "Toss a copper coin into the dark well and count the     ║
+║              seconds — if it never lands, the well goes deeper than water"  ║
 ║  COMBAT PHASE (Turns >= 8, enemies present):                              ║
 ║    BOLD   — Strike first. Close the distance. Meet the blade with yours.  ║
+║              e.g. "Close the gap before it finishes speaking — some        ║
+║              prayers should not be allowed to end"                          ║
 ║    CAREFUL — Defend. Protect. Position. Find the advantage before          ║
 ║              committing. Let them come to you.                               ║
+║              e.g. "Plant your feet and watch its shoulders — the attack    ║
+║              always begins where the weight shifts first"                   ║
 ║    CREATIVE — The unexpected move. Use the environment. An ability that     ║
 ║              shifts the fight. The thing the enemy does not expect.         ║
+║              e.g. "Grab the hanging chains and swing — let gravity make     ║
+║              the argument your blade cannot"                                ║
 ║  Companion choices follow the same pattern filtered through their          ║
-║  personality — a bold companion charges; a careful one finds high ground.  ║
+║  personality:                                                              ║
+║    BOLD companion  — "Vaprak throws himself at the door — it groans but    ║
+║                       does not give"                                        ║
+║    CAREFUL companion — "Elara reads the inscription twice before she       ║
+║                         whispers: 'Don't touch the third stone'"            ║
+║    CREATIVE companion — "Mothlight notices the shadows move wrong — they   ║
+║                          are cast by something above, not below"           ║
 ║                                                                            ║
 ║  RULE 5 — TURN 0 SPECIAL CASE                                             ║
 ║  Turn 0 has NO characters yet. The 3 pc_choices must emerge from the      ║
