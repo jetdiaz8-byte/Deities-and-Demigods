@@ -95,7 +95,7 @@ export interface Entity {
   attacks?: number
   damage?: string
   move?: string
-  // Encounter system — set by Gemini DM response
+  // Encounter system — set by DM response
   encounter_type?: 'ENEMY' | 'ALLY' | 'BOSS' | 'RIVAL' | 'BYSTANDER' | 'NUISANCE' | string
 }
 
@@ -279,7 +279,7 @@ export interface GameState {
   inventory: Item[]
   partyGold: number
   // Token tracking
-  geminiTokensUsed: number
+  dmTokensUsed: number
   // Current dice rolls for display
   lastDiceRolls: DiceRoll[]
   // Antagonist identity mystery system

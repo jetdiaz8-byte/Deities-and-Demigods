@@ -204,7 +204,7 @@ export interface GameState {
   inventory: Item[]
   partyGold: number
   // Token tracking
-  geminiTokensUsed: number
+  dmTokensUsed: number
   groqTokensUsed: number
   // Current dice rolls for display
   lastDiceRolls: DiceRoll[]

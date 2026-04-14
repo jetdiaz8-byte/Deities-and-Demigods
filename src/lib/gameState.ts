@@ -55,7 +55,7 @@ export const createInitialState = (): GameState => ({
     { ...ITEM_TEMPLATES[0], id: 'healing_potion_2' }
   ],
   partyGold: 0,
-  geminiTokensUsed: 0,
+  dmTokensUsed: 0,
   lastDiceRolls: [],
   // Antagonist identity mystery system
   antagonistCluesRevealed: [],

@@ -263,8 +263,8 @@ export function useGameEngine() {
   const [gameState, setGameState] = useState<GameState>(createInitialState())
   const [openrouterKey, setOpenrouterKey] = useState('')
   const [serverKey, setServerKey] = useState('')
-  const [aiProvider, setAiProvider] = useState<'gemini' | 'lmstudio'>('gemini')
-  const [engineMode, setEngineMode] = useState<'gemini' | 'lmstudio' | 'dual'>('gemini')
+  const [aiProvider, setAiProvider] = useState<'openrouter' | 'lmstudio'>('openrouter')
+  const [engineMode, setEngineMode] = useState<'openrouter' | 'lmstudio' | 'dual'>('openrouter')
   const [lmStudioUrl, setLmStudioUrl] = useState('http://localhost:1234')
   const [lmStudioModel, setLmStudioModel] = useState('default')
   const [comicMode, setComicMode] = useState<boolean>(false)
@@ -373,7 +373,7 @@ export function useGameEngine() {
   
   // Token Tracking State
   const [tokenUsage, setTokenUsage] = useState({
-    gemini: { input: 0, output: 0, total: 0 },
+    openrouter: { input: 0, output: 0, total: 0 },
     lastCall: { api: '', input: 0, output: 0 }
   })
 
@@ -421,7 +421,7 @@ export function useGameEngine() {
 
   // Hydrate persisted settings after mount to avoid SSR/client mismatch.
   useEffect(() => {
-    const savedMode = safeLocalStorageGetItem('mw_engineMode') as 'gemini' | 'lmstudio' | 'dual' | null
+    const savedMode = safeLocalStorageGetItem('mw_engineMode') as 'openrouter' | 'lmstudio' | 'dual' | null
     const savedUrl = safeLocalStorageGetItem('mw_lmStudioUrl')
     const savedModel = safeLocalStorageGetItem('mw_lmStudioModel')
     const savedComicMode = safeLocalStorageGetItem('mw_comicMode')
@@ -727,18 +727,18 @@ export function useGameEngine() {
     
     setTokenUsage(prev => ({
       ...prev,
-      gemini: {
-        input: prev.gemini.input + inputTokens,
-        output: prev.gemini.output + outputTokens,
-        total: prev.gemini.total + inputTokens + outputTokens
+      openrouter: {
+        input: prev.openrouter.input + inputTokens,
+        output: prev.openrouter.output + outputTokens,
+        total: prev.openrouter.total + inputTokens + outputTokens
       },
-      lastCall: { api: 'gemini', input: inputTokens, output: outputTokens }
+      lastCall: { api: 'openrouter', input: inputTokens, output: outputTokens }
     }))
     
     // Also update game state for persistence
     setGameState(prev => ({
       ...prev,
-      geminiTokensUsed: prev.geminiTokensUsed + inputTokens + outputTokens
+      dmTokensUsed: prev.dmTokensUsed + inputTokens + outputTokens
     }))
   }
 
@@ -3735,7 +3735,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
   // ═══════════════════════════════════════════════════════════════════
   // DUAL-ENGINE DM SYSTEM v2.17.0
   //   LM Studio  → mechanics (dice, rules, state changes)
-  //   Gemini     → creative narration (prose, dialogue, atmosphere)
+  //   OpenRouter → creative narration (prose, dialogue, atmosphere)
   //   Dual mode  → both in parallel, merge best of each
   // ═══════════════════════════════════════════════════════════════════
 
@@ -5197,7 +5197,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
 
       // ═══════════════════════════════════════════════════════════════════════════
       // ARCHRIVAL SUMMON MECHANICAL EFFECTS
-      // Applied AFTER applyMechanics so they stack with whatever Gemini resolved
+      // Applied AFTER applyMechanics so they stack with whatever the DM resolved
       // ═══════════════════════════════════════════════════════════════════════════
       if (isRivalSummon && newGS.antagonistRival) {
         const rival = newGS.antagonistRival
@@ -5727,7 +5727,6 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     // ── STATE ──────────────────────────────────────────────────────────────
     gameState, setGameState,
     openrouterKey, setOpenrouterKey,
-    geminiKey: openrouterKey, setGeminiKey: setOpenrouterKey,
     aiProvider, setAiProvider,
     engineMode, setEngineMode,
     lmStudioUrl, setLmStudioUrl,
@@ -5794,7 +5793,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     confirmPartySelection,
     buildDMSystem,
     callOpenRouterDM,
-    callGeminiDM: callOpenRouterDM,
+    // callGeminiDM removed — Gemini is no longer used as DM provider
     parseDMResponse,
     parseCombatData,
     parseQuestData,

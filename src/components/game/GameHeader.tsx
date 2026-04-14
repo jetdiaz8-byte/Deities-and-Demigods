@@ -327,7 +327,7 @@ export function GameHeader({
           )}
         </div>
         
-        <TokenCounter geminiTokens={gameState.geminiTokensUsed} />
+        <TokenCounter dmTokens={gameState.dmTokensUsed} />
 
         {/* Achievements Trophy Button */}
         <button

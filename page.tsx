@@ -28,7 +28,7 @@ import { version } from '../../package.json'
 export default function MythworldEngine() {
   const {
     gameState, setGameState,
-    geminiKey, setGeminiKey,
+    openrouterKey, setOpenrouterKey,
     gamePhase, setGamePhase,
     availableHeroes,
     selectedParty, setSelectedParty,
@@ -89,8 +89,8 @@ export default function MythworldEngine() {
   if (gamePhase === 'intro') {
     return (
       <IntroScreen
-        geminiKey={geminiKey}
-        setGeminiKey={setGeminiKey}
+        openrouterKey={openrouterKey}
+        setOpenrouterKey={setOpenrouterKey}
         startNewCampaign={startNewCampaign}
         saveSlots={saveSlots}
         setShowLoadDialog={setShowLoadDialog}
@@ -253,8 +253,8 @@ export default function MythworldEngine() {
 
           {/* Key Status */}
           <div className="flex items-center gap-1">
-            <div className={`w-2 h-2 rounded-full ${geminiKey ? 'bg-[#40c080]' : 'bg-[#804040]'}`} />
-            <span className="text-[10px] text-[#5a4d30]">Gem2.5</span>
+            <div className={`w-2 h-2 rounded-full ${openrouterKey ? 'bg-[#40c080]' : 'bg-[#804040]'}`} />
+            <span className="text-[10px] text-[#5a4d30]">OR</span>
           </div>
           <span className="text-[8px] text-[#3a3020]">v{version}</span>
 
@@ -302,9 +302,9 @@ export default function MythworldEngine() {
           {/* API Key Input (bottom bar) */}
           <Input
             type="password"
-            placeholder="Gemini key..."
-            value={geminiKey}
-            onChange={e => setGeminiKey(e.target.value)}
+            placeholder="OpenRouter key..."
+            value={openrouterKey}
+            onChange={e => setOpenrouterKey(e.target.value)}
             className="w-40 bg-[#110d07] border-[#2e2008] text-[#e8d9b0] placeholder:text-[#5a4d30] text-xs"
           />
         </div>

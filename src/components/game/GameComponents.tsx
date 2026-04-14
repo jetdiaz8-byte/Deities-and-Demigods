@@ -277,10 +277,10 @@ export const NarrativeSection = ({ title, content, icon, defaultOpen = true, var
 // ═══════════════════════════════════════════════════════════════════════════
 
 interface TokenCounterProps {
-  geminiTokens: number
+  dmTokens: number
 }
 
-export const TokenCounter = ({ geminiTokens }: TokenCounterProps) => {
+export const TokenCounter = ({ dmTokens }: TokenCounterProps) => {
   const formatTokens = (n: number) => {
     if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`
     if (n >= 1000) return `${(n / 1000).toFixed(1)}K`
@@ -289,10 +289,10 @@ export const TokenCounter = ({ geminiTokens }: TokenCounterProps) => {
 
   return (
     <div className="flex items-center gap-3 px-4 py-2 bg-gradient-to-r from-[#1a1510] to-[#201a14] rounded-lg border border-[#4a4030] shadow-md">
-      {/* Gemini */}
+      {/* DM Tokens */}
       <div className="flex items-center gap-2 px-2 py-0.5 bg-[#0d0a08] rounded">
         <div className="w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 shadow-[0_0_8px_rgba(96,165,250,0.6)] animate-pulse" />
-        <span className="text-blue-400 text-xs font-bold">{formatTokens(geminiTokens)}</span>
+        <span className="text-blue-400 text-xs font-bold">{formatTokens(dmTokens)}</span>
       </div>
     </div>
   )

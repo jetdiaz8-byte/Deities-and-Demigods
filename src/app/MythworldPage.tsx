@@ -109,7 +109,7 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
   const {
     gameState,
     setGameState,
-    geminiKey, setGeminiKey,
+    openrouterKey, setOpenrouterKey,
     aiProvider, setAiProvider,
     engineMode, setEngineMode,
     lmStudioUrl, setLmStudioUrl,
@@ -413,8 +413,8 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
   if (gamePhase === 'intro') {
     return (
       <IntroScreen
-        geminiKey={geminiKey}
-        setGeminiKey={setGeminiKey}
+        openrouterKey={openrouterKey}
+        setOpenrouterKey={setOpenrouterKey}
         aiProvider={aiProvider}
         setAiProvider={setAiProvider}
         engineMode={engineMode}
@@ -791,8 +791,8 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
 
           {/* API Status — shows active engine mode */}
           <div className="flex items-center gap-1">
-            <div className={`w-2 h-2 rounded-full ${engineMode === 'dual' ? 'bg-[#a070f0]' : engineMode === 'gemini' ? 'bg-[#40c080]' : 'bg-[#60a0f0]'}`} />
-            <span className="text-[10px] text-[#5a4d30]">{engineMode === 'dual' ? 'Hybrid' : engineMode === 'gemini' ? 'Cloud' : 'Local'}</span>
+            <div className={`w-2 h-2 rounded-full ${engineMode === 'dual' ? 'bg-[#a070f0]' : engineMode === 'openrouter' ? 'bg-[#40c080]' : 'bg-[#60a0f0]'}`} />
+            <span className="text-[10px] text-[#5a4d30]">{engineMode === 'dual' ? 'Hybrid' : engineMode === 'openrouter' ? 'Cloud' : 'Local'}</span>
           </div>
           <span className="text-[8px] text-[#3a3020] hidden md:inline">v{version}</span>
 

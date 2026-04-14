@@ -11,12 +11,12 @@ import type { Character } from '@/lib/characterTypes'
 import CharacterCard from '@/components/game/CharacterCard'
 
 export interface IntroScreenProps {
-  geminiKey: string
-  setGeminiKey: (key: string) => void
-  aiProvider: 'gemini' | 'lmstudio'
-  setAiProvider: (provider: 'gemini' | 'lmstudio') => void
-  engineMode: 'gemini' | 'lmstudio' | 'dual'
-  setEngineMode: (mode: 'gemini' | 'lmstudio' | 'dual') => void
+  openrouterKey: string
+  setOpenrouterKey: (key: string) => void
+  aiProvider: 'openrouter' | 'lmstudio'
+  setAiProvider: (provider: 'openrouter' | 'lmstudio') => void
+  engineMode: 'openrouter' | 'lmstudio' | 'dual'
+  setEngineMode: (mode: 'openrouter' | 'lmstudio' | 'dual') => void
   lmStudioUrl: string
   setLmStudioUrl: (url: string) => void
   lmStudioModel: string
@@ -28,7 +28,7 @@ export interface IntroScreenProps {
 }
 
 export function IntroScreen({
-  geminiKey, setGeminiKey,
+  openrouterKey, setOpenrouterKey,
   aiProvider, setAiProvider,
   engineMode, setEngineMode,
   lmStudioUrl, setLmStudioUrl,

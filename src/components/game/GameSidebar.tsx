@@ -29,7 +29,7 @@ export interface GameSidebarProps {
   sidebarOpen: boolean
   setSidebarOpen: (open: boolean) => void
   saveSlots: SaveSlot[]
-  tokenUsage: { gemini: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
+  tokenUsage: { openrouter: { input: number; output: number; total: number }; lastCall: { api: string; input: number; output: number } }
   onOpenQuestJournal?: () => void
   conversationHistory?: { role: string; content: string }[]
   comicMode: boolean
@@ -784,7 +784,7 @@ export function GameSidebar({
               <div className="grid grid-cols-3 gap-2 text-sm">
                 <div className="p-2.5 bg-[#1a1510] rounded-lg border border-[#2e2008]">
                   <div className="text-[#7a5f20] text-[10px]">Cloud Tokens</div>
-                  <div className="text-blue-400 font-bold mt-0.5">{tokenUsage.gemini.total.toLocaleString()}</div>
+                  <div className="text-blue-400 font-bold mt-0.5">{tokenUsage.openrouter.total.toLocaleString()}</div>
                 </div>
                 <div className="p-2.5 bg-[#1a1510] rounded-lg border border-[#2e2008]">
                   <div className="text-[#7a5f20] text-[10px]">Turn</div>

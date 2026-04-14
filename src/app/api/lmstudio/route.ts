@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 // Server-side proxy to LM Studio (OpenAI-compatible local LLM server)
 // LM Studio exposes: POST http://localhost:1234/v1/chat/completions
-// This route translates our Gemini-format requests into OpenAI format
+// This route translates game engine requests into OpenAI format
 
 export const runtime = 'edge'
 
@@ -97,12 +97,12 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json()
 
-    // Translate OpenAI response → Gemini-compatible format so the game engine can parse it unchanged
+    // Translate OpenAI response → DM-compatible format so the game engine can parse it unchanged
     const content = data.choices?.[0]?.message?.content || ''
     const finishReason = data.choices?.[0]?.finish_reason || 'stop'
     const modelUsed = data.model || model || 'local-model'
 
-    const geminiCompatibleResponse = {
+    const dmCompatibleResponse = {
       candidates: [{
         content: {
           parts: [{ text: content }],
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     console.log(`[LM Studio Proxy] ✅ ${modelUsed} — ${content.length} chars`)
 
     return NextResponse.json({
-      data: geminiCompatibleResponse,
+      data: dmCompatibleResponse,
       text: content,
       modelUsed,
       fallbackUsed: false,
