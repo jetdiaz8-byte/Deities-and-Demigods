@@ -2253,7 +2253,23 @@ ${!isFirstTurn ? `7a. **COMBAT IS REAL — ENEMIES ATTACK BACK**:
       - Companion bond deepening
       - Subtle antagonist clues (shadows, omens, symbols — NOT the antagonist themselves)
       - Introduce a MYSTERY or QUEST HOOK
-    - Turn 8-9: FIRST BLOOD — A minor threat (guardian spirit, territorial creature).
+
+    ⚠️ TURNS 1-7 ABSOLUTE BAN — The following are FORBIDDEN in narration, state, and JSON:
+      - DO NOT introduce enemies, hostile NPCs, or combat encounters
+      - DO NOT use npc_encounters with encounter_type "ENEMY" or "BOSS"
+      - DO NOT narrate violence, combat, bloodshed, or physical harm from enemies
+      - DO NOT describe any character drawing weapons with hostile intent toward a foe
+      - DO NOT spawn damage, injury_events, or state_updates dealing damage
+      - DO NOT use words like "attack," "fight," "battle," "strike," "slay," "kill" in narration
+        EXCEPT in past-tense historical/mythological asides (acceptable: "This temple was
+        built on a battlefield where gods once fought" — NOT acceptable: "A creature attacks!")
+      - If the player's action implies violence (custom action), narrate restraint (see Rule 9a)
+      - The world is dangerous but the danger is ATMOSPHERIC, not physical, in these turns
+      - Tension comes from mystery, not from threat. Dread, not danger.
+      - The codex is truth: only entities from the Deities & Demigods roster may appear.
+        No invented creatures, no random goblins, no generic monsters.
+
+    - Turn 8-9: FIRST BLOOD — A minor threat (guardian spirit, territorial creature from the codex).
       Proves the PC needs allies. First real danger. No party member joins yet.
     - Turns 10-11: PARTY MEMBER 1 joins (rescued/found — debt of gratitude).
       "You saved my life. I owe you a sword."
@@ -4160,10 +4176,13 @@ Focus on:\n- Describing the environment in rich detail (ancient ruins, mystical 
       const isRestAction = /rest|sleep|camp|meditat|wait|recover/i.test(lastUserAction)
       const isCombatTurn = (gs.activeNPCs || []).some(n => n.encounter_type === 'ENEMY' || n.encounter_type === 'BOSS')
 
+      const isEarlyAct1 = gs.act === ACTS.ONE && gs.turn >= 1 && gs.turn <= 7
+      const earlyAct1Ban = isEarlyAct1 ? `\n🛑 ACT I TURNS 1-7 — NO COMBAT ZONE. DO NOT introduce enemies, spawn damage, or narrate violence. Atmosphere only: mystery, dread, discovery. If the player attacks, narrate restraint (desire to strike, then something stays their hand). The codex is truth — no invented creatures. See TURNS 1-7 ABSOLUTE BAN in your rules.` : ''
+
       userMsg = `TURN ${gs.turn}.
 PLAYER ACTION THIS TURN: ${lastUserAction || 'Continue the story.'}
 ${isRestAction ? 'ACTION TYPE: REST/SLEEP — Narrate briefly (2-3 sentences max). The party rests. Brief atmosphere, a dream or reflection, then move on. DO NOT write a long passage.' : isCombatTurn ? 'ACTION TYPE: COMBAT — You may write up to 2 short paragraphs (max 150 words) for dramatic impact.' : 'ACTION TYPE: EXPLORATION — Write exactly ONE paragraph (60-120 words).'}
-
+${earlyAct1Ban}
 Recent: ${recentLog}
 Act: ${gs.act}
 ${gs.pendingShardQuestion ? `🔮 SHARD INSIGHT — The player asked: "${gs.pendingShardQuestion}". The shard answers with a hidden truth — a piece of lore, an antagonist clue, a prophecy fragment, or a secret about an NPC. Set shard_insight_used to true. The shard remembers everything but doesn't always tell you what you WANTED to hear. Narrate the shard's whisper/vision in 1-2 sentences of prophecy-like prose.\n` : ''}${pcIntroStr}${gs.act === ACTS.TWO ? 'Introduce 1-2 gods from the DDG roster this turn. Mix pantheons.\n' : ''}${gs.act === ACTS.THREE ? `BOSS FIGHT: ${ant?.name} Phase ${gs.antagonistPhase}. HP ${gs.antagonistHp}/${gs.antagonistMaxHp}.\n` : ''}${pacingGuide}
