@@ -2817,10 +2817,42 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     return getNarrationPreservationFallback(gs, 'Payload structure unrecoverable')
   }
 
+  const COMBAT_ABILITIES = ['melee_attack', 'ranged_attack', 'defend', 'companion_guard', 'companion_attack', 'companion_defend', 'companion_assist']
+
+  const stripCombatChoices = (choices: AIChoice[] | undefined): AIChoice[] => {
+    if (!choices) return []
+    const isEarlyAct1 = gameState.act === ACTS.ONE && gameState.turn < 8
+    if (!isEarlyAct1) return choices
+    return choices.filter(c => !COMBAT_ABILITIES.includes(c.ability || ''))
+  }
+
+  const padChoices = (choices: AIChoice[], pads: AIChoice[], target: number = 3): AIChoice[] => {
+    if (choices.length >= target) return choices.slice(0, target)
+    const result = [...choices]
+    for (let i = 0; i < target - result.length; i++) {
+      result.push(pads[result.length] || pads[0])
+    }
+    return result
+  }
+
   const buildDefaultOptions = (pc: Entity, aiChoices?: { pc_choices?: AIChoice[]; companion_choices?: AIChoice[] }): { pcOptions: GameOption[]; compOptions: GameOption[]; extraOptions: GameOption[] } => {
     const ab = pc.abilities.map(toAscii)
     const evil = pc.align.toLowerCase().includes('evil')
     
+    // HARD GUARD: Strip combat choices in early Act I (turns < 8), applied centrally
+    const pcExplorationPads: AIChoice[] = [
+      { narrative: 'Kneel and press your palm to the stone — it is warmer than it should be', ability: 'investigation', align_note: 'perception check' },
+      { narrative: 'Follow the silence. Something here has stopped making sound', ability: 'exploration', align_note: 'exploration' },
+      { narrative: 'Listen. Not to the wind — to the absence of it', ability: 'perception', align_note: 'arcana check' },
+    ]
+    const compExplorationPads: AIChoice[] = [
+      { narrative: 'Moves ahead, testing each stone before committing his weight', ability: 'companion_scout', align_note: 'perception check' },
+      { narrative: 'Stops and tilts his head — he has heard something you have not', ability: 'companion_observe', align_note: 'investigation check' },
+      { narrative: 'Traces a finger along the wall, reading it like a page no one else can see', ability: 'companion_discussion', align_note: 'character insight' },
+    ]
+    const safePCChoices = padChoices(stripCombatChoices(aiChoices?.pc_choices), pcExplorationPads)
+    const safeCompChoices = padChoices(stripCombatChoices(aiChoices?.companion_choices), compExplorationPads)
+
     // Skill modifier helper — shows "+N SkillName" for proficient skills
     const skillMod = (skillName: string): string => {
       if (!gameState.skillProficiencies.includes(skillName)) return ''
@@ -2829,13 +2861,13 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     }
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // AI-GENERATED CHOICES — Use contextual choices from DM when available
-    // Falls back to hardcoded templates below if AI choices are missing/invalid
+    // AI-GENERATED CHOICES — Use safe (filtered) choices from DM when available
+    // Falls back to hardcoded templates below if safe choices are missing/invalid
     // ═══════════════════════════════════════════════════════════════════════════
-    const validAIChoices = aiChoices?.pc_choices?.length === 3 && aiChoices.pc_choices.every(
+    const validAIChoices = safePCChoices.length === 3 && safePCChoices.every(
       c => c.narrative?.length > 5 && c.ability?.length > 2
     )
-    const validAICompChoices = aiChoices?.companion_choices?.length === 3 && aiChoices.companion_choices.every(
+    const validAICompChoices = safeCompChoices.length === 3 && safeCompChoices.every(
       c => c.narrative?.length > 5 && c.ability?.length > 2
     )
     
@@ -2858,8 +2890,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     const pcOptions: GameOption[] = []
     
     // ── USE AI-GENERATED CHOICES IF AVAILABLE ───────────────────────────
-    if (validAIChoices && aiChoices?.pc_choices) {
-      aiChoices.pc_choices.forEach((c, i) => {
+    if (validAIChoices) {
+      safePCChoices.forEach((c, i) => {
         pcOptions.push({
           num: i + 1,
           action: c.narrative,
@@ -2980,8 +3012,8 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     
     if (companion) {
       // ── USE AI-GENERATED COMPANION CHOICES IF AVAILABLE ──────────────
-      if (validAICompChoices && aiChoices?.companion_choices) {
-        compOptions = aiChoices.companion_choices.map((c, i) => ({
+      if (validAICompChoices) {
+        compOptions = safeCompChoices.map((c, i) => ({
           num: i + 1,
           action: c.narrative,
           ability: c.ability,
@@ -4178,54 +4210,13 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
       if (humanPC && !humanPC.dead) {
         setStatusMessage(`Generating options for ${humanPC.name}...`)
 
-        const aiPCChoices = res.pc_choices
-        // HARD GUARD: Turn 0 NEVER has companion choices — strip even if AI returns them
+        // buildDefaultOptions now handles combat stripping centrally (early Act I)
+        // Only special case: Turn 0 never has companion choices
         const aiCompChoices = gs.turn === 0 ? [] : res.companion_choices
 
-        // HARD GUARD: Early Act I (turns < 8) — strip ALL combat-oriented choices
-        // Both PC and companion choices. The DM should only offer
-        // exploration/trap/social choices before turn 8.
-        const isEarlyAct1 = gs.act === ACTS.ONE && gs.turn < 8
-        const COMBAT_ABILITIES = ['melee_attack', 'ranged_attack', 'defend', 'companion_guard', 'companion_attack', 'companion_defend', 'companion_assist']
-        let filteredPCChoices: AIChoice[] = aiPCChoices ?? []
-        let filteredCompChoices: AIChoice[] = aiCompChoices ?? []
-        if (isEarlyAct1) {
-          if (aiPCChoices) {
-            filteredPCChoices = aiPCChoices.filter(c => !COMBAT_ABILITIES.includes(c.ability || ''))
-            const stripped = aiPCChoices.length - filteredPCChoices.length
-            if (stripped > 0) { /* early act I guard */ }
-          }
-          if (aiCompChoices) {
-            filteredCompChoices = aiCompChoices.filter(c => !COMBAT_ABILITIES.includes(c.ability || ''))
-            const stripped = aiCompChoices.length - filteredCompChoices.length
-            if (stripped > 0) { /* early act I guard */ }
-          }
-          // Pad PC choices to 3 with Gaiman-styled exploration alternatives
-          const pcPads: AIChoice[] = [
-            { narrative: 'Kneel and press your palm to the stone — it is warmer than it should be', ability: 'investigation', align_note: 'perception check' },
-            { narrative: 'Follow the silence. Something here has stopped making sound', ability: 'exploration', align_note: 'exploration' },
-            { narrative: 'Listen. Not to the wind — to the absence of it', ability: 'perception', align_note: 'arcana check' },
-          ]
-          const pcNeeded = 3 - filteredPCChoices.length
-          for (let i = 0; i < pcNeeded; i++) {
-            filteredPCChoices = [...filteredPCChoices, pcPads[filteredPCChoices.length] || pcPads[0]]
-          }
-          // Pad companion choices to 3 with Gaiman-styled exploration alternatives
-          const compPads: AIChoice[] = [
-            { narrative: 'Moves ahead, testing each stone before committing his weight', ability: 'companion_scout', align_note: 'perception check' },
-            { narrative: 'Stops and tilts his head — he has heard something you have not', ability: 'companion_observe', align_note: 'investigation check' },
-            { narrative: 'Traces a finger along the wall, reading it like a page no one else can see', ability: 'companion_discussion', align_note: 'character insight' },
-          ]
-          const compNeeded = 3 - filteredCompChoices.length
-          for (let i = 0; i < compNeeded; i++) {
-            filteredCompChoices = [...filteredCompChoices, compPads[filteredCompChoices.length] || compPads[0]]
-          }
-        }
-
-
         const { pcOptions, compOptions, extraOptions } = buildDefaultOptions(humanPC, {
-          pc_choices: filteredPCChoices,
-          companion_choices: filteredCompChoices
+          pc_choices: res.pc_choices,
+          companion_choices: aiCompChoices
         })
         gs.humanOptions = [...pcOptions, ...extraOptions]
         gs.companionOptions = compOptions
@@ -5240,8 +5231,11 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
       skillCheckLine = `\n\n⚠️ LOCAL SKILL CHECK: ${humanPC.name} rolled d20(${check.roll}) + ${check.modifier} ${skillLabel} = ${check.total} vs DC 13 → ${check.success ? '✅ SUCCESS' : '❌ FAILURE'}. USE THIS RESULT. Do NOT re-roll. Narrate the outcome accordingly.`
     }
 
+    const isEarlyAct1 = gs.act === ACTS.ONE && gs.turn < 8
+    const earlyAct1CombatBlock = isEarlyAct1 && isFreeTextAction ? `
+🛑 EARLY ACT I COMBAT PREVENTION (Turns 0-7): NO combat is allowed yet. The world has not revealed its dangers. If the player's custom action implies attacking, striking, fighting, or harming anything (the shard, an NPC, a creature, an object), you MUST narrate it as follows:\n- The character RAISES their weapon/hand/fist with every intention of striking...\n- But something STAYS them. A sound. A feeling. A memory. The weight of the moment. The shard's light flickering. An instinct older than violence.\n- They LOWER their hand. The urge passes. They do something else instead — something the scene offers naturally.\n- Write this in Gaiman prose. The desire is real. The restraint is the story. This is NOT a failure — it is character depth. The narration should feel like fate holding them back, not like a game blocking them.\n- Companion follows the same pattern if their custom action implies combat.\n- After the restraint narration, redirect to an exploration/discovery outcome — something is revealed, noticed, or sensed. The turn is NOT wasted.\n- Do NOT deal damage. Do NOT initiate combat. Do NOT spawn enemies. The first 7 turns are sacred discovery.` : ''
     const freeTextBlock = isFreeTextAction ? `
-⚠️ CUSTOM PLAYER ACTION: The player wrote their own action instead of selecting a preset option.\nInterpret their intent generously — this is their creative choice. Determine the appropriate skill check, ability roll, or reaction. Apply standard mechanics (d20 vs DC, damage, etc.) based on what makes narrative sense. Do NOT just narrate — MECHANICALLY RESOLVE their action like any other choice.\nStamina cost: 1 for observation/movement, 2 for combat, 3 for magical/complex actions.` : ''
+⚠️ CUSTOM PLAYER ACTION: The player wrote their own action instead of selecting a preset option.\nInterpret their intent generously — this is their creative choice. Determine the appropriate skill check, ability roll, or reaction. Apply standard mechanics (d20 vs DC, damage, etc.) based on what makes narrative sense. Do NOT just narrate — MECHANICALLY RESOLVE their action like any other choice.\nStamina cost: 1 for observation/movement, 2 for combat, 3 for magical/complex actions.${earlyAct1CombatBlock}` : ''
     const userMsg = `TURN ${gs.turn} RESOLUTION.
 
 Human player chose for ${toAscii(humanPC?.name || 'PC')}: "${toAscii(chosen?.action || 'acts')}"[${toAscii(chosen?.ability || '')}].${companionActionLine}
