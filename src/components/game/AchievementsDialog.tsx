@@ -134,7 +134,7 @@ export function AchievementsDialog({ open, onClose, tracker }: AchievementsDialo
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
                 aria-pressed={selectedCategory === cat.value}
-                className={`px-2.5 py-1 rounded text-[10px] uppercase tracking-wider transition-all border min-h-[32px] ${
+                className={`px-2.5 py-1 rounded text-[11px] uppercase tracking-wider transition-all border min-h-[32px] ${
                   selectedCategory === cat.value
                     ? 'bg-[#d4af37]/20 border-[#d4af37] text-[#d4af37]'
                     : 'bg-[#0d0a08] border-[#2e2008] text-[#8a7040] hover:border-[#5a4018] hover:text-[#c9a84c]'
@@ -152,7 +152,7 @@ export function AchievementsDialog({ open, onClose, tracker }: AchievementsDialo
                 key={tier.value}
                 onClick={() => setSelectedTier(tier.value)}
                 aria-pressed={selectedTier === tier.value}
-                className={`px-2 py-0.5 rounded text-[9px] uppercase tracking-wider transition-all min-h-[28px] ${
+                className={`px-2 py-0.5 rounded text-[11px] uppercase tracking-wider transition-all min-h-[28px] ${
                   selectedTier === tier.value
                     ? 'bg-[#3a3020] text-[#d4af37]'
                     : 'text-[#5a4d30] hover:text-[#8a7040]'
@@ -174,8 +174,8 @@ export function AchievementsDialog({ open, onClose, tracker }: AchievementsDialo
                 return (
                   <div key={key} className="bg-[#0d0a08] rounded-lg border border-[#2e2008] p-2 text-center">
                     <div className="text-base mb-0.5" aria-hidden="true">{cfg.icon}</div>
-                    <div className="text-[9px] text-[#8a7040] uppercase tracking-wider">{cfg.label}</div>
-                    <div className="text-[10px] text-[#c9a84c] font-bold mt-0.5">
+                    <div className="text-[11px] text-[#8a7040] uppercase tracking-wider">{cfg.label}</div>
+                    <div className="text-[11px] text-[#c9a84c] font-bold mt-0.5">
                       {prog.unlocked}/{prog.total}
                     </div>
                   </div>
@@ -242,7 +242,7 @@ export function AchievementsDialog({ open, onClose, tracker }: AchievementsDialo
                     </span>
                     {unlocked && (
                       <span
-                        className="text-[8px] px-1.5 py-0.5 rounded-full font-bold"
+                        className="text-[11px] px-1.5 py-0.5 rounded-full font-bold"
                         style={{
                           color: tier.color,
                           background: `${tier.color}20`,
@@ -257,7 +257,7 @@ export function AchievementsDialog({ open, onClose, tracker }: AchievementsDialo
                     {unlocked ? def.description : def.hidden ? 'Hidden achievement' : def.description}
                   </div>
                   {unlocked && rec?.unlockedAt && (
-                    <div className="text-[9px] text-[#5a4d30] mt-0.5">
+                    <div className="text-[11px] text-[#5a4d30] mt-0.5">
                       Unlocked on Turn {rec.unlockedAt}
                     </div>
                   )}
@@ -266,7 +266,7 @@ export function AchievementsDialog({ open, onClose, tracker }: AchievementsDialo
                 {/* Checkmark */}
                 {unlocked && (
                   <div
-                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
+                    className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[11px]"
                     style={{ background: `${tier.color}30`, color: tier.color }}
                     aria-hidden="true"
                   >
@@ -286,7 +286,7 @@ export function AchievementsDialog({ open, onClose, tracker }: AchievementsDialo
 
         {/* Footer */}
         <div className="px-5 py-3 border-t border-[#2e2008] bg-[#0d0a08] text-center">
-          <span className="text-[10px] text-[#5a4d30]">
+          <span className="text-[11px] text-[#5a4d30]">
             Hidden achievements are revealed when unlocked. Keep exploring!
           </span>
         </div>

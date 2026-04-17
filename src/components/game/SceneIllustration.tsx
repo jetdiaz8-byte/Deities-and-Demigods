@@ -368,7 +368,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
             >
               {sceneName}
             </span>
-            <span className="text-[10px] text-[#5a4030] font-title">
+            <span className="text-[11px] text-[#5a4030] font-title">
               Turn {turn}
             </span>
           </div>

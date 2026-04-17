@@ -7,6 +7,16 @@ import {
 } from 'lucide-react'
 
 // ═══════════════════════════════════════════════════════════════════════════
+// S2-F4: Reduced-motion hook for Tailwind animation classes
+// Tailwind utility classes (animate-spin, animate-pulse) bypass global CSS
+// @media rules, so we check the media query at the JS level.
+// ═══════════════════════════════════════════════════════════════════════════
+function useReducedMotion() {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // VISUAL DICE COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -20,7 +30,7 @@ interface DiceRollProps {
   isAnimating?: boolean
 }
 
-const DiceFace = ({ sides, value, isRolling }: { sides: number; value?: number; isRolling: boolean }) => {
+const DiceFace = ({ sides, value, isRolling, reducedMotion }: { sides: number; value?: number; isRolling: boolean; reducedMotion: boolean }) => {
   const getDiceColor = () => {
     switch (sides) {
       case 4: return 'from-red-800 to-red-600 border-red-400'
@@ -51,7 +61,7 @@ const DiceFace = ({ sides, value, isRolling }: { sides: number; value?: number; 
         bg-gradient-to-br ${getDiceColor()}
         text-white font-bold text-lg md:text-xl
         shadow-lg border-2
-        ${isRolling ? 'animate-spin' : 'animate-pulse'}
+        ${isRolling ? (reducedMotion ? '' : 'animate-spin') : (reducedMotion ? '' : 'animate-pulse')}
         transition-all duration-300
       `}
       style={{ 
@@ -65,17 +75,22 @@ const DiceFace = ({ sides, value, isRolling }: { sides: number; value?: number; 
 }
 
 export const VisualDiceRoll = ({ die, roll, dc, success, roller, notes, isAnimating }: DiceRollProps) => {
+  // S2-F4: Detect reduced-motion preference for Tailwind animation classes
+  const reducedMotion = useReducedMotion()
   const [revealed, setRevealed] = React.useState(false)
   const [tumbling, setTumbling] = React.useState(true)
   React.useEffect(() => {
     setRevealed(false)
     setTumbling(true)
+    // S2-F4: Skip tumbling animation entirely when reduced motion is preferred;
+    // reveal result immediately with a minimal 100ms delay so state settles.
+    const delay = reducedMotion ? 100 : 1200
     const timer = setTimeout(() => {
       setRevealed(true)
       setTumbling(false)
-    }, 1200)
+    }, delay)
     return () => clearTimeout(timer)
-  }, [roll, die])
+  }, [roll, die, reducedMotion])
 
   // Parse dice notation
   const parseDice = (notation: string): { count: number; sides: number }[] => {
@@ -132,6 +147,7 @@ export const VisualDiceRoll = ({ die, roll, dc, success, roller, notes, isAnimat
               sides={20}
               value={revealed ? val : undefined}
               isRolling={!revealed || isAnimating || false}
+              reducedMotion={reducedMotion}
             />
         ))}
       </div>
@@ -197,7 +213,7 @@ export const HealthBar = ({ current, max, showLabel = true, size = 'md', label }
   return (
     <div className="w-full">
       {label && (
-        <div className="text-[10px] text-gray-400 mb-0.5 flex justify-between">
+        <div className="text-[11px] text-gray-400 mb-0.5 flex justify-between">
           <span>{label}</span>
           <span className={pct <= 20 ? 'text-red-400' : 'text-gray-300'}>
             {Math.max(0, current)}/{max}
@@ -211,7 +227,7 @@ export const HealthBar = ({ current, max, showLabel = true, size = 'md', label }
         />
       </div>
       {showLabel && !label && (
-        <div className="text-[10px] text-center mt-0.5">
+        <div className="text-[11px] text-center mt-0.5">
           <span className={pct <= 20 ? 'text-red-400' : 'text-green-400'}>
             {Math.max(0, current)}
           </span>

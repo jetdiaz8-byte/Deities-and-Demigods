@@ -298,7 +298,7 @@ export function IntroScreen({
           {/* Subtitle - positioned safely below title, above card */}
           <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1.2, duration: 0.6 }} className="mt-2"
-            style={{ fontFamily: 'var(--font-heading)', fontSize: '.65rem', color: '#D4AF37',
+            style={{ fontFamily: 'var(--font-heading)', fontSize: '0.6875rem', color: '#D4AF37',
               letterSpacing: '.25em', textTransform: 'uppercase' }}>
             Mythworld Engine &middot; AI-Powered D&D
           </motion.p>
@@ -306,7 +306,7 @@ export function IntroScreen({
 
         <div className="grid grid-cols-1 md:grid-cols-[minmax(360px,1fr)_minmax(280px,350px)_minmax(350px,520px)] gap-6 md:gap-8 items-start mt-3 w-full">
           <div className="justify-self-center md:justify-self-start intro-showcase-area">
-            <div className="text-center mb-2 text-[10px]" style={{ fontFamily: 'var(--font-heading)', letterSpacing: '.08em', color: '#C9A84C' }}>
+            <div className="text-center mb-2 text-[11px]" style={{ fontFamily: 'var(--font-heading)', letterSpacing: '.08em', color: '#C9A84C' }}>
               CHARACTER CARD SHOWCASE · {portraitCount} portraits
               {activeCharacter?.pantheon && (
                 <span className="ml-2 text-[#d4af37]" style={{ letterSpacing: '.06em' }}>
@@ -474,22 +474,22 @@ export function IntroScreen({
                 <span className="text-xs" style={{ fontFamily: 'var(--font-heading)', letterSpacing: '.15em', color: '#C9A84C' }}>
                   {'\u2726'} Created by JeTZone2k26 {'\u2726'}
                 </span>
-                <span className="text-[#5a4d30] text-[10px] ml-2">v{version}</span>
+                <span className="text-[#5a4d30] text-[11px] ml-2">v{version}</span>
               </div>
 
 
 
               {/* Links */}
               <div className="flex items-center justify-center gap-3 mt-3">
-                <a href="/rulebook" className="text-[10px] hover:text-[#60e0a0] inline-flex items-center gap-1 transition-colors" style={{ fontFamily: 'var(--font-heading)', color: '#2ECC71' }}>
+                <a href="/rulebook" className="text-[11px] hover:text-[#60e0a0] inline-flex items-center gap-1 transition-colors" style={{ fontFamily: 'var(--font-heading)', color: '#2ECC71' }}>
                   <BookOpen className="w-3 h-3" /> Guide
                 </a>
                 <span className="text-[#3a3020]">&middot;</span>
-                <a href="/dm-handbook" className="text-[10px] hover:text-[#60e0a0] inline-flex items-center gap-1 transition-colors" style={{ fontFamily: 'var(--font-heading)', color: '#7B2D8E' }}>
+                <a href="/dm-handbook" className="text-[11px] hover:text-[#60e0a0] inline-flex items-center gap-1 transition-colors" style={{ fontFamily: 'var(--font-heading)', color: '#7B2D8E' }}>
                   <ScrollText className="w-3 h-3" /> DM Handbook
                 </a>
                 <span className="text-[#3a3020]">&middot;</span>
-                <a href="/codex" className="text-[10px] hover:text-[#60e0a0] inline-flex items-center gap-1 transition-colors" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}>
+                <a href="/codex" className="text-[11px] hover:text-[#60e0a0] inline-flex items-center gap-1 transition-colors" style={{ fontFamily: 'var(--font-heading)', color: '#D4AF37' }}>
                   <BookOpen className="w-3 h-3" /> Codex
                 </a>
               </div>
@@ -515,8 +515,8 @@ export function IntroScreen({
                 {features.map((feature, i) => (
                   <div key={i} className="text-center p-2 bg-[#181208] border border-[#2e2008] rounded">
                     <div className="text-[#D4AF37] mb-0.5 flex justify-center">{feature.icon}</div>
-                    <div className="text-[9px] leading-tight" style={{ fontFamily: 'var(--font-heading)', color: '#C9A84C' }}>{feature.label}</div>
-                    <div className="text-[8px]" style={{ color: '#8A7A50' }}>{feature.desc}</div>
+                    <div className="text-[11px] leading-tight" style={{ fontFamily: 'var(--font-heading)', color: '#C9A84C' }}>{feature.label}</div>
+                    <div className="text-[11px]" style={{ color: '#8A7A50' }}>{feature.desc}</div>
                   </div>
                 ))}
               </div>

@@ -161,3 +161,71 @@ Stage Summary:
 - Combat in early Act I: Fixed by adding guard at combat state application (useGameEngine.ts:4194-4209)
 - Scene image letterbox: Fixed by removing max-height cap from globals.css:245-250
 - Both fixes are hot-reloaded, no build errors
+
+---
+Task ID: 1
+Agent: Sprint 2 Agent
+Task: S2-F1 — Enforce 11px minimum font-size floor across all components
+
+Work Log:
+- globals.css: Raised 16 CSS selectors with font-size < 11px to 11px (0.6875rem):
+  - .speech-bubble: 0.625rem→0.6875rem, mobile 0.5rem→0.6875rem, landscape 0.5rem→0.6875rem
+  - .caption: 0.5625rem→0.6875rem, desktop already 0.6875rem, landscape 0.5rem→0.6875rem
+  - .initiative-skull: 10px→11px
+  - .initiative-name: 10px→11px
+  - .initiative-status: 10px→11px
+  - .hp-text: 8px→11px
+  - .map-pin-name: 9px→11px
+  - .alignment-cell: 9px→11px
+  - .alignment-axis-label: 9px→11px
+  - .npc-status-badge: 10px→11px
+  - .character-detail-phase-label: 10px→11px
+  - .power-choice-source: 10px→11px
+  - .graveyard-card-turn: 9px→11px
+  - .graveyard-card-power: 10px→11px
+  - .attunement-text: 10px→11px
+  - .echo-conflicted-badge: 10px→11px
+- CombatOverlay.tsx: Fixed 10 inline fontSize values (9→11, 10→11):
+  - Enemy condition badges, ally condition badges: fontSize 9→11
+  - YOU badge, ALLY badge: fontSize 9→11
+  - Battle Context label: fontSize 10→11
+  - Phase indicator badge: fontSize 10→11
+  - Enemy title span: fontSize 10→11
+  - Enemy AC text, Ally AC text: fontSize 10→11
+  - Combat Log label: fontSize 10→11
+- AchievementsDialog.tsx: Fixed 8 Tailwind font-size classes:
+  - Category filter buttons: text-[10px]→text-[11px]
+  - Tier filter buttons: text-[9px]→text-[11px]
+  - Category progress labels: text-[9px]→text-[11px]
+  - Category progress numbers: text-[10px]→text-[11px]
+  - Tier badge: text-[8px]→text-[11px]
+  - Unlock date: text-[9px]→text-[11px]
+  - Checkmark circle: text-[10px]→text-[11px]
+  - Footer hint: text-[10px]→text-[11px]
+- IntroScreen.tsx: Fixed 8 font-size values:
+  - Subtitle: fontSize '.65rem'→'0.6875rem'
+  - Showcase header: text-[10px]→text-[11px]
+  - Version number: text-[10px]→text-[11px]
+  - Guide/DM Handbook/Codex links: text-[10px]→text-[11px]
+  - Feature labels: text-[9px]→text-[11px]
+  - Feature descriptions: text-[8px]→text-[11px]
+- GameComponents.tsx: Fixed 2 Tailwind font-size classes:
+  - Health bar label: text-[10px]→text-[11px]
+  - Health bar value: text-[10px]→text-[11px]
+- GameDialogs.tsx: Fixed 8 font-size values:
+  - Save slot badges: text-[10px]→text-[11px]
+  - Act badge: text-[10px]→text-[11px]
+  - Gold display: text-[10px]→text-[11px]
+  - Party member names: text-[10px]→text-[11px]
+  - Date: text-[10px]→text-[11px]
+  - Save/Load/Delete buttons: text-[10px]→text-[11px]
+  - Item type: text-[10px]→text-[11px]
+  - Shard hint: text-[10px]→text-[11px]
+- SceneIllustration.tsx: Fixed 1 Tailwind class:
+  - Turn caption: text-[10px]→text-[11px]
+
+Stage Summary:
+- 7 files modified: globals.css, CombatOverlay.tsx, AchievementsDialog.tsx, IntroScreen.tsx, GameComponents.tsx, GameDialogs.tsx, SceneIllustration.tsx
+- 53 total font-size violations fixed to meet the 11px minimum floor
+- No color scheme changes — only font-size enforcement
+- No Sprint 3 or Sprint 4 items touched

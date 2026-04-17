@@ -26,6 +26,11 @@ const getBorderColor = (alignment?: string) => {
   return ALIGNMENT_BORDER[alignment.toLowerCase()] || '#808080'
 }
 
+// S2-F4 verification: Divine rank glow effects (aura-gold-pulse, aura-shimmer,
+// aura-dark-pulse) are CSS-based animations already suppressed by the global
+// @media (prefers-reduced-motion: reduce) rule in globals.css line 741+
+// ("animation: none !important"). No JS-level hook needed here.
+
 const getDivineRankClass = (divineRank?: string): string => {
   const rank = divineRank?.toLowerCase() ?? ''
   if (rank.includes('greater')) return 'character-card--greater-god'

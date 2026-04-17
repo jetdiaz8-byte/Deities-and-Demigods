@@ -194,7 +194,7 @@ export default function CombatOverlay({
           lineHeight: 1.5,
           fontFamily: 'var(--font-body)',
         }}>
-          <div style={{ fontSize: 10, color: '#8A7A50', marginBottom: 4, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
+          <div style={{ fontSize: 11, color: '#8A7A50', marginBottom: 4, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
             📜 Battle Context
           </div>
           {combatContext}
@@ -256,12 +256,12 @@ export default function CombatOverlay({
                           {enemy.name}
                         </span>
                         {isAntag && gameState?.act === 'act3' && gameState?.antagonistPhase && (
-                          <span style={{ fontSize: 10, color: '#a06060', border: '1px solid rgba(160,60,60,.3)', padding: '1px 5px', borderRadius: 3 }}>
+                          <span style={{ fontSize: 11, color: '#a06060', border: '1px solid rgba(160,60,60,.3)', padding: '1px 5px', borderRadius: 3 }}>
                             Phase {gameState.antagonistPhase}/3
                           </span>
                         )}
                         {enemy.title && (
-                          <span style={{ fontSize: 10, color: '#8a6060', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <span style={{ fontSize: 11, color: '#8a6060', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {enemy.title}
                           </span>
                         )}
@@ -280,7 +280,7 @@ export default function CombatOverlay({
                         <span style={{ fontSize: 11, color: '#8a7060' }}>
                           {Math.max(0, enemy.hp)}/{enemy.maxHp} HP
                         </span>
-                        <span style={{ fontSize: 10, color: '#6a5a50' }}>
+                        <span style={{ fontSize: 11, color: '#6a5a50' }}>
                           AC {enemy.AC}
                         </span>
                       </div>
@@ -288,7 +288,7 @@ export default function CombatOverlay({
                         <div style={{ display: 'flex', gap: 4, marginTop: 3, flexWrap: 'wrap' }}>
                           {enemy.conditions!.map(s => (
                             <span key={s} style={{
-                              fontSize: 9, padding: '1px 5px', borderRadius: 3,
+                              fontSize: 11, padding: '1px 5px', borderRadius: 3,
                               background: 'rgba(100,60,60,.2)', border: '1px solid rgba(100,60,60,.2)',
                               color: '#c0a090',
                             }}>
@@ -352,8 +352,8 @@ export default function CombatOverlay({
                         }}>
                           {ally.name}
                         </span>
-                        {isActive && <span style={{ fontSize: 9, color: '#d4af37', border: '1px solid rgba(212,175,55,.3)', padding: '1px 5px', borderRadius: 3 }}>YOU</span>}
-                        {isCompanion && !isActive && <span style={{ fontSize: 9, color: '#7090c0', border: '1px solid rgba(112,144,192,.3)', padding: '1px 5px', borderRadius: 3 }}>ALLY</span>}
+                        {isActive && <span style={{ fontSize: 11, color: '#d4af37', border: '1px solid rgba(212,175,55,.3)', padding: '1px 5px', borderRadius: 3 }}>YOU</span>}
+                        {isCompanion && !isActive && <span style={{ fontSize: 11, color: '#7090c0', border: '1px solid rgba(112,144,192,.3)', padding: '1px 5px', borderRadius: 3 }}>ALLY</span>}
                       </div>
                       <div style={{
                         height: 6, background: '#1a1510', borderRadius: 3, overflow: 'hidden',
@@ -369,7 +369,7 @@ export default function CombatOverlay({
                         <span style={{ fontSize: 11, color: '#8a8060' }}>
                           {Math.max(0, ally.hp)}/{ally.maxHp} HP
                         </span>
-                        <span style={{ fontSize: 10, color: '#6a6050' }}>
+                        <span style={{ fontSize: 11, color: '#6a6050' }}>
                           AC {ally.AC}
                         </span>
                       </div>
@@ -377,7 +377,7 @@ export default function CombatOverlay({
                         <div style={{ display: 'flex', gap: 4, marginTop: 3, flexWrap: 'wrap' }}>
                           {ally.conditions!.map(s => (
                             <span key={s} style={{
-                              fontSize: 9, padding: '1px 5px', borderRadius: 3,
+                              fontSize: 11, padding: '1px 5px', borderRadius: 3,
                               background: 'rgba(80,80,60,.2)', border: '1px solid rgba(80,80,60,.2)',
                               color: '#c0b090',
                             }}>
@@ -401,7 +401,7 @@ export default function CombatOverlay({
             background: 'rgba(0,0,0,.4)', borderTop: '1px solid #333',
             borderBottom: '1px solid #333', borderRadius: 6,
           }}>
-            <div style={{ fontSize: 10, color: '#8A7A50', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
+            <div style={{ fontSize: 11, color: '#8A7A50', marginBottom: 6, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
               Combat Log
             </div>
             {combatState.log.slice(-8).map((e, idx) => (

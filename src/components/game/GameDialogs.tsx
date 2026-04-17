@@ -65,19 +65,19 @@ function SaveSlotThumbnail({ slot, children, interactive = false }: {
       {/* Turn number badge + Act indicator */}
       <div className="flex items-center gap-2 mb-2">
         <Badge
-          className="text-[10px] font-bold px-2 py-0.5"
+          className="text-[11px] font-bold px-2 py-0.5"
           style={{ background: '#2a2015', color: '#d4af37', border: '1px solid #5a4018' }}
         >
           T{slot.turn}
         </Badge>
         <div
-          className="text-[10px] font-bold px-2 py-0.5 rounded"
+          className="text-[11px] font-bold px-2 py-0.5 rounded"
           style={{ background: act.bg, color: act.color, border: `1px solid ${act.color}33` }}
         >
           Act {act.label}
         </div>
         {slot.totalGold !== undefined && (
-          <div className="ml-auto text-[10px] text-[#d4af37] font-title flex items-center gap-1">
+          <div className="ml-auto text-[11px] text-[#d4af37] font-title flex items-center gap-1">
             <span className="text-xs">🪙</span> {slot.totalGold}
           </div>
         )}
@@ -90,7 +90,7 @@ function SaveSlotThumbnail({ slot, children, interactive = false }: {
           return (
             <div
               key={idx}
-              className="flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded"
+              className="flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded"
               style={{
                 background: isAlive ? 'rgba(74,144,96,0.1)' : 'rgba(200,60,60,0.1)',
                 border: `1px solid ${isAlive ? 'rgba(74,144,96,0.2)' : 'rgba(200,60,60,0.2)'}`,
@@ -114,7 +114,7 @@ function SaveSlotThumbnail({ slot, children, interactive = false }: {
 
       {/* Date + actions */}
       <div className="flex items-center justify-between mt-1">
-        <div className="text-[10px] text-[#5a4d30]">
+        <div className="text-[11px] text-[#5a4d30]">
           {new Date(slot.timestamp).toLocaleDateString()} · {new Date(slot.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </div>
         {children}
@@ -199,7 +199,7 @@ function InventoryItemRow({ item, onUse, disabled }: { item: Item; onUse: () => 
           >
             {item.name}
           </button>
-          <div className="text-[10px] text-[#5a4d30] flex items-center gap-1">
+          <div className="text-[11px] text-[#5a4d30] flex items-center gap-1">
             <span>{typeIcons[item.type] || '📦'}</span>
             <span>{item.type}</span>
             <span className="mx-0.5">·</span>
@@ -295,7 +295,7 @@ export function GameDialogs({
                   <Button
                     onClick={() => saveGame(`slot_${i}`, buildSaveData(existing, `slot_${i}`).name)}
                     size="sm"
-                    className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860] text-[10px] px-2"
+                    className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860] text-[11px] px-2"
                   >
                     Overwrite
                   </Button>
@@ -326,8 +326,8 @@ export function GameDialogs({
               saveSlots.map(slot => (
                 <SaveSlotThumbnail key={slot.id} slot={slot} interactive>
                   <div className="flex gap-1">
-                    <Button onClick={() => loadGame(slot.id)} size="sm" className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860] text-[10px] px-2">Load</Button>
-                    <Button onClick={() => deleteSave(slot.id)} size="sm" variant="destructive" className="text-[10px] px-2"><Trash2 className="w-3 h-3" /></Button>
+                    <Button onClick={() => loadGame(slot.id)} size="sm" className="bg-gradient-to-b from-[#4e3300] to-[#2b1800] text-[#f0c860] text-[11px] px-2">Load</Button>
+                    <Button onClick={() => deleteSave(slot.id)} size="sm" variant="destructive" className="text-[11px] px-2"><Trash2 className="w-3 h-3" /></Button>
                   </div>
                 </SaveSlotThumbnail>
               ))
@@ -405,7 +405,7 @@ export function GameDialogs({
                   className="bg-[#0a0612] border-[#4a2878] text-[#d0c0e8] placeholder:text-[#5a4070]"
                   onKeyDown={e => e.key === 'Enter' && invokeShard()}
                 />
-                <p className="text-[10px] text-[#5a4070] italic">
+                <p className="text-[11px] text-[#5a4070] italic">
                   The shard remembers everything. It has seen worlds end. But it doesn&apos;t always tell you what you wanted to hear.
                 </p>
               </>
