@@ -51,6 +51,7 @@
 /* ALT: Creepster (Google Fonts) — placeholder for Ghostoons */
 
 :root {
+  color-scheme: dark;
   --bg-primary: #0a0a0f;
   --bg-secondary: #12121a;
   --bg-card: #1a1a2e;
@@ -385,7 +386,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 @keyframes ember-float {
   0% { transform: translateY(0) translateX(0); opacity: 0; }
   15% { opacity: 0.9; }
-  100% { transform: translateY(-110vh) translateX(18px); opacity: 0; }
+  100% { transform: translateY(-110dvh) translateX(18px); opacity: 0; }
 }
 .fog-overlay { position: absolute; left: 0; right: 0; bottom: 0; height: 80px; pointer-events: none; background: linear-gradient(180deg, rgba(18, 12, 8, 0), rgba(18, 12, 8, 0.45)); }
 
@@ -545,10 +546,10 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .intro-showcase__next:hover {
   background: rgba(255,215,0,0.3);
 }
-.intro-showcase-area { max-height: calc(100vh - 80px); overflow-y: auto; }
+.intro-showcase-area { max-height: calc(100dvh - 80px); overflow-y: auto; }
 .intro-showcase-card .character-card { max-height: calc(100vh - 100px); overflow-y: auto; }
 
-.party-bar-wrap { position: fixed; bottom: 0; left: 0; right: 0; z-index: 80; }
+.party-bar-wrap { position: fixed; bottom: 0; left: 0; right: 0; z-index: 80; padding-bottom: env(safe-area-inset-bottom, 0px); }
 .party-bar {
   display: flex;
   align-items: center;
@@ -576,7 +577,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .hp-high { background: #2ecc71; }
 .hp-mid { background: #f39c12; }
 .hp-low { background: #e74c3c; }
-.party-bar__hp-text { font-family: var(--font-body); font-size: 0.6rem; color: #a09880; margin-top: 1px; }
+.party-bar__hp-text { font-family: var(--font-body); font-size: 0.7rem; color: #a09880; margin-top: 1px; }
 .party-bar__loading-note { text-align: center; font-size: 0.75rem; color: #c9a84c; padding: 4px 8px 8px; background: rgba(10, 8, 16, 0.98); }
 .party-card-expand {
   position: absolute;
@@ -588,7 +589,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
   z-index: 100;
 }
 .party-card-expand.open { transform: translateX(-50%) translateY(0); opacity: 1; }
-.party-card-expand__panel { position: relative; max-height: calc(100vh - 200px); overflow-y: auto; }
+.party-card-expand__panel { position: relative; max-height: calc(100dvh - 200px); overflow-y: auto; }
 .party-card-expand__close { position: absolute; right: 8px; top: 8px; z-index: 3; border: 1px solid #7a5f20; background: rgba(10,8,6,.8); color: #f0c860; border-radius: 6px; padding: 2px 8px; }
 .gallery-modal {
   position: fixed;
@@ -731,7 +732,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .combat-banner { text-align: center; padding: 16px; border-bottom: 2px solid #8b0000; animation: bannerPulse 2s ease-in-out infinite; position: relative; }
 @keyframes bannerPulse { 0%, 100% { border-color: #8b0000; } 50% { border-color: #d4a843; } }
 .combat-banner h2 { font-family: var(--font-combat); font-size: 28px; color: #d4a843; margin: 0; }
-.combat-close-btn { position: absolute; top: 12px; right: 16px; background: none; border: 1px solid #555; color: #c4b896; font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
+.combat-close-btn { position: absolute; top: 12px; right: 16px; background: none; border: 1px solid #555; color: #c4b896; font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 4px; min-width: 44px; min-height: 44px; display: flex; align-items: center; justify-content: center; }
 .initiative-tracker { display: flex; justify-content: center; gap: 12px; padding: 12px; flex-wrap: wrap; }
 .initiative-slot { display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all .3s; }
 .initiative-slot.active { transform: scale(1.15); }
@@ -758,16 +759,16 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .combat-end-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1001; }
 .combat-victory { background: rgba(0,0,0,.85); }
 .combat-defeat { background: rgba(40,0,0,.9); }
-.combat-end-title { font-family: var(--font-combat); font-size: 64px; margin-bottom: 20px; }
+.combat-end-title { font-family: var(--font-combat); font-size: clamp(28px, 10vw, 64px); margin-bottom: 20px; }
 .combat-end-btn { font-family: var(--font-button); font-size: 16px; padding: 10px 24px; background: transparent; border: 2px solid #d4a843; color: #d4a843; border-radius: 6px; cursor: pointer; }
 .combat-action-bar { display: flex; justify-content: center; gap: 8px; padding: 10px; background: rgba(0,0,0,.7); border-top: 1px solid #333; flex-wrap: wrap; }
-.combat-action-btn { font-family: var(--font-button); font-size: 13px; padding: 8px 14px; background: rgba(60,36,21,.5); border: 1px solid #555; color: #c4b896; border-radius: 4px; cursor: pointer; }
+.combat-action-btn { font-family: var(--font-button); font-size: 13px; padding: 10px 14px; background: rgba(60,36,21,.5); border: 1px solid #555; color: #c4b896; border-radius: 4px; cursor: pointer; min-height: 44px; }
 .combat-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 12px; }
 .combat-column { background: rgba(0,0,0,.35); border: 1px solid #333; border-radius: 6px; padding: 8px; }
 .combat-column h4 { margin: 0 0 6px; color: #d4a843; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
 .combatant-row { font-size: 12px; color: #c4b896; padding: 3px 0; }
 .combatant-row.active { color: #ffd78a; font-weight: 700; }
-.combat-indicator { position: fixed; bottom: 80px; right: 16px; min-width: 100px; height: 36px; background: rgba(0,0,0,.8); border: 1px solid #8b0000; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999; }
+.combat-indicator { position: fixed; bottom: 80px; right: 16px; min-width: 100px; min-height: 44px; background: rgba(0,0,0,.8); border: 1px solid #8b0000; border-radius: 6px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 999; }
 .combat-indicator span { color: #d4a843; }
 .mini-map { position: fixed; bottom: 80px; left: 12px; width: 120px; height: 120px; border-radius: 50%; background: rgba(0,0,0,.7); border: 2px solid #3c2415; overflow: hidden; z-index: 100; cursor: pointer; }
 .mini-map-dot { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #888; transform: translate(-50%, -50%); }

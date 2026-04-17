@@ -105,7 +105,7 @@ export function GameSidebar({
       {/* DESKTOP ICON STRIP */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       <TooltipProvider delayDuration={200}>
-        <div className="fixed right-0 top-0 h-full w-14 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col items-center py-2 gap-1 z-10 hidden md:flex">
+        <div className="fixed right-0 top-0 h-full w-14 bg-[#110d07]/95 border-l border-[#2e2008] flex flex-col items-center py-2 gap-1 z-10 hidden lg:flex">
           {/* ── Section Icons ── */}
           <Tooltip>
             <TooltipTrigger asChild>

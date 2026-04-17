@@ -162,16 +162,16 @@ export default function CombatOverlay({
     <div className={`combat-overlay ${latest?.isCritical ? 'screen-shake' : ''}`}>
       {/* ── Close button ─────────────────────────────────────────────── */}
       <button
-        className="combat-close-btn"
+        className="combat-close-btn min-h-[44px] min-w-[44px]"
         onClick={onClose}
-        style={{ position: 'absolute', top: 12, right: 12, zIndex: 1010, width: 32, height: 32, borderRadius: 6, border: '1px solid #5a3030', background: 'rgba(20,5,5,.8)', color: '#a08060', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}
+        style={{ position: 'absolute', top: 12, right: 12, zIndex: 1010, borderRadius: 6, border: '1px solid #5a3030', background: 'rgba(20,5,5,.8)', color: '#a08060', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}
       >
         <X className="w-4 h-4" />
       </button>
 
       {/* ── Combat Banner ────────────────────────────────────────────── */}
       <div className="combat-banner">
-        <h2 style={{ fontFamily: 'var(--font-combat)', fontSize: 28, color: '#D4AF37', margin: 0, textShadow: '0 0 10px rgba(212,175,55,0.3)' }}>⚔ COMBAT — Round {combatState.round || 1}</h2>
+        <h2 style={{ fontFamily: 'var(--font-combat)', fontSize: 'clamp(20px, 5vw, 28px)', color: '#D4AF37', margin: 0, textShadow: '0 0 10px rgba(212,175,55,0.3)' }}>⚔ COMBAT — Round {combatState.round || 1}</h2>
         {combatState.phase && (
           <div style={{ fontSize: 12, color: '#D4AF37', marginTop: 4, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-heading)' }}>
             {combatState.phase === 'player_turn' ? '🗡 Your Move' :
@@ -397,7 +397,7 @@ export default function CombatOverlay({
         {/* ── Combat Log ─────────────────────────────────────────────── */}
         {combatState.log.length > 0 && (
           <div style={{
-            maxHeight: 160, overflow: 'auto', padding: 10,
+            maxHeight: 'clamp(100px, 20vh, 200px)', overflow: 'auto', padding: 10,
             background: 'rgba(0,0,0,.4)', borderTop: '1px solid #333',
             borderBottom: '1px solid #333', borderRadius: 6,
           }}>
@@ -460,7 +460,8 @@ export default function CombatOverlay({
             onClick={() => onAction(action.text)}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
-              padding: '8px 14px',
+              padding: '10px 14px',
+              minHeight: 44,
               background: action.highlight
                 ? 'rgba(80,60,20,.4)'
                 : action.danger

@@ -60,11 +60,13 @@ function EquipmentTooltipCard({ item, position }: { item: Item; position: { x: n
 
   // Smart positioning: compute from position prop directly with some margin
   const adjustedPos = React.useMemo(() => {
-    const maxX = typeof window !== 'undefined' ? window.innerWidth - 300 : 500
-    const maxY = typeof window !== 'undefined' ? window.innerHeight - 250 : 400
+    if (typeof window === 'undefined') return { x: 12, y: 12 }
+    const vw = window.innerWidth
+    const tooltipW = Math.min(280, vw - 24) // leave 12px margin each side
+    const tooltipH = 250 // approximate
     return {
-      x: Math.min(Math.max(position.x, 12), maxX),
-      y: Math.min(Math.max(position.y + 8, 12), maxY),
+      x: Math.min(Math.max(position.x, 12), vw - tooltipW - 12),
+      y: Math.min(Math.max(position.y + 8, 12), window.innerHeight - tooltipH - 12),
     }
   }, [position])
 

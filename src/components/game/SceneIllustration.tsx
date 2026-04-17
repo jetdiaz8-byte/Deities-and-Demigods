@@ -149,9 +149,17 @@ function detectSceneName(narration: string, act: string): string {
 
 // ── Particle system — lightweight CSS animations ─────────────────────────
 function SceneParticles({ type, glowColor }: { type: string; glowColor: string }) {
-  if (type === 'none' || !type) return null
-
   const particleCount = type === 'embers' ? 12 : type === 'snow' ? 15 : 8
+
+  // Pre-compute deterministic drift offsets (avoids Math.random() jitter on re-render)
+  const driftOffsets = React.useMemo(() =>
+    Array.from({ length: Math.max(particleCount, 15) }).map((_, i) => {
+      const n = ((i * 37 + 11) % 100) / 100 // deterministic 0-1
+      return n
+    }), [particleCount]
+  )
+
+  if (type === 'none' || !type) return null
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -159,6 +167,7 @@ function SceneParticles({ type, glowColor }: { type: string; glowColor: string }
         const isEmber = type === 'embers'
         const isSnow = type === 'snow'
         const isBubble = type === 'bubbles'
+        const drift = driftOffsets[i] || 0
 
         return (
           <div
@@ -184,7 +193,10 @@ function SceneParticles({ type, glowColor }: { type: string; glowColor: string }
               animation: `${isBubble ? 'floatBubble' : isEmber ? 'riseEmber' : isSnow ? 'fallSnow' : 'driftMist'} ${4 + (i % 5) * 1.5}s ease-in-out ${i * 0.7}s infinite`,
               opacity: 0,
               animationFillMode: 'forwards',
-            }}
+              // Use CSS custom properties for stable drift per-particle
+              '--drift-x': `${20 - drift * 40}px`,
+              '--drift-x-ember': `${30 - drift * 60}px`,
+            } as React.CSSProperties}
           />
         )
       })}
@@ -243,19 +255,19 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
           0% { opacity: 0; transform: translateY(0) translateX(0); }
           30% { opacity: 0.6; }
           70% { opacity: 0.4; }
-          100% { opacity: 0; transform: translateY(-120px) translateX(${20 - Math.random() * 40}px); }
+          100% { opacity: 0; transform: translateY(-120px) translateX(var(--drift-x, 0px)); }
         }
         @keyframes riseEmber {
           0% { opacity: 0; transform: translateY(0) translateX(0) scale(1); }
           20% { opacity: 0.9; }
           60% { opacity: 0.6; }
-          100% { opacity: 0; transform: translateY(-200px) translateX(${30 - Math.random() * 60}px) scale(0.3); }
+          100% { opacity: 0; transform: translateY(-200px) translateX(var(--drift-x-ember, 0px)) scale(0.3); }
         }
         @keyframes fallSnow {
           0% { opacity: 0; transform: translateY(0) translateX(0); }
           20% { opacity: 0.7; }
           80% { opacity: 0.4; }
-          100% { opacity: 0; transform: translateY(200px) translateX(${20 - Math.random() * 40}px); }
+          100% { opacity: 0; transform: translateY(200px) translateX(var(--drift-x, 0px)); }
         }
         @keyframes floatBubble {
           0% { opacity: 0; transform: translateY(0) scale(0.5); }

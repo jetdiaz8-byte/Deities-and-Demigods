@@ -81,6 +81,79 @@ function GaimanLoadingPage() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// MOBILE MORE MENU — Collapses secondary actions for small screens
+// ═══════════════════════════════════════════════════════════════════════════
+function MobileMoreMenu({ onInventory, onSave, onLoad, onExport, inventoryCount }: {
+  onInventory: () => void
+  onSave: () => void
+  onLoad: () => void
+  onExport: () => void
+  inventoryCount: number
+}) {
+  const [open, setOpen] = React.useState(false)
+  const menuRef = React.useRef<HTMLDivElement>(null)
+
+  React.useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  const close = React.useCallback(() => setOpen(false), [])
+
+  return (
+    <div ref={menuRef} className="relative lg:hidden">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="min-h-[44px] min-w-[44px] flex items-center justify-center px-2 rounded text-xs text-[#9a8860] border border-[#5a4018] hover:bg-[#2a2015]"
+        aria-label="More actions"
+      >
+        ⋮
+      </button>
+      {open && (
+        <div
+          className="absolute bottom-full right-0 mb-2 w-44 rounded-lg border border-[#3a3020] bg-[#181208]/95 backdrop-blur-sm shadow-lg overflow-hidden z-[200]"
+          role="menu"
+        >
+          <button
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#9a8860] hover:bg-[#2a2015] hover:text-[#d4af37] transition-colors text-left"
+            onClick={() => { close(); onInventory() }}
+            role="menuitem"
+          >
+            <Package className="w-4 h-4" /> Inventory
+            <Badge variant="secondary" className="ml-auto text-[10px]">{inventoryCount}</Badge>
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#9a8860] hover:bg-[#2a2015] hover:text-[#d4af37] transition-colors text-left"
+            onClick={() => { close(); onSave() }}
+            role="menuitem"
+          >
+            <Save className="w-4 h-4" /> Save Game
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#9a8860] hover:bg-[#2a2015] hover:text-[#d4af37] transition-colors text-left"
+            onClick={() => { close(); onLoad() }}
+            role="menuitem"
+          >
+            <Upload className="w-4 h-4" /> Load Game
+          </button>
+          <button
+            className="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-[#9a8860] hover:bg-[#2a2015] hover:text-[#d4af37] transition-colors text-left"
+            onClick={() => { close(); onExport() }}
+            role="menuitem"
+          >
+            <Download className="w-4 h-4" /> Export Chronicle
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MYTHWORLD ENGINE — Loaded via next/dynamic ssr:false in page.tsx
 // No SSR guards needed — this component ONLY runs client-side.
 // All browser APIs (localStorage, speechSynthesis, etc.) are safe here.
@@ -452,7 +525,7 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
     <TooltipProvider>
       <EquipmentTooltipProvider>
       <LoreGlossaryProvider pcs={gameState?.pcs ?? []} activeNPCs={gameState?.activeNPCs ?? []} npcHistory={gameState?.npcHistory ?? []}>
-      <div className="min-h-screen bg-[#060403] flex flex-col pb-28 md:pb-0" data-screen-root onClickCapture={triggerPendingTTSFromUserGesture}>
+      <div className="min-h-screen bg-[#060403] flex flex-col pb-28 lg:pb-0" data-screen-root onClickCapture={triggerPendingTTSFromUserGesture}>
         {/* Screen Effects */}
         <style>{`
           @keyframes screen-flash-red {
@@ -663,7 +736,7 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
           />
 
           {/* Right Panel — Portrait Gallery + Dice Tray (desktop only) */}
-          <div className="hidden md:flex flex-col w-80 flex-shrink-0 mr-14 border-l border-[#2e2008] bg-[#0a0806]/95 overflow-y-auto sticky top-0 h-screen">
+          <div className="hidden lg:flex flex-col w-80 flex-shrink-0 mr-14 border-l border-[#2e2008] bg-[#0a0806]/95 overflow-y-auto sticky top-0 h-screen">
             <TurnCardShowcase turn={gameState?.turn ?? 0} gameState={gameState} />
             <SidebarDiceArea diceRolls={diceRollsForDisplay ?? []} />
           </div>
@@ -760,12 +833,12 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
         )}
 
         {/* Bottom Bar — fixed above PartyBar */}
-        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] flex-wrap safe-bottom" style={{ position: 'fixed', bottom: '110px', left: 0, right: 0, zIndex: 79, marginRight: undefined }}>
+        <div className="flex gap-2 items-center p-2 bg-[#181208] border-t border-[#2e2008] safe-bottom" style={{ position: 'fixed', bottom: '110px', left: 0, right: 0, zIndex: 79, marginRight: undefined }}>
           <Button
             onClick={() => setSidebarOpen(true)}
             variant="outline"
             size="sm"
-            className="md:hidden border-[#5a4018] text-[#9a8860] min-h-[44px]"
+            className="lg:hidden border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             ☰ Menu
           </Button>
@@ -789,55 +862,60 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
 
           <span className="flex-1 text-xs text-[#5a4d30] italic truncate min-w-0">{statusMessage}</span>
 
-          {/* API Status — shows active engine mode */}
+          {/* API Status */}
           <div className="flex items-center gap-1">
             <div className={`w-2 h-2 rounded-full ${engineMode === 'dual' ? 'bg-[#a070f0]' : engineMode === 'openrouter' ? 'bg-[#40c080]' : 'bg-[#60a0f0]'}`} />
             <span className="text-[10px] text-[#5a4d30]">{engineMode === 'dual' ? 'Hybrid' : engineMode === 'openrouter' ? 'Cloud' : 'Local'}</span>
           </div>
-          <span className="text-[8px] text-[#3a3020] hidden md:inline">v{version}</span>
 
-          {/* Inventory Button */}
+          {/* Desktop: show all buttons directly */}
+          <span className="text-[10px] text-[#3a3020] hidden lg:inline">v{version}</span>
+
           <Button
             onClick={() => setShowInventoryDialog(true)}
             variant="outline"
             size="sm"
-            className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
+            className="hidden lg:inline-flex border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             <Package className="w-4 h-4 mr-1" />
             <Badge variant="secondary" className="ml-1 text-[10px]">{gameState?.inventory?.length ?? 0}</Badge>
           </Button>
 
-          {/* Save Button */}
           <Button
             onClick={() => setShowSaveDialog(true)}
             variant="outline"
             size="sm"
-            className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
+            className="hidden lg:inline-flex border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             <Save className="w-4 h-4 mr-1" /> Save
           </Button>
 
-          {/* Load Button */}
           <Button
             onClick={() => setShowLoadDialog(true)}
             variant="outline"
             size="sm"
-            className="border-[#5a4018] text-[#9a8860] min-h-[44px]"
+            className="hidden lg:inline-flex border-[#5a4018] text-[#9a8860] min-h-[44px]"
           >
             <Upload className="w-4 h-4 mr-1" /> Load
           </Button>
 
-          {/* Export Button - hidden on mobile */}
           <Button
             onClick={exportStory}
             variant="outline"
             size="sm"
-            className="hidden md:flex border-[#5a4018] text-[#9a8860]"
+            className="hidden lg:inline-flex border-[#5a4018] text-[#9a8860]"
           >
             <Download className="w-4 h-4 mr-1" /> Export Chronicle
           </Button>
 
-          {/* API key is now server-side — no client input needed */}
+          {/* Mobile: More menu */}
+          <MobileMoreMenu
+            onInventory={() => setShowInventoryDialog(true)}
+            onSave={() => setShowSaveDialog(true)}
+            onLoad={() => setShowLoadDialog(true)}
+            onExport={exportStory}
+            inventoryCount={gameState?.inventory?.length ?? 0}
+          />
         </div>
 
         {/* Achievement Toast Notifications */}
