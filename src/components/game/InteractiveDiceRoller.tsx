@@ -12,6 +12,12 @@ interface DiceRollerProps {
   showResult?: boolean
 }
 
+// S2-F4: Reduced motion hook
+function useReducedMotion(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 const DIE_SHAPES: Record<string, string> = {
   d4: 'polygon(50% 0%, 100% 100%, 0% 100%)',
   d6: 'polygon(10% 0%, 90% 0%, 100% 10%, 100% 90%, 90% 100%, 10% 100%, 0% 90%, 0% 10%)',
@@ -25,29 +31,56 @@ export function InteractiveDiceRoller({ dieType, label = 'Roll', onRoll, disable
   const [rolling, setRolling] = useState(false)
   const [result, setResult] = useState<number | null>(null)
   const [tumble, setTumble] = useState(false)
+  const prefersReduced = useReducedMotion()
 
   const maxRoll = parseInt(dieType.replace('d', ''))
 
   const roll = useCallback(() => {
     if (rolling || disabled) return
     setRolling(true)
-    setTumble(true)
+    // S2-F4: Skip tumble animation in reduced-motion mode
+    if (!prefersReduced) setTumble(true)
     setResult(null)
 
-    // Show tumble animation for 800ms
+    // S2-F4: Shorter delay in reduced-motion (just compute, no animation)
+    const delay = prefersReduced ? 50 : 800
     setTimeout(() => {
       const finalResult = Math.floor(Math.random() * maxRoll) + 1
       setResult(finalResult)
       setTumble(false)
       setRolling(false)
       onRoll(finalResult)
-    }, 800)
-  }, [rolling, disabled, maxRoll, onRoll])
+    }, delay)
+  }, [rolling, disabled, maxRoll, onRoll, prefersReduced])
 
   const total = result !== null ? result + bonus : null
 
+  // S2-F4: Inline keyframes for dice animation (avoids undefined class references)
+  const diceKeyframes = prefersReduced ? '' : `
+    @keyframes dice-tumble-anim {
+      0% { transform: rotate(0deg) scale(1); }
+      25% { transform: rotate(90deg) scale(0.9); }
+      50% { transform: rotate(180deg) scale(1.05); }
+      75% { transform: rotate(270deg) scale(0.95); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+    @keyframes dice-glow-gold {
+      0% { box-shadow: 0 0 10px rgba(212,175,55,0.6); }
+      50% { box-shadow: 0 0 25px rgba(212,175,55,0.9); }
+      100% { box-shadow: 0 0 10px rgba(212,175,55,0.6); }
+    }
+    @keyframes dice-glow-red {
+      0% { box-shadow: 0 0 10px rgba(139,38,53,0.6); }
+      50% { box-shadow: 0 0 25px rgba(139,38,53,0.9); }
+      100% { box-shadow: 0 0 10px rgba(139,38,53,0.6); }
+    }
+  `
+
   return (
     <div className="flex flex-col items-center gap-2">
+      {/* S2-F4: Inline keyframes to replace missing global keyframes */}
+      {!prefersReduced && <style>{diceKeyframes}</style>}
+
       {label && (
         <span className="text-xs font-title text-[#c9a84c] uppercase tracking-wider">{label}</span>
       )}
@@ -55,13 +88,13 @@ export function InteractiveDiceRoller({ dieType, label = 'Roll', onRoll, disable
       <button
         onClick={roll}
         disabled={rolling || disabled}
+        aria-label={`Roll ${dieType}${bonus ? ` +${bonus}` : ''}${result !== null ? `, last result: ${result}${bonus !== 0 ? ` (${total})` : ''}` : ''}`}
         className={`relative w-16 h-16 flex items-center justify-center cursor-pointer transition-all
-          ${rolling ? 'scale-90' : 'hover:scale-110'}
+          ${rolling && !prefersReduced ? 'scale-90' : 'hover:scale-110'}
           ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
-          ${result === maxRoll ? 'animate-[dice-glow-gold_0.6s_ease-out]' : ''}
-          ${result === 1 ? 'animate-[dice-glow-red_0.6s_ease-out]' : ''}
         `}
         title={`Click to roll ${dieType}`}
+        style={result === maxRoll && !prefersReduced ? { animation: 'dice-glow-gold 0.6s ease-out' } : result === 1 && !prefersReduced ? { animation: 'dice-glow-red 0.6s ease-out' } : undefined}
       >
         {/* Die shape */}
         <div
@@ -85,22 +118,25 @@ export function InteractiveDiceRoller({ dieType, label = 'Roll', onRoll, disable
             {tumble ? (
               <motion.span
                 key="tumble"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1, rotate: 360 }}
+                initial={prefersReduced ? { opacity: 1 } : { opacity: 0 }}
+                animate={{ opacity: 1, rotate: prefersReduced ? 0 : 360 }}
                 exit={{ opacity: 0 }}
                 className="text-2xl font-bold text-[#d4af37]"
                 style={{ fontFamily: 'var(--font-heading)' }}
+                aria-hidden="true"
               >
                 ?
               </motion.span>
             ) : result !== null ? (
               <motion.span
                 key={result}
-                initial={{ scale: 0.5, opacity: 0 }}
+                initial={prefersReduced ? { scale: 1, opacity: 1 } : { scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.5, opacity: 0 }}
+                exit={prefersReduced ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
                 className="text-2xl font-bold text-[#f0ebe3]"
                 style={{ fontFamily: 'var(--font-heading)' }}
+                role="status"
+                aria-live="polite"
               >
                 {result}
               </motion.span>
@@ -120,12 +156,14 @@ export function InteractiveDiceRoller({ dieType, label = 'Roll', onRoll, disable
 
       {showResult && result !== null && (
         <motion.div
-          initial={{ y: 10, opacity: 0 }}
+          initial={prefersReduced ? { opacity: 1, y: 0 } : { y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="text-center"
+          role="status"
+          aria-live="polite"
         >
           <div className="text-sm font-narrative text-[#c9a84c]">
-            {result === maxRoll ? '🎯 CRITICAL!' : result === 1 ? '💀 Fumble!' : `Rolled ${result}`}
+            {result === maxRoll ? 'CRITICAL!' : result === 1 ? 'Fumble!' : `Rolled ${result}`}
             {bonus !== 0 && ` ${bonus > 0 ? '+' : ''}${bonus}`}
           </div>
           {total !== null && bonus !== 0 && (

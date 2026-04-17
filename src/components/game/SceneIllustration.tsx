@@ -162,7 +162,7 @@ function SceneParticles({ type, glowColor }: { type: string; glowColor: string }
   if (type === 'none' || !type) return null
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 overflow-hidden pointer-events-none scene-particles-container">
       {Array.from({ length: particleCount }).map((_, i) => {
         const isEmber = type === 'embers'
         const isSnow = type === 'snow'
@@ -279,6 +279,11 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
           0%, 100% { opacity: 0.3; }
           50% { opacity: 0.6; }
         }
+        /* S2-F4: Disable particle and glow animations in reduced-motion */
+        @media (prefers-reduced-motion: reduce) {
+          .scene-particles-container { display: none !important; }
+          .scene-glow-pulse { animation: none !important; opacity: 0.4 !important; }
+        }
       `}</style>
 
       {/* Fantasy frame corners */}
@@ -302,7 +307,7 @@ export function SceneIllustration({ narration, act, turn, gameState }: SceneIllu
 
           {/* Central scene glow */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 scene-glow-pulse"
             style={{
               background: `radial-gradient(ellipse at 50% 45%, ${theme.glowColor} 0%, transparent 60%)`,
               animation: 'pulseGlow 6s ease-in-out infinite',

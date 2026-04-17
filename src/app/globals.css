@@ -52,6 +52,8 @@
 
 :root {
   color-scheme: dark;
+  --font-size-min: 11px;
+  --font-size-body: clamp(12px, 2.2vw, 16px);
   --bg-primary: #0a0a0f;
   --bg-secondary: #12121a;
   --bg-card: #1a1a2e;
@@ -137,6 +139,27 @@ html {
   scroll-behavior: smooth;
   overflow-x: hidden;
 }
+/* S2-F1: Minimum font floor — no text smaller than 11px */
+body * {
+  font-size: max(var(--font-size-min), inherit);
+}
+body [class*='text-['],
+body [class*='text-xs'],
+body [class*='text-sm'],
+body [class*='text-lg'] {
+  font-size: inherit;
+}
+/* Explicit tiny-font overrides with floor */
+.speech-bubble, .caption, .npc-status-badge,
+.initiative-name, .initiative-status, .initiative-skull,
+.combatant-row, .combat-log-entry, .map-pin-name,
+.map-tooltip-desc, .map-tooltip-danger, .alignment-cell,
+.alignment-axis-label, .npc-relation-history,
+.character-card__abilities, .character-card__lore,
+.party-bar__name, .party-bar__hp-text,
+.party-bar__loading-note, .dm-narration-header {
+  font-size: clamp(11px, 1.5vw, inherit);
+}
 
 body {
   margin: 0;
@@ -144,6 +167,7 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-body);
+  font-size: var(--font-size-body);
   line-height: 1.5;
   min-height: 100dvh;
   min-height: -webkit-fill-available;
@@ -163,7 +187,7 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 
-.narrative-area { font-size: 0.875rem; line-height: 1.6; }
+.narrative-area { font-size: clamp(12px, 2.2vw, 0.9375rem); line-height: 1.6; }
 @media (min-width: 640px) { .narrative-area { font-size: 0.9375rem; } }
 .dm-narration-body, .dm-narration-block, [class*="dm-narration"] {
   font-family: var(--font-narrative);
@@ -549,7 +573,7 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .intro-showcase-area { max-height: calc(100dvh - 80px); overflow-y: auto; }
 .intro-showcase-card .character-card { max-height: calc(100vh - 100px); overflow-y: auto; }
 
-.party-bar-wrap { position: fixed; bottom: 0; left: 0; right: 0; z-index: 80; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.party-bar-wrap { position: fixed; bottom: 0; left: 0; right: 0; z-index: 80; padding-bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
 .party-bar {
   display: flex;
   align-items: center;
@@ -717,6 +741,13 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .ember-container, .vignette-overlay, .fog-overlay, .time-cycle-overlay { display: none !important; }
+  /* S2-F4: Suppress particle and aura effects in reduced-motion */
+  .intro-ember { display: none !important; }
+  .character-card--greater-god, .character-card--demigod, .character-card--monster {
+    animation: none !important;
+  }
+  .screen-shake, .screen-effect-shake { animation: none !important; }
+  .damage-popup { animation: none !important; opacity: 1; transform: none; }
 }
 
 /* H-14: Documented z-index scale system
@@ -728,6 +759,15 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
    flash(9999)           — one-shot screen flash effects
 */
 .combat-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.92); display: flex; flex-direction: column; animation: combatFadeIn 0.5s ease-out; font-family: var(--font-body); overflow-y: auto; }
+/* S2-F4: screen-shake class definition (CombatOverlay uses this class) */
+.screen-shake { animation: screen-shake 0.4s ease-out; }
+@keyframes screen-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px) translateY(2px); }
+  40% { transform: translateX(4px) translateY(-2px); }
+  60% { transform: translateX(-3px) translateY(1px); }
+  80% { transform: translateX(3px); }
+}
 @keyframes combatFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 .combat-banner { text-align: center; padding: 16px; border-bottom: 2px solid #8b0000; animation: bannerPulse 2s ease-in-out infinite; position: relative; }
 @keyframes bannerPulse { 0%, 100% { border-color: #8b0000; } 50% { border-color: #d4a843; } }
@@ -763,6 +803,24 @@ button, .btn, [role='button'] { font-family: var(--font-button); }
 .combat-end-btn { font-family: var(--font-button); font-size: 16px; padding: 10px 24px; background: transparent; border: 2px solid #d4a843; color: #d4a843; border-radius: 6px; cursor: pointer; }
 .combat-action-bar { display: flex; justify-content: center; gap: 8px; padding: 10px; background: rgba(0,0,0,.7); border-top: 1px solid #333; flex-wrap: wrap; }
 .combat-action-btn { font-family: var(--font-button); font-size: 13px; padding: 10px 14px; background: rgba(60,36,21,.5); border: 1px solid #555; color: #c4b896; border-radius: 4px; cursor: pointer; min-height: 44px; }
+/* S2-F4: Dice animation keyframes (previously undefined — referenced by InteractiveDiceRoller) */
+@keyframes dice-tumble-anim {
+  0% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(90deg) scale(0.9); }
+  50% { transform: rotate(180deg) scale(1.05); }
+  75% { transform: rotate(270deg) scale(0.95); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes dice-glow-gold {
+  0% { box-shadow: 0 0 10px rgba(212,175,55,0.6); }
+  50% { box-shadow: 0 0 25px rgba(212,175,55,0.9); }
+  100% { box-shadow: 0 0 10px rgba(212,175,55,0.6); }
+}
+@keyframes dice-glow-red {
+  0% { box-shadow: 0 0 10px rgba(139,38,53,0.6); }
+  50% { box-shadow: 0 0 25px rgba(139,38,53,0.9); }
+  100% { box-shadow: 0 0 10px rgba(139,38,53,0.6); }
+}
 .combat-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 8px 12px; }
 .combat-column { background: rgba(0,0,0,.35); border: 1px solid #333; border-radius: 6px; padding: 8px; }
 .combat-column h4 { margin: 0 0 6px; color: #d4a843; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }

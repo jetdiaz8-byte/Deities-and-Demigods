@@ -377,10 +377,11 @@ export function IntroScreen({
                   </div>
                 </div>
                 <div className="md:hidden">
+                  {/* S2-F7: Fixed double-tap bug — removed onTouchStart, onClick handles both */}
                   <button
                     className="w-full"
                     onClick={() => setCardModalOpen(true)}
-                    onTouchStart={() => setCardModalOpen(true)}
+                    style={{ touchAction: 'manipulation' }}
                   >
                     <CharacterCard character={activeCharacter} compact />
                   </button>
