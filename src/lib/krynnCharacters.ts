@@ -15,7 +15,7 @@ export interface KrynnCharacter extends Character {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// KRYNN HEROES (16)
+// KRYNN HEROES (14)
 // ═══════════════════════════════════════════════════════════════════════════
 
 export const KRYNN_HEROES: KrynnCharacter[] = [
@@ -34,11 +34,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'leadership, half-elven heritage',
     personality: 'He is the man who does not know what he is — half of everything, whole of nothing, and somehow the center that holds. He has a beard because elves cannot grow them and he cannot stop being half-mortal, and every time he looks in a mirror he sees the argument his parents never finished. He leads because no one else will, and hates himself for being good at it. The war found him hiding and he has been failing to hide from it ever since.',
     abilities: [
-      'Half-elven sight: infravision 60ft, surprised only on 1 in 10',
-      'Ranger tracking: 75% in wilderness',
-      'Leadership under pressure: allies +1 saves when Tanis commands',
-      'Dragonlance proficiency: +3 to hit and damage vs. dragons',
-      'Cannot be magically compelled to betray allies'
+      'Elven Longbow (Action; 150 ft; +11 to hit; 5d8 + 5 piercing; —; —; Instantaneous; At will)',
+      'Tactical Command (Bonus Action; 30 ft; DC 17 CHA; allies gain +2 to saves; —; —; 1 round; At will)',
+      'Reluctant Parry (Reaction; 5 ft; —; +5 AC vs one melee attack; —; —; Instantaneous; 3/day)',
+      'Dragonlance Mastery (Passive; Self; —; +3 to hit and damage with dragon-slaying weapons; —; —; —; —)'
     ],
     str: '18', dex: '17', con: '16', int: '16', wis: '15', cha: '16',
     level: '10th ranger/8th fighter',
@@ -61,11 +60,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'honor, knighthood, sacrifice',
     personality: 'He is a knight from a time when knights meant something, which is to say he is a man perpetually out of place in his own era, armored in honor so absolute it has become a kind of loneliness. He follows a code that the world has largely stopped believing in, and follows it anyway, which is either the most heroic thing or the most heartbreaking depending on the angle. He will die for what he believes. He knows this. He has always known this.',
     abilities: [
-      'Brightblade: +2 ancestral sword, +4 vs. chaotic evil beings',
-      'Honor aura: cannot be charmed, cannot lie — ever',
-      'Knightly resolve: immune to fear at all times',
-      'STR 19: +3 to hit +6 damage',
-      'Death before dishonor: at 0 HP, fights 1 final round at full combat ability before dying'
+      'Brightblade Strike (Action; 5 ft; +11 to hit; 5d8 + 6 slashing; —; —; Instantaneous; At will)',
+      'Honor Ward (Bonus Action; 30 ft; DC 18 CHA; target immune to charmed; —; charmed; Con 1 min; 1/day)',
+      'Knightly Resolve (Reaction; Self; —; immune to frightened condition; —; frightened; Instantaneous; 3/day)',
+      'Aura of Honor (Passive; 30 ft; —; allies gain advantage vs frightened; —; frightened; —; —)'
     ],
     str: '19', dex: '14', con: '17', int: '14', wis: '16', cha: '17',
     level: '12th paladin',
@@ -88,12 +86,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'magic, time, ambition',
     personality: 'He was broken on purpose, and he accepted the breaking, and that is what makes him more frightening than anything the darkness ever produced on its own. His eyes see time as a wound that never closes — everyone he looks at is already dying, already dust, and he has decided that if the world insists on being fragile he will be the most dangerous fragile thing in it.',
     abilities: [
-      'Hourglass eyes: sees all living things as they will appear in death — this cannot be turned off',
-      'Staff of Magius: +3, light/darkness at will, spells stored (3 slots), club 1-6 in melee',
-      '35% MR — gift and curse of the Test',
-      'Spell mastery: casts all spells at +2 levels of effectiveness',
-      'Frail body: CON 6 — any physical exertion requires CON check or 1d4 damage from coughing',
-      'See through all disguises and illusions: INT check auto-succeeds'
+      'Staff of Magius (Action; 5 ft; +10 to hit; 4d8 + 5 force; —; —; Instantaneous; At will)',
+      'Frail Cough (Bonus Action; 60 ft; DC 17 CON; 2d8 necrotic, target incapacitated; 2d8 necrotic; incapacitated; 1 round; Recharge 5-6)',
+      'Spell Absorption (Reaction; Self; DC 17 INT; absorb one spell, redirect it; —; —; 2 rounds; 3/day)',
+      'Hourglass Eyes (Passive; Self; —; advantage on Insight and Perception checks; —; —; —; —)'
     ],
     str: '6', dex: '16', con: '6', int: '20', wis: '17', cha: '10',
     level: '18th magic-user',
@@ -116,11 +112,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'strength, loyalty, brotherhood',
     personality: 'He is the strongest man in the room in every room he enters, and he has spent his entire life using that strength to carry someone who never asked to be carried and never said thank you and he would do it again tomorrow without being asked. He loves without condition or strategy or self-preservation, which is either the simplest thing in the world or the most complicated depending on whether you have ever tried it.',
     abilities: [
-      'STR 20: +3 to hit +8 damage',
-      'Twin bond: +2 all rolls when Raistlin is within 30ft',
-      'Bodyguard instinct: auto-intercepts any attack targeting Raistlin if within 5ft',
-      'Gladiatorial training: +1 attack/round after year in the arena',
-      'Immovable: cannot be knocked prone or repositioned against his will by non-divine force'
+      'Greatsword Cleave (Action; 5 ft; +12 to hit; 5d8 + 6 slashing; —; —; Instantaneous; At will)',
+      'Shield Bash (Bonus Action; 5 ft; DC 17 STR; target pushed 10 ft and knocked prone; —; prone; 1 round; Recharge 5-6)',
+      "Twin's Bodyguard (Reaction; 5 ft; —; impose disadvantage on attack vs Raistlin; —; —; Instantaneous; 3/day)",
+      'Twin Bond (Passive; 30 ft; —; +2 to attack, saves, and checks near Raistlin; —; —; —; —)'
     ],
     str: '20', dex: '16', con: '20', int: '12', wis: '12', cha: '16',
     level: '12th fighter',
@@ -143,11 +138,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'healing, faith, divine restoration',
     personality: 'She walked across a world that had forgotten the gods and introduced herself to a staff that should not have worked and discovered, somewhere in the distance between faith and proof, that she was the proof. She is beautiful in the way that people who have been through something real are beautiful — not despite the cost but somehow because of it.',
     abilities: [
-      'Blue Crystal Staff: heals 2-12 HP/touch, undead destroyed on contact, holy damage 2-12 vs. evil',
-      'First true cleric: divine healing restores lost limbs and cures magical diseases',
-      "Mishakal's blessing: 3/day call for direct divine intervention (Mishakal answers)",
-      'Cannot be permanently killed while Riverwind lives — Mishakals covenant',
-      'Turn undead as 16th level cleric'
+      'Crystal Staff Strike (Action; Touch; +11 to hit; 5d8 radiant; —; —; Instantaneous; At will)',
+      'Turn Undead (Action; 30 ft; DC 17 WIS; undead turned or destroyed; 4d8 radiant; turned; 1 min; 3/day)',
+      'Divine Restoration (Reaction; Touch; —; restore 4d8 + 4 HP, cure disease; 4d8 + 4 healing; —; Instantaneous; Recharge 5-6)',
+      "Mishakal's Covenant (Passive; Self; —; auto-stabilize at 0 HP, regains 1 HP in 1 min; —; —; —; —)"
     ],
     str: '15', dex: '16', con: '15', int: '16', wis: '19', cha: '20',
     level: '14th cleric (Mishakal)',
@@ -170,11 +164,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'wilderness, archery, devotion',
     personality: 'He ran the length of a continent to prove himself worthy of a woman whose father said he was not, and found gods instead, and decided that was probably answer enough. He is tall and quiet and suspicious of things he cannot touch, which is most things these days, and he loves his wife with the kind of directness that people who learned love late sometimes have.',
     abilities: [
-      'STR 19: +3 to hit +7 damage',
-      'Plainsman tracking: 90% any terrain, never lost outdoors',
-      'Longbow mastery: 3 attacks/round with bow, +2 to hit',
-      'Distrust of magic: +2 saves vs. all magical effects',
-      'Protective rage: +4 all combat rolls when Goldmoon is threatened'
+      "Plainsman's Arrow (Action; 150 ft; +11 to hit; 5d8 + 5 piercing; —; —; Instantaneous; At will)",
+      'Crippling Shot (Bonus Action; 150 ft; DC 17 DEX; target speed halved; —; restrained; 1 round; Recharge 5-6)',
+      'Protective Parry (Reaction; 5 ft; —; +5 AC vs one melee attack vs ally; —; —; Instantaneous; 3/day)',
+      'Devoted Guardian (Passive; 60 ft; —; immune to charmed and frightened near Goldmoon; —; charmed, frightened; —; —)'
     ],
     str: '19', dex: '19', con: '18', int: '14', wis: '15', cha: '14',
     level: '13th ranger',
@@ -197,11 +190,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'leadership, dragons, elven grace',
     personality: 'She left home a princess chasing a boy who did not want to be caught, and came back a general who had changed the course of a war, and somewhere between those two people is a story about what it costs to grow up inside a catastrophe. She is more beautiful than anything on Krynn has a right to be and has spent years trying to get people to look past it.',
     abilities: [
-      'Dragonlance mastery: +3 to hit dragons, ignores dragon AC bonus from scales',
-      'Elven grace: DEX 20, +4 AC bonus, never surprised',
-      'Golden General: commands armies — troop morale never breaks under her leadership',
-      'Dragon riding: can ride any dragon without check after initial bond',
-      'Immune to dragon fear aura'
+      'Dragonlance Thrust (Action; 10 ft; +11 to hit; 5d8 + 5 piercing; —; —; Instantaneous; At will)',
+      'Commanding Presence (Bonus Action; 60 ft; DC 18 CHA; allies gain immunity to frightened; —; frightened; 1 min; 3/day)',
+      'Elven Dodge (Reaction; Self; —; +5 AC vs one attack; —; —; Instantaneous; 3/day)',
+      'Golden General (Passive; 60 ft; —; allies +1 to morale-based WIS saves; —; —; —; —)'
     ],
     str: '14', dex: '20', con: '14', int: '17', wis: '16', cha: '20',
     level: '10th fighter/6th ranger',
@@ -224,11 +216,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'dragons, ambition, war',
     personality: 'She is the half-sibling that Raistlin and Caramon learned early not to trust and loved anyway, which tells you something about all three of them. She wants power the way some people want air — not as ambition exactly, more as a baseline requirement for existing — and she is brilliant enough to get it and human enough to throw it away for someone who does not deserve it.',
     abilities: [
-      'Dragon Highlord command: blue dragons obey without question',
-      'Skie bond: her blue dragon Skie grants her +2 all combat rolls when mounted',
-      'Ambition made manifest: immune to intimidation, charm, and fear',
-      'Sword mastery: 3 attacks/round, +1 attack when fighting former lovers',
-      'Never truly defeated: at 0 HP, leaves battlefield rather than dies — returns next encounter at 50% HP'
+      "Warlord's Blade (Action; 5 ft; +12 to hit; 5d8 + 5 slashing; —; —; Instantaneous; At will)",
+      'Dragon Highlord Command (Action; 60 ft; DC 18 CHA; command blue dragons to obey; —; charmed; 1 hour; 1/day)',
+      "Skie's Escape (Reaction; Self; —; drop to 1 HP instead of 0 HP and escape; —; —; Instantaneous; 1/day)",
+      'Ambition Made Manifest (Passive; Self; —; immune to frightened and charmed; —; frightened, charmed; —; —)'
     ],
     str: '18', dex: '19', con: '17', int: '18', wis: '13', cha: '19',
     level: '14th fighter/6th thief',
@@ -251,11 +242,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'craft, dwarven heritage, loyalty',
     personality: 'He is old and he knows it and he has decided that old means experienced rather than diminished, a distinction the enemies who underestimate him do not usually get to correct. He loves Tasslehoff Burrfoot with the specific exasperated tenderness of someone who has raised something chaotic and cannot bring himself to be sorry about it.',
     abilities: [
-      'STR 19: +3 to hit +8 damage',
-      'Master smith: identifies any metal objects origin, age, and maker by touch',
-      'Dwarven resilience: immune to poison, +4 saves vs. magic',
-      'Battle axe +3: inherited Fireforge weapon, returns when thrown',
-      'Stubborn beyond reason: cannot be persuaded to abandon his companions — any charm/compulsion auto-fails'
+      'Fireforge Axe (Action; 5 ft; +11 to hit; 5d8 + 6 slashing; —; —; Instantaneous; At will)',
+      'Dwarven Throw (Bonus Action; 60 ft; +11 to hit; 4d8 + 5 slashing; —; prone; Instantaneous; Recharge 5-6)',
+      'Dwarven Resilience (Reaction; Self; DC 17 CON; end one condition on self; —; poisoned; Instantaneous; 3/day)',
+      'Master Smith (Passive; Self; —; immune to poison damage and poisoned condition; —; poisoned; —; —)'
     ],
     str: '19', dex: '12', con: '19', int: '15', wis: '14', cha: '13',
     level: '11th fighter/9th thief (craft)',
@@ -278,12 +268,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'kender, luck, chaos (benign)',
     personality: 'He is the most dangerous creature on Krynn because he has no fear and therefore no sense of scale — a dracolich and an interesting rock are equally compelling to him, which means he treats both with the same cheerful recklessness that has ended empires and infuriated gods. He is not stupid. He notices everything. He simply has a different relationship with consequences than other beings.',
     abilities: [
-      'Kender fearlessness: literally cannot feel fear — immune to ALL fear effects, magical or otherwise',
-      'Hoopak: staff-sling combination, 1-6 melee or 1-6 ranged, can be anything Tas decides it is',
-      'Handling: any unattended object within 10ft may migrate into his pouches (no check — it just happens)',
-      '25% MR — kender are inherently resistant to magic that affects the mind',
-      'Pocket dimension pouches: contains improbable objects — 15% chance any mundane item is in there',
-      'Plot immunity: Tas cannot die at dramatically inappropriate moments — fate requires him elsewhere'
+      'Hoopak Strike (Action; 30 ft; +10 to hit; 4d8 + 3 bludgeoning; —; —; Instantaneous; At will)',
+      'Kender Handling (Bonus Action; 10 ft; DC 17 DEX; steal one unattended item; —; —; Instantaneous; At will)',
+      'Plot Immunity (Reaction; Self; —; reduced to 1 HP instead of 0 HP on 1-2 on d6; —; —; Instantaneous; 1/day)',
+      'Kender Fearlessness (Passive; Self; —; immune to frightened condition; —; frightened; —; —)'
     ],
     str: '12', dex: '22', con: '14', int: '16', wis: '6', cha: '18',
     level: '9th thief/7th fighter',
@@ -306,10 +294,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'courage, common sense, love',
     personality: 'She was a barmaid in the Inn of the Last Home and she became a hero the way most people become heroes — not by choosing it but by refusing the alternative when it was put in front of her. She is prettier than she thinks and braver than she knows and she loves Caramon Majere with a clarity that cuts right through every complicated thing in his life like a window letting in light.',
     abilities: [
-      'Skillet proficiency: improvised weapon 1-8 damage, counts as +2 vs. surprised opponents',
-      "Barmaids eye: reads any rooms social dynamics in 1 round — never surprised by betrayal",
-      'Common courage: allies within 30ft +1 morale when Tika fights alongside them',
-      'Loves Caramon: +3 all rolls when Caramon is threatened'
+      'Skillet Smash (Action; 5 ft; +10 to hit; 4d8 + 3 bludgeoning; —; —; Instantaneous; At will)',
+      'Common Courage (Bonus Action; 30 ft; DC 17 CHA; allies gain +2 to saves vs frightened; —; frightened; 1 min; At will)',
+      'Protective Instinct (Reaction; 5 ft; —; +5 AC vs attack targeting Caramon; —; —; Instantaneous; 3/day)',
+      "Barmaid's Eye (Passive; Self; —; auto-succeed on CHA Insight to detect lies; —; —; —; —)"
     ],
     str: '15', dex: '17', con: '15', int: '14', wis: '14', cha: '18',
     level: '9th fighter',
@@ -332,11 +320,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'elven royalty, archery, forbidden love',
     personality: 'He is an elf prince who spent the first half of his life being exactly as arrogant as his title suggested and the second half discovering what that cost everyone around him, and has been trying to settle the debt ever since in the way of people who are not sure the math will ever work out. He loves a silver dragon. He loves his people. These two facts are not always compatible and he knows it and chooses her anyway.',
     abilities: [
-      'Elven senses: infravision 60ft, 4 in 6 detect secret doors',
-      'Elven bow mastery: +3 to hit, double range',
-      'Silvara bond: +2 all rolls in presence of silver dragons',
-      'Elven magic: 4th level MU spells',
-      'Guilt-driven: -1 all rolls in presence of those he has wronged (he wronged many)'
+      'Elven Longbow (Action; 200 ft; +11 to hit; 5d8 + 5 piercing; —; —; Instantaneous; At will)',
+      'Faerie Fire (Bonus Action; 60 ft; DC 17 DEX; 4d8 radiant in 20-ft radius; 4d8 radiant; —; Con 1 min; 3/day)',
+      'Elven Evasion (Reaction; Self; —; +5 AC vs one spell or attack; —; —; Instantaneous; 3/day)',
+      'Silvara Bond (Passive; 60 ft; —; +2 to all rolls near silver dragons; —; —; —; —)'
     ],
     str: '14', dex: '20', con: '13', int: '17', wis: '14', cha: '17',
     level: '10th ranger/7th MU',
@@ -359,10 +346,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'knighthood, ambition, pride',
     personality: 'He is everything the Knighthood produced when it stopped asking whether honor and ambition were the same thing. He is brave. He is capable. He is the kind of man who will lead a charge into certain death because retreat would look bad in the histories, and the histories matter more to him than the people in them.',
     abilities: [
-      'Knight of the Rose: highest Solamnic rank, commands all lesser knights',
-      'Ambition: +2 all rolls when rank or glory is at stake',
-      'Rigid honor: cannot disobey a direct order from his Knight Commander — ever',
-      'Tactical blindness: -2 all rolls when personal ambition conflicts with tactical reality'
+      "Rose Knight's Blade (Action; 5 ft; +11 to hit; 5d8 + 5 slashing; —; —; Instantaneous; At will)",
+      "Knight Commander's Orders (Bonus Action; 30 ft; DC 18 WIS; allies gain +2 to attacks; —; —; 1 min; 3/day)",
+      'Righteous Shield (Reaction; 5 ft; —; +5 AC vs one attack; —; —; Instantaneous; 3/day)',
+      "Ambition's Edge (Passive; Self; —; +2 to all rolls when personal glory at stake; —; —; —; —)"
     ],
     str: '18', dex: '15', con: '17', int: '16', wis: '10', cha: '15',
     level: '13th paladin',
@@ -386,13 +373,10 @@ export const KRYNN_HEROES: KrynnCharacter[] = [
     domain: 'black magic, time, ambition ascendant',
     personality: 'He became what he always said he would, and discovered that becoming it was not the same as surviving it. He has swallowed a dead archmage whole and wears the darkness like a second skin over a first skin that is already failing, and somewhere inside the architecture of all that power there is still a boy who was told he was not enough and decided to make enough mean something else entirely.',
     abilities: [
-      'Time stop at will — 1/round, affects all but himself',
-      'Absorbs spells cast at him: redirects within 2 rounds',
-      '75% MR — absorbed the power of Fistandantilus',
-      'Staff of Magius (enhanced): 3-18 damage, disintegrate 1/day, plane shift 1/day',
-      'See through all illusions, disguises, and divine masks — no save',
-      'Coughing blood: at <=30% HP loses 5 HP/round (body failing under godhoods weight)',
-      'Will not harm Caramon — automatic failure on any action targeting his twin'
+      'Enhanced Staff of Magius (Action; 5 ft; +13 to hit; 7d10 force; —; —; Instantaneous; At will)',
+      'Time Stop (Action; 300 ft; DC 20 INT; stop time for all creatures 1 round; —; stunned; 1 round; Recharge 5-6)',
+      'Spell Absorption (Reaction; Self; DC 19 INT; absorb and redirect one spell; —; —; 2 rounds; Recharge 5-6)',
+      'All-Seeing Eye (Passive; Self; —; auto-succeed on INT Investigation vs illusions; —; —; —; —)'
     ],
     str: '12', dex: '18', con: '16', int: '22', wis: '19', cha: '16',
     level: '30th magic-user (post-Fistandantilus merger)',
@@ -422,13 +406,10 @@ export const KRYNN_DEMIGODS: KrynnCharacter[] = [
     domain: 'good, wisdom, divine intervention (subtle)',
     personality: 'He is a god wearing a fools costume, which is either the humblest thing divinity has ever done or the most strategic, and he has been doing it long enough that he is no longer entirely certain which. He forgets things. He misplaces spells. He shows up at precisely the moment he is needed wearing the expression of someone who has no idea why he is there, and the people who believe this have never looked carefully at his eyes, which are the color of eternity on a clear day and miss absolutely nothing.',
     abilities: [
-      "Paladines aspect: true form is Greater God — stats above are mortal-form limits only",
-      'Forgetfulness as weapon: 20% chance any harmful action toward him simply fails to occur to the attacker',
-      'All arcane magic at will — limited only by what the mortal form can contain',
-      '95% MR',
-      'Cannot directly intervene against mortal free will — divine compact',
-      'Pyrestone hat: contains more than physics allows, produces whatever is needed',
-      'Death is an inconvenience: if this form dies, Fizban returns in 1d4 turns from a different direction'
+      'Divine Fire Bolt (Action; 60 ft; +13 to hit; 7d10 radiant; —; —; Instantaneous; At will)',
+      'Forgetfulness (Bonus Action; 30 ft; DC 20 WIS; creature forgets its action; —; incapacitated; 1 round; Recharge 5-6)',
+      'Inconvenient Immortality (Reaction; Self; —; reforms at full HP in 1d4 rounds; —; —; 1d4 rounds; 1/day)',
+      'Divine Compact (Passive; Self; —; immune to compulsion overriding free will; —; charmed; —; —)'
     ],
     str: '16', dex: '14', con: '20', int: '25', wis: '25', cha: '22',
     level: 'Apparent 10th MU (actually unlimited)',
@@ -451,12 +432,10 @@ export const KRYNN_DEMIGODS: KrynnCharacter[] = [
     domain: 'dragons, poison, nightmares',
     personality: 'He is the most intelligent dragon on Krynn and uses it the way a surgeon uses a blade — with precision, without pleasure, to cause the maximum damage to the minimum tissue. He destroyed a king with dreams rather than fire. He considers this an improvement. He has been in the service of Takhisis since before most nations existed.',
     abilities: [
-      'Chlorine gas breath: 50ft cone, 14d10 damage (save halves)',
-      'Dream poison: any hit requires save vs. poison or target falls into waking nightmare (-4 all rolls, 1d6 turns)',
-      'Telepathic nightmare: range 1 mile, forces target to experience their worst fear for 1 round',
-      '55% MR',
-      'Takhisis bond: serves Her Dark Majesty directly — immune to any divine power not of Takhisis',
-      'Subtle intelligence: prefers psychological destruction to physical — will talk before fighting'
+      'Chlorine Gas Breath (Action; 50-ft cone; DC 19 DEX; 6d10 poison in cone; 6d10 poison; —; Instantaneous; Recharge 5-6)',
+      'Telepathic Nightmare (Action; 1 mile; DC 20 WIS; target experiences worst fear; —; frightened, stunned; 1 round; 1/day)',
+      'Dream Poison (Reaction; 5 ft; DC 19 CON; attacker has disadvantage on next attack; —; —; 1 round; At will)',
+      'Takhisis Bond (Passive; 1 mile; —; advantage on attacks near Takhisis; —; —; —; —)'
     ],
     str: '24', dex: '16', con: '22', int: '22', wis: '18', cha: '8',
     level: 'Ancient Green Dragon',
@@ -479,14 +458,10 @@ export const KRYNN_DEMIGODS: KrynnCharacter[] = [
     domain: 'undeath, fallen knighthood, tragedy',
     personality: 'He could have stopped a war. He chose not to because a woman told him the truth about himself and he decided that destroying the world was preferable to sitting with what she said. This is the architecture of his damnation — not grand evil, not ambition, just a man who loved his pride more than everything else alive, and now he has neither love nor death nor the release of either.',
     abilities: [
-      'Level drain: each hit drains 1d2 levels permanently (no save)',
-      'Death wail: all within 60ft must save vs. death or be paralyzed 1d6 rounds',
-      'Impervious to non-magical weapons',
-      'Immune to fire, cold, electricity, poison, charm, sleep, fear',
-      '85% MR',
-      'Rose Knight armor: AC -8, never needs repair, regenerates 5 HP/round',
-      'Tragic compulsion: cannot leave Dargaard Keep permanently — returns within 1d10 days',
-      'Cannot be destroyed: only Soth himself choosing redemption can end him'
+      'Life Drain (Action; 5 ft; +14 to hit; 7d10 necrotic; —; —; Instantaneous; At will)',
+      'Death Wail (Action; 60 ft; DC 20 CON; creatures paralyzed; —; paralyzed; 1 min; Recharge 5-6)',
+      'Undead Resilience (Reaction; Self; —; reduce damage by half from one attack; —; —; Instantaneous; 3/day)',
+      'Black Rose Regeneration (Passive; Self; —; regains 10 HP at start of each turn; —; —; —; —)'
     ],
     str: '22', dex: '16', con: '25', int: '18', wis: '17', cha: '16',
     level: 'Death Knight (former 15th paladin)',
@@ -509,12 +484,10 @@ export const KRYNN_DEMIGODS: KrynnCharacter[] = [
     domain: 'knighthood, sacrifice, dragon-slaying',
     personality: 'He is the reason there are Knights of Solamnia — not the order, which existed before him, but the idea of what a knight could mean when the order was something more than men in armor competing for position. He rode a silver dragon into a battle he knew he would not survive and killed Takhisis greatest general and ended a war, and Krynn has been telling the story ever since because it needs to believe that kind of person is possible.',
     abilities: [
-      'Dragonlance +5: the original, forged by Reorx himself — destroys any dragon on a critical hit',
-      'Paladin of Paladine: all good divine spells available, no limit',
-      'Dragon fear immunity: absolute',
-      'Inspiration: any Solamnic Knight within 60ft fights at +3 all rolls',
-      'Willing sacrifice: if Huma voluntarily accepts death for others, all enemies in 300ft are banished',
-      '40% MR'
+      'Dragonlance Strike (Action; 10 ft; +14 to hit; 8d10 + 8 piercing; —; —; Instantaneous; At will)',
+      'Divine Smite (Bonus Action; 10 ft; DC 19 CON; 6d10 radiant to one target; 6d10 radiant; stunned; 1 round; 3/day)',
+      "Knight's Shield (Reaction; 5 ft; —; +5 AC and immune to frightened; —; frightened; 1 round; 3/day)",
+      'Knightly Inspiration (Passive; 60 ft; —; Solamnic Knights gain +3 to attacks and saves; —; —; —; —)'
     ],
     str: '20', dex: '18', con: '19', int: '16', wis: '18', cha: '20',
     level: 'Paladin of Paladine (beyond mortal level)',
@@ -537,12 +510,10 @@ export const KRYNN_DEMIGODS: KrynnCharacter[] = [
     domain: 'dark magic, immortality, soul theft',
     personality: 'He has been alive long enough that he has stopped thinking of other people as people and started thinking of them as resources, which is the kind of thing that happens when you spend centuries treating the universe as a problem to be solved. He found Raistlin and recognized in him the only student he had ever met who might actually surpass him, and began immediately planning to consume him.',
     abilities: [
-      'Soul drain: on successful hit, drains 1d4 years of life — he absorbs them',
-      'Bloodstone: his phylactery-equivalent, contains his essence — he cannot die while it exists',
-      'All magic at will: 30th level MU, no preparation required',
-      '80% MR',
-      'Inhabits disciples: can possess any mage who bears his bloodstone (saves at -4)',
-      'Temporal anchor: cannot be permanently erased from the timeline — paradox resistance'
+      'Soul Drain (Action; 5 ft; +13 to hit; 7d10 necrotic; —; —; Instantaneous; At will)',
+      'Inhabit Disciple (Action; 60 ft; DC 20 WIS; possess a mage bearing Bloodstone; —; incapacitated; 24 hours; 1/day)',
+      'Temporal Anchor (Reaction; Self; —; immune to time-altering effects; —; —; 1 round; 3/day)',
+      'Bloodstone Phylactery (Passive; Self; —; reforms 1d6 hours after destruction; —; —; —; —)'
     ],
     str: '10', dex: '18', con: '18', int: '24', wis: '20', cha: '14',
     level: '30th magic-user (immortal)',
@@ -572,11 +543,10 @@ export const KRYNN_LESSER_GODS: KrynnCharacter[] = [
     domain: 'healing, light, restoration',
     personality: 'She is the reason there is healing on Krynn at all — she hid the knowledge of the true gods in a blue crystal staff and waited for a girl with enough faith to find it, which is either patience or grief depending on how you count the years. She loves the mortal world the way you love something you made and cannot stop worrying about.',
     abilities: [
-      'Healing light: cures any wound, disease, or curse — unlimited',
-      'True resurrection: restores any dead being whose soul consents',
-      '80% MR',
-      'Blue Crystal Staff manifestation: can create a Blue Crystal Staff for any worthy mortal 1/year',
-      "Consort of Paladine: his divine power reinforces hers — +10 HP per turn when Paladine acts nearby"
+      'Radiant Strike (Action; 60 ft; +12 to hit; 7d10 radiant; —; —; Instantaneous; At will)',
+      'Purifying Light (Bonus Action; 30 ft; DC 19 WIS; remove curses and diseases; —; charmed; 1 min; 3/day)',
+      'True Resurrection (Reaction; Touch; —; restore dead creature to life; 10d8 + 10 healing; —; Instantaneous; 1/day)',
+      'Healing Aura (Passive; 60 ft; —; all healing maximized in her presence; —; —; —; —)'
     ],
     str: '16', dex: '18', con: '20', int: '20', wis: '24', cha: '23',
     level: 'Lesser Goddess',
@@ -599,11 +569,10 @@ export const KRYNN_LESSER_GODS: KrynnCharacter[] = [
     domain: 'forge, creation, dwarves',
     personality: 'He made the world and then made the tools to improve the world and then accidentally made the Graygem which scattered chaos across existence, and has spent the rest of eternity making things to make up for it, which is perhaps the most dwarven story ever told about a god. He is loud and warm and smells of forge-fire.',
     abilities: [
-      'Divine forge: creates any object in 1 round — including artifacts',
-      '75% MR',
-      'Dragonlance creation: the original Dragonlances were his work',
-      'Dwarven authority: all dwarves +2 all rolls in his presence',
-      'The Graygem: accidentally created it, cannot destroy it — this haunts him'
+      'Forge Hammer (Action; 10 ft; +13 to hit; 7d10 bludgeoning; —; —; Instantaneous; At will)',
+      'Dwarven Command (Bonus Action; 60 ft; DC 18 CHA; all dwarves gain +2 to all rolls; —; —; 1 min; 3/day)',
+      "Reorx's Shield (Reaction; Self; —; +5 AC vs one attack, immune to fire; —; —; 1 round; 3/day)",
+      'Dwarven Authority (Passive; 60 ft; —; dwarves gain +2 to attack, saves, and checks; —; —; —; —)'
     ],
     str: '22', dex: '14', con: '24', int: '18', wis: '16', cha: '18',
     level: 'Lesser God',
@@ -626,11 +595,10 @@ export const KRYNN_LESSER_GODS: KrynnCharacter[] = [
     domain: 'neutrality, knowledge, balance',
     personality: 'He wrote everything down and decided that writing things down was more important than changing them, which makes him either the wisest being on Krynn or the most frustrating depending on whether you are currently dying and hoping for intervention. He holds the scales level between Paladine and Takhisis not because he prefers either but because he prefers balance.',
     abilities: [
-      'The Tobril: contains all knowledge — answers any question with absolute accuracy',
-      '90% MR',
-      'Balance keeper: if Good or Evil gains clear advantage, intervenes — not for either side, for balance',
-      'True neutrality: cannot be swayed by argument, love, or threat — ever',
-      'Chronicler: knows everything that has happened and is happening, nothing of what will happen'
+      'Word of Balance (Action; 60 ft; +12 to hit; 6d10 force; —; —; Instantaneous; At will)',
+      'Balance Compulsion (Bonus Action; 60 ft; DC 19 WIS; target cannot take hostile actions; —; incapacitated; 1 min; 3/day)',
+      'Equilibrium Ward (Reaction; Self; —; +5 AC, immune to charmed and frightened; —; charmed, frightened; 1 round; 3/day)',
+      'True Neutrality (Passive; Self; —; immune to charmed, frightened, compelled; —; charmed, frightened; —; —)'
     ],
     str: '14', dex: '14', con: '20', int: '25', wis: '25', cha: '16',
     level: 'Lesser God',
@@ -653,11 +621,10 @@ export const KRYNN_LESSER_GODS: KrynnCharacter[] = [
     domain: 'music, joy, kender',
     personality: 'He is joy made into a god, which sounds simple until you realize that joy, genuine joy, is rarer and stranger and more resistant to despair than any weapon. He chose the kender as his people because they alone still feel wonder without effort, which tells you everything about what he values and why the other gods find him alternately delightful and maddening.',
     abilities: [
-      'Song of life: any dead being within earshot must make WIS save or choose to return',
-      'Kender patron: all kender +2 CHA in his presence, their fearlessness doubles',
-      '70% MR',
-      'Harmony: ends any conflict between good-aligned beings with 1 song (no save)',
-      'Music made manifest: his songs physically alter reality in a 300ft radius'
+      'Discordant Note (Action; 60 ft; +11 to hit; 6d10 thunder; —; —; Instantaneous; At will)',
+      'Harmony (Action; 300 ft; DC 19 CHA; good creatures cannot fight each other; —; charmed; 1 hour; 1/day)',
+      'Song of Soothing (Reaction; 60 ft; DC 19 WIS; end frightened or charmed on ally; —; frightened, charmed; Instantaneous; 3/day)',
+      'Kender Patron (Passive; 60 ft; —; kender gain +2 CHA and extend fear immunity; —; frightened; —; —)'
     ],
     str: '14', dex: '20', con: '18', int: '18', wis: '20', cha: '24',
     level: 'Lesser God',
@@ -680,11 +647,10 @@ export const KRYNN_LESSER_GODS: KrynnCharacter[] = [
     domain: 'undeath, bones, immortality bargains',
     personality: 'He offers immortality and delivers undeath and considers this an acceptable substitution, which says everything about his theology. He collected Lord Soth the way some people collect regrets — recognizing in the death knight the most perfect monument to what happens when people choose damnation slowly, one reasonable decision at a time.',
     abilities: [
-      'Death touch: save at -4 or die instantly',
-      "Lord Soths master: commands Lord Soth — one of few beings Soth obeys",
-      '75% MR',
-      'Undead army: raises and commands all dead within 1 mile',
-      'Soul bargain: offers immortality to mortals — they become undead servants, they just dont realize it yet'
+      'Death Touch (Action; 5 ft; +13 to hit; 7d10 necrotic; —; —; Instantaneous; At will)',
+      'Soul Bargain (Action; 30 ft; DC 19 WIS; target becomes undead servant; —; charmed; Permanent; 1/day)',
+      'Army of the Dead (Reaction; 1 mile; —; raise all dead as undead; —; —; Permanent; 1/day)',
+      'Commander of the Dead (Passive; 60 ft; —; all undead charmed and follow commands; —; charmed; —; —)'
     ],
     str: '18', dex: '14', con: '24', int: '20', wis: '18', cha: '14',
     level: 'Lesser God',
@@ -707,11 +673,10 @@ export const KRYNN_LESSER_GODS: KrynnCharacter[] = [
     domain: 'sea, storms, tempest',
     personality: 'She is Takhisis daughter and the seas mistress and she inherited temper from both, which means storms come when she is displeased and she is very often displeased. She is not evil the way her mother is evil — she is elemental and angry and occasionally, in her better moments, wildly beautiful, the way the ocean is beautiful the second before it kills you.',
     abilities: [
-      'Sea mastery: controls all weather and ocean within 500 miles',
-      'Storm wrath: 1/round, summons lightning strike 10d10 any target in sight',
-      '65% MR',
-      'Tidal fury: tsunami 1/day, 300ft wave',
-      "Daughter of Takhisis: her mothers power reinforces hers over the sea — +20 HP/round near ocean"
+      'Storm Wrath (Action; 1 mile; +13 to hit; 7d10 lightning; —; —; Instantaneous; At will)',
+      'Tidal Fury (Action; 300 ft; DC 19 STR; 7d10 bludgeoning, push 300 ft; 7d10 bludgeoning; prone; Instantaneous; 1/day)',
+      "Sea's Embrace (Reaction; Self; —; resistance to all damage until next turn; —; —; 1 round; 3/day)",
+      'Daughter of Takhisis (Passive; Self; —; regains 20 HP/turn near ocean, +2 save DC; —; —; —; —)'
     ],
     str: '18', dex: '18', con: '22', int: '16', wis: '18', cha: '20',
     level: 'Lesser Goddess',
@@ -734,11 +699,10 @@ export const KRYNN_LESSER_GODS: KrynnCharacter[] = [
     domain: 'lies, thieves, corruption, bargains',
     personality: 'He lies as other beings breathe — constantly, automatically, without thought or effort, and he has been doing it so long that the truth tastes wrong in his mouth, like food that has gone bad. He collects bargains the way some gods collect worshippers, and he has never lost a deal because he has never made one where he did not already know exactly how it would end.',
     abilities: [
-      'Perfect deception: cannot be detected as lying by any means — divine or magical',
-      'Contract corruption: any agreement made in his presence can be twisted to his advantage',
-      '60% MR',
-      'Merchants curse: can devalue any treasure — gold becomes worthless in his hands',
-      'Whisper network: knows every secret on Krynn — information is his currency'
+      'Corrupting Strike (Action; 5 ft; +12 to hit; 6d10 psychic; —; —; Instantaneous; At will)',
+      'Contract Corruption (Bonus Action; 30 ft; DC 19 CHA; twist agreement to advantage; —; charmed; 24 hours; 3/day)',
+      "Merchant's Curse (Reaction; 60 ft; DC 19 CON; magic item loses properties; —; —; 24 hours; 1/day)",
+      'Perfect Deception (Passive; Self; —; advantage on CHA (Deception); —; —; —; —)'
     ],
     str: '14', dex: '20', con: '18', int: '22', wis: '18', cha: '18',
     level: 'Lesser God',
@@ -768,12 +732,10 @@ export const KRYNN_GREATER_GODS: KrynnCharacter[] = [
     domain: 'good, protection, justice, dragons',
     personality: 'He is the eldest of the gods of Krynn and the most patient, which is to say he has watched his sister destroy herself and the world she loved and he has not stopped loving her, which is either the definition of goodness or the definition of tragedy depending on how you look at it. He walks among mortals as Fizban the Fabulous, a doddering old wizard who forgets spells and shows up at precisely the right moment.',
     abilities: [
-      'Platinum dragon form: the most powerful good dragon in existence',
-      'Cannot directly intervene against mortal free will — divine compact',
-      '95% MR',
-      'All good-aligned divine magic at will — unlimited',
-      'Dragon command: all good dragons answer his call',
-      'Disguise perfect: as Fizban, no being has ever seen through his mortal form'
+      'Platinum Breath (Action; 60-ft cone; DC 20 DEX; 8d10 radiant in cone; 8d10 radiant; —; Instantaneous; Recharge 5-6)',
+      'Dragon Command (Action; 10 miles; DC 20 WIS; all metallic dragons must answer; —; charmed; 24 hours; 1/day)',
+      'Divine Aegis (Reaction; 60 ft; —; grant target +5 AC and resistance to all damage; —; —; 1 round; 3/day)',
+      'Magic Resistance (Passive; Self; —; advantage on all saves vs spells; —; —; —; —)'
     ],
     str: '22', dex: '18', con: '25', int: '25', wis: '25', cha: '25',
     level: 'Greater God',
@@ -796,12 +758,10 @@ export const KRYNN_GREATER_GODS: KrynnCharacter[] = [
     domain: 'evil, domination, dragons, shadows',
     personality: 'She is the shadow of her brother cast wrong, the love turned to ownership, the protection turned to prison. She wants Krynn the way a dragon wants gold — not for any purpose, just to have it, just to know it is hers, and she has spent eternity learning that the wanting never ends and the having never satisfies.',
     abilities: [
-      'Five-headed dragon form: each head breathes different damage type',
-      'Shadow self: can exist in multiple places simultaneously',
-      '95% MR',
-      'All evil-aligned divine magic at will — unlimited',
-      'Dragon command: all chromatic dragons answer her call',
-      'Corruption: can turn any being to evil by offering them what they want most'
+      'Five-Headed Breath (Action; 120-ft cone; DC 20 DEX; 8d10 fire/cold/acid/lightning/poison; 8d10 mixed; —; Instantaneous; Recharge 5-6)',
+      'Corruption (Action; 60 ft; DC 20 WIS; shift alignment toward evil, charm; —; charmed; 24 hours; 1/day)',
+      'Shadow Self (Reaction; 10 miles; —; redirect damage to a duplicate; —; —; Instantaneous; 3/day)',
+      'Dragon Command (Passive; 10 miles; —; all chromatic dragons charmed; —; charmed; —; —)'
     ],
     str: '24', dex: '18', con: '25', int: '25', wis: '20', cha: '25',
     level: 'Greater Goddess',
@@ -824,12 +784,10 @@ export const KRYNN_GREATER_GODS: KrynnCharacter[] = [
     domain: 'vengeance, fire, minotaurs, honor (twisted)',
     personality: 'He is Takhisis consort and he hates her with the specific hatred of someone who has been bound to someone he cannot escape and cannot defeat and cannot stop wanting. He is the god of minotaurs and the god of vengeance, which means he serves the Dark Queen while planning her destruction, which is either the most loyal thing or the most treacherous depending on who wins.',
     abilities: [
-      'Bull form: the most powerful minotaur in existence',
-      'Fire mastery: all fire magic at 50th level effectiveness',
-      '90% MR',
-      'Vengeance aura: any being who has wronged him suffers double damage from his attacks',
-      'Honor bound: cannot break his word once given — even to enemies',
-      "Consort of Takhisis: bound to her, hates her, cannot escape her, cannot stop wanting her"
+      'Bull Gore (Action; 10 ft; +14 to hit; 8d10 + 10 piercing; —; —; Instantaneous; At will)',
+      'Vengeance Mark (Bonus Action; 60 ft; DC 19 CHA; target takes double damage from Sargonnas; —; —; 1 min; 3/day)',
+      "Bull's Resolve (Reaction; Self; —; +5 AC, immune to frightened; —; frightened; 1 round; 3/day)",
+      'Fire Mastery (Passive; Self; —; immune to fire, fire spells deal max damage; —; —; —; —)'
     ],
     str: '25', dex: '16', con: '24', int: '20', wis: '18', cha: '20',
     level: 'Greater God',
@@ -859,11 +817,10 @@ export const KRYNN_GODS_OF_MAGIC: KrynnCharacter[] = [
     domain: 'good magic, white robes, protection',
     personality: 'He is the youngest of the three gods of magic, born of Paladines light reflected in the first moon. He loves the Order of the White Robes as a father loves children who have chosen well, and he weeps when they fall, which is often, because good in Krynn has always been the hardest path.',
     abilities: [
-      'White moon power: all good-aligned magic +2 levels during his moon phase',
-      'Magic immunity: 85% MR',
-      'Patron of White Robes: direct intervention possible for greatest servants',
-      'Purification: can cleanse magical corruption from any being or item',
-      'Cannot act against neutrality — bound by the magic compact'
+      'Moonlight Beam (Action; 60 ft; +12 to hit; 7d10 radiant; —; —; Instantaneous; At will)',
+      'Purification (Action; 60 ft; DC 19 CON; cleanse curses and corruption; —; charmed; Instantaneous; 3/day)',
+      'White Moon Ward (Reaction; Self; —; +5 AC and advantage on saves vs spells; —; —; 1 round; 3/day)',
+      'White Moon Power (Passive; Self; —; good magic cast at +2 levels; —; —; —; —)'
     ],
     str: '14', dex: '18', con: '20', int: '24', wis: '24', cha: '22',
     level: 'Lesser God',
@@ -886,11 +843,10 @@ export const KRYNN_GODS_OF_MAGIC: KrynnCharacter[] = [
     domain: 'neutral magic, red robes, balance',
     personality: 'She walks between her brothers and loves neither and both and has decided that magic itself matters more than what it serves. The Red Robes are her children, and she asks only that they preserve the Art above all causes, which sounds simple until you realize that the Art requires mortality to practice it.',
     abilities: [
-      'Red moon power: all neutral magic +2 levels during her moon phase',
-      'Magic immunity: 85% MR',
-      'Patron of Red Robes: direct intervention for those who preserve magical balance',
-      'Illusion mastery: all illusions are real in her presence',
-      'Keeper of the Balance: can strip any wizard of all magic permanently'
+      'Arcane Bolt (Action; 60 ft; +12 to hit; 6d10 force; —; —; Instantaneous; At will)',
+      'Illusion Mastery (Bonus Action; 60 ft; DC 19 INT; illusions become real, deal 5d10 psychic; 5d10 psychic; frightened; Con 1 min; 3/day)',
+      'Red Moon Ward (Reaction; Self; —; absorb one harmful spell targeting self; —; —; Instantaneous; 1/day)',
+      'Red Moon Power (Passive; Self; —; neutral magic cast at +2 levels; —; —; —; —)'
     ],
     str: '14', dex: '18', con: '20', int: '25', wis: '22', cha: '22',
     level: 'Lesser Goddess',
@@ -913,11 +869,10 @@ export const KRYNN_GODS_OF_MAGIC: KrynnCharacter[] = [
     domain: 'evil magic, black robes, forbidden knowledge',
     personality: 'He is the hunger that magic leaves in the soul, the desire for more that has ruined more wizards than all wars combined. He loves the Black Robes the way fire loves wood — not with affection, but with appetite. He is his mothers son, and he has inherited her need to possess.',
     abilities: [
-      'Black moon power: all evil magic +2 levels during his moon phase',
-      'Magic immunity: 85% MR',
-      'Patron of Black Robes: grants forbidden knowledge to those who serve',
-      'Sight of the Black Moon: invisible to all but Black Robes and gods',
-      'Corruption of magic: can turn any good spell to evil purpose'
+      'Dark Bolt (Action; 60 ft; +12 to hit; 6d10 necrotic; —; —; Instantaneous; At will)',
+      'Corruption of Magic (Action; 60 ft; DC 19 WIS; twist good spell to evil purpose; —; —; 1 round; 3/day)',
+      'Black Moon Veil (Reaction; Self; —; become invisible until end of next turn; —; invisible; 1 round; 3/day)',
+      'Sight of the Black Moon (Passive; Self; —; invisible to all except Black Robes and gods; —; —; —; —)'
     ],
     str: '14', dex: '18', con: '20', int: '25', wis: '20', cha: '20',
     level: 'Lesser God',
@@ -947,12 +902,10 @@ export const KRYNN_DRAGONS: KrynnCharacter[] = [
     domain: 'blue dragons, storm, loyalty',
     personality: 'He is called Skie by the woman who rides him, which is a name he has accepted because names given by those you love become true. He has served Kitiara through wars and deaths and betrayals, and he has served willingly, which is the only way a dragon as old as he would serve anything at all.',
     abilities: [
-      'Lightning breath: 100ft line, 16d10 damage (save halves)',
-      'Storm mastery: controls weather within 10 miles',
-      '60% MR',
-      'Rider bond: +3 all rolls when Kitiara is mounted',
-      'Wing buffet: knocks down all within 50ft',
-      'Ancient wisdom: has seen empires rise and fall, remembers all'
+      'Lightning Breath (Action; 100-ft line; DC 19 DEX; 8d10 lightning in line; 8d10 lightning; —; Instantaneous; Recharge 5-6)',
+      'Wing Buffet (Bonus Action; 50 ft; DC 19 STR; knock prone and push 20 ft; —; prone; Instantaneous; Recharge 5-6)',
+      'Storm Shield (Reaction; Self; —; +5 AC, immune to lightning damage; —; —; 1 round; 3/day)',
+      'Rider Bond (Passive; Self; —; +3 to all rolls when Kitiara is mounted; —; —; —; —)'
     ],
     str: '24', dex: '14', con: '24', int: '20', wis: '18', cha: '16',
     level: 'Ancient Blue Dragon',
@@ -975,12 +928,10 @@ export const KRYNN_DRAGONS: KrynnCharacter[] = [
     domain: 'green dragons, forest, poison',
     personality: 'She is the intelligence of green dragons made vast and terrible, which means she prefers to destroy through patience rather than fire, through poison rather than claw, through the slow death of forests rather than the quick death of battles. She has time. She has always had time.',
     abilities: [
-      'Chlorine gas breath: 60ft cone, 14d10 damage (save halves)',
-      'Forest mastery: controls all plant life within 5 miles',
-      '55% MR',
-      'Poison aura: all within 100ft save vs poison or take 2d10 damage per round',
-      'Camouflage: invisible in any forest environment',
-      'Patient destruction: can wait centuries for revenge'
+      'Chlorine Gas Breath (Action; 60-ft cone; DC 19 DEX; 7d10 poison in cone; 7d10 poison; —; Instantaneous; Recharge 5-6)',
+      'Forest Mastery (Bonus Action; 5 miles; DC 19 DEX; restrain target with vegetation; —; restrained; 1 round; Recharge 5-6)',
+      'Forest Veil (Reaction; Self; —; become invisible in forest; —; invisible; 1 min; 3/day)',
+      'Poison Aura (Passive; 100 ft; DC 18 CON; 2d10 poison damage to creatures each turn; 2d10 poison; poisoned; —; —)'
     ],
     str: '22', dex: '16', con: '24', int: '22', wis: '18', cha: '12',
     level: 'Great Green Dragon',
@@ -1003,12 +954,10 @@ export const KRYNN_DRAGONS: KrynnCharacter[] = [
     domain: 'red dragons, fire, destruction',
     personality: 'She is fire given thought and appetite, which is to say she is what dragons become when they stop pretending they are anything but hunger with wings. She has burned nations because they were there. She will burn more because they will be there. This is not evil to her. This is simply what fire does.',
     abilities: [
-      'Fire breath: 120ft cone, 20d10 damage (save halves)',
-      'Fire immunity: heals from fire instead of taking damage',
-      '65% MR',
-      'Heat aura: all within 200ft take 3d10 fire damage per round',
-      'Volcanic command: can summon and control lava flows',
-      'Indestructible by fire: fire heals her, she heals fire'
+      'Fire Breath (Action; 120-ft cone; DC 20 DEX; 8d10 fire in cone; 8d10 fire; —; Instantaneous; Recharge 5-6)',
+      'Heat Aura (Bonus Action; 200 ft; DC 20 CON; non-magical items catch fire; 3d10 fire; —; Con 1 min; At will)',
+      'Fire Absorption (Reaction; Self; —; regain HP equal to half fire damage dealt to self; —; —; Instantaneous; At will)',
+      'Indestructible by Fire (Passive; 300 ft; —; immune to fire, nearby fires intensified; —; —; —; —)'
     ],
     str: '26', dex: '14', con: '26', int: '18', wis: '14', cha: '14',
     level: 'Great Red Dragon',
@@ -1038,11 +987,10 @@ export const KRYNN_ADDITIONAL_GODS: KrynnCharacter[] = [
     domain: 'sea, animals, healing, nature',
     personality: 'He is the god who chose to become a king who fishes, which sounds humble until you realize that the sea contains everything that lives and most of what dies, and he has been fishing both for longer than nations have existed. He loves rangers the way some gods love paladins — as the hands that do the work he cannot do directly.',
     abilities: [
-      'Sea mastery: controls all ocean life within 1000 miles',
-      'Animal friendship: all natural animals obey him without question',
-      '70% MR',
-      'Healing touch: cures any natural disease or wound',
-      'Fisher King blessing: rangers in his service can speak with all animals'
+      'Ocean Strike (Action; 60 ft; +12 to hit; 6d10 bludgeoning; —; —; Instantaneous; At will)',
+      'Sea Call (Bonus Action; 1 mile; DC 19 WIS; summon ocean creatures to restrain; —; restrained; 1 min; 3/day)',
+      'Healing Touch (Reaction; Touch; —; restore 5d10 + 8 HP, cure disease; 5d10 + 8 healing; —; Instantaneous; Recharge 5-6)',
+      "Fisher King's Blessing (Passive; 60 ft; —; rangers gain +2 to attacks and saves; —; —; —; —)"
     ],
     str: '18', dex: '18', con: '22', int: '18', wis: '22', cha: '20',
     level: 'Lesser God',
@@ -1065,11 +1013,10 @@ export const KRYNN_ADDITIONAL_GODS: KrynnCharacter[] = [
     domain: 'fire, passion, creativity, change',
     personality: 'He is the fire that warms and the fire that destroys and he has never understood why people think these are different things. Passion creates. Passion destroys. The same flame does both, and Sirrion is that flame, and he loves mortals the way fire loves forests — with the absolute certainty that contact will change them forever.',
     abilities: [
-      'Fire mastery: all fire magic at +4 levels',
-      'Passion flame: can inspire any emotion in any being (no save)',
-      '65% MR',
-      'Creative fire: any art made in his presence becomes masterwork',
-      'Destructive fire: can burn anything, even things that cannot burn'
+      'Destructive Fire (Action; 60 ft; +12 to hit; 7d10 fire; —; —; Instantaneous; At will)',
+      'Passion Flame (Bonus Action; 60 ft; DC 19 WIS; inspire one emotion for 1 hour; —; charmed; 1 hour; 3/day)',
+      'Flame Ward (Reaction; Self; —; immune to fire damage until next turn; —; —; 1 round; 3/day)',
+      'Creative Fire (Passive; 60 ft; —; art made nearby automatically becomes masterwork; —; —; —; —)'
     ],
     str: '16', dex: '20', con: '20', int: '18', wis: '18', cha: '24',
     level: 'Lesser God',
@@ -1099,11 +1046,10 @@ export const KRYNN_MONSTERS: KrynnCharacter[] = [
     domain: 'corruption, war, sacrifice',
     personality: 'They were made from the eggs of good dragons, corrupted by dark ritual into soldiers for Takhisis armies. They know what they were. They know what they are. Some hate their creators. Some hate themselves. All of them die badly — turning to stone or acid or explosive death, denying their killers even the satisfaction of a clean kill.',
     abilities: [
-      'Death throes: Baaz turn to stone, Kapak to acid, Sivak explode 5d6, Aurak explode 10d6',
-      'Winged flight (Sivak, Aurak only)',
-      'Poison glands (Kapak only): saliva is paralytic poison',
-      'Glide: can slow falls and travel short distances',
-      'Corrupt origin: +2 saves vs good-aligned magic, -2 vs evil-aligned'
+      'Draconian Blade (Action; 5 ft; +5 to hit; 5d6 slashing; —; —; Instantaneous; At will)',
+      'Poison Glands (Bonus Action; 5 ft; DC 14 CON; apply paralytic poison; —; paralyzed; 1 min; 3/day)',
+      'Death Throes (Reaction; 10 ft; DC 13 DEX; explode dealing 5d6 fire; 5d6 fire; prone; Instantaneous; 1/day)',
+      'Corrupt Origin (Passive; Self; —; advantage on saves vs good-aligned magic; —; —; —; —)'
     ],
     str: '16', dex: '16', con: '16', int: '10', wis: '10', cha: '8',
     level: 'Various (2nd-8th fighter)',
@@ -1126,11 +1072,10 @@ export const KRYNN_MONSTERS: KrynnCharacter[] = [
     domain: 'shadow, forgetting, undeath',
     personality: 'They are what remains when the soul is taken and the memory is left to rot. They exist in the spaces between light, and they feed on the memory of their victims — not the flesh, not the soul, just the knowledge that the victim ever existed. After a shadow wight takes someone, no one remembers they were ever born.',
     abilities: [
-      'Memory drain: victim must save or be forgotten by all who knew them',
-      'Shadow form: 75% invisible in darkness, can pass through any opening',
-      '35% MR',
-      'Forgetfulness aura: creatures within 30ft forget why they are fighting',
-      'Undead immunity: immune to charm, sleep, poison, cold, electricity'
+      'Memory Drain (Action; 5 ft; +6 to hit; 4d6 necrotic; —; —; Instantaneous; At will)',
+      'Forgetfulness Aura (Bonus Action; 30 ft; DC 14 WIS; targets forget why they fight; —; incapacitated; 1 round; At will)',
+      'Shadow Form (Reaction; Self; —; half damage from physical attacks; —; —; 1 round; 3/day)',
+      'Undead Immunities (Passive; Self; —; immune to cold, lightning, charmed, poisoned, stunned; —; charmed, poisoned, stunned; —; —)'
     ],
     str: '12', dex: '20', con: '—', int: '12', wis: '14', cha: '6',
     level: 'Undead',
