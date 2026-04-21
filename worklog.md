@@ -1,4 +1,29 @@
 ---
+Task ID: v2.43.2
+Agent: Main Agent
+Task: UI Polish — Sticky Card Showcase & Dice Tray, remove big dice from ChoicePanel, update all documentation
+
+Work Log:
+- Restructured right panel in MythworldPage.tsx: Card Showcase (sticky top, max 45vh) + flex spacer + Dice Tray (sticky bottom)
+- Removed InteractiveDiceRoller from ChoicePanel.tsx (dice now only displayed in SidebarDiceArea)
+- Cleaned unused imports from ChoicePanel.tsx: InteractiveDiceRoller, motion (framer-motion), useCallback
+- Removed unused functions from ChoicePanel.tsx: getDamageDie(), isCombatAbility()
+- Removed unused variables: selectedPCOption, isCombat, damageDie, diceRollResult, handleDiceRoll
+- Cleaned unused import from MythworldPage.tsx: VisualDiceRoll (replaced with actual used exports)
+- Removed duplicate LoreGlossaryProvider import from MythworldPage.tsx
+- Created deities-demigods-game-bible.md — comprehensive living game documentation
+- Updated MANUS_HANDOVER.md: version to v2.43.2, line counts, added sprint entry, updated commit example
+- Added Chapter 14 (Game Interface Reference) to generate_players_handbook.py
+- Updated Player's Handbook cover to "2026 Edition — v2.43" and colophon
+
+Stage Summary:
+- ChoicePanel.tsx reduced from 621 → 561 lines
+- MythworldPage.tsx at 1043 lines
+- Right panel now has sticky Card Showcase (top) and Dice Tray (bottom) with flex spacer between
+- All documentation updated: game bible, handover, player's handbook, worklog
+- No game logic changes — purely UI and documentation updates
+
+---
 Task ID: 2-e
 Agent: font-updater (subagent)
 Task: Update Codex page with fantasy fonts

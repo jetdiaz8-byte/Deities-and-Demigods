@@ -1,7 +1,7 @@
 # MANUS HANDOVER — Deities & Demigods Mythworld Engine
 
-> **Prepared by:** Z Agent (v2.40.0)
-> **Date:** 2026-04-19
+> **Prepared by:** Z Agent (v2.43.2)
+> **Date:** 2026-04-21
 > **Purpose:** Complete UI redesign handover for Manus to take over responsive layout, visual polish, and cross-device optimization.
 
 ---
@@ -11,7 +11,7 @@
 | Field | Value |
 |---|---|
 | **Repo** | `jetdiaz8-byte/Deities-and-Demigods` (main branch) |
-| **Current Version** | `v2.40.0` |
+| **Current Version** | `v2.43.2` |
 | **Tech Stack** | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui, TypeScript, Prisma, Vercel |
 | **Local Path** | `/home/z/my-project/Deities-and-Demigods/` |
 | **Deploy Target** | Vercel (auto-deploy on push to main) |
@@ -69,12 +69,12 @@ On a 768–1023px device:
 
 | File | Lines | Role | What Manus Should Focus On |
 |---|---|---|---|
-| `src/app/MythworldPage.tsx` | 1036 | Main game orchestrator | Layout grid, responsive class swaps, bottom-bar, floating buttons |
+| `src/app/MythworldPage.tsx` | 1043 | Main game orchestrator | Layout grid, responsive class swaps, bottom-bar, floating buttons |
 | `src/app/globals.css` | 1067 | Global styles, fonts, animations | CSS custom properties, font floor, responsive utilities, safe-area |
 | `src/components/game/GameSidebar.tsx` | 1198 | Sidebar + dialog panels | Desktop icon strip, mobile dock, 12 dialog panels |
 | `src/components/game/PartyBar.tsx` | 70 | Fixed bottom party bar | Layout, expand-on-tap, portrait sizing |
 | `src/components/game/GameHeader.tsx` | 406 | Top header bar | Responsive title, action buttons, region indicator |
-| `src/components/game/ChoicePanel.tsx` | 621 | Player choice cards | Card layout, spacing, touch targets |
+| `src/components/game/ChoicePanel.tsx` | 561 | Player choice cards | Card layout, spacing, touch targets, free-text input |
 | `src/components/game/PartySelectionScreen.tsx` | 497 | Character selection | Grid layout, card sizes |
 | `src/components/game/IntroScreen.tsx` | 549 | Intro/splash screen | Hero area, CTA buttons |
 | `src/components/game/PortraitModal.tsx` | 529 | Character portrait viewer | Image sizing, modal layout |
@@ -89,7 +89,7 @@ On a 768–1023px device:
 | File | Lines |
 |---|---|
 | GameSidebar.tsx | 1198 |
-| ChoicePanel.tsx | 621 |
+| ChoicePanel.tsx | 561 |
 | IntroScreen.tsx | 549 |
 | PortraitModal.tsx | 529 |
 | PartySelectionScreen.tsx | 497 |
@@ -101,7 +101,7 @@ On a 768–1023px device:
 | ActiveCharacterCard.tsx | 346 |
 | TurnCardShowcase.tsx | 335 |
 | CharacterDetailModal.tsx | 332 |
-| GameComponents.tsx | 320 |
+| GameComponents.tsx | 316 |
 | AchievementsDialog.tsx | 296 |
 | LoreGlossaryCard.tsx | 235 |
 | EquipmentTooltip.tsx | 234 |
@@ -247,6 +247,15 @@ Code markers present in the codebase:
 - All 12 portraits verified in `public/portraits/lesser-gods/`
 - Portrait path pattern: `/portraits/{category}/{id}.png?v=3`
 
+### v2.43.2 — UI Polish: Sticky Panels & Dice Cleanup
+- Right panel restructured: Card Showcase (sticky top, max 45vh) + Dice Tray (sticky bottom) with flex spacer
+- Removed InteractiveDiceRoller from ChoicePanel (dice now only in SidebarDiceArea)
+- Cleaned unused imports: VisualDiceRoll, InteractiveDiceRoller, motion, useCallback
+- Removed unused functions: getDamageDie(), isCombatAbility()
+- Created `deities-demigods-game-bible.md` — living game documentation
+- Added Chapter 14 (Game Interface Reference) to Player's Handbook
+- Updated colophon year to 2026 Edition
+
 ---
 
 ## 7. shadcn/ui Components in Use
@@ -321,4 +330,4 @@ accordion, alert, alert-dialog, aspect-ratio, breadcrumb, calendar, carousel, ch
 - **Version bumps:** `v{X.Y.Z} — {description}`
 - **UI changes:** `UI: {description}`
 - **Always tag** after committing: `git tag v{X.Y.Z}`
-- Example: `git commit -m "v2.41.0 — Tablet breakpoint"` → `git tag v2.41.0`
+- Example: `git commit -m "v2.43.2 — Sticky panel + dice cleanup"` → `git tag v2.43.2`

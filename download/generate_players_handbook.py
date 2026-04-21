@@ -199,7 +199,7 @@ def build_content():
     story.append(Spacer(1, 30))
     story.append(Paragraph("Powered by Gemini 2.5 Flash AI", ParagraphStyle('ai', fontName=FONT, fontSize=11, textColor=HexColor('#95D5B2'), alignment=TA_CENTER)))
     story.append(Spacer(1, 200))
-    story.append(Paragraph("2025 Edition", ParagraphStyle('ed', fontName=FONT, fontSize=10, textColor=HexColor('#B7E4C7'), alignment=TA_CENTER)))
+    story.append(Paragraph("2026 Edition \u2014 v2.43", ParagraphStyle('ed', fontName=FONT, fontSize=10, textColor=HexColor('#B7E4C7'), alignment=TA_CENTER)))
     story.append(NextPageTemplate('normal'))
 
     # ── TABLE OF CONTENTS ──
@@ -735,11 +735,38 @@ def build_content():
     story.append(body("All save data, API keys, and game state are stored <b>exclusively in your browser's localStorage</b>. Nothing is transmitted to any server other than the Google Gemini API and (optionally) the Groq API for AI inference. Z.ai does not collect, store, or have access to your campaign data, API keys, or personal information. Your stories are yours alone."))
 
     # ═══════════════════════════════════════════════════════════════════════
+    # CHAPTER 14: GAME INTERFACE REFERENCE
+    # ═══════════════════════════════════════════════════════════════════════
+    story.append(heading("Chapter 14: Game Interface Reference"))
+    story.append(body("The Deities &amp; Demigods interface is designed to immerse you in a mythological world while keeping all essential information accessible. This chapter describes the primary UI components and how to interact with them. The interface adapts between desktop (1024px+) and mobile layouts, with all touch targets meeting a minimum 44\u00d744 pixel standard for comfortable mobile play."))
+
+    story.append(h2("Main Game Area (Centre Panel)"))
+    story.append(body("The central panel displays the <b>DM Narration</b>\u2014richly formatted text rendered on a parchment-style background with ornate borders and dragon-corner decorations. Each new turn appends a fresh narration block. Narrations longer than 1200 characters auto-collapse with a \"Continue reading\" button. Below the narration, you will find the <b>Test of Faith</b> prompt (when triggered), the <b>Combat Tracker</b> (when enemies are active), and the <b>Choice Panel</b> (your action selection interface). AI-generated comic panels and scene illustrations also appear inline within the narrative area when enabled."))
+
+    story.append(h2("Choice Panel \u2014 Your Turn"))
+    story.append(body("The Choice Panel appears whenever the game is waiting for your input. It displays your character's name, available action options (typically three contextual choices), and\u2014if you have a Companion\u2014their action options as well. Each option shows the action description, the ability type (melee attack, spell, defend, movement, social, heal), and any alignment notes. You may also write a <b>custom action</b> in the free-text field instead of selecting a preset option\u2014the AI DM will interpret your intent and resolve it mechanically. A 10-second cooldown between turns prevents API rate limiting. The <b>Confirm Choice</b> button activates once both you and your Companion have selected actions."))
+
+    story.append(h2("Right Panel \u2014 Card Showcase &amp; Dice Tray (Desktop)"))
+    story.append(body("On desktop screens (1024px and wider), a right-side panel provides two always-visible tools. The <b>Card Showcase</b> sits at the top and displays an auto-advancing portrait carousel of characters from all mythological pantheons, cycling every 5 seconds with play/pause and navigation controls. When a boss NPC is active, the carousel automatically focuses on the boss card. The <b>Dice Tray</b> is pinned to the bottom of the right panel and displays a scrollable history of all dice rolls from the current session (up to 5 recent rolls), using BG3-style 3D animated dice faces with color-coding by die type (d4 red, d6 blue, d8 green, d10 purple, d12 amber, d20 gold). Critical hits glow gold; critical failures glow red. Both panels are sticky\u2014the Card Showcase remains anchored to the top and the Dice Tray to the bottom\u2014so they are always visible regardless of scroll position."))
+
+    story.append(h2("Dice Display"))
+    story.append(body("All dice rolls in the game are displayed in the <b>Dice Tray</b> on the right panel (desktop) or accessible via the sidebar. Each roll entry shows the die face, the roller's name, the numeric result, the DC being contested (if applicable), and whether the roll was a hit, miss, critical hit (natural max), or critical failure (natural 1). Flavour notes from the AI DM may also appear beneath the roll. The tray keeps a running count of total rolls and automatically scrolls to show the latest result."))
+
+    story.append(h2("Sidebar \u2014 Party, NPCs, Map, Quests, Settings"))
+    story.append(body("A collapsible sidebar provides access to six panels. On desktop, it appears as a 56px icon strip on the left edge; on mobile, it becomes a bottom dock bar with six scrollable tabs. The panels include: <b>Party</b> (detailed character sheets for all party members), <b>NPCs</b> (characters you have encountered with affinity tracking), <b>Map</b> (world map with location pins and travel), <b>Quests</b> (active quest journal with objectives), <b>DM Settings</b> (API keys, narration style, token usage), and additional tools. All sidebar panels use shadcn/ui Dialog components for consistent, accessible modals."))
+
+    story.append(h2("Header &amp; Party Bar"))
+    story.append(body("The <b>Game Header</b> at the top displays the game title, current act/turn indicator, success rate gauge, region name, and action buttons for text-to-speech, audio controls, and the achievements trophy case. The <b>Party Bar</b> at the bottom shows portrait icons for all party members with HP bars, the active character highlighted in gold, and the Companion highlighted in blue. On mobile, the Party Bar is fixed at the bottom with safe-area padding for notched devices."))
+
+    story.append(h2("Combat Overlay"))
+    story.append(body("When combat is initiated, a <b>full-screen Combat Overlay</b> appears with contextual action buttons (Attack, Ranged, Defend, Cast Spell, Heal, Flee), enemy and ally health panels with portraits, a combat log showing the last 8 actions, and a damage popup for the latest result. The overlay respects reduced-motion preferences and includes keyboard-accessible controls. Minimising the overlay returns you to the narrative view with a small combat indicator button to re-open it."))
+
+    # ═══════════════════════════════════════════════════════════════════════
     # COLOPHON
     # ═══════════════════════════════════════════════════════════════════════
     story.append(Spacer(1, 40))
     story.append(Paragraph("\u2014 End of Player's Handbook \u2014", ParagraphStyle('end', fontName=FONT, fontSize=11, textColor=DARK_GREEN, alignment=TA_CENTER, spaceBefore=20, spaceAfter=8)))
-    story.append(Paragraph("Powered by Gemini 2.5 Flash | Built with love by Z.ai | 2025", ParagraphStyle('colophon', fontName=FONT, fontSize=9, textColor=HexColor('#888888'), alignment=TA_CENTER)))
+    story.append(Paragraph("Powered by Gemini 2.5 Flash | Built with love by Z.ai | 2026 Edition", ParagraphStyle('colophon', fontName=FONT, fontSize=9, textColor=HexColor('#888888'), alignment=TA_CENTER)))
 
     return story
 

@@ -22,11 +22,10 @@ function sanitizeHtml(html: string): string {
   // Server-side: basic regex strip (fallback, should never render server-side for this component)
   return html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
 }
-import { VisualDiceRoll } from '@/components/game/GameComponents'
+import { HealthBar, NarrativeSection, TokenCounter, LoreGlossaryProvider } from '@/components/game/GameComponents'
 import { IntroScreen } from '@/components/game/IntroScreen'
 import { PartySelectionScreen } from '@/components/game/PartySelectionScreen'
 import { GameHeader } from '@/components/game/GameHeader'
-import { LoreGlossaryProvider } from '@/components/game/LoreGlossaryCard'
 import { EquipmentTooltipProvider } from '@/components/game/EquipmentTooltip'
 import PartyBar from '@/components/game/PartyBar'
 import CharacterCard from '@/components/game/CharacterCard'
@@ -736,9 +735,17 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
           />
 
           {/* Right Panel — Portrait Gallery + Dice Tray (desktop only) */}
-          <div className="hidden lg:flex flex-col w-80 flex-shrink-0 mr-14 border-l border-[#2e2008] bg-[#0a0806]/95 overflow-y-auto sticky top-0 h-screen">
-            <TurnCardShowcase turn={gameState?.turn ?? 0} gameState={gameState} />
-            <SidebarDiceArea diceRolls={diceRollsForDisplay ?? []} />
+          <div className="hidden lg:flex flex-col w-80 flex-shrink-0 mr-14 border-l border-[#2e2008] bg-[#0a0806]/95 sticky top-0 h-screen overflow-hidden">
+            {/* Sticky top: Card Showcase */}
+            <div className="flex-shrink-0 max-h-[45vh] overflow-y-auto">
+              <TurnCardShowcase turn={gameState?.turn ?? 0} gameState={gameState} />
+            </div>
+            {/* Scrollable spacer / middle area */}
+            <div className="flex-1 overflow-y-auto min-h-0" />
+            {/* Sticky bottom: Dice Tray */}
+            <div className="flex-shrink-0">
+              <SidebarDiceArea diceRolls={diceRollsForDisplay ?? []} />
+            </div>
           </div>
         </div>
 
