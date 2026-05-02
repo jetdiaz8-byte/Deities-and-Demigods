@@ -184,7 +184,7 @@ export function IntroScreen({
 
   return (
     <div
-      className="h-screen w-full flex flex-col items-center justify-center p-4 overflow-hidden relative"
+      className="min-h-screen w-full flex flex-col items-center justify-start p-4 pt-8 overflow-y-auto relative"
       style={{
         backgroundImage:
           "linear-gradient(135deg, #0d0a15 0%, #1a1025 20%, #251830 40%, #1a0d1d 60%, #0d0812 80%, #050308 100%)",

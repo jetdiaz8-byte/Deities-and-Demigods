@@ -735,7 +735,7 @@ function MythworldEngineWithEngine({ result }: { result: NonNullable<ReturnType<
           />
 
           {/* Right Panel — Portrait Gallery + Dice Tray (desktop only) */}
-          <div className="hidden lg:flex flex-col w-80 flex-shrink-0 mr-14 border-l border-[#2e2008] bg-[#0a0806]/95 sticky top-0 h-screen overflow-hidden">
+          <div className="hidden lg:flex flex-col w-80 flex-shrink-0 mr-14 border-l border-[#2e2008] bg-[#0a0806]/95 sticky top-0 h-screen overflow-y-auto">
             {/* Sticky top: Card Showcase */}
             <div className="flex-shrink-0 max-h-[45vh] overflow-y-auto">
               <TurnCardShowcase turn={gameState?.turn ?? 0} gameState={gameState} />
