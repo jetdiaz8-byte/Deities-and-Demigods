@@ -1772,6 +1772,7 @@ export function useGameEngine() {
       shardSummoned: 0,      // DEPRECATED v2.19.0 — kept for success rate compatibility
       companionAffinity: 50,  // Starting affinity
       companionMood: 'loyal', // Starting mood
+      moralityQuotient: 0,   // Starting morality
       injuryPenalty: 0        // No injuries at start
     })
 
@@ -1810,6 +1811,7 @@ export function useGameEngine() {
       shardSummonedBonus: initialSuccess.breakdown.shardSummoned,
       companionAffinityBonus: initialSuccess.breakdown.companionAffinity,
       companionMoodBonus: initialSuccess.breakdown.companionMood,
+      moralityBonus: initialSuccess.breakdown.morality,
       injuryPenaltyBonus: initialSuccess.breakdown.injury,
       // Companion System
       companionId: companion?.id || null,
@@ -3478,6 +3480,26 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           }
           if (u.remove_condition) {
             pc.conditions = pc.conditions.filter(c => c !== u.remove_condition)
+            // v2.44.0: Bridge remove_condition to injuries — if condition matches injury id/name, cure it
+            const cond = String(u.remove_condition).toLowerCase().replace(/[^a-z0-9_]/g, '')
+            const pcInjuries = newGS.injuries[pc.id]
+            if (pcInjuries && pcInjuries.length > 0) {
+              const matchedIdx = pcInjuries.findIndex(inj =>
+                inj.id === cond ||
+                inj.name.toLowerCase().replace(/[^a-z0-9_]/g, '') === cond ||
+                cond.includes(inj.id) ||
+                inj.id.includes(cond)
+              )
+              if (matchedIdx >= 0) {
+                const cured = pcInjuries[matchedIdx]
+                newGS.injuries = {
+                  ...newGS.injuries,
+                  [pc.id]: pcInjuries.filter((_, i) => i !== matchedIdx)
+                }
+                if (newGS.injuries[pc.id]?.length === 0) delete newGS.injuries[pc.id]
+                console.log(`[v2.44.0] Injury cured via remove_condition: ${cured.name} on ${pc.id}`)
+              }
+            }
           }
           if (u.dead || pc.hp <= 0) {
             // Check Shard Shield FIRST, then Death Ward
@@ -3548,9 +3570,17 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
           : injTemplate.modifier?.dot ? 5  // DOT injuries last 5 turns
           : 4                               // default: 4 turns
         const inj: Injury = { ...injTemplate, turnsLeft: turns }
+
+        // v2.44.0: Injury stacking cap — max 5 injuries per PC
+        const pcInjuries = newGS.injuries[ev.pc_id] || []
+        if (pcInjuries.length >= 5) {
+          console.warn(`[v2.44.0] Injury cap reached for ${ev.pc_id} (5 max). Skipping ${injTemplate.id}.`)
+          continue
+        }
+
         newGS.injuries = {
           ...newGS.injuries,
-          [ev.pc_id]: [...(newGS.injuries[ev.pc_id] || []), inj]
+          [ev.pc_id]: [...pcInjuries, inj]
         }
       }
     }
@@ -3847,6 +3877,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       shardSummoned: 0,  // v2.19.0: Summoning removed, no bonus from summoned gods
       companionAffinity: newGS.companionAffinity,
       companionMood: newGS.companionMood,
+      moralityQuotient: newGS.moralityQuotient,
       injuryPenalty: totalInjuryPenalty
     })
     
@@ -3862,6 +3893,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     newGS.shardSummonedBonus = successUpdate.breakdown.shardSummoned
     newGS.companionAffinityBonus = successUpdate.breakdown.companionAffinity
     newGS.companionMoodBonus = successUpdate.breakdown.companionMood
+    newGS.moralityBonus = successUpdate.breakdown.morality
     newGS.injuryPenaltyBonus = successUpdate.breakdown.injury
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -5228,9 +5260,17 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
         // Apply healing effect locally (same as handleUseItem)
         const targetPC = gs.pcs.find(p => p.id === gs.humanPCId && !p.dead) || gs.pcs.find(p => !p.dead)
         if (targetPC && item.modifier?.healing) {
-          const healAmount = typeof item.modifier.healing === 'number' ? item.modifier.healing : Math.floor(Math.random() * 8 + Math.random() * 8) + 4
-          gs.pcs = gs.pcs.map(p => p.id !== targetPC.id ? p : { ...p, hp: Math.min(p.maxHp, p.hp + healAmount) })
-          toast({ title: `${item.name} Used`, description: `${targetPC.name} healed for ${healAmount} HP` })
+          // v2.44.0: Blood Toxin check — blocks magical healing
+          const hasBloodToxin = (gs.injuries[targetPC.id] || []).some(
+            inj => inj.modifier?.healing_mult === 0
+          )
+          if (!hasBloodToxin) {
+            const healAmount = typeof item.modifier.healing === 'number' ? item.modifier.healing : Math.floor(Math.random() * 8 + Math.random() * 8) + 4
+            gs.pcs = gs.pcs.map(p => p.id !== targetPC.id ? p : { ...p, hp: Math.min(p.maxHp, p.hp + healAmount) })
+            toast({ title: `${item.name} Used`, description: `${targetPC.name} healed for ${healAmount} HP` })
+          } else {
+            toast({ title: `${item.name} Failed`, description: `${targetPC.name}'s blood rejects the healing!` })
+          }
         }
         // Death ward
         if (targetPC && item.modifier?.death_ward) {
@@ -5356,6 +5396,62 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
         }
       }
       gs.injuries = newInjuries
+
+      // v2.44.0: ELDRITCH CORROSION — drain item charges per turn
+      let eldritchDrainOccurred = false
+      for (const pcId of Object.keys(newInjuries)) {
+        const pc = gs.pcs.find(p => p.id === pcId)
+        if (!pc || pc.dead) continue
+        const hasEldritchCorrosion = newInjuries[pcId]?.some(inj => inj.id === 'eldritch_corrosion')
+        if (hasEldritchCorrosion && gs.inventory.length > 0) {
+          // Drain 1 charge from a random magical item
+          const magicItems = gs.inventory.filter(i => i.charges !== undefined && i.charges > 0 && i.charges < 99)
+          if (magicItems.length > 0) {
+            const target = magicItems[Math.floor(Math.random() * magicItems.length)]
+            gs.inventory = gs.inventory.map(item => {
+              if (item.id !== target.id) return item
+              const newCharges = (item.charges || 1) - 1
+              if (newCharges <= 0) {
+                eldritchDrainOccurred = true
+                console.log(`[v2.44.0] Eldritch Corrosion consumed: ${item.name}`)
+                return { ...item, charges: 0 } // Will be cleaned up later
+              }
+              return { ...item, charges: newCharges }
+            })
+            // Remove zero-charge items
+            gs.inventory = gs.inventory.filter(i => !i.charges || i.charges > 0)
+          }
+        }
+      }
+      if (eldritchDrainOccurred) {
+        soundEvents.emit({ type: 'injury' })
+      }
+
+      // v2.44.0: REST MECHANIC — reduce injury duration by 2 for all living PCs when resting
+      if (chosen?.ability === 'rest') {
+        const restReduction: string[] = []
+        const restInjuries = { ...gs.injuries }
+        for (const pcId of Object.keys(restInjuries)) {
+          const pc = gs.pcs.find(p => p.id === pcId)
+          if (!pc || pc.dead) continue
+          const pcInjuries = restInjuries[pcId]
+          if (!pcInjuries || pcInjuries.length === 0) continue
+          restInjuries[pcId] = pcInjuries.map(inj => {
+            const newTurns = inj.turnsLeft - 2
+            if (newTurns <= 0) {
+              restReduction.push(`${inj.name} fully healed`)
+              return { ...inj, turnsLeft: 0 }
+            }
+            restReduction.push(`${inj.name}: ${inj.turnsLeft}t → ${newTurns}t`)
+            return { ...inj, turnsLeft: newTurns }
+          }).filter(inj => inj.turnsLeft > 0)
+          if (restInjuries[pcId].length === 0) delete restInjuries[pcId]
+        }
+        gs.injuries = restInjuries
+        if (restReduction.length > 0) {
+          console.log(`[v2.44.0] Rest reduced injuries: ${restReduction.join(', ')}`)
+        }
+      }
 
       const res = await callDM(userMsg, gs, false)
 
@@ -5594,6 +5690,14 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
 
     // Apply item effect immutably — never mutate original state objects
     if (item.modifier?.healing) {
+      // v2.44.0: Check for Blood Toxin (healing_mult: 0) — blocks magical healing
+      const hasBloodToxin = (newGS.injuries[targetPC.id] || []).some(
+        inj => inj.modifier?.healing_mult === 0
+      )
+      if (hasBloodToxin) {
+        toast({ title: `${item.name} Failed`, description: `${targetPC.name}'s blood rejects the healing — the toxin pulses.` })
+        return
+      }
       const healAmount = typeof item.modifier.healing === 'number' ? item.modifier.healing : rollDice(2, 8) + 4
       newGS.pcs = newGS.pcs.map(p => {
         if (p.id !== targetPC.id) return p

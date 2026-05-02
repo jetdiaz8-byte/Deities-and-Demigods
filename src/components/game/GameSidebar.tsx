@@ -569,7 +569,7 @@ export function GameSidebar({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-3 pt-0 text-xs">
-                  <div className="text-[#7a5f20] mb-2">Charges: {gameState.shardCharges}/2</div>
+                  <div className="text-[#7a5f20] mb-2">Charges: {gameState.shardCharges}/3</div>
                   <div className="text-[10px] text-[#a08060] italic leading-relaxed">
                     The shard contains the prophecy. It chose its bearer. They cannot escape destiny.
                   </div>

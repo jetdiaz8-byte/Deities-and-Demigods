@@ -310,6 +310,7 @@ export interface GameState {
   shardSummonedBonus: number         // Bonus from gods summoned via shard
   companionAffinityBonus: number     // Bonus from companion relationship
   companionMoodBonus: number         // v2.44.0: Bonus from companion mood
+  moralityBonus: number             // v2.44.0: Bonus from paragon/renegade conviction
   injuryPenaltyBonus: number         // Penalty from active injuries
   currentSuccessRate: number         // Calculated total success %
   // COMPANION SYSTEM - Affinity with main PC
@@ -394,6 +395,7 @@ export interface SuccessRateFactors {
   shardSummoned: number      // DEPRECATED — kept for save compatibility
   companionAffinity: number  // -100 to +100: Relationship with main PC
   companionMood: 'loyal' | 'concerned' | 'conflicted' | 'distant' | 'hostile' | 'devoted' // v2.44.0: mood mechanical effect
+  moralityQuotient: number    // v2.44.0: -100 (pure renegade) to +100 (pure paragon)
   injuryPenalty: number      // Sum of all active injury modifiers
 }
 

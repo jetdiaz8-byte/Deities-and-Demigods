@@ -191,6 +191,17 @@ export const calculateSuccessRate = (factors: SuccessRateFactors) => {
   }
   companionMoodBonus = moodMap[factors.companionMood] ?? 0
 
+  // v2.44.0: MORALITY BONUS — extreme morality grants narrative power
+  // Strong conviction (paragon or renegade) inspires the world to respond
+  // Paragon (+30+): +1 to +3 (diplomatic weight, divine favor from good gods)
+  // Renegade (-30-): +1 to +3 (fear commands respect, dark pacts hold power)
+  // Moderate (-29 to +29): 0 (undecided, no moral gravity)
+  let moralityBonus = 0
+  const absMorality = Math.abs(factors.moralityQuotient || 0)
+  if (absMorality >= 50) moralityBonus = 3
+  else if (absMorality >= 30) moralityBonus = 2
+  else if (absMorality >= 15) moralityBonus = 1
+
   // INJURY PENALTY: Sum of all active injury modifiers (negative values hurt success rate)
   // Each injury typically has a modifier of -1 to -5; capped at -15 total
   const injuryPenalty = Math.max(-15, factors.injuryPenalty)
@@ -199,7 +210,7 @@ export const calculateSuccessRate = (factors: SuccessRateFactors) => {
   const total = Math.max(5, Math.min(95, 
     base + partyBonus + prophecyBonus + allyBonus + renownBonus + 
     powerBonus + alignmentBonus + mythicalBonus + antagonistPenalty +
-    shardChargeBonus + shardSummonedBonus + companionAffinityBonus + companionMoodBonus + injuryPenalty
+    shardChargeBonus + shardSummonedBonus + companionAffinityBonus + companionMoodBonus + moralityBonus + injuryPenalty
   ))
   
   return {
@@ -218,6 +229,7 @@ export const calculateSuccessRate = (factors: SuccessRateFactors) => {
       shardSummoned: shardSummonedBonus,
       companionAffinity: companionAffinityBonus,
       companionMood: companionMoodBonus,
+      morality: moralityBonus,
       injury: injuryPenalty
     }
   }
