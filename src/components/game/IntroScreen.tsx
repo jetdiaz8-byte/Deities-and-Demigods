@@ -510,13 +510,13 @@ export function IntroScreen({
                 )}
               </div>
 
-              {/* Compact feature grid */}
-              <div className="mt-5 grid grid-cols-5 gap-1.5">
+              {/* Compact feature grid — responsive: 2 cols on mobile, 5 on sm+ */}
+              <div className="mt-5 grid grid-cols-2 sm:grid-cols-5 gap-1.5">
                 {features.map((feature, i) => (
-                  <div key={i} className="text-center p-2 bg-[#181208] border border-[#2e2008] rounded">
+                  <div key={i} className="text-center p-2 bg-[#181208] border border-[#2e2008] rounded overflow-hidden">
                     <div className="text-[#D4AF37] mb-0.5 flex justify-center">{feature.icon}</div>
-                    <div className="text-[11px] leading-tight" style={{ fontFamily: 'var(--font-heading)', color: '#C9A84C' }}>{feature.label}</div>
-                    <div className="text-[11px]" style={{ color: '#8A7A50' }}>{feature.desc}</div>
+                    <div className="text-[11px] leading-tight break-words" style={{ fontFamily: 'var(--font-heading)', color: '#C9A84C' }}>{feature.label}</div>
+                    <div className="text-[11px]" style={{ color: '#A09060' }}>{feature.desc}</div>
                   </div>
                 ))}
               </div>
