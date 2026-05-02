@@ -1771,6 +1771,7 @@ export function useGameEngine() {
       shardCharges: 3,       // v2.19.0: Start with 3 shard charges (Insight, Shield, Final Word)
       shardSummoned: 0,      // DEPRECATED v2.19.0 — kept for success rate compatibility
       companionAffinity: 50,  // Starting affinity
+      companionMood: 'loyal', // Starting mood
       injuryPenalty: 0        // No injuries at start
     })
 
@@ -1808,6 +1809,7 @@ export function useGameEngine() {
       shardChargeBonus: initialSuccess.breakdown.shardCharge,
       shardSummonedBonus: initialSuccess.breakdown.shardSummoned,
       companionAffinityBonus: initialSuccess.breakdown.companionAffinity,
+      companionMoodBonus: initialSuccess.breakdown.companionMood,
       injuryPenaltyBonus: initialSuccess.breakdown.injury,
       // Companion System
       companionId: companion?.id || null,
@@ -2186,17 +2188,29 @@ CRITICAL RULES:
      e) NEXT TURN INTRO — End with a hook: a fork in the road, a distant threat, a mystery. (1-2 sentences)
      f) Include companion dialogue that reflects their personality
      Total: ~3000-3500 chars. TTS-friendly: ~60-75 seconds.
-   - REGULAR TURNS (Turn 2+): Write 2-3 paragraphs (150-300 words total). STRUCTURED:
-     Paragraph 1 — RESULTS: What happened as a result of the player's choices from the previous turn. Be vivid. Reference the specific action.
-     Paragraph 2 — REACTIONS: The PC and companion react to what happened. Include 1-2 lines of dialogue that reveal personality.
-     Paragraph 3 — HOOK: A new development, tension, or fork in the road. End with something that demands a response.
-     If combat occurred, weave it naturally into Paragraph 1-2. Do NOT write a separate combat section.
-     BASELINE: 150-300 words. For complex actions, dramatic moments, or pivotal scenes, you may expand up to 500 words — but ONLY when the narrative demands it.
+   - REGULAR TURNS (Turn 2+): Write 3 paragraphs (200-400 words total). STRUCTURED:
+     Paragraph 1 — RESULTS & ACTION: What happened as a result of the player's choices. Be vivid. Reference the specific action. If combat occurred, weave it HERE — every blow, every dodge, every wound narrated in Gaiman prose. Do NOT separate combat into its own section.
+     Paragraph 2 — DIALOGUE & CHARACTER MOMENTS: The PC, companion, and foreground party members REACT. This paragraph MUST contain spoken dialogue:
+       • Main PC: 1-2 lines of speech or inner thought showing their perspective
+       • Companion: At least 1 spoken line revealing their personality
+       • Foreground party member: 1 reaction line — agreement, concern, dark humor, knowledge
+       • NPCs present: Speak in Gaiman voice — laconic, weighted, never expository
+       FORMAT: Dialogue lives within prose. "The rune burned," said Kael. "Good. It means it's listening."
+     Paragraph 3 — HOOK: A new development, tension, or fork in the road. End on an IMAGE or QUESTION — never an explanation. The reader must lean forward.
+     MINIMUM: 200 words. TARGET: 300 words. MAXIMUM: 500 words (pivotal/dramatic moments only).
+     A turn under 150 words will feel thin. Do not undershoot.
    - CRITICAL: NEVER repeat or rephrase narration from previous turns. Every turn must be ENTIRELY NEW prose.
    - ALL narration follows the GAIMAN VOICE rules at the top of this prompt — no exceptions.
    - Use specific sensory language: the taste of copper, the weight of shadows, the smell of old rain
    - For REST/SLEEP/CAMP actions: write 2-3 sentences max. Brief, reflective, atmospheric.
-   - For COMBAT actions: keep one paragraph and maintain literary pacing.
+   - For COMBAT actions: combat is woven into Paragraphs 1-2 of the standard 3-paragraph structure. Combat narration must still be Gaiman prose — every wound is a sentence, every dodge a paragraph's weight. Do NOT abbreviate combat turns.
+   - DIALOGUE IS MANDATORY: Every regular turn MUST contain at least 3 lines of spoken dialogue across the party (PC + companion + foreground member). Silence is not an option. Characters talk, argue, whisper, joke, warn — they do not stand mute.
+   - PC VOICE: The main PC is not a silent protagonist. Show their personality through speech and thought. A lawful good paladin speaks differently than a chaotic neutral thief — and both should sound like they stepped from a Gaiman novel.
+   - DC SCALING GUIDELINES: Use these difficulty classes based on the story's current act:
+     Act I (exploration): DC 10-13 standard, DC 14-16 puzzles/traps
+     Act II (rising tension): DC 12-15 standard, DC 16-18 combat/social
+     Act III (boss fight): DC 14-17 standard, DC 18-22 boss encounters
+     Adjust up by +2 for legendary enemies or divine challenges.
 4. Permadeath. No stat/alignment changes mid-game.
 5. PCs=Heroes/Demigods (including Krynn). NPCs=Lesser/Greater Gods (including Krynn gods).
 5a. **CODEX-ONLY ENTITIES** — You may ONLY use entities from the DDG codex roster (heroes, demigods, gods, monsters from characterData and krynnCharacters). DO NOT invent entities. No "Shadow Wisp", no "Cave Goblin", no custom monsters. If it's not in the codex with stats, it DOES NOT EXIST in this world. For early Act I hazards, use traps/puzzles/environmental obstacles instead of monsters.
@@ -2520,7 +2534,7 @@ QUICKENING RULES:
 ╚══════════════════════════════════════════════════════════════════════════════╝
 
 OUTPUT: First, write the narrative prose. Then, append the JSON block:
-{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — Turn 0 shard intro: ~600 chars max. Turn 1 full intro: 3000-3500 chars (4-5 paragraphs). Regular turns: 150-300 words baseline, 2-3 paragraphs (RESULTS / REACTIONS / HOOK structure). For complex or pivotal actions, may expand up to 500 words. REST/SLEEP: 2-3 sentences. COMBAT: weave into paragraphs 1-2, up to 300 words total.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","shard_insight_used":false,"pc_choices":[{"narrative":"string (GAIMAN PROSE — contextual, story-specific, max 80 chars. NOT a menu item. Must read like a line from American Gods. Reference specific objects/NPCs/tensions from your narration. See THE GOLDEN RULE. BAD: 'Examine the area for clues' GOOD: 'Kneel beside the hearthstone — the light beneath it pulses')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}]${isFirstTurn ? `` : `,"companion_choices":[{"narrative":"string (GAIMAN PROSE - contextual companion action, max 80 chars. Same voice as narration. Reference the scene. BAD: Scout the area GOOD: Vaprak tastes the air - something old is close)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]`}"}`
+{"story_summary":"string (1-3 paragraphs)","journey_so_far":"string (COMPLETE updated TLDR of entire journey so far - append new events to previous summary, keep under 150 words total)","dm_narration":"string (EXACT COMPLETE COPY of your narrative prose — Turn 0 shard intro: ~1500 chars max. Turn 1 full intro: 3000-3500 chars (4-5 paragraphs). Regular turns: 200-400 words (3 paragraphs: RESULTS / DIALOGUE / HOOK). 500 words max for pivotal moments. REST/SLEEP: 2-3 sentences. COMBAT: weave into standard 3-paragraph structure. Dialogue is mandatory in every regular turn.)","human_pc_id":"id|null","human_pc_reason":"string (why this PC should act next)","npc_encounters":[{"npc_id":"string","npc_name":"string","encounter_type":"ENEMY/ALLY/BOSS","behavior":"string","pantheon":"string"}],"dice_rolls":[{"roller":"string","die":"d20","roll":0,"dc":0,"success":true,"notes":"string"}],"damage_dealt":[{"from":"string","to":"string","amount":0,"type":"string"}],"injury_events":[{"pc_id":"string","injury_id":"string|null","description":"string"}],"state_updates":[{"pc_id":"string|ANTAGONIST","hp_delta":0,"new_condition":null,"remove_condition":null,"dead":false}],"new_active_npcs":["id"],"next_pc_id":"string|null","pc_agreement":{"pc_id":"agreed/refused/undecided"},"boss_phase_trigger":false,"consequences":"string","tension_note":"string","item_drops":[{"id":"string","name":"string","type":"artifact|potion|equipment|scroll","rarity":"common|uncommon|rare|legendary","effect":"string","icon":"string","description":"string"}],"quest_updates":[{"id":"string","status":"active|completed|failed","objectives":[{"text":"string","completed":false}]}],"outcome_tier":"critical_success|full_success|partial_success|miss|null","paragon_delta":0,"renegade_delta":0,"new_aspect":"string|null","clue_revealed":"string (short description of antagonist clue revealed this turn, or omit if none)","shard_insight_used":false,"pc_choices":[{"narrative":"string (GAIMAN PROSE — contextual, story-specific, max 80 chars. NOT a menu item. Must read like a line from American Gods. Reference specific objects/NPCs/tensions from your narration. See THE GOLDEN RULE. BAD: 'Examine the area for clues' GOOD: 'Kneel beside the hearthstone — the light beneath it pulses')","ability":"string (mechanical key: investigation/exploration/perception/arcana/divine_sense/stealth/melee_attack/defend/conversation/persuasion/intimidation or PC's named ability)","align_note":"string (brief mechanical note)"}]${isFirstTurn ? `` : `,"companion_choices":[{"narrative":"string (GAIMAN PROSE - contextual companion action, max 80 chars. Same voice as narration. Reference the scene. BAD: Scout the area GOOD: Vaprak tastes the air - something old is close)","ability":"string (companion_scout/companion_discussion/companion_guard/companion_attack/companion_defend/companion_assist/companion_ability:AbilityName/companion_conversation/companion_support/companion_observe)","align_note":"string (brief mechanical note)"}]`}"}`
   }
 
   // ── API CALLS ──────────────────────────────────────────────────────────
@@ -3310,6 +3324,13 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
         if (d.amount > 0 && d.to) {
           const targetPc = newGS.pcs.find(p => p.id === d.to || p.name === d.to)
           if (targetPc) {
+            // v2.44.0: Damage validation — cap single-hit damage at 50% of target max HP
+            // Critical hits allowed up to 75%. Prevents AI hallucination of absurd damage.
+            const maxDmgPerHit = Math.floor(targetPc.maxHp * (isCritical ? 0.75 : 0.50))
+            if (d.amount > maxDmgPerHit) {
+              console.warn(`[v2.44.0] Damage capped: ${d.amount} → ${maxDmgPerHit} (target: ${targetPc.name}, maxHP: ${targetPc.maxHp}, crit: ${isCritical})`)
+              d.amount = maxDmgPerHit
+            }
             triggerScreenEffect('screen-effect-red')
             triggerCombatFlash(isCritical ? 'crit' : 'damage')
             // P4.1 FIX: Actually deduct HP and check for death
@@ -3418,7 +3439,18 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     if (res.state_updates) {
       for (const u of res.state_updates) {
         if (u.pc_id === 'ANTAGONIST') {
-          newGS.antagonistHp = Math.max(0, Math.min(newGS.antagonistMaxHp, newGS.antagonistHp + Number(u.hp_delta || 0)))
+          // v2.44.0: Antagonist damage validation — cap at 25% of max HP per turn
+          const rawDelta = Number(u.hp_delta || 0)
+          if (rawDelta < 0) {
+            const maxDmgToBoss = Math.floor(newGS.antagonistMaxHp * 0.25)
+            const cappedDelta = Math.max(-maxDmgToBoss, rawDelta)
+            if (rawDelta < cappedDelta) {
+              console.warn(`[v2.44.0] Antagonist damage capped: ${rawDelta} → ${cappedDelta} (maxHP: ${newGS.antagonistMaxHp})`)
+            }
+            newGS.antagonistHp = Math.max(0, newGS.antagonistHp + cappedDelta)
+          } else {
+            newGS.antagonistHp = Math.min(newGS.antagonistMaxHp, newGS.antagonistHp + rawDelta)
+          }
           continue
         }
 
@@ -3814,6 +3846,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
       shardCharges: newGS.shardCharges,
       shardSummoned: 0,  // v2.19.0: Summoning removed, no bonus from summoned gods
       companionAffinity: newGS.companionAffinity,
+      companionMood: newGS.companionMood,
       injuryPenalty: totalInjuryPenalty
     })
     
@@ -3828,6 +3861,7 @@ OUTPUT: First, write the narrative prose. Then, append the JSON block:
     newGS.shardChargeBonus = successUpdate.breakdown.shardCharge
     newGS.shardSummonedBonus = successUpdate.breakdown.shardSummoned
     newGS.companionAffinityBonus = successUpdate.breakdown.companionAffinity
+    newGS.companionMoodBonus = successUpdate.breakdown.companionMood
     newGS.injuryPenaltyBonus = successUpdate.breakdown.injury
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -4391,9 +4425,9 @@ Execute mechanics (dice, damage, state) and output JSON at the end.`
     const quickeningParsed = parseQuickeningData(consequenceParsed.cleanText, gs.turn, quickeningState)
     narr = quickeningParsed.cleanText
 
-    // v2.24.0: Truncate long narrations — Turn 0: 200 words, Turn 1: 500 words, Regular: 350 words
-    const maxWords = isFirst ? 200 : gs.turn <= 1 ? 500 : 350
-    const maxChars = isFirst ? 1500 : gs.turn <= 1 ? 4000 : 3000
+    // v2.44.0: Truncate long narrations — aligned with prompt limits (500 words for all non-Turn-0)
+    const maxWords = isFirst ? 200 : 500
+    const maxChars = isFirst ? 1500 : 4000
     if (narr.length > maxChars) {
       const words = narr.split(/\s+/)
       if (words.length > maxWords) {
@@ -5277,7 +5311,7 @@ ${compChosen ? '5' : '4'}. ${compChosen ? `Full narrative prose covering BOTH ch
     setConversationHistory(prev => [
       ...prev,
       ...convEntries
-    ].slice(-3)) // Keep last 3 exchanges (journey_so_far handles older context)
+    ].slice(-8)) // Keep last 8 exchanges for richer conversation memory
 
     try {
       // Tick injuries — collect all DOT damage first, then apply immutably

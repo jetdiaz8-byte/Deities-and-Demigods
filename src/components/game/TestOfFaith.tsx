@@ -46,8 +46,10 @@ export function TestOfFaith({ gameState, resolveTestOfFaith }: TestOfFaithProps)
 
   const trustFate = useCallback(() => {
     if (isRolling || finalRoll !== null) return
-    setFinalRoll(10)
-    resolveTimerRef.current = setTimeout(() => resolveTestOfFaith(10), 1000)
+    // v2.44.0: Trust Fate set to 12 — slightly better than random average (10.5)
+    // to reward the narrative choice of surrendering to fate
+    setFinalRoll(12)
+    resolveTimerRef.current = setTimeout(() => resolveTestOfFaith(12), 1000)
   }, [isRolling, finalRoll, resolveTestOfFaith])
 
   if (!gameState.pendingTestOfFaith) return null

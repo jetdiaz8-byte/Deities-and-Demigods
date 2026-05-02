@@ -180,6 +180,17 @@ export const calculateSuccessRate = (factors: SuccessRateFactors) => {
   else if (factors.companionAffinity >= 0) companionAffinityBonus = 0
   else companionAffinityBonus = Math.max(-5, Math.floor(factors.companionAffinity / 20))
 
+  // v2.44.0: COMPANION MOOD BONUS — mood now has a mechanical effect on outcomes
+  // Devoted: +3 (companion goes above and beyond), Loyal: +1 (reliable support)
+  // Concerned: 0 (distracted but present), Conflicted: -1 (hesitant, unreliable)
+  // Distant: -2 (barely cooperating), Hostile: -4 (actively undermining)
+  let companionMoodBonus = 0
+  const moodMap: Record<string, number> = {
+    'devoted': 3, 'loyal': 1, 'concerned': 0,
+    'conflicted': -1, 'distant': -2, 'hostile': -4
+  }
+  companionMoodBonus = moodMap[factors.companionMood] ?? 0
+
   // INJURY PENALTY: Sum of all active injury modifiers (negative values hurt success rate)
   // Each injury typically has a modifier of -1 to -5; capped at -15 total
   const injuryPenalty = Math.max(-15, factors.injuryPenalty)
@@ -188,7 +199,7 @@ export const calculateSuccessRate = (factors: SuccessRateFactors) => {
   const total = Math.max(5, Math.min(95, 
     base + partyBonus + prophecyBonus + allyBonus + renownBonus + 
     powerBonus + alignmentBonus + mythicalBonus + antagonistPenalty +
-    shardChargeBonus + shardSummonedBonus + companionAffinityBonus + injuryPenalty
+    shardChargeBonus + shardSummonedBonus + companionAffinityBonus + companionMoodBonus + injuryPenalty
   ))
   
   return {
@@ -206,6 +217,7 @@ export const calculateSuccessRate = (factors: SuccessRateFactors) => {
       shardCharge: shardChargeBonus,
       shardSummoned: shardSummonedBonus,
       companionAffinity: companionAffinityBonus,
+      companionMood: companionMoodBonus,
       injury: injuryPenalty
     }
   }

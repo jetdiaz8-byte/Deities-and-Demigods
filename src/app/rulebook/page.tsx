@@ -414,6 +414,7 @@ export default function RulebookPage() {
                     &nbsp;&nbsp;+ <span className="text-amber-300">min(shardCharges &times; 2, 6)</span> &nbsp;&nbsp;# shard charges remaining<br />
                     &nbsp;&nbsp;+ <span className="text-amber-200">min(shardSummoned &times; 3, 9)</span> &nbsp;&nbsp;# gods summoned via shard<br />
                     &nbsp;&nbsp;+ <span className="text-teal-400">companionAffinityBonus</span> &nbsp;&nbsp;# devoted:+5, loyal:+3, concerned:+1, hostile:-5<br />
+                    &nbsp;&nbsp;+ <span className="text-teal-300">companionMoodBonus</span> &nbsp;&nbsp;# v2.44 devoted:+3, loyal:+1, concerned:0, conflicted:-1, distant:-2, hostile:-4<br />
                     &nbsp;&nbsp;+ <span className="text-rose-400">clamp(injuryPenalty, -15, 0)</span> &nbsp;&nbsp;# sum of all active injury modifiers<br />
                     &nbsp;&nbsp;= <span className="text-white">clamp(total, 5, 95)</span> &nbsp;&nbsp;# always some chance
                   </div>

@@ -309,6 +309,7 @@ export interface GameState {
   shardChargeBonus: number           // Bonus from remaining shard charges
   shardSummonedBonus: number         // Bonus from gods summoned via shard
   companionAffinityBonus: number     // Bonus from companion relationship
+  companionMoodBonus: number         // v2.44.0: Bonus from companion mood
   injuryPenaltyBonus: number         // Penalty from active injuries
   currentSuccessRate: number         // Calculated total success %
   // COMPANION SYSTEM - Affinity with main PC
@@ -392,6 +393,7 @@ export interface SuccessRateFactors {
   shardCharges: number       // v2.19.0: 0-3: Shard charges (Insight, Shield, Final Word)
   shardSummoned: number      // DEPRECATED — kept for save compatibility
   companionAffinity: number  // -100 to +100: Relationship with main PC
+  companionMood: 'loyal' | 'concerned' | 'conflicted' | 'distant' | 'hostile' | 'devoted' // v2.44.0: mood mechanical effect
   injuryPenalty: number      // Sum of all active injury modifiers
 }
 

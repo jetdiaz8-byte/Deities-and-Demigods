@@ -90,6 +90,7 @@ export const createInitialState = (): GameState => ({
   shardChargeBonus: 0,
   shardSummonedBonus: 0,
   companionAffinityBonus: 0,
+  companionMoodBonus: 0,  // v2.44.0: mood mechanical effect
   injuryPenaltyBonus: 0,
   currentSuccessRate: 50,
   // ═══════════════════════════════════════════════════════════════════════════
