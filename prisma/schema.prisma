@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Entity {
+  id          String   @id
+  name        String
+  title       String?
+  pantheon    String
+  type        String
+  category    String
+  align       String
+  hp          Int
+  maxHp       Int
+  ac          Int
+  mr          Int      @default(0)
+  abilities   String
+  personality String?
+  domain      String?
+  symbol      String?
+  str         Int      @default(10)
+  dex         Int      @default(10)
+  con         Int      @default(10)
+  int         Int      @default(10)
+  wis         Int      @default(10)
+  cha         Int      @default(10)
+  level       Int      @default(1)
+  divineRank  Int      @default(0)
+  description String?
+  portrait    String?
+  phase1      String?
+  phase2      String?
+  phase3      String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([pantheon])
+  @@index([type])
+  @@index([category])
+}
+
+model SaveGame {
+  id                  String   @id @default(cuid())
+  slot                Int
+  name                String
+  gameState           String
+  conversationHistory String?
+  ttsConfig           String?
+  achievements        String?
+  playTime            Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@unique([slot])
+}
+
+model Shard {
+  id         String @id
+  name       String
+  originLore String
+  color      String
+  glow       String
+  pantheon   String
+  power      String
+  prophecy   String?
+
+  @@index([pantheon])
+}
+
+model Prophecy {
+  id          String @id
+  text        String
+  boundToType String
+  boundToId   String
+  status      String @default("dormant")
+  triggerTurn Int?
+  fulfillTurn Int?
+  reward      String?
+}
+
+model Injury {
+  id              String @id
+  name            String
+  description     String
+  effect          String
+  modifier        String
+  icon            String
+  type            String
+  cureDescription String
+}
+
+model Item {
+  id                String @id
+  name              String
+  description       String
+  type              String
+  rarity            String
+  charges           Int
+  maxCharges        Int
+  effects           String
+  acquisitionMethod String
+  icon              String
+  lore              String
+
+  @@index([type])
+  @@index([rarity])
+}
+
+model Achievement {
+  id          String  @id
+  name        String
+  description String
+  tier        String
+  icon        String
+  hidden      Boolean @default(false)
+  condition   String?
+}
+
+model GameSession {
+  id        String   @id @default(cuid())
+  userId    String?
+  startedAt DateTime @default(now())
+  endedAt   DateTime?
+  turns     Int      @default(0)
+  act       String   @default("act1")
+  victory   Boolean?
+}

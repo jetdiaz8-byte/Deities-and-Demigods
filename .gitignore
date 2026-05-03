@@ -1,0 +1,9 @@
+node_modules
+.next
+out
+db/*.db
+db/*.db-journal
+.env*
+!.env.example
+public/portraits/**/*.tmp
+*.tsbuildinfo

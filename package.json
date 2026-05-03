@@ -1,0 +1,46 @@
+{
+  "name": "deities-and-demigods",
+  "version": "2.43.2",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prisma:push": "prisma db push",
+    "prisma:generate": "prisma generate",
+    "test": "tsx src/test/systems.test.ts",
+    "portraits": "tsx scripts/generate-portraits.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "6.11.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dompurify": "^3.2.4",
+    "framer-motion": "^12.23.2",
+    "lucide-react": "^0.468.0",
+    "next": "^16.1.1",
+    "node-edge-tts": "^1.2.10",
+    "prisma": "6.11.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-markdown": "^10.1.0",
+    "sharp": "^0.34.3",
+    "tailwind-merge": "^3.0.0",
+    "tailwindcss": "^4.0.0",
+    "z-ai-web-dev-sdk": "^0.0.17",
+    "zod": "^4.0.2",
+    "zustand": "^5.0.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^16.1.1",
+    "postcss": "^8.4.49",
+    "tsx": "^4.19.2",
+    "typescript": "^6.0.2"
+  }
+}
