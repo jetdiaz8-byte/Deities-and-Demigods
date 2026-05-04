@@ -9,11 +9,13 @@ export function CharacterCard({ character, selected, onSelect }: { character: Ch
     <button
       onClick={onSelect}
       className={cn(
-        "group relative grid min-h-[18rem] grid-rows-[auto_1fr] border bg-[#16100a] text-left transition",
+        "fantasy-card group relative grid min-h-[22rem] grid-rows-[auto_1fr] overflow-hidden border text-left transition",
         selected ? "border-[#e0c060] shadow-[0_0_28px_rgba(201,168,76,0.24)]" : "border-[var(--border-leather)] hover:border-[var(--border-gold)]"
       )}
     >
-      <PortraitImage character={character} className="h-40 w-full opacity-90 transition group-hover:opacity-100" />
+      <div className="p-4 pb-0">
+        <PortraitImage character={character} className="portrait-frame h-48 w-full opacity-90 transition group-hover:opacity-100" />
+      </div>
       <div className="space-y-2 p-4">
         <div>
           <h3 className="font-title text-lg text-[var(--text-ivory)]">{character.name}</h3>
@@ -21,10 +23,9 @@ export function CharacterCard({ character, selected, onSelect }: { character: Ch
         </div>
         <p className="line-clamp-3 text-sm text-[var(--text-parchment)]">{character.description}</p>
         <div className="flex flex-wrap gap-2 text-xs text-[var(--text-muted)]">
-          <span>{character.pantheon}</span>
-          <span>{character.align}</span>
-          <span>HP {character.maxHp}</span>
-          <span>AC {character.ac}</span>
+          {[character.pantheon, character.align, `HP ${character.maxHp}`, `AC ${character.ac}`].map((label) => (
+            <span key={label} className="border border-[#4d3218] bg-black/20 px-2 py-1">{label}</span>
+          ))}
         </div>
       </div>
     </button>

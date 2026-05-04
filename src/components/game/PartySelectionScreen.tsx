@@ -13,7 +13,7 @@ export function PartySelectionScreen({ onSelect }: { onSelect: (id: string) => v
     return pantheon === "All" ? playable : playable.filter((character) => character.pantheon === pantheon);
   }, [pantheon]);
   return (
-    <main className="min-h-screen px-4 py-6 md:px-8">
+    <main className="mythic-backdrop min-h-screen px-4 py-6 md:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>

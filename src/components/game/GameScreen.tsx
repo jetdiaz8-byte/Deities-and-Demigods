@@ -23,7 +23,7 @@ export function GameScreen() {
   }
 
   return (
-    <main className="min-h-screen p-4 md:p-6">
+    <main className="mythic-backdrop min-h-screen p-3 md:p-5">
       <div className="mx-auto grid max-w-[96rem] gap-4">
         <GameHeader state={state} onReset={state.resetGame} />
         <div className="grid gap-4 lg:grid-cols-[1fr_22rem]">

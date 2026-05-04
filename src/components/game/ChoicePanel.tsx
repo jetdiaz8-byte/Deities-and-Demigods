@@ -12,8 +12,8 @@ export function ChoicePanel({ choices, disabled, onChoose }: { choices: DMChoice
       {choices.map((choice, index) => {
         const Icon = icons[index] ?? Sparkles;
         return (
-          <Button key={`${choice.narrative}-${index}`} disabled={disabled} onClick={() => onChoose(choice)} className="justify-start p-4 text-left text-base">
-            <Icon size={18} className="shrink-0 text-[var(--text-gold)]" />
+          <Button key={`${choice.narrative}-${index}`} disabled={disabled} onClick={() => onChoose(choice)} className="min-h-16 justify-start border-[#8d5a23] bg-[#201007] p-4 text-left text-lg">
+            <Icon size={20} className="shrink-0 text-[var(--text-gold)] drop-shadow-[0_0_8px_rgba(215,168,58,.55)]" />
             <span className="flex-1">{choice.narrative}</span>
             <span className="hidden text-xs text-[var(--text-muted)] md:inline">{choice.align_note}</span>
           </Button>
