@@ -7,3 +7,5 @@ db/*.db-journal
 !.env.example
 public/portraits/**/*.tmp
 *.tsbuildinfo
+
+.vercel
