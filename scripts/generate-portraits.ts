@@ -6,7 +6,13 @@ import { buildPortraitPrompt } from "../src/lib/portraits";
 async function main() {
   const manifest: Array<{ id: string; name: string; category: string; path: string; prompt: string; status: string }> = [];
   const shouldDownload = process.env.PORTRAIT_DOWNLOAD === "true";
-  for (const character of characterData) {
+  const categoryFilter = process.env.PORTRAIT_CATEGORY;
+  const limit = Number(process.env.PORTRAIT_LIMIT ?? "0");
+  const queue = characterData
+    .filter((character) => !categoryFilter || character.category === categoryFilter)
+    .slice(0, limit > 0 ? limit : undefined);
+
+  for (const character of queue) {
     const dir = path.join(process.cwd(), "public", "portraits", character.category);
     const file = path.join(dir, `${character.id}.png`);
     await fs.mkdir(dir, { recursive: true });
@@ -18,7 +24,7 @@ async function main() {
     } catch {
       if (shouldDownload) {
         const url = new URL(`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}`);
-        url.searchParams.set("width", "1024");
+        url.searchParams.set("width", "768");
         url.searchParams.set("height", "1024");
         url.searchParams.set("nologo", "true");
         url.searchParams.set("model", "flux");
